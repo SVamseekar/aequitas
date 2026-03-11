@@ -1,11 +1,12 @@
 {
-  "generated_at": "2026-03-11T09:49:59.521434",
+  "generated_at": "2026-03-11T10:33:30.335993",
   "naptan": {
     "raw_total_rows": 434248,
     "bus_type_rows": 374950,
-    "england_active_bus_stops": 303163,
-    "unique_atco_codes": 303163,
-    "has_duplicates": false
+    "england_active_bus_stops": 274719,
+    "unique_atco_codes": 274719,
+    "has_duplicates": false,
+    "filter_method": "ATCO admin area prefix 0xx-4xx (England only)"
   },
   "bods": {
     "raw_route_rows": 13099,
@@ -13,7 +14,7 @@
     "total_trips": 1752443,
     "bods_stops_total": 310598,
     "bods_unique_stop_ids": 310598,
-    "bods_naptan_stop_overlap": 248124
+    "bods_naptan_stop_overlap": 224811
   },
   "census": {
     "total_lsoas_england": 33755,
@@ -21,58 +22,27 @@
     "ons_official_england_population": 56490048,
     "population_discrepancy_pct": 0.0,
     "lsoa_code_column": "geography code",
-    "population_column": "Residence type: Total; measures: Value",
-    "additional_tables": {
-      "ts007a": {
-        "table": "Age groups (LSOA)",
-        "lsoas": 33755,
-        "source": "Census 2021"
-      },
-      "ts021": {
-        "table": "Ethnic group (LSOA)",
-        "lsoas": 33755,
-        "source": "Census 2021"
-      },
-      "ts045": {
-        "table": "Car or van availability (LSOA)",
-        "lsoas": 33755,
-        "source": "Census 2021"
-      },
-      "ruc2021": {
-        "table": "Rural Urban Classification 2021 (LSOA)",
-        "lsoas": 33755,
-        "source": "ONS RUC 2021",
-        "cols": [
-          "LSOA21CD",
-          "RUC21CD",
-          "RUC21NM",
-          "Urban_rural_flag"
-        ]
-      }
-    },
-    "note": "TS044 removed \u2014 was accommodation type, not urban/rural. RUC 2021 standalone lookup used instead."
+    "population_column": "Residence type: Total; measures: Value"
   },
   "imd": {
-    "source": "IMD 2025 (English Indices of Deprivation 2025)",
+    "source": "IMD 2025 (File 7 \u2014 all ranks, scores, deciles)",
+    "lsoa_boundary_year": 2021,
     "total_lsoas": 33755,
     "lsoas_no_imd_score": 0,
     "lsoa_code_column": "LSOA code (2021)",
     "imd_score_column": "Index of Multiple Deprivation (IMD) Score",
-    "imd_decile_column": "Index of Multiple Deprivation (IMD) Decile (where 1 is most deprived 10% of LSOAs)",
-    "boundary_note": "IMD 2025 uses 2021 LSOA boundaries \u2014 exact match with Census 2021. Zero boundary mismatch.",
-    "income_col": "Income Score (rate)",
-    "employment_col": "Employment Score (rate)"
+    "income_score_column": "Income Score (rate)"
   },
   "nomis": {
     "source": "Census 2021 TS066 (economic activity status) at LSOA level",
+    "lsoa_boundary_year": 2021,
     "total_lsoas_england": 33755,
     "lsoas_with_null_unemployment": 0,
     "lsoa_code_column": "geography code",
-    "unemployment_column": "unemployment_rate (computed: unemployed / economically_active)",
-    "unemployment_min_pct": 0.0,
-    "unemployment_max_pct": 27.1,
-    "unemployment_mean_pct": 5.0,
-    "note": "LSOA-level data \u2014 no MSOA distribution needed. Replaces previous MSOA approach."
+    "economically_active_column": "Economic activity status: Economically active (excluding full-time students)",
+    "unemployed_column": "Economic activity status: Economically active (excluding full-time students): Unemployed",
+    "unemployment_rate_column": "unemployment_rate (unemployed / econ_active * 100)",
+    "note": "Native LSOA level \u2014 no MSOA distribution required."
   },
   "boundaries": {
     "lsoa_geojson_available": true,
@@ -84,9 +54,12 @@
     "pipeline_note": "GeoJSON downloaded successfully."
   },
   "joins": {
-    "stop_to_lsoa_sample_size": 1000,
-    "stop_to_lsoa_sample_match_rate_pct": 89.4,
-    "note": "Full match rate computed during pipeline processing stage."
+    "stop_to_lsoa_total_stops": 274719,
+    "stop_to_lsoa_matched_pass1": 274715,
+    "stop_to_lsoa_matched_pass2": 2,
+    "stop_to_lsoa_unmatched": 2,
+    "stop_to_lsoa_match_rate_pct": 99.9993,
+    "note": "Two-pass join: (1) point-in-polygon using BFE polygons in EPSG:27700, (2) sjoin_nearest with max_distance=2000m for coastal/pier orphans. Implemented in pipeline as src/aequitas/ingestion/stop_lsoa_join.py."
   },
-  "locked_at": "2026-03-11T10:30:00.000000"
+  "locked_at": "2026-03-11T10:34:16.912635"
 }
