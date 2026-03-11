@@ -1,0 +1,104 @@
+check_id,category,dataset,column,severity,status,observed,expected,affected_rows,affected_pct,notes
+C1.IMD2025.key_null,Completeness,IMD2025,LSOA code (2021),INFO,PASS,0,0,0,0.0,Null join keys
+C2.IMD2025.key_empty,Completeness,IMD2025,LSOA code (2021),INFO,PASS,0,0,0,0.0,Empty string join keys
+C3.IMD2025.key_whitespace,Completeness,IMD2025,LSOA code (2021),INFO,PASS,0,0,0,0.0,Whitespace around join keys
+C1.NOMIS.key_null,Completeness,NOMIS,geography code,INFO,PASS,0,0,0,0.0,Null join keys
+C2.NOMIS.key_empty,Completeness,NOMIS,geography code,INFO,PASS,0,0,0,0.0,Empty string join keys
+C3.NOMIS.key_whitespace,Completeness,NOMIS,geography code,INFO,PASS,0,0,0,0.0,Whitespace around join keys
+C1.Census.key_null,Completeness,Census,geography code,INFO,PASS,0,0,0,0.0,Null join keys
+C2.Census.key_empty,Completeness,Census,geography code,INFO,PASS,0,0,0,0.0,Empty string join keys
+C3.Census.key_whitespace,Completeness,Census,geography code,INFO,PASS,0,0,0,0.0,Whitespace around join keys
+C1.RUC.key_null,Completeness,RUC,LSOA21CD,INFO,PASS,0,0,0,0.0,Null join keys
+C2.RUC.key_empty,Completeness,RUC,LSOA21CD,INFO,PASS,0,0,0,0.0,Empty string join keys
+C3.RUC.key_whitespace,Completeness,RUC,LSOA21CD,INFO,PASS,0,0,0,0.0,Whitespace around join keys
+C1.Age.key_null,Completeness,Age,geography code,INFO,PASS,0,0,0,0.0,Null join keys
+C2.Age.key_empty,Completeness,Age,geography code,INFO,PASS,0,0,0,0.0,Empty string join keys
+C3.Age.key_whitespace,Completeness,Age,geography code,INFO,PASS,0,0,0,0.0,Whitespace around join keys
+C1.Cars.key_null,Completeness,Cars,geography code,INFO,PASS,0,0,0,0.0,Null join keys
+C2.Cars.key_empty,Completeness,Cars,geography code,INFO,PASS,0,0,0,0.0,Empty string join keys
+C3.Cars.key_whitespace,Completeness,Cars,geography code,INFO,PASS,0,0,0,0.0,Whitespace around join keys
+C1.Ethnicity.key_null,Completeness,Ethnicity,geography code,INFO,PASS,0,0,0,0.0,Null join keys
+C2.Ethnicity.key_empty,Completeness,Ethnicity,geography code,INFO,PASS,0,0,0,0.0,Empty string join keys
+C3.Ethnicity.key_whitespace,Completeness,Ethnicity,geography code,INFO,PASS,0,0,0,0.0,Whitespace around join keys
+C1.NaPTAN.ATCOCode,Completeness,NaPTAN,ATCOCode,INFO,PASS,0,0,0,0.0,Null ATCOCode in NaPTAN
+C6.NaPTAN.coords,Completeness,NaPTAN,Latitude,HIGH,WARN,52449,0,52449,12.0781,"Null coordinates in raw NaPTAN (52,449 rows — filtered out in England set)"
+V1.IMD.score_range,Validity,IMD2025,IMD Score,INFO,PASS,min=0.165,>=0,0,0.0,IMD scores below 0 are impossible
+V2.IMD.rank_range,Validity,IMD2025,IMD Rank,INFO,PASS,"range [1,33755]","[1,33755]",0,0.0,IMD rank outside valid range
+V3.IMD.rank_unique,Validity,IMD2025,IMD Rank,INFO,PASS,0 dupes,0 dupes,0,0.0,Duplicate IMD ranks (must be bijection 1..33755)
+V4.IMD.decile_domain,Validity,IMD2025,IMD Decile,INFO,PASS,"[8, 10, 5, 4, 2, 3, 6, 1, 7, 9]","[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]",0,0.0,"IMD decile outside [1,10]"
+V5.IMD.Income_rate,Validity,IMD2025,Income Score (rate),INFO,PASS,"[0.0020,0.9980]","[0,1]",0,0.0,"Income score outside valid rate range [0,1]"
+V5.IMD.Employment_rate,Validity,IMD2025,Employment Score (rate),INFO,PASS,"[0.0020,0.9780]","[0,1]",0,0.0,"Employment score outside valid rate range [0,1]"
+V6.NOMIS.unemp_le_active,Validity,NOMIS,Unemployed,INFO,PASS,0 violations,unemployed <= econ_active always,0,0.0,Unemployed > economically active — impossible
+V7.NOMIS.neg_econ_active,Validity,NOMIS,Econ Active,INFO,PASS,0 negatives,>=0,0,0.0,Negative economically active count
+V9.Census.pop_positive,Validity,Census,Residence type: Total; measures: Value,INFO,PASS,0 non-positive,>0,0,0.0,Zero or negative population — LSOAs must have population > 0
+V10.Cars.nocar_le_total,Validity,Cars,No cars,INFO,PASS,0 violations,no_car <= total_hh,0,0.0,No-car households > total households — impossible
+V11.Cars.hh_positive,Validity,Cars,Total HH,INFO,PASS,0 non-positive,>0,0,0.0,Zero or negative household count
+V12.Age.bands_sum,Validity,Age,Age bands,INFO,PASS,0 mismatches,sum(bands) == Total ±2,0,0.0,Age band sum != Age Total
+V13.Eth.groups_sum,Validity,Ethnicity,Ethnic groups,INFO,PASS,0 mismatches,sum(top-level groups) ≈ Total ±5,0,0.0,Ethnic group sum deviates from total by >5
+V14.NaPTAN.lat_bounds,Validity,NaPTAN,Latitude,INFO,PASS,"0 outside [49.9,55.9]",49.9–55.9,0,0.0,Stop latitude outside England bounds
+V15.NaPTAN.lon_bounds,Validity,NaPTAN,Longitude,INFO,PASS,"0 outside [-6.5,2.1]",-6.5–2.1,0,0.0,Stop longitude outside England bounds
+V16.RUC.code_domain,Validity,RUC,RUC21CD,INFO,PASS,"['UN1', 'RSN1', 'RLN1', 'UF1', 'RLF1', 'RSF1']","['RLF1', 'UN1', 'RLN1', 'RSN1', 'RSF1', 'UF1']",0,0.0,RUC code outside valid 6-category domain
+V17.IMD.lsoa_format,Validity,IMD2025,LSOA code,INFO,PASS,0 bad format,E[0-9]{8},0,0.0,LSOA code format mismatch (should be E followed by 8 digits)
+U1.IMD2025.exact_dupe_rows,Uniqueness,IMD2025,ALL,INFO,PASS,0,0,0,0.0,Exact duplicate rows
+U2.IMD2025.dupe_key,Uniqueness,IMD2025,LSOA code (2021),INFO,PASS,0,0,0,0.0,Duplicate join keys — breaks 1:1 LSOA joins
+U1.NOMIS.exact_dupe_rows,Uniqueness,NOMIS,ALL,INFO,PASS,0,0,0,0.0,Exact duplicate rows
+U2.NOMIS.dupe_key,Uniqueness,NOMIS,geography code,INFO,PASS,0,0,0,0.0,Duplicate join keys — breaks 1:1 LSOA joins
+U1.Census.exact_dupe_rows,Uniqueness,Census,ALL,INFO,PASS,0,0,0,0.0,Exact duplicate rows
+U2.Census.dupe_key,Uniqueness,Census,geography code,INFO,PASS,0,0,0,0.0,Duplicate join keys — breaks 1:1 LSOA joins
+U1.RUC.exact_dupe_rows,Uniqueness,RUC,ALL,INFO,PASS,0,0,0,0.0,Exact duplicate rows
+U2.RUC.dupe_key,Uniqueness,RUC,LSOA21CD,INFO,PASS,0,0,0,0.0,Duplicate join keys — breaks 1:1 LSOA joins
+U1.Age.exact_dupe_rows,Uniqueness,Age,ALL,INFO,PASS,0,0,0,0.0,Exact duplicate rows
+U2.Age.dupe_key,Uniqueness,Age,geography code,INFO,PASS,0,0,0,0.0,Duplicate join keys — breaks 1:1 LSOA joins
+U1.Cars.exact_dupe_rows,Uniqueness,Cars,ALL,INFO,PASS,0,0,0,0.0,Exact duplicate rows
+U2.Cars.dupe_key,Uniqueness,Cars,geography code,INFO,PASS,0,0,0,0.0,Duplicate join keys — breaks 1:1 LSOA joins
+U1.Ethnicity.exact_dupe_rows,Uniqueness,Ethnicity,ALL,INFO,PASS,0,0,0,0.0,Exact duplicate rows
+U2.Ethnicity.dupe_key,Uniqueness,Ethnicity,geography code,INFO,PASS,0,0,0,0.0,Duplicate join keys — breaks 1:1 LSOA joins
+U3.NaPTAN.dupe_atco,Uniqueness,NaPTAN,ATCOCode,INFO,PASS,0,0,0,0.0,Duplicate ATCOCodes in England active bus stops
+U4.NaPTAN.near_dupe_coords,Uniqueness,NaPTAN,Lat/Lon,MEDIUM,WARN,604,0,604,0.2199,Stops within 5m of each other (604 — may be legitimate opposite-side-of-road stops)
+U5.IMD.dupe_lsoa,Uniqueness,IMD2025,LSOA code,INFO,PASS,0,0,0,0.0,Duplicate LSOA codes in IMD dataset
+S1.IMD Score.iqr_outliers,Statistical,Multiple,IMD Score,LOW,WARN,4 IQR outliers,<1% of rows,4,0.0119,"IQR outliers (3×IQR fence): skew=1.14, kurt=0.93"
+S1.Income Score.iqr_outliers,Statistical,Multiple,Income Score,LOW,WARN,1 IQR outliers,<1% of rows,1,0.003,"IQR outliers (3×IQR fence): skew=0.99, kurt=0.37"
+S1.Employment Scor.iqr_outliers,Statistical,Multiple,Employment Score,LOW,WARN,30 IQR outliers,<1% of rows,30,0.0889,"IQR outliers (3×IQR fence): skew=1.24, kurt=1.62"
+S1.Health Score.iqr_outliers,Statistical,Multiple,Health Score,LOW,PASS,0 IQR outliers,<1% of rows,0,0.0,"IQR outliers (3×IQR fence): skew=0.11, kurt=-0.17"
+S1.Living Env.iqr_outliers,Statistical,Multiple,Living Env,LOW,PASS,0 IQR outliers,<1% of rows,0,0.0,"IQR outliers (3×IQR fence): skew=0.92, kurt=0.30"
+S1.Unemployment %.iqr_outliers,Statistical,Multiple,Unemployment %,LOW,WARN,166 IQR outliers,<1% of rows,166,0.4918,"IQR outliers (3×IQR fence): skew=1.55, kurt=3.55"
+S1.Population.iqr_outliers,Statistical,Multiple,Population,LOW,WARN,69 IQR outliers,<1% of rows,69,0.2044,"IQR outliers (3×IQR fence): skew=2.06, kurt=18.90"
+S1.No-car HH %.iqr_outliers,Statistical,Multiple,No-car HH %,LOW,PASS,0 IQR outliers,<1% of rows,0,0.0,"IQR outliers (3×IQR fence): skew=1.12, kurt=0.81"
+S2.IsoForest.multivariate,Statistical,Multiple,5 metrics,MEDIUM,WARN,338 anomalies,<337 (1% contamination),338,1.0013,"Multivariate anomalies: LSOAs unusual across IMD, income, health, unemployment, population simultaneously"
+X1.Census_vs_Age.pop,CrossDataset,Census/Age,Population,INFO,PASS,0 LSOAs with diff>50,0,0,0.0,Census (all residents TS001) vs Age (usual residents TS007a) mismatch >50. Max diff=13 — small diffs expected due to different reference populations
+X2.Census_vs_Eth.pop,CrossDataset,Census/Ethnicity,Population,INFO,PASS,0 LSOAs with diff>10,0,0,0.0,Census pop vs Ethnicity total mismatch >10. Max diff=10
+R1.imd_score_x_income_score,Correlation,Multiple,imd_score × income_score,INFO,PASS,r=0.954,>=0.85 STRONG POSITIVE,0,0.0,Pearson r=0.954 vs expected STRONG POSITIVE (min r=0.85)
+R1.imd_score_x_employ_score,Correlation,Multiple,imd_score × employ_score,INFO,PASS,r=0.957,>=0.8 STRONG POSITIVE,0,0.0,Pearson r=0.957 vs expected STRONG POSITIVE (min r=0.8)
+R1.imd_score_x_health_score,Correlation,Multiple,imd_score × health_score,INFO,PASS,r=0.842,>=0.7 STRONG POSITIVE,0,0.0,Pearson r=0.842 vs expected STRONG POSITIVE (min r=0.7)
+R1.imd_score_x_unemp_rate,Correlation,Multiple,imd_score × unemp_rate,INFO,PASS,r=0.792,>=0.55 STRONG POSITIVE,0,0.0,Pearson r=0.792 vs expected STRONG POSITIVE (min r=0.55)
+R1.imd_score_x_nocar_pct,Correlation,Multiple,imd_score × nocar_pct,INFO,PASS,r=0.644,>=0.3 MODERATE POSITIVE,0,0.0,Pearson r=0.644 vs expected MODERATE POSITIVE (min r=0.3)
+R1.income_score_x_unemp_rate,Correlation,Multiple,income_score × unemp_rate,INFO,PASS,r=0.807,>=0.65 STRONG POSITIVE,0,0.0,Pearson r=0.807 vs expected STRONG POSITIVE (min r=0.65)
+R1.imd_score_x_crime_score,Correlation,Multiple,imd_score × crime_score,INFO,PASS,r=0.797,>=0.4 MODERATE POSITIVE,0,0.0,Pearson r=0.797 vs expected MODERATE POSITIVE (min r=0.4)
+R1.imd_score_x_living_score,Correlation,Multiple,imd_score × living_score,INFO,PASS,r=0.288,>=-0.99 MODERATE,0,0.0,Pearson r=0.288 vs expected MODERATE (min r=-0.99)
+B1.Census/Population.benford,Benford,Census,Residence type: Total; measures: Value,LOW,WARN,MAD=0.1223,MAD<0.015,0,0.0,Possible data anomaly: count column does not follow Benford's Law
+B1.NOMIS/Pop16+.benford,Benford,NOMIS,Economic activity status: Total: All usual residents aged 16 years and over,LOW,WARN,MAD=0.1384,MAD<0.015,0,0.0,Possible data anomaly: count column does not follow Benford's Law
+B1.NOMIS/Unemployed.benford,Benford,NOMIS,Economic activity status: Economically active (excluding full-time students): Unemployed,LOW,WARN,MAD=0.0472,MAD<0.015,0,0.0,Possible data anomaly: count column does not follow Benford's Law
+B1.Age/Total.benford,Benford,Age,Age: Total,LOW,WARN,MAD=0.1223,MAD<0.015,0,0.0,Possible data anomaly: count column does not follow Benford's Law
+B1.Cars/Households.benford,Benford,Cars,Number of cars or vans: Total: All households,LOW,WARN,MAD=0.1345,MAD<0.015,0,0.0,Possible data anomaly: count column does not follow Benford's Law
+B1.IMD/Pop2022.benford,Benford,IMD,Total population: mid 2022,LOW,WARN,MAD=0.1188,MAD<0.015,0,0.0,Possible data anomaly: count column does not follow Benford's Law
+BR1.IMD.decile_1_size,BusinessRule,IMD2025,Decile 1,INFO,PASS,3375,≈3375±5%,0,0.0,Decile 1 has 3375 LSOAs (0.0% deviation from expected)
+BR1.IMD.decile_2_size,BusinessRule,IMD2025,Decile 2,INFO,PASS,3376,≈3375±5%,0,0.0,Decile 2 has 3376 LSOAs (0.0% deviation from expected)
+BR1.IMD.decile_3_size,BusinessRule,IMD2025,Decile 3,INFO,PASS,3375,≈3375±5%,0,0.0,Decile 3 has 3375 LSOAs (0.0% deviation from expected)
+BR1.IMD.decile_4_size,BusinessRule,IMD2025,Decile 4,INFO,PASS,3376,≈3375±5%,0,0.0,Decile 4 has 3376 LSOAs (0.0% deviation from expected)
+BR1.IMD.decile_5_size,BusinessRule,IMD2025,Decile 5,INFO,PASS,3375,≈3375±5%,0,0.0,Decile 5 has 3375 LSOAs (0.0% deviation from expected)
+BR1.IMD.decile_6_size,BusinessRule,IMD2025,Decile 6,INFO,PASS,3376,≈3375±5%,0,0.0,Decile 6 has 3376 LSOAs (0.0% deviation from expected)
+BR1.IMD.decile_7_size,BusinessRule,IMD2025,Decile 7,INFO,PASS,3375,≈3375±5%,0,0.0,Decile 7 has 3375 LSOAs (0.0% deviation from expected)
+BR1.IMD.decile_8_size,BusinessRule,IMD2025,Decile 8,INFO,PASS,3376,≈3375±5%,0,0.0,Decile 8 has 3376 LSOAs (0.0% deviation from expected)
+BR1.IMD.decile_9_size,BusinessRule,IMD2025,Decile 9,INFO,PASS,3375,≈3375±5%,0,0.0,Decile 9 has 3375 LSOAs (0.0% deviation from expected)
+BR1.IMD.decile_10_size,BusinessRule,IMD2025,Decile 10,INFO,PASS,3376,≈3375±5%,0,0.0,Decile 10 has 3376 LSOAs (0.0% deviation from expected)
+BR2.NOMIS.national_rate,BusinessRule,NOMIS,Unemployment rate,INFO,PASS,4.87%,~4.8% (ONS Census 2021),0,0.0,National unemployment rate: 4.87% vs ONS published 4.8%
+BR3.Census.total_pop,BusinessRule,Census,Total population,INFO,PASS,"56,490,056","56,490,048 (ONS 2021)",0,0.0,"England total population: 56,490,056 vs ONS 56,490,048 (diff=0.0000%)"
+BR4.Census.min_pop,BusinessRule,Census,Population,INFO,PASS,0,>100 expected,0,0.0,LSOAs with population < 100 (below ONS minimum design threshold)
+BR5.Census.max_pop,BusinessRule,Census,Population,INFO,PASS,0,"<10,000 typical",0,0.0,"LSOAs with population > 10,000 — far above ONS design maximum of ~3,000"
+BR6.RUC.flag_complete,BusinessRule,RUC,Urban_rural_flag,INFO,PASS,0,0,0,0.0,LSOAs with missing urban/rural flag
+A1.England_population,Accuracy,Multiple,England population,INFO,PASS,56490056,"[56490000,56500000]",0,0.0,"Accuracy check vs published aggregate: computed=56490056, reference=56490048"
+A1.England_LSOA_count,Accuracy,Multiple,England LSOA count,INFO,PASS,33755,"[33750,33760]",0,0.0,"Accuracy check vs published aggregate: computed=33755, reference=33755"
+A1.IMD_decile_count,Accuracy,Multiple,IMD decile count,INFO,PASS,10,"[10,10]",0,0.0,"Accuracy check vs published aggregate: computed=10, reference=10"
+A1.National_unemp_rate_,Accuracy,Multiple,National unemp rate %,INFO,PASS,4.87,"[4.0,6.0]",0,0.0,"Accuracy check vs published aggregate: computed=4.87, reference=4.8"
+A1.%_Urban_LSOAs,Accuracy,Multiple,% Urban LSOAs,INFO,PASS,83.5,"[80.0,86.0]",0,0.0,"Accuracy check vs published aggregate: computed=83.5, reference=82.6"
+A1.%_UN1_(core_urban)_L,Accuracy,Multiple,% UN1 (core urban) LSOAs,INFO,PASS,77.6,"[72.0,79.0]",0,0.0,"Accuracy check vs published aggregate: computed=77.6, reference=75.9"
