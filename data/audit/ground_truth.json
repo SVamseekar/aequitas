@@ -32,12 +32,15 @@
     "boundary_note": "IMD 2019 uses 2011 LSOA boundaries. ~900 Census 2021 LSOAs have no IMD score. Strategy: assign IMD score from spatially overlapping 2011 LSOA using ONS lookup table."
   },
   "nomis": {
-    "source": "Census 2021 TS066 (economic activity status) at MSOA level",
-    "total_msoas_england": 6856,
-    "msoas_with_null_unemployment": 0,
-    "msoa_code_column": "geography code",
+    "source": "Census 2021 TS066 (economic activity status) at LSOA level",
+    "total_lsoas_england": 33755,
+    "lsoas_with_null_unemployment": 0,
+    "lsoa_code_column": "geography code",
     "unemployment_column": "unemployment_rate (computed: unemployed / economically_active)",
-    "distribution_note": "MSOA unemployment distributed to constituent LSOAs via ONS MSOA->LSOA lookup. All LSOAs in same MSOA share the same rate."
+    "unemployment_min_pct": 0.0,
+    "unemployment_max_pct": 27.1,
+    "unemployment_mean_pct": 5.0,
+    "note": "LSOA-level data \u2014 no MSOA distribution needed. Replaces previous MSOA approach."
   },
   "boundaries": {
     "lsoa_geojson_available": true,
