@@ -21,15 +21,43 @@
     "ons_official_england_population": 56490048,
     "population_discrepancy_pct": 0.0,
     "lsoa_code_column": "geography code",
-    "population_column": "Residence type: Total; measures: Value"
+    "population_column": "Residence type: Total; measures: Value",
+    "additional_tables": {
+      "ts007a": {
+        "table": "Age groups",
+        "lsoas": 33755,
+        "key_cols": [
+          "Age: Aged 65 to 69 years",
+          "Age: Aged 70 to 74 years",
+          "Age: Aged 75 to 79 years",
+          "Age: Aged 80 to 84 years",
+          "Age: Aged 85 years and over"
+        ]
+      },
+      "ts021": {
+        "table": "Ethnic group",
+        "lsoas": 33755
+      },
+      "ts044": {
+        "table": "Urban/rural classification",
+        "lsoas": 33755
+      },
+      "ts045": {
+        "table": "Car or van availability",
+        "lsoas": 33755
+      }
+    }
   },
   "imd": {
-    "total_lsoas": 32844,
-    "lsoas_no_imd_score": 1945,
-    "lsoa_code_column": "LSOA code (2011)",
+    "source": "IMD 2025 (English Indices of Deprivation 2025)",
+    "total_lsoas": 33755,
+    "lsoas_no_imd_score": 0,
+    "lsoa_code_column": "LSOA code (2021)",
     "imd_score_column": "Index of Multiple Deprivation (IMD) Score",
     "imd_decile_column": "Index of Multiple Deprivation (IMD) Decile (where 1 is most deprived 10% of LSOAs)",
-    "boundary_note": "IMD 2019 uses 2011 LSOA boundaries. ~900 Census 2021 LSOAs have no IMD score. Strategy: assign IMD score from spatially overlapping 2011 LSOA using ONS lookup table."
+    "boundary_note": "IMD 2025 uses 2021 LSOA boundaries \u2014 exact match with Census 2021. Zero boundary mismatch.",
+    "income_col": "Income Score (rate)",
+    "employment_col": "Employment Score (rate)"
   },
   "nomis": {
     "source": "Census 2021 TS066 (economic activity status) at LSOA level",
@@ -56,5 +84,5 @@
     "stop_to_lsoa_sample_match_rate_pct": 89.4,
     "note": "Full match rate computed during pipeline processing stage."
   },
-  "locked_at": "2026-03-11T09:51:23.327497"
+  "locked_at": "2026-03-11T10:30:00.000000"
 }
