@@ -24,29 +24,33 @@
     "population_column": "Residence type: Total; measures: Value",
     "additional_tables": {
       "ts007a": {
-        "table": "Age groups",
+        "table": "Age groups (LSOA)",
         "lsoas": 33755,
-        "key_cols": [
-          "Age: Aged 65 to 69 years",
-          "Age: Aged 70 to 74 years",
-          "Age: Aged 75 to 79 years",
-          "Age: Aged 80 to 84 years",
-          "Age: Aged 85 years and over"
-        ]
+        "source": "Census 2021"
       },
       "ts021": {
-        "table": "Ethnic group",
-        "lsoas": 33755
-      },
-      "ts044": {
-        "table": "Urban/rural classification",
-        "lsoas": 33755
+        "table": "Ethnic group (LSOA)",
+        "lsoas": 33755,
+        "source": "Census 2021"
       },
       "ts045": {
-        "table": "Car or van availability",
-        "lsoas": 33755
+        "table": "Car or van availability (LSOA)",
+        "lsoas": 33755,
+        "source": "Census 2021"
+      },
+      "ruc2021": {
+        "table": "Rural Urban Classification 2021 (LSOA)",
+        "lsoas": 33755,
+        "source": "ONS RUC 2021",
+        "cols": [
+          "LSOA21CD",
+          "RUC21CD",
+          "RUC21NM",
+          "Urban_rural_flag"
+        ]
       }
-    }
+    },
+    "note": "TS044 removed \u2014 was accommodation type, not urban/rural. RUC 2021 standalone lookup used instead."
   },
   "imd": {
     "source": "IMD 2025 (English Indices of Deprivation 2025)",
