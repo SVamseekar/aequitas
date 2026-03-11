@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-11T10:58:39.305104",
+  "generated_at": "2026-03-11T11:25:50.051144",
   "naptan": {
     "raw_total_rows": 434248,
     "bus_type_rows": 374950,
@@ -348,5 +348,110 @@
     "zero_stop_least_deprived_decile": 330,
     "note": "Stop count is a raw proximity metric. Pipeline will compute a richer access metric: stops within 400m buffer weighted by service frequency."
   },
-  "locked_at": "2026-03-11T10:59:46.912585"
+  "single_lsoa_verification": {
+    "E01000001": {
+      "label": "City of London 001A \u2014 Wealthy urban core",
+      "pop_total": 1475,
+      "imd_score": 8.742,
+      "imd_rank": 26525,
+      "imd_decile": 8,
+      "unemp_rate_pct": 3.61,
+      "elderly_pct": 25.1,
+      "no_car_pct": 66.3,
+      "nonwhite_pct": 19.9,
+      "urban_rural": "UN1",
+      "bus_stops": 8,
+      "all_checks_pass": true
+    },
+    "E01012040": {
+      "label": "Sunderland \u2014 Most deprived (NE, rank 43)",
+      "pop_total": 1397,
+      "imd_score": 79.882,
+      "imd_rank": 43,
+      "imd_decile": 1,
+      "unemp_rate_pct": 20.3,
+      "elderly_pct": 7.0,
+      "no_car_pct": 63.0,
+      "nonwhite_pct": 52.5,
+      "urban_rural": "UN1",
+      "bus_stops": 0,
+      "all_checks_pass": true
+    },
+    "E01026625": {
+      "label": "Basildon \u2014 Most deprived (East, rank 37)",
+      "pop_total": 1832,
+      "imd_score": 80.525,
+      "imd_rank": 37,
+      "imd_decile": 1,
+      "unemp_rate_pct": 18.27,
+      "elderly_pct": 10.9,
+      "no_car_pct": 59.3,
+      "nonwhite_pct": 13.4,
+      "urban_rural": "UF1",
+      "bus_stops": 0,
+      "all_checks_pass": true
+    },
+    "E01005047": {
+      "label": "Rural England \u2014 Low deprivation, elderly",
+      "pop_total": 1477,
+      "imd_score": 10.084,
+      "imd_rank": 24870,
+      "imd_decile": 8,
+      "unemp_rate_pct": 2.44,
+      "elderly_pct": 31.2,
+      "no_car_pct": 8.5,
+      "nonwhite_pct": 2.0,
+      "urban_rural": "RSN1",
+      "bus_stops": 16,
+      "all_checks_pass": true
+    }
+  },
+  "data_dictionary_generated": true,
+  "data_dictionary_path": "docs/data-dictionary",
+  "join_integrity": {
+    "NOMIS TS066": {
+      "rows": 33755,
+      "in_imd": 33755,
+      "not_in_imd": 0,
+      "missing_from_ds": 0,
+      "clean": true
+    },
+    "Census TS001": {
+      "rows": 33755,
+      "in_imd": 33755,
+      "not_in_imd": 0,
+      "missing_from_ds": 0,
+      "clean": true
+    },
+    "RUC 2021": {
+      "rows": 33755,
+      "in_imd": 33755,
+      "not_in_imd": 0,
+      "missing_from_ds": 0,
+      "clean": true
+    },
+    "Age TS007a": {
+      "rows": 33755,
+      "in_imd": 33755,
+      "not_in_imd": 0,
+      "missing_from_ds": 0,
+      "clean": true
+    },
+    "Cars TS045": {
+      "rows": 33755,
+      "in_imd": 33755,
+      "not_in_imd": 0,
+      "missing_from_ds": 0,
+      "clean": true
+    },
+    "Ethnicity TS021": {
+      "rows": 33755,
+      "in_imd": 33755,
+      "not_in_imd": 0,
+      "missing_from_ds": 0,
+      "clean": true
+    }
+  },
+  "join_integrity_all_clean": true,
+  "locked_at": "2026-03-11T11:27:30.838279"
 }
