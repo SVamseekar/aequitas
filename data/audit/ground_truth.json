@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-11T10:33:30.335993",
+  "generated_at": "2026-03-11T10:58:39.305104",
   "naptan": {
     "raw_total_rows": 434248,
     "bus_type_rows": 374950,
@@ -61,5 +61,292 @@
     "stop_to_lsoa_match_rate_pct": 99.9993,
     "note": "Two-pass join: (1) point-in-polygon using BFE polygons in EPSG:27700, (2) sjoin_nearest with max_distance=2000m for coastal/pier orphans. Implemented in pipeline as src/aequitas/ingestion/stop_lsoa_join.py."
   },
-  "locked_at": "2026-03-11T10:34:16.912635"
+  "provenance": {
+    "naptan": {
+      "source_url": "https://naptan.api.dft.gov.uk/v1/access-nodes?dataFormat=csv",
+      "version": "Live snapshot (no versioning \u2014 refreshed on each download)",
+      "download_date": "2026-03-11",
+      "next_update": "Continuous \u2014 NaPTAN is a live register updated by operators",
+      "licence": "Open Government Licence v3.0"
+    },
+    "bods": {
+      "source_url": "https://data.bus-data.dft.gov.uk/timetable/download/bulk_archive",
+      "version": "Live snapshot \u2014 BODS GTFS bulk archive",
+      "download_date": "2026-03-11",
+      "next_update": "Continuous \u2014 operators update timetables throughout the year",
+      "licence": "Open Government Licence v3.0"
+    },
+    "census_ts001": {
+      "source_url": "https://www.nomisweb.co.uk/output/census/2021/census2021-ts001.zip",
+      "version": "Census 2021 TS001 \u2014 Residence type (population)",
+      "reference_date": "Census night 21 March 2021",
+      "next_update": "Census 2031 (expected ~2033)",
+      "licence": "Open Government Licence v3.0"
+    },
+    "census_ts007a": {
+      "source_url": "https://www.nomisweb.co.uk/output/census/2021/census2021-ts007a.zip",
+      "version": "Census 2021 TS007a \u2014 Age by single year (LSOA)",
+      "reference_date": "Census night 21 March 2021",
+      "next_update": "Census 2031 (expected ~2033)",
+      "licence": "Open Government Licence v3.0"
+    },
+    "census_ts021": {
+      "source_url": "https://www.nomisweb.co.uk/output/census/2021/census2021-ts021.zip",
+      "version": "Census 2021 TS021 \u2014 Ethnic group (LSOA)",
+      "reference_date": "Census night 21 March 2021",
+      "next_update": "Census 2031 (expected ~2033)",
+      "licence": "Open Government Licence v3.0"
+    },
+    "census_ts045": {
+      "source_url": "https://www.nomisweb.co.uk/output/census/2021/census2021-ts045.zip",
+      "version": "Census 2021 TS045 \u2014 Car or van availability (LSOA)",
+      "reference_date": "Census night 21 March 2021",
+      "next_update": "Census 2031 (expected ~2033)",
+      "licence": "Open Government Licence v3.0"
+    },
+    "nomis_ts066": {
+      "source_url": "https://www.nomisweb.co.uk/output/census/2021/census2021-ts066.zip",
+      "version": "Census 2021 TS066 \u2014 Economic activity status (LSOA)",
+      "reference_date": "Census night 21 March 2021",
+      "next_update": "Census 2031 (expected ~2033)",
+      "licence": "Open Government Licence v3.0"
+    },
+    "ruc_2021": {
+      "source_url": "https://geoportal.statistics.gov.uk/datasets/ons::rural-urban-classification-2021-for-lower-layer-super-output-areas-in-ew/about",
+      "version": "ONS Rural Urban Classification 2021 (LSOA level)",
+      "reference_date": "2021",
+      "next_update": "Updated to align with each Census \u2014 next ~2033",
+      "licence": "Open Government Licence v3.0"
+    },
+    "imd_2025": {
+      "source_url": "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2025",
+      "version": "IMD 2025 \u2014 File 7: All IoD2025 Scores, Ranks, Deciles and Population Denominators",
+      "reference_date": "2025 (updated from IMD 2019)",
+      "next_update": "Irregular \u2014 typically every 4-5 years. IMD 2019 \u2192 IMD 2025 was a 6-year gap.",
+      "licence": "Open Government Licence v3.0",
+      "boundary_year": "2021 LSOAs (zero mismatch with Census 2021)"
+    },
+    "boundaries_lsoa": {
+      "source_url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Lower_layer_Super_Output_Areas_December_2021_Boundaries_EW_BFE_V10/FeatureServer/0",
+      "version": "LSOA (Dec 2021) Boundaries EW BFE V10 \u2014 Full resolution",
+      "reference_date": "2021 LSOA boundaries",
+      "next_update": "Updated after each Census \u2014 next ~2033",
+      "licence": "Open Government Licence v3.0",
+      "note": "BFE (full resolution) used with nearest-neighbour fallback for coastal stops"
+    },
+    "boundaries_regions": {
+      "source_url": "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Regions_December_2021_EN_BUC_2022/FeatureServer/0",
+      "version": "Regions (Dec 2021) EN BUC \u2014 Ultra-generalised clipped",
+      "reference_date": "2021 region boundaries",
+      "next_update": "Rare \u2014 region boundaries change infrequently",
+      "licence": "Open Government Licence v3.0"
+    }
+  },
+  "regional_summary": [
+    {
+      "region": "South East",
+      "lsoas": 5571,
+      "population": 9278063,
+      "stops": 46826,
+      "imd_mean": 15.868947226709746,
+      "unemp_mean": 4.184123137677258
+    },
+    {
+      "region": "London",
+      "lsoas": 4994,
+      "population": 8799776,
+      "stops": 19939,
+      "imd_mean": 22.128674609531437,
+      "unemp_mean": 6.492631157388867
+    },
+    {
+      "region": "North West",
+      "lsoas": 4567,
+      "population": 7417385,
+      "stops": 36870,
+      "imd_mean": 26.681850667834464,
+      "unemp_mean": 5.0658419093496825
+    },
+    {
+      "region": "East of England",
+      "lsoas": 3758,
+      "population": 6335041,
+      "stops": 24342,
+      "imd_mean": 17.740042043640234,
+      "unemp_mean": 4.237469398616285
+    },
+    {
+      "region": "West Midlands",
+      "lsoas": 3574,
+      "population": 5950741,
+      "stops": 16177,
+      "imd_mean": 24.814183268047007,
+      "unemp_mean": 5.870598768886402
+    },
+    {
+      "region": "South West",
+      "lsoas": 3407,
+      "population": 5701179,
+      "stops": 42398,
+      "imd_mean": 17.85738479600822,
+      "unemp_mean": 3.7126915174640445
+    },
+    {
+      "region": "Yorkshire and The Humber",
+      "lsoas": 3355,
+      "population": 5480772,
+      "stops": 36192,
+      "imd_mean": 25.77043308494784,
+      "unemp_mean": 5.079084947839046
+    },
+    {
+      "region": "East Midlands",
+      "lsoas": 2847,
+      "population": 4880094,
+      "stops": 33904,
+      "imd_mean": 20.86929258868985,
+      "unemp_mean": 4.295535651563049
+    },
+    {
+      "region": "North East",
+      "lsoas": 1682,
+      "population": 2647005,
+      "stops": 18069,
+      "imd_mean": 28.89930142687277,
+      "unemp_mean": 5.910041617122474
+    }
+  ],
+  "master_lsoa_stats": {
+    "lsoas_with_zero_stops": 4245,
+    "lsoas_with_stops": 29510,
+    "mean_stops_per_lsoa": 8.14,
+    "median_stops_per_lsoa": 6.0
+  },
+  "distributions": {
+    "IMD Score (deprivation)": {
+      "min": 0.17,
+      "p10": 5.46,
+      "p25": 9.69,
+      "median": 17.45,
+      "p75": 29.67,
+      "p90": 44.91,
+      "max": 94.22,
+      "mean": 21.67,
+      "count": 33755,
+      "nulls": 0
+    },
+    "Unemployment rate (%)": {
+      "min": 0.0,
+      "p10": 2.28,
+      "p25": 3.04,
+      "median": 4.24,
+      "p75": 6.22,
+      "p90": 8.68,
+      "max": 27.15,
+      "mean": 4.97,
+      "count": 33755,
+      "nulls": 0
+    },
+    "Bus stops per LSOA": {
+      "min": 0.0,
+      "p10": 0.0,
+      "p25": 3.0,
+      "median": 6.0,
+      "p75": 11.0,
+      "p90": 17.0,
+      "max": 126.0,
+      "mean": 8.14,
+      "count": 33755,
+      "nulls": 0
+    }
+  },
+  "deprivation_coverage": {
+    "imd_stop_correlation": -0.0644,
+    "decile_summary": [
+      {
+        "imd_decile": 1,
+        "lsoa_count": 3376,
+        "mean_stops": 6.901658767772512,
+        "zero_stop_lsoas": 601,
+        "mean_imd_score": 56.24648400473934,
+        "mean_unemployment": 9.859671208530806
+      },
+      {
+        "imd_decile": 2,
+        "lsoa_count": 3375,
+        "mean_stops": 6.622518518518518,
+        "zero_stop_lsoas": 528,
+        "mean_imd_score": 38.61595259259259,
+        "mean_unemployment": 7.3065125925925924
+      },
+      {
+        "imd_decile": 3,
+        "lsoa_count": 3376,
+        "mean_stops": 7.1996445497630335,
+        "zero_stop_lsoas": 425,
+        "mean_imd_score": 29.79663684834123,
+        "mean_unemployment": 6.251720971563981
+      },
+      {
+        "imd_decile": 4,
+        "lsoa_count": 3375,
+        "mean_stops": 8.064592592592593,
+        "zero_stop_lsoas": 442,
+        "mean_imd_score": 23.97189155555556,
+        "mean_unemployment": 5.19416
+      },
+      {
+        "imd_decile": 5,
+        "lsoa_count": 3375,
+        "mean_stops": 9.190814814814814,
+        "zero_stop_lsoas": 413,
+        "mean_imd_score": 19.427149629629632,
+        "mean_unemployment": 4.439345185185186
+      },
+      {
+        "imd_decile": 6,
+        "lsoa_count": 3376,
+        "mean_stops": 9.86670616113744,
+        "zero_stop_lsoas": 427,
+        "mean_imd_score": 15.727550059241707,
+        "mean_unemployment": 3.922331161137441
+      },
+      {
+        "imd_decile": 7,
+        "lsoa_count": 3374,
+        "mean_stops": 9.679016004742145,
+        "zero_stop_lsoas": 366,
+        "mean_imd_score": 12.58720835803201,
+        "mean_unemployment": 3.5526111440426793
+      },
+      {
+        "imd_decile": 8,
+        "lsoa_count": 3375,
+        "mean_stops": 9.045037037037037,
+        "zero_stop_lsoas": 355,
+        "mean_imd_score": 9.729307259259258,
+        "mean_unemployment": 3.242311111111111
+      },
+      {
+        "imd_decile": 9,
+        "lsoa_count": 3377,
+        "mean_stops": 8.04116079360379,
+        "zero_stop_lsoas": 358,
+        "mean_imd_score": 6.935689961504294,
+        "mean_unemployment": 3.0537518507551082
+      },
+      {
+        "imd_decile": 10,
+        "lsoa_count": 3376,
+        "mean_stops": 6.775473933649289,
+        "zero_stop_lsoas": 330,
+        "mean_imd_score": 3.6561119668246445,
+        "mean_unemployment": 2.8397186018957346
+      }
+    ],
+    "zero_stop_most_deprived_decile": 601,
+    "zero_stop_least_deprived_decile": 330,
+    "note": "Stop count is a raw proximity metric. Pipeline will compute a richer access metric: stops within 400m buffer weighted by service frequency."
+  },
+  "locked_at": "2026-03-11T10:59:46.912585"
 }
