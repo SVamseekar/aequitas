@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-11T11:25:50.051144",
+  "generated_at": "2026-03-11T17:27:35.667247",
   "naptan": {
     "raw_total_rows": 434248,
     "bus_type_rows": 374950,
@@ -453,5 +453,127 @@
     }
   },
   "join_integrity_all_clean": true,
-  "locked_at": "2026-03-11T11:27:30.838279"
+  "statistical_profiling": {
+    "IMD Score": {
+      "iqr_outliers": 4,
+      "z_outliers": 104,
+      "skew": 1.144,
+      "kurtosis": 0.934
+    },
+    "Income Score": {
+      "iqr_outliers": 1,
+      "z_outliers": 46,
+      "skew": 0.988,
+      "kurtosis": 0.373
+    },
+    "Employment Score": {
+      "iqr_outliers": 30,
+      "z_outliers": 143,
+      "skew": 1.24,
+      "kurtosis": 1.619
+    },
+    "Health Score": {
+      "iqr_outliers": 0,
+      "z_outliers": 10,
+      "skew": 0.108,
+      "kurtosis": -0.168
+    },
+    "Living Env": {
+      "iqr_outliers": 0,
+      "z_outliers": 41,
+      "skew": 0.918,
+      "kurtosis": 0.297
+    },
+    "Unemployment %": {
+      "iqr_outliers": 166,
+      "z_outliers": 282,
+      "skew": 1.551,
+      "kurtosis": 3.548
+    },
+    "Population": {
+      "iqr_outliers": 69,
+      "z_outliers": 143,
+      "skew": 2.058,
+      "kurtosis": 18.897
+    },
+    "No-car HH %": {
+      "iqr_outliers": 0,
+      "z_outliers": 69,
+      "skew": 1.12,
+      "kurtosis": 0.812
+    }
+  },
+  "isolation_forest_anomalies": {
+    "count": 338,
+    "sample": [
+      "E01000601",
+      "E01001178",
+      "E01002039",
+      "E01004670",
+      "E01004794",
+      "E01004823",
+      "E01004850",
+      "E01004960",
+      "E01005004",
+      "E01005142"
+    ]
+  },
+  "cross_dataset_consistency": {
+    "census_vs_age_mismatches_gt5": 0,
+    "census_vs_eth_mismatches_gt10": 0,
+    "census_vs_age_max_diff": 13,
+    "census_vs_eth_max_diff": 10
+  },
+  "correlation_analysis": {
+    "imd_score_x_income_score": 0.954,
+    "imd_score_x_employ_score": 0.957,
+    "imd_score_x_health_score": 0.842,
+    "imd_score_x_unemp_rate": 0.792,
+    "imd_score_x_nocar_pct": 0.644,
+    "income_score_x_unemp_rate": 0.807,
+    "imd_score_x_crime_score": 0.797,
+    "imd_score_x_living_score": 0.288
+  },
+  "accuracy_checks": {
+    "England population": {
+      "computed": 56490056,
+      "reference": 56490048,
+      "pass": true
+    },
+    "England LSOA count": {
+      "computed": 33755,
+      "reference": 33755,
+      "pass": true
+    },
+    "IMD decile count": {
+      "computed": 10,
+      "reference": 10,
+      "pass": true
+    },
+    "National unemp rate %": {
+      "computed": 4.87,
+      "reference": 4.8,
+      "pass": true
+    },
+    "% Urban LSOAs": {
+      "computed": 83.5,
+      "reference": 82.6,
+      "pass": true
+    },
+    "% UN1 (core urban) LSOAs": {
+      "computed": 77.6,
+      "reference": 75.9,
+      "pass": true
+    }
+  },
+  "data_quality_audit": {
+    "total_checks": 103,
+    "pass": 89,
+    "fail": 0,
+    "warn": 14,
+    "critical_issues": 0,
+    "high_issues": 1,
+    "audit_log_path": "data/audit/data_quality_audit_log.csv"
+  },
+  "locked_at": "2026-03-11T17:29:18.628485"
 }
