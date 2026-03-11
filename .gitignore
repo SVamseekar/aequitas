@@ -1,0 +1,40 @@
+# Data — never commit raw or processed data
+data/raw/
+data/processed/
+data/audit/*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb~
+
+# DuckDB warehouse (large binary — use Git LFS in deployment)
+*.duckdb
+*.duckdb.wal
+
+# ML models
+models/
+*.pkl
+*.joblib
+*.faiss
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
