@@ -2,6 +2,7 @@
 data/raw/
 data/processed/
 data/audit/*.json
+!data/audit/ground_truth.json
 
 # Python
 __pycache__/

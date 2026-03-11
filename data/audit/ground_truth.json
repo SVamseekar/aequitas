@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-03-11T09:49:59.521434",
+  "naptan": {
+    "raw_total_rows": 434248,
+    "bus_type_rows": 374950,
+    "england_active_bus_stops": 303163,
+    "unique_atco_codes": 303163,
+    "has_duplicates": false
+  },
+  "bods": {
+    "raw_route_rows": 13099,
+    "unique_bus_route_ids": 13099,
+    "total_trips": 1752443,
+    "bods_stops_total": 310598,
+    "bods_unique_stop_ids": 310598,
+    "bods_naptan_stop_overlap": 248124
+  },
+  "census": {
+    "total_lsoas_england": 33755,
+    "total_population_sum": 56490056,
+    "ons_official_england_population": 56490048,
+    "population_discrepancy_pct": 0.0,
+    "lsoa_code_column": "geography code",
+    "population_column": "Residence type: Total; measures: Value"
+  },
+  "imd": {
+    "total_lsoas": 32844,
+    "lsoas_no_imd_score": 1945,
+    "lsoa_code_column": "LSOA code (2011)",
+    "imd_score_column": "Index of Multiple Deprivation (IMD) Score",
+    "imd_decile_column": "Index of Multiple Deprivation (IMD) Decile (where 1 is most deprived 10% of LSOAs)",
+    "boundary_note": "IMD 2019 uses 2011 LSOA boundaries. ~900 Census 2021 LSOAs have no IMD score. Strategy: assign IMD score from spatially overlapping 2011 LSOA using ONS lookup table."
+  },
+  "nomis": {
+    "source": "Census 2021 TS066 (economic activity status) at MSOA level",
+    "total_msoas_england": 6856,
+    "msoas_with_null_unemployment": 0,
+    "msoa_code_column": "geography code",
+    "unemployment_column": "unemployment_rate (computed: unemployed / economically_active)",
+    "distribution_note": "MSOA unemployment distributed to constituent LSOAs via ONS MSOA->LSOA lookup. All LSOAs in same MSOA share the same rate."
+  },
+  "boundaries": {
+    "lsoa_geojson_available": true,
+    "region_geojson_available": true,
+    "lsoa_features_in_geojson": 33755,
+    "lsoa_count_from_census": 33755,
+    "lsoas_missing_boundary": 0,
+    "all_9_regions_present": true,
+    "pipeline_note": "GeoJSON downloaded successfully."
+  },
+  "joins": {
+    "stop_to_lsoa_sample_size": 1000,
+    "stop_to_lsoa_sample_match_rate_pct": 89.4,
+    "note": "Full match rate computed during pipeline processing stage."
+  },
+  "locked_at": "2026-03-11T09:51:23.327497"
+}
