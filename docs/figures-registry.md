@@ -41,6 +41,7 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | GT-011 | NaPTAN Status field correct value | `'active'` (not `'act'`) | ✅ Confirmed | 02h_spatial_access.ipynb | act=0 rows, active=387,377 rows |
 | GT-012 | BODS stop_times.txt file size | 5.8 GB | ✅ Confirmed | 02b_bods_deep_dive.ipynb | Read in chunks only |
 | GT-013 | BODS shapes.txt file size | 3.2 GB | ✅ Confirmed | 02b_bods_deep_dive.ipynb | Inside bods_gtfs_all.zip |
+| GT-020 | Code-Point Open England postcodes | 1,492,016 | ✅ Confirmed | 03h_codepoint_postcodes.ipynb | England only (E92000001), Feb 2026 release; 837 non-geographic postcodes excluded |
 
 ---
 
@@ -144,4 +145,5 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | 02g_bods_service_levels.ipynb | — | No new registry figures (service tiers are classifications not constants) |
 | 02i_lsoa_stories.ipynb | — | No new registry figures (composite scores are derived from confirmed figures) |
 | 03a_disability_ts038.ipynb | ST-008, ST-009 | See Category 2 |
+| 03h_codepoint_postcodes.ipynb | GT-020 | See Category 1 |
 | *Layers 1–6 EDA (pending)* | TBD | Add here as notebooks complete |
