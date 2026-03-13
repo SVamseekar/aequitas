@@ -71,7 +71,7 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 ---
 
 ## Category 3 — Transport Appraisal Constants (TAG / Green Book)
-*Must use TAG Databook v2.03fc (Dec 2025, rebased 2023 prices, includes May 2026 changes). File downloaded — extract values before economic appraisal EDA.*
+*TAG Databook v2.03fc (Dec 2025, 122 sheets). Values extracted via 03f_tag_databook.ipynb → data/audit/tag_constants.json. Source VoT values are 2014 prices; A1.3.1 published values are 2023 prices.*
 
 | ID | Figure | Value | Status | Correct Source | Fix |
 |----|--------|-------|--------|---------------|-----|
