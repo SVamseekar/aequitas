@@ -42,8 +42,8 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | GT-012 | BODS stop_times.txt file size | 5.8 GB | ✅ Confirmed | 02b_bods_deep_dive.ipynb | Read in chunks only |
 | GT-013 | BODS shapes.txt file size | 3.2 GB | ✅ Confirmed | 02b_bods_deep_dive.ipynb | Inside bods_gtfs_all.zip |
 | GT-020 | Code-Point Open England postcodes | 1,492,016 | ✅ Confirmed | 03h_codepoint_postcodes.ipynb | England only (E92000001), Feb 2026 release; 837 non-geographic postcodes excluded |
-| GT-021 | England acute hospital sites (total rows) | 3,870 | ✅ Confirmed | 03b_hospitals.ipynb | NHS ODS RO198, England only, HOSPITAL/INFIRMARY filter; 3,714 geocoded (96.0%) via Code-Point Open, 156 retained with NaN coords |
-| GT-022 | England GP practices (geocoded) | 12,214 | ✅ Confirmed | 03c_gp_surgeries.ipynb | NHS ODS RO177, England only; no header row in raw file |
+| GT-021 | England acute hospital sites (geocoded) | 3,714 | ✅ Confirmed | 03b_hospitals.ipynb | NHS ODS RO198, England only, HOSPITAL/INFIRMARY filter; match rate via Code-Point Open (96.0% geocoded) |
+| GT-022 | England GP practices (geocoded) | 12,059 | ✅ Confirmed | 03c_gp_surgeries.ipynb | NHS ODS RO177, England only; no header row in raw file; match rate 98.7% via Code-Point Open |
 | GT-023 | GIAS open schools (England, geocoded) | 26,503 | ✅ Confirmed | 03d_schools_gias.ipynb | Open only, 6 Scottish schools filtered out; 97.8% coord coverage |
 | GT-024 | GIAS secondary-equiv schools (England) | 3,412 | ✅ Confirmed | 03d_schools_gias.ipynb | Secondary + All-through + Middle deemed secondary; geocoded England only |
 | GT-025 | BRES England MSOAs (2023) | 6,791 | ✅ Confirmed | 03e_employment_bres.ipynb | 27.3M total employees; LSOA level suppressed by ONS |
