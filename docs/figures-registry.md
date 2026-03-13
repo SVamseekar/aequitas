@@ -70,6 +70,11 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | ST-009 | Disability % range (TS038) | 1.81%–44.68% | ✅ Confirmed | 03a_disability_ts038.ipynb | England LSOAs only |
 | ST-010 | Mean route length (km) | 23.0 km (median 18.7 km) | ✅ Confirmed | 04a_route_geometry.ipynb | Based on max shape variant per route; 7,241 routes with geometry |
 | ST-011 | Cross-LA routes | 5,143 (37.7%) | ✅ Confirmed | 04a_route_geometry.ipynb | Of 13,640 GTFS routes; route spans >1 Local Authority |
+| ST-012 | Median weekday headway (per stop) | 33.3 min | ✅ Confirmed | 04b_service_quality_depth.ipynb | Across all England GTFS stops with weekday service |
+| ST-013 | Evening isolated LSOAs (last bus <19:00) | 5,189 (15.4%) | ✅ Confirmed | 04b_service_quality_depth.ipynb | Of 33,755 England LSOAs |
+| ST-014 | Sunday desert LSOAs (0 Sunday trips) | 6,745 (20.0%) | ✅ Confirmed | 04b_service_quality_depth.ipynb | Of 33,755 England LSOAs |
+| ST-015 | Mean service quality index (England) | 65.4/100 | ✅ Confirmed | 04b_service_quality_depth.ipynb | Composite: headway 40% + span 20% + frequency 20% + evening 10% + Sunday 10% |
+| ST-016 | IMD vs service quality Pearson r | +0.2184 (p<0.001) | ✅ Confirmed | 04b_service_quality_depth.ipynb | Positive = more deprived LSOAs have marginally higher SQI; urban concentration effect |
 
 ---
 
@@ -166,4 +171,5 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | 03g_desnz_carbon.ipynb | CO2-001, CO2-002, CO2-003, NTS-001 | See Category 4 |
 | 03h_codepoint_postcodes.ipynb | GT-020 | See Category 1 |
 | 04a_route_geometry.ipynb | GT-027, ST-010, ST-011 | See Category 1 + 2 |
+| 04b_service_quality_depth.ipynb | ST-012, ST-013, ST-014, ST-015, ST-016 | See Category 2 |
 | *Series 04 analytical layers (remaining)* | TBD | Add here as notebooks complete |
