@@ -42,6 +42,12 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | GT-012 | BODS stop_times.txt file size | 5.8 GB | ✅ Confirmed | 02b_bods_deep_dive.ipynb | Read in chunks only |
 | GT-013 | BODS shapes.txt file size | 3.2 GB | ✅ Confirmed | 02b_bods_deep_dive.ipynb | Inside bods_gtfs_all.zip |
 | GT-020 | Code-Point Open England postcodes | 1,492,016 | ✅ Confirmed | 03h_codepoint_postcodes.ipynb | England only (E92000001), Feb 2026 release; 837 non-geographic postcodes excluded |
+| GT-021 | England acute hospital sites (geocoded) | 3,870 | ✅ Confirmed | 03b_hospitals.ipynb | NHS ODS RO198, England only, HOSPITAL/INFIRMARY filter; match rate via Code-Point Open |
+| GT-022 | England GP practices (geocoded) | 12,214 | ✅ Confirmed | 03c_gp_surgeries.ipynb | NHS ODS RO177, England only; no header row in raw file |
+| GT-023 | GIAS open schools (England, geocoded) | 26,503 | ✅ Confirmed | 03d_schools_gias.ipynb | Open only, 6 Scottish schools filtered out; 97.8% coord coverage |
+| GT-024 | GIAS secondary-equiv schools (England) | 3,412 | ✅ Confirmed | 03d_schools_gias.ipynb | Secondary + All-through + Middle deemed secondary; geocoded England only |
+| GT-025 | BRES England MSOAs (2023) | 6,791 | ✅ Confirmed | 03e_employment_bres.ipynb | 27.3M total employees; LSOA level suppressed by ONS |
+| GT-026 | LSOAs with employment proxy | 31,217 (92.5%) | ✅ Confirmed | 03e_employment_bres.ipynb | Derived from LA-level BRES aggregation; 2,538 LSOAs unmatched (small LAs) |
 
 ---
 
@@ -67,11 +73,11 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 
 | ID | Figure | Value | Status | Correct Source | Fix |
 |----|--------|-------|--------|---------------|-----|
-| TAG-001 | Value of bus commuting time | £9.85/hr | ⚠️ Stale | TAG Databook v2.03fc (Dec 2025) | Extract from downloaded v2.03fc → read Value of Time tab → update |
-| TAG-002 | Value of car commuting time | £12.65/hr | ⚠️ Stale | TAG Databook v2.03fc | Same extraction |
-| TAG-003 | Value of business travel time | £28.30/hr | ⚠️ Stale | TAG Databook v2.03fc | Same extraction |
-| TAG-004 | Value of leisure travel time | £7.85/hr | ⚠️ Stale | TAG Databook v2.03fc | Same extraction |
-| TAG-005 | Carbon value (central) | £80/tonne CO2e | ⚠️ Stale | TAG Databook v2.03fc | Same extraction |
+| TAG-001 | Value of commuting time (all modes) | £11.21/hr | ✅ Confirmed | TAG Databook v2.03fc, Source VoT sheet D46, 2014 prices | Extracted 2026-03-13 via 03f_tag_databook.ipynb. TAG uses single commuting VoT across all modes — no separate bus/car rate |
+| TAG-002 | Value of car commuting time | £11.21/hr | ✅ Confirmed | TAG Databook v2.03fc (same as TAG-001) | TAG-001 and TAG-002 are identical — TAG methodology uses mode-neutral commuting VoT |
+| TAG-003 | Value of business travel time (working avg) | £18.23/hr | ✅ Confirmed | TAG Databook v2.03fc, Source VoT D41, 2014 prices | Working person average (passenger only). Car driver £16.74/hr, PSV (bus) passenger £9.49/hr |
+| TAG-004 | Value of leisure/other travel time | £5.12/hr | ✅ Confirmed | TAG Databook v2.03fc, Source VoT D47, 2014 prices | Extracted 2026-03-13 via 03f_tag_databook.ipynb |
+| TAG-005 | Carbon value (central, appraisal) | £206.44/tCO2e | ✅ Confirmed | TAG Databook v2.03fc, GHG sheet, 2020 prices | Extracted 2026-03-13. Note: DESNZ 2025 also provides carbon values — use TAG for appraisal BCR, DESNZ for emission factors |
 | TAG-006 | Social discount rate | 3.5%/yr | ✅ Confirmed | HM Treasury Green Book 2026 | Confirmed unchanged per March 2026 check |
 | TAG-007 | BCR band: Poor | <1.0 | ✅ Confirmed | HM Treasury Green Book | Confirmed unchanged |
 | TAG-008 | BCR band: Low | 1.0–1.5 | ✅ Confirmed | HM Treasury Green Book | Confirmed unchanged |
@@ -86,8 +92,9 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 
 | ID | Figure | Value | Status | Correct Source | Fix |
 |----|--------|-------|--------|---------------|-----|
-| CO2-001 | Bus CO2 emissions | 0.0965 kg/pax-km | ⚠️ Stale | DESNZ GHG Conversion Factors 2025 (June 2025) | Extract from downloaded 2025 factors → read transport tab → update |
-| CO2-002 | Car CO2 emissions | 0.171 kg/km | ⚠️ Stale | DESNZ GHG Conversion Factors 2025 | Same extraction |
+| CO2-001 | Bus CO2 emissions (average local) | 0.10385 kg CO2e/pax-km | ✅ Confirmed | DESNZ GHG Conversion Factors 2025, Business travel- land sheet | Extracted 2026-03-13 via 03g_desnz_carbon.ipynb. London bus = 0.06875, coach = 0.02776 |
+| CO2-002 | Car CO2 emissions (average) | 0.17304 kg CO2e/km | ✅ Confirmed | DESNZ GHG Conversion Factors 2025, Business travel- land sheet | Extracted 2026-03-13. Per vehicle-km. Per pax-km = 0.11164 (÷1.55 occupancy) |
+| CO2-003 | National rail CO2 emissions (average) | 0.03546 kg CO2e/pax-km | ✅ Confirmed | DESNZ GHG Conversion Factors 2025 | Extracted 2026-03-13 via 03g_desnz_carbon.ipynb |
 
 ---
 
@@ -145,5 +152,11 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | 02g_bods_service_levels.ipynb | — | No new registry figures (service tiers are classifications not constants) |
 | 02i_lsoa_stories.ipynb | — | No new registry figures (composite scores are derived from confirmed figures) |
 | 03a_disability_ts038.ipynb | ST-008, ST-009 | See Category 2 |
+| 03b_hospitals.ipynb | GT-021 | See Category 1 |
+| 03c_gp_surgeries.ipynb | GT-022 | See Category 1 |
+| 03d_schools_gias.ipynb | GT-023, GT-024 | See Category 1 |
+| 03e_employment_bres.ipynb | GT-025, GT-026 | See Category 1 |
+| 03f_tag_databook.ipynb | TAG-001 through TAG-005 | See Category 3 |
+| 03g_desnz_carbon.ipynb | CO2-001, CO2-002, CO2-003 | See Category 4 |
 | 03h_codepoint_postcodes.ipynb | GT-020 | See Category 1 |
-| *Layers 1–6 EDA (pending)* | TBD | Add here as notebooks complete |
+| *Series 04 analytical layers (pending)* | TBD | Add here as notebooks complete |
