@@ -45,7 +45,7 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | GT-021 | England acute hospital sites (geocoded) | 3,714 | ✅ Confirmed | 03b_hospitals.ipynb | NHS ODS RO198, England only, HOSPITAL/INFIRMARY filter; match rate via Code-Point Open (96.0% geocoded) |
 | GT-022 | England GP practices (geocoded) | 12,059 | ✅ Confirmed | 03c_gp_surgeries.ipynb | NHS ODS RO177, England only; no header row in raw file; match rate 98.7% via Code-Point Open |
 | GT-016 | GIAS open schools (all England) | 27,183 | ✅ Confirmed | 03d_schools_gias.ipynb | EstablishmentStatus code=1; includes Scotland schools pre-filter |
-| GT-017 | GIAS secondary + all-through schools (England, geocoded) | 3,336 | ✅ Confirmed | 03d_schools_gias.ipynb | Secondary (3,173) + All-through (163) open, England bounds, postcode geocoding applied |
+| GT-017 | GIAS secondary + all-through schools (England, geocoded) | 3,336 | ✅ Confirmed | 03d_schools_gias.ipynb | Secondary (3,173) + All-through (163) open; pre-England-filter total=3,339; 3 dropped by England bounding box / missing coords; postcode geocoding applied |
 | GT-023 | GIAS open schools (England, geocoded) | 26,544 | ✅ Confirmed | 03d_schools_gias.ipynb | Open only, out-of-bounds schools filtered; 97.5% coord coverage; postcode geocoding applied |
 | GT-024 | GIAS secondary-equiv schools (England, geocoded) | 3,336 | ✅ Confirmed | 03d_schools_gias.ipynb | Secondary + All-through; geocoded England only; 87.6% within 400m of bus stop |
 | GT-025 | BRES England MSOAs (2023) | 6,791 | ✅ Confirmed | 03e_employment_bres.ipynb | 27.3M total employees; LSOA level suppressed by ONS |

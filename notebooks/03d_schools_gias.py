@@ -407,10 +407,11 @@ geocoded_missing = missing_schools.merge(
 resolved = geocoded_missing["Easting_pc"].notna().sum()
 logger.info(f"Missing coords resolved via postcode: {resolved} / {len(missing_schools)}")
 
+pc_match_rate = resolved / has_postcode.sum() * 100 if has_postcode.sum() > 0 else 0
 check(
-    "postcode-geocoding",
-    "PASS" if resolved > 0 else "WARN",
-    f"Resolved {resolved} schools via Code-Point Open postcode lookup",
+    "postcode-geocoding-match-rate",
+    "PASS" if pc_match_rate >= 50 else "WARN",
+    f"{pc_match_rate:.1f}% postcode match rate ({resolved}/{has_postcode.sum()} schools geocoded via Code-Point Open)",
 )
 
 # Apply resolved coordinates back
@@ -506,15 +507,15 @@ naptan_england = naptan[
 ].copy()
 logger.info(f"England active bus stops: {len(naptan_england):,}")
 
+# Drop stops with missing lat/lon
+stops_clean = naptan_england.dropna(subset=["Latitude", "Longitude"]).reset_index(drop=True)
+logger.info(f"Stops with coordinates: {len(stops_clean):,}")
+
 check(
     "bus-stops-england",
-    "PASS" if len(naptan_england) == 274719 else "WARN",
-    f"{len(naptan_england):,} England active bus stops (expected 274,719)",
+    "PASS" if len(stops_clean) == 274719 else "WARN",
+    f"England bus stops with coordinates: {len(stops_clean):,} (expected 274,719)",
 )
-
-# Drop stops with missing lat/lon
-stops_clean = naptan_england.dropna(subset=["Latitude", "Longitude"])
-logger.info(f"Stops with coordinates: {len(stops_clean):,}")
 
 # Build KDTree from stop coordinates
 # Use radians for great-circle distance approximation
@@ -628,6 +629,13 @@ sec_cols = [c for c in BASE_COLS if c in sec_england.columns]
 sec_out = sec_england[sec_cols].copy()
 sec_out.to_parquet(AUDIT / "schools_secondary_geocoded.parquet", index=False)
 logger.info(f"Saved schools_secondary_geocoded.parquet: {len(sec_out):,} rows")
+
+sec_dropped = secondary_count - len(sec_out)
+check(
+    "secondary-geocoded-vs-gt017",
+    "PASS" if sec_dropped == 0 else "WARN",
+    f"{len(sec_out):,} in output vs GT-017 pre-filter={secondary_count:,} — {sec_dropped} dropped by bounding box / missing coords",
+)
 
 check(
     "output-secondary",
