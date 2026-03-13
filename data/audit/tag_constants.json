@@ -1,0 +1,23 @@
+{
+  "source": "TAG Databook v2.03fc (Dec 2025)",
+  "file": "tag-data-book-v2-03fc-dec-2025.xlsm",
+  "version": "v2.03fc",
+  "published": "December 2025",
+  "prices_year": 2014,
+  "value_of_time_per_hour_gbp": {
+    "commuting_all_modes": 11.2074,
+    "leisure_other": 5.1154,
+    "business_working_avg": 18.2313,
+    "business_car_driver": 16.7378,
+    "business_bus_passenger": 9.4851
+  },
+  "carbon_per_tco2e_gbp": {
+    "central_appraisal": 206.44,
+    "note": "Table A3.4, 2020 prices"
+  },
+  "notes": [
+    "Commuting VoT is identical across all non-working modes in TAG (one rate for bus, car, rail etc.)",
+    "Business VoT varies by mode: car driver \u00a316.74, PSV passenger \u00a39.49, working avg \u00a318.23",
+    "Prices year is 2014 for VoT, 2020 for carbon appraisal values"
+  ]
+}
