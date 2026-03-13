@@ -75,6 +75,12 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | ST-014 | Sunday desert LSOAs (0 Sunday trips) | 6,745 (20.0%) | ✅ Confirmed | 04b_service_quality_depth.ipynb | Of 33,755 England LSOAs |
 | ST-015 | Mean service quality index (England) | 65.4/100 | ✅ Confirmed | 04b_service_quality_depth.ipynb | Composite: headway 40% + span 20% + frequency 20% + evening 10% + Sunday 10% |
 | ST-016 | IMD vs service quality Pearson r | +0.2184 (p<0.001) | ✅ Confirmed | 04b_service_quality_depth.ipynb | Positive = more deprived LSOAs have marginally higher SQI; urban concentration effect |
+| ST-017 | Gini coefficient (bus service, pop-weighted) | 0.5741 | ✅ Confirmed | 04c_equity_framework.ipynb | Trips per capita across 33,755 LSOAs; exceeds UK income Gini of ~0.36 |
+| ST-018 | Palma ratio (bus service) | 5.702 | ✅ Confirmed | 04c_equity_framework.ipynb | Top 10% receives 5.7× more service than bottom 40%; bottom 20% gets only 1.4% of all trips |
+| ST-019 | Concentration Index (bus trips vs IMD) | +0.1358 (PRO-RICH) | ✅ Confirmed | 04c_equity_framework.ipynb | Positive = service skewed toward more affluent LSOAs; key policy finding |
+| ST-020 | Dissimilarity Index (bus service) | 0.4212 | ✅ Confirmed | 04c_equity_framework.ipynb | 42.1% of trips would need to redistribute for population-proportional coverage |
+| ST-021 | Triple-deprived LSOAs | 612 (1.8%) | ✅ Confirmed | 04c_equity_framework.ipynb | High IMD + high no-car + high elderly simultaneously; mean SQI 6.3 pts below rest |
+| ST-022 | Quadruple-vulnerable LSOAs | 611 (1.8%) | ✅ Confirmed | 04c_equity_framework.ipynb | Triple-deprived + high disability |
 
 ---
 
@@ -172,4 +178,5 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | 03h_codepoint_postcodes.ipynb | GT-020 | See Category 1 |
 | 04a_route_geometry.ipynb | GT-027, ST-010, ST-011 | See Category 1 + 2 |
 | 04b_service_quality_depth.ipynb | ST-012, ST-013, ST-014, ST-015, ST-016 | See Category 2 |
+| 04c_equity_framework.ipynb | ST-017, ST-018, ST-019, ST-020, ST-021, ST-022 | See Category 2 |
 | *Series 04 analytical layers (remaining)* | TBD | Add here as notebooks complete |
