@@ -50,6 +50,7 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | GT-024 | GIAS secondary-equiv schools (England, geocoded) | 3,336 | ✅ Confirmed | 03d_schools_gias.ipynb | Secondary + All-through; geocoded England only; 87.6% within 400m of bus stop |
 | GT-025 | BRES England MSOAs (2023) | 6,791 | ✅ Confirmed | 03e_employment_bres.ipynb | 27,343,200 total employees; LSOA level suppressed by ONS |
 | GT-026 | LSOAs with employment proxy | 32,919 (97.5%) | ✅ Confirmed | 03e_employment_bres.ipynb | Population-weighted MSOA→LSOA proxy via ONS OA21/LSOA21/MSOA21 lookup; 836 LSOAs unmatched (Wales-only MSOAs in lookup) |
+| GT-027 | Routes with geometry (shapes.txt) | 7,241 (53.1%) | ✅ Confirmed | 04a_route_geometry.ipynb | Of 13,640 GTFS routes (pre-dedup); 46.9% lack shape_id in feed |
 
 ---
 
@@ -67,6 +68,8 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | ST-007 | Coverage prediction R² | TBD | ❌ Unverified | Old project reported ~0.089 but used wrong data (7,696 LSOAs, IMD 2019) | Re-run Random Forest in Layer 4 EDA on correct Aequitas data. Do not cite 0.089 until re-derived. |
 | ST-008 | Disability % (TS038, England mean) | 17.49% | ✅ Confirmed | 03a_disability_ts038.ipynb | Disabled under Equality Act / total population |
 | ST-009 | Disability % range (TS038) | 1.81%–44.68% | ✅ Confirmed | 03a_disability_ts038.ipynb | England LSOAs only |
+| ST-010 | Mean route length (km) | 23.0 km (median 18.7 km) | ✅ Confirmed | 04a_route_geometry.ipynb | Based on max shape variant per route; 7,241 routes with geometry |
+| ST-011 | Cross-LA routes | 5,143 (37.7%) | ✅ Confirmed | 04a_route_geometry.ipynb | Of 13,640 GTFS routes; route spans >1 Local Authority |
 
 ---
 
@@ -162,4 +165,5 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | 03f_tag_databook.ipynb | TAG-001 through TAG-005 | See Category 3 |
 | 03g_desnz_carbon.ipynb | CO2-001, CO2-002, CO2-003, NTS-001 | See Category 4 |
 | 03h_codepoint_postcodes.ipynb | GT-020 | See Category 1 |
-| *Series 04 analytical layers (pending)* | TBD | Add here as notebooks complete |
+| 04a_route_geometry.ipynb | GT-027, ST-010, ST-011 | See Category 1 + 2 |
+| *Series 04 analytical layers (remaining)* | TBD | Add here as notebooks complete |
