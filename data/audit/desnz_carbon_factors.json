@@ -101,6 +101,8 @@
   "modal_shift_car_to_bus": {
     "saving_per_pax_km": 0.00779,
     "unit": "kg CO2e / passenger-km",
+    "car_basis": "average_car_diesel_per_vehicle_km (0.17304) / 1.55 occupancy",
+    "bus_basis": "average_local_bus",
     "note": "Positive = CO2 saved by switching from car to bus"
   },
   "notes": [
