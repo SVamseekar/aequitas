@@ -1,0 +1,136 @@
+column,classification,rationale,dtype,null_count,null_pct,sample_values
+URN,USE,Unique Reference Number — primary key for each establishment,int64,0,0.0,100000 | 100001 | 100002
+LA (code),USE,Local Authority code — spatial/admin grouping,int64,0,0.0,201 | 202 | 203
+LA (name),USE,Local Authority name — human-readable grouping,str,0,0.0,City of London | Camden | Greenwich
+EstablishmentNumber,IGNORE,"OFSTED/DfE admin ref, duplicates URN for our purposes",float64,135,0.3,3614.0 | 6005.0 | 6006.0
+EstablishmentName,USE,School name — for display and matching,str,0,0.0,The Aldgate School | City of London School for Girls | St Paul's Cathedral School
+TypeOfEstablishment (code),USE,Establishment type code — filters academy/community/independent,int64,0,0.0,2 | 11 | 15
+TypeOfEstablishment (name),USE,Establishment type name — human-readable,str,0,0.0,Voluntary aided school | Other independent school | Local authority nursery school
+EstablishmentTypeGroup (code),IGNORE,Higher-level grouping of type; type (name) sufficient,int64,0,0.0,4 | 3 | 5
+EstablishmentTypeGroup (name),IGNORE,Higher-level grouping of type; type (name) sufficient,str,0,0.0,Local authority maintained schools | Independent schools | Special schools
+EstablishmentStatus (code),USE,Status code: 1=Open (primary filter),int64,0,0.0,1 | 2 | 3
+EstablishmentStatus (name),USE,Status name: Open/Closed/etc.,str,0,0.0,"Open | Closed | Open, but proposed to close"
+ReasonEstablishmentOpened (code),IGNORE,Admin reason; not relevant for accessibility analysis,int64,0,0.0,0 | 1 | 2
+ReasonEstablishmentOpened (name),IGNORE,Admin reason; not relevant for accessibility analysis,str,811,1.6,Not applicable | Result of Amalgamation | Result of Closure
+OpenDate,IGNORE,Historical admin date; not needed for current analysis,str,30118,57.6,01-01-1920 | 01-01-1939 | 01-01-1919
+ReasonEstablishmentClosed (code),IGNORE,Only relevant for closed schools,int64,0,0.0,0 | 1 | 2
+ReasonEstablishmentClosed (name),IGNORE,Only relevant for closed schools,str,13981,26.7,Not applicable | Result of Amalgamation/Merger | Closure
+CloseDate,IGNORE,Only relevant for closed schools,str,27552,52.7,31-08-1992 | 31-08-2021 | 31-08-2000
+PhaseOfEducation (code),IGNORE,Code version; name column used instead,int64,0,0.0,2 | 0 | 1
+PhaseOfEducation (name),USE,Phase: Secondary/Primary/All-through — key for filtering,str,0,0.0,Primary | Not applicable | Nursery
+StatutoryLowAge,REVIEW,Age range may help identify true secondary (11+) vs middle schools,float64,3987,7.6,3.0 | 10.0 | 4.0
+StatutoryHighAge,REVIEW,Age range may help identify secondary (16+) vs other phases,float64,3984,7.6,11.0 | 18.0 | 13.0
+Boarders (code),IGNORE,Boarding status not relevant for daily accessibility analysis,int64,0,0.0,1 | 3 | 0
+Boarders (name),IGNORE,Boarding status not relevant for daily accessibility analysis,str,1628,3.1,No boarders | Boarding school | Not applicable
+NurseryProvision (name),IGNORE,Nursery provision; not target phase,str,37,0.1,Has Nursery Classes | No Nursery Classes | Not applicable
+OfficialSixthForm (code),REVIEW,Sixth form presence relevant for 16+ accessibility,int64,0,0.0,2 | 1 | 0
+OfficialSixthForm (name),REVIEW,Sixth form presence relevant for 16+ accessibility,str,9,0.0,Does not have a sixth form | Has a sixth form | Not applicable
+Gender (code),IGNORE,Gender of intake; not a spatial accessibility factor,int64,0,0.0,3 | 2 | 1
+Gender (name),IGNORE,Gender of intake; not a spatial accessibility factor,str,1449,2.8,Mixed | Girls | Boys
+ReligiousCharacter (code),IGNORE,Religious denomination; not spatial,int64,0,0.0,2 | 6 | 0
+ReligiousCharacter (name),IGNORE,Religious denomination; not spatial,str,12817,24.5,Church of England | Does not apply | Roman Catholic
+ReligiousEthos (name),IGNORE,Ethos detail; subset of religious character,str,9765,18.7,Does not apply | Inter- / non- denominational | Christian
+Diocese (code),IGNORE,Diocese admin; not relevant,str,0,0.0,CE23 | 0000 | RC01
+Diocese (name),IGNORE,Diocese admin; not relevant,str,1407,2.7,Diocese of London | Not applicable | Archdiocese of Westminster
+AdmissionsPolicy (code),IGNORE,Admissions policy; not spatial accessibility,int64,0,0.0,0 | 2 | 4
+AdmissionsPolicy (name),IGNORE,Admissions policy; not spatial accessibility,str,5604,10.7,Not applicable | Selective | Non-selective
+SchoolCapacity,USE,Total capacity — needed for demand vs supply gap analysis,float64,12402,23.7,245.0 | 860.0 | 285.0
+SpecialClasses (code),IGNORE,Special classes; not primary focus,int64,0,0.0,2 | 0 | 1
+SpecialClasses (name),IGNORE,Special classes; not primary focus,str,142,0.3,No Special Classes | Not applicable | Has Special Classes
+CensusDate,IGNORE,Date of last census; admin field,str,21817,41.7,16-01-2025 | 18-01-2024 | 21-01-2021
+NumberOfPupils,USE,Current roll — actual demand figure for catchment analysis,float64,21809,41.7,249.0 | 780.0 | 285.0
+NumberOfBoys,IGNORE,Gender breakdown not needed at this level,float64,21830,41.8,137.0 | 0.0 | 169.0
+NumberOfGirls,IGNORE,Gender breakdown not needed at this level,float64,21835,41.8,112.0 | 780.0 | 116.0
+PercentageFSM,USE,% Free School Meals — deprivation proxy; correlates with IMD,float64,24547,47.0,23.3 | 43.8 | 77.4
+TrustSchoolFlag (code),IGNORE,Trust membership; admin not spatial,int64,0,0.0,0 | 2 | 1
+TrustSchoolFlag (name),IGNORE,Trust membership; admin not spatial,str,0,0.0,Not applicable | Not supported by a trust | Supported by a trust
+Trusts (code),IGNORE,Trust identifier; admin,float64,39887,76.3,1247.0 | 1520.0 | 1114.0
+Trusts (name),IGNORE,Trust name; admin,str,39887,76.3,Eltham Green School Trust | *Co-op Brent Knoll and Watergate Co-operative Trust | The Academies Enterprise Trust
+SchoolSponsorFlag (name),IGNORE,Sponsor flag; admin,str,0,0.0,Not applicable | - | Linked to a sponsor
+SchoolSponsors (name),IGNORE,Sponsor name; admin,str,43113,82.5,Tove Learning Trust | Endeavour Academies Trust | Dixons Academies Trust
+FederationFlag (name),IGNORE,Federation flag; admin,str,0,0.0,Not under a federation | Not applicable | Supported by a federation
+Federations (code),IGNORE,Federation code; admin,str,51130,97.8,17794 | 17835 | 17669
+Federations (name),IGNORE,Federation name; admin,str,51130,97.8,The Brecknock and Torriano Schools Federation | Go Shine Church of England Federation | H3 Federation
+UKPRN,IGNORE,UKPRN provider code; not needed for spatial analysis,float64,18751,35.9,10079319.0 | 10013279.0 | 10018890.0
+FEHEIdentifier,IGNORE,Further/Higher Ed identifier; not relevant,float64,51741,99.0,108356.0 | 108346.0 | 108351.0
+FurtherEducationType (name),IGNORE,FE type; not relevant for school accessibility,str,5965,11.4,Not applicable | Specialist Designated College | General Further Education College
+LastChangedDate,IGNORE,Admin timestamp; not analytical,str,0,0.0,14-01-2026 | 13-02-2026 | 10-02-2026
+Street,USE,Address component — useful for geocoding fallback,str,1198,2.3,St James's Passage | St Giles' Terrace | 2 New Change
+Locality,IGNORE,Sub-locality; Postcode sufficient for geocoding,str,23846,45.6,Duke's Place | Barbican | Athlone Street
+Address3,IGNORE,Additional address line; rarely populated,str,47877,91.6,Hampstead | London | Kentish Town
+Town,USE,Town — useful for geographic display and validation,str,2000,3.8,London | High Wycombe | Greenwich
+County (name),IGNORE,County; LA is more precise for our analysis,str,12036,23.0,Buckinghamshire | West Sussex | Kent
+Postcode,USE,Postcode — needed for geocoding schools missing Easting/Northing,str,1487,2.8,EC3A 5DE | EC2Y 8BB | EC4M 9AD
+SchoolWebsite,IGNORE,Website; not analytical,str,27408,52.4,www.thealdgateschool.org | http://www.clsg.org.uk | http://www.spcslondon.com
+TelephoneNum,IGNORE,Telephone; not analytical,float64,25050,47.9,2072831147.0 | 2078475500.0 | 2072485156.0
+HeadTitle (name),IGNORE,Head teacher details; not analytical,str,9027,17.3,Miss | Mrs | Mr
+HeadFirstName,IGNORE,Head teacher details; not analytical,str,7666,14.7,Alexandra | Jenny | Judith
+HeadLastName,IGNORE,Head teacher details; not analytical,str,7608,14.6,Allan | Brown | Fremont-Barnes
+HeadPreferredJobTitle,IGNORE,Head teacher details; not analytical,str,6537,12.5,Headteacher | Head | Head Teacher
+BSOInspectorateName (name),IGNORE,Inspection body; not spatial,str,0,0.0,Not applicable | Education Development Trust | Independent Schools Inspectorate
+InspectorateReport,IGNORE,Inspection report URL; not analytical,str,51956,99.4,https://edtlive.b-cdn.net/livenew/media/p2rfadrr/dubai-british-school-emirates-hills-bso-report-oct-24_final.pdf | www.isi.net/school/british-embassy-school-ankara-7505?results=true | https://www.isi.net/school/st-george-s-international-school--luxembourg-7444
+DateOfLastInspectionVisit,IGNORE,Inspection date; not analytical,str,51954,99.4,17-10-2024 | 10-12-2025 | 11-03-2025
+NextInspectionVisit,IGNORE,Future inspection; not analytical,float64,52278,100.0,
+TeenMoth (name),IGNORE,Teen mothers provision; niche — not primary focus,str,9,0.0,Not applicable | Does not provide places for Teen Mothers | Provides places for Teen Mothers
+TeenMothPlaces,IGNORE,Teen mothers places; niche,float64,52181,99.8,12.0 | 20.0 | 45.0
+CCF (name),IGNORE,Combined Cadet Force; admin,str,6430,12.3,Not applicable | Does not have child care facilities | Has child care facilities
+SENPRU (name),IGNORE,SEN provision unit flag; niche,str,11,0.0,Not applicable | PRU Does have Provision for SEN | PRU Does not have Provision for SEN
+EBD (name),IGNORE,Emotional/behavioural difficulties flag; niche,str,7,0.0,Not applicable | PRU Does have EBD provision | PRU Does not have EBD provision
+PlacesPRU,IGNORE,PRU places; niche,float64,51674,98.8,65.0 | 134.0 | 36.0
+FTProv (name),IGNORE,Full-time provision; admin,str,49326,94.4,PRU offers full time provision | Not applicable | Does not offer full time provision
+EdByOther (name),IGNORE,Education by other provider; admin,str,6441,12.3,Not applicable | Does not offer tuition by another provider | PRU does offer tuition by another provider
+Section41Approved (name),IGNORE,Section 41 approval; admin/legal,str,0,0.0,Not applicable | Not approved | Approved
+SEN1 (name),IGNORE,SEN need type 1; too granular for spatial analysis,str,46132,88.2,"SEMH - Social, Emotional and Mental Health | ASD - Autistic Spectrum Disorder | SLCN - Speech, language and Communication"
+SEN2 (name),IGNORE,SEN need type 2; too granular for spatial analysis,str,50035,95.7,"PD - Physical Disability | VI - Visual Impairment | SLCN - Speech, language and Communication"
+SEN3 (name),IGNORE,SEN need type 3; too granular for spatial analysis,str,51000,97.6,"OTH - Other Difficulty/Disability | SLD - Severe Learning Difficulty | SEMH - Social, Emotional and Mental Health"
+SEN4 (name),IGNORE,SEN need type 4; too granular for spatial analysis,str,51385,98.3,HI - Hearing Impairment | PMLD - Profound and Multiple Learning Difficulty | MLD - Moderate Learning Difficulty
+SEN5 (name),IGNORE,SEN need type 5; too granular for spatial analysis,str,51622,98.7,"SLCN - Speech, language and Communication | SEMH - Social, Emotional and Mental Health | ASD - Autistic Spectrum Disorder"
+SEN6 (name),IGNORE,SEN need type 6; too granular for spatial analysis,str,51709,98.9,ASD - Autistic Spectrum Disorder | MSI - Multi-Sensory Impairment | PD - Physical Disability
+SEN7 (name),IGNORE,SEN need type 7; too granular for spatial analysis,str,51780,99.0,"SEMH - Social, Emotional and Mental Health | MSI - Multi-Sensory Impairment | SLD - Severe Learning Difficulty"
+SEN8 (name),IGNORE,SEN need type 8; too granular for spatial analysis,str,51851,99.2,PD - Physical Disability | PMLD - Profound and Multiple Learning Difficulty | MSI - Multi-Sensory Impairment
+SEN9 (name),IGNORE,SEN need type 9; too granular for spatial analysis,str,51936,99.3,MLD - Moderate Learning Difficulty | SLD - Severe Learning Difficulty | PD - Physical Disability
+SEN10 (name),IGNORE,SEN need type 10; too granular for spatial analysis,str,52045,99.6,SLD - Severe Learning Difficulty | PMLD - Profound and Multiple Learning Difficulty | MLD - Moderate Learning Difficulty
+SEN11 (name),IGNORE,SEN need type 11; too granular for spatial analysis,str,52124,99.7,PMLD - Profound and Multiple Learning Difficulty | SLD - Severe Learning Difficulty
+SEN12 (name),IGNORE,SEN need type 12; too granular for spatial analysis,str,52177,99.8,PMLD - Profound and Multiple Learning Difficulty
+SEN13 (name),IGNORE,SEN need type 13; too granular for spatial analysis,float64,52278,100.0,
+TypeOfResourcedProvision (name),IGNORE,Specialist provision type; not primary focus,str,44232,84.6,SEN unit | Not applicable | Resourced provision
+ResourcedProvisionOnRoll,IGNORE,Specialist provision roll; not primary focus,float64,50015,95.7,30.0 | 14.0 | 11.0
+ResourcedProvisionCapacity,IGNORE,Specialist provision capacity; not primary focus,float64,49987,95.6,30.0 | 14.0 | 21.0
+SenUnitOnRoll,IGNORE,SEN unit roll; not primary focus,float64,51165,97.9,20.0 | 43.0 | 10.0
+SenUnitCapacity,IGNORE,SEN unit capacity; not primary focus,float64,51148,97.8,20.0 | 120.0 | 12.0
+GOR (code),USE,Government Office Region code — regional grouping,str,0,0.0,H | J | D
+GOR (name),USE,Government Office Region name — regional grouping,str,0,0.0,London | South East | Yorkshire and the Humber
+DistrictAdministrative (code),IGNORE,District code; LA is sufficient,str,0,0.0,E09000001 | E09000007 | E07000007
+DistrictAdministrative (name),IGNORE,District name; LA is sufficient,str,1490,2.9,City of London | Camden | Wycombe
+AdministrativeWard (code),IGNORE,Ward code; too granular for school-level analysis,str,0,0.0,E05009308 | E05009302 | E05009293
+AdministrativeWard (name),IGNORE,Ward name; too granular for school-level analysis,str,1489,2.8,Portsoken | Cripplegate | Bread Street
+ParliamentaryConstituency (code),IGNORE,Constituency; not needed for bus analysis,str,0,0.0,E14001172 | E14000750 | E14001290
+ParliamentaryConstituency (name),IGNORE,Constituency; not needed for bus analysis,str,1489,2.8,Cities of London and Westminster | Holborn and St Pancras | Hampstead and Highgate
+UrbanRural (code),USE,Urban/rural classification code — structural modifier,str,0,0.0,UN1 | A1 | C1
+UrbanRural (name),USE,Urban/rural classification name — structural modifier,str,1490,2.9,Urban: Nearer to a major town or city | (England/Wales) Urban major conurbation | (England/Wales) Urban city and town
+GSSLACode (name),IGNORE,GSS LA code; LA (code) already used,str,0,0.0,E09000001 | E09000007 | E09000011
+Easting,USE,BNG Easting — primary geocoding input (OSGB36),float64,1744,3.3,533498.0 | 532301.0 | 532160.0
+Northing,USE,BNG Northing — primary geocoding input (OSGB36),float64,1744,3.3,181201.0 | 181746.0 | 181151.0
+MSOA (name),IGNORE,MSOA name; code is sufficient,str,1489,2.8,City of London 001 | Camden 007 | Camden 029
+LSOA (name),IGNORE,LSOA name; code is sufficient,str,1492,2.9,City of London 001F | City of London 001B | Camden 007D
+InspectorateName (name),IGNORE,Inspection body name; not spatial,str,46322,88.6,ISI | Ofsted | Bridge Schools' Inspectorate
+SENStat,IGNORE,SEN statement count; admin,float64,48342,92.5,0.0 | 1.0 | 4.0
+SENNoStat,IGNORE,SEN without statement; admin,float64,48640,93.0,99.0 | 29.0 | 161.0
+BoardingEstablishment (name),IGNORE,Boarding school flag; not spatial,str,49651,95.0,Does not have boarders | Has boarders | Not applicable
+PropsName,IGNORE,Proprietor name (independent schools); admin,str,48235,92.3,Corporation of London | Chapter of the Cathedral Church of St Pauls | City of London Corporation(Board of Governors of City of London School
+PreviousLA (code),IGNORE,Previous LA code; historical admin,int64,0,0.0,999 | 205 | 318
+PreviousLA (name),IGNORE,Previous LA name; historical admin,str,35177,67.3,Hammersmith and Fulham | Richmond upon Thames | Westminster
+PreviousEstablishmentNumber,IGNORE,Previous OFSTED number; historical admin,float64,43963,84.1,6002.0 | 6080.0 | 6391.0
+Country (name),USE,Country — needed to filter England-only,str,48531,92.8,United Kingdom | Gibraltar | Spain
+UPRN,IGNORE,Unique Property Reference Number; alternative ID not needed,float64,12752,24.4,200000071925.0 | 200000074660.0 | 200000072075.0
+SiteName,IGNORE,Site name for multi-site establishments; admin,str,52275,100.0,"motorvations@hopewell | Old Kingdom Hall | Clubhouse Unit, behind Bentinck Welfare"
+QABName (code),IGNORE,Quality assurance body code; admin,int64,0,0.0,0 | 1
+QABName (name),IGNORE,Quality assurance body name; admin,str,0,0.0,Not applicable | Ofsted
+EstablishmentAccredited (code),IGNORE,Accreditation code; admin,int64,0,0.0,0 | 1
+EstablishmentAccredited (name),IGNORE,Accreditation name; admin,str,0,0.0,Not applicable | Yes
+QABReport,IGNORE,QAB report URL; not analytical,str,52276,100.0,Ofsted
+CHNumber,IGNORE,Companies House number (academies); admin,float64,52271,100.0,12332015.0 | 12612936.0 | 4236028.0
+MSOA (code),USE,MSOA code — for employment/Census cross-reference,str,0,0.0,E02000001 | E02000172 | E02007115
+LSOA (code),USE,LSOA code — for IMD cross-reference,str,0,0.0,E01032739 | E01000002 | E01000901
+FSM,IGNORE,Free School Meals count (PercentageFSM used instead),float64,24546,47.0,58.0 | 28.0 | 24.0
+AccreditationExpiryDate,IGNORE,Accreditation expiry; admin,str,52266,100.0,26-10-2026 | 14-12-2026 | 14-03-2027
