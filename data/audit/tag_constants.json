@@ -3,21 +3,244 @@
   "file": "tag-data-book-v2-03fc-dec-2025.xlsm",
   "version": "v2.03fc",
   "published": "December 2025",
-  "prices_year": 2014,
-  "value_of_time_per_hour_gbp": {
-    "commuting_all_modes": 11.2074,
-    "leisure_other": 5.1154,
-    "business_working_avg": 18.2313,
-    "business_car_driver": 16.7378,
-    "business_bus_passenger": 9.4851
+  "extracted_by": "03f_tag_databook.ipynb",
+  "value_of_time": {
+    "source_vot_2014_prices": {
+      "price_year": 2014,
+      "commuting_all_modes_per_hr": 11.2074,
+      "leisure_other_per_hr": 5.1154,
+      "business_working_avg_per_hr": 18.2313,
+      "business_car_driver_per_hr": 16.7378,
+      "business_bus_passenger_per_hr": 9.4851,
+      "cell_refs": {
+        "commuting": "Source VoT!D46",
+        "leisure": "Source VoT!D47",
+        "business_avg": "Source VoT!D41",
+        "business_car": "Source VoT!D27",
+        "business_bus": "Source VoT!D33"
+      }
+    },
+    "a131_published_2023_prices": {
+      "price_year": 2023,
+      "value_year": 2023,
+      "indirect_tax_correction": 1.19,
+      "working_factor_cost": {
+        "Car driver": 23.12,
+        "Car passenger": 23.12,
+        "LGV Freight": 22.83,
+        "LGV Services": 20.92,
+        "OGV": 87.0,
+        "PSV driver": 18.97,
+        "PSV passenger": 13.1,
+        "Taxi driver": 15.98,
+        "Rail passenger": 38.13,
+        "Working avg (pax)": 25.18
+      },
+      "commuting_factor_cost_per_hr": 13.01,
+      "commuting_market_price_per_hr": 15.48,
+      "leisure_factor_cost_per_hr": 5.94,
+      "leisure_market_price_per_hr": 7.06
+    }
   },
-  "carbon_per_tco2e_gbp": {
-    "central_appraisal": 206.44,
-    "note": "Table A3.4, 2020 prices"
+  "carbon_appraisal": {
+    "price_year": 2020,
+    "unit": "\u00a3/tCO2e",
+    "source_tab": "GHG (Table A3.4)",
+    "central_2010": 206.44,
+    "central_2025": 259.87,
+    "central_2030": 280.27,
+    "series": {
+      "2010": {
+        "low": 103.22,
+        "central": 206.44,
+        "high": 309.67
+      },
+      "2011": {
+        "low": 104.79,
+        "central": 209.59,
+        "high": 314.38
+      },
+      "2012": {
+        "low": 106.39,
+        "central": 212.78,
+        "high": 319.17
+      },
+      "2013": {
+        "low": 108.01,
+        "central": 216.02,
+        "high": 324.03
+      },
+      "2014": {
+        "low": 109.65,
+        "central": 219.31,
+        "high": 328.96
+      },
+      "2015": {
+        "low": 111.32,
+        "central": 222.65,
+        "high": 333.97
+      },
+      "2016": {
+        "low": 113.02,
+        "central": 226.04,
+        "high": 339.06
+      },
+      "2017": {
+        "low": 114.74,
+        "central": 229.48,
+        "high": 344.22
+      },
+      "2018": {
+        "low": 116.49,
+        "central": 232.98,
+        "high": 349.47
+      },
+      "2019": {
+        "low": 118.26,
+        "central": 236.52,
+        "high": 354.79
+      },
+      "2020": {
+        "low": 120.06,
+        "central": 240.13,
+        "high": 360.19
+      },
+      "2021": {
+        "low": 122.31,
+        "central": 244.63,
+        "high": 366.94
+      },
+      "2022": {
+        "low": 124.18,
+        "central": 248.35,
+        "high": 372.53
+      },
+      "2023": {
+        "low": 126.07,
+        "central": 252.14,
+        "high": 378.2
+      },
+      "2024": {
+        "low": 127.99,
+        "central": 255.97,
+        "high": 383.96
+      },
+      "2025": {
+        "low": 129.94,
+        "central": 259.87,
+        "high": 389.81
+      },
+      "2026": {
+        "low": 131.92,
+        "central": 263.83,
+        "high": 395.75
+      },
+      "2027": {
+        "low": 133.92,
+        "central": 267.85,
+        "high": 401.77
+      },
+      "2028": {
+        "low": 135.96,
+        "central": 271.93,
+        "high": 407.89
+      },
+      "2029": {
+        "low": 138.03,
+        "central": 276.07,
+        "high": 414.1
+      },
+      "2030": {
+        "low": 140.14,
+        "central": 280.27,
+        "high": 420.41
+      },
+      "2031": {
+        "low": 142.27,
+        "central": 284.54,
+        "high": 426.81
+      }
+    }
   },
+  "fuel_electricity_prices": {
+    "price_year": 2023,
+    "source_tab": "A1.3.7",
+    "unit_fuel": "p/litre",
+    "unit_electricity": "p/kWh",
+    "by_year": {
+      "2023": {
+        "petrol_resource_p_litre": 73.93,
+        "diesel_resource_p_litre": 75.31,
+        "electricity_road_p_kwh": 36.21,
+        "electricity_rail_p_kwh": 19.13,
+        "petrol_duty_p_litre": 53.75,
+        "diesel_duty_p_litre": 53.75
+      },
+      "2024": {
+        "petrol_resource_p_litre": 67.12,
+        "diesel_resource_p_litre": 68.31,
+        "electricity_road_p_kwh": 33.61,
+        "electricity_rail_p_kwh": 19.34,
+        "petrol_duty_p_litre": 52.62,
+        "diesel_duty_p_litre": 52.62
+      },
+      "2025": {
+        "petrol_resource_p_litre": 62.73,
+        "diesel_resource_p_litre": 63.79,
+        "electricity_road_p_kwh": 30.86,
+        "electricity_rail_p_kwh": 18.31,
+        "petrol_duty_p_litre": 52.71,
+        "diesel_duty_p_litre": 52.71
+      },
+      "2026": {
+        "petrol_resource_p_litre": 63.16,
+        "diesel_resource_p_litre": 64.17,
+        "electricity_road_p_kwh": 29.54,
+        "electricity_rail_p_kwh": 17.14,
+        "petrol_duty_p_litre": 52.4,
+        "diesel_duty_p_litre": 52.4
+      },
+      "2030": {
+        "petrol_resource_p_litre": 59.26,
+        "diesel_resource_p_litre": 60.21,
+        "electricity_road_p_kwh": 24.59,
+        "electricity_rail_p_kwh": 13.02,
+        "petrol_duty_p_litre": 57.22,
+        "diesel_duty_p_litre": 57.22
+      },
+      "2035": {
+        "petrol_resource_p_litre": 59.26,
+        "diesel_resource_p_litre": 60.21,
+        "electricity_road_p_kwh": 22.46,
+        "electricity_rail_p_kwh": 12.35,
+        "petrol_duty_p_litre": 57.48,
+        "diesel_duty_p_litre": 57.48
+      },
+      "2040": {
+        "petrol_resource_p_litre": 59.26,
+        "diesel_resource_p_litre": 60.21,
+        "electricity_road_p_kwh": 21.59,
+        "electricity_rail_p_kwh": 11.92,
+        "petrol_duty_p_litre": 57.74,
+        "diesel_duty_p_litre": 57.74
+      },
+      "2050": {
+        "petrol_resource_p_litre": 59.26,
+        "diesel_resource_p_litre": 60.21,
+        "electricity_road_p_kwh": 20.72,
+        "electricity_rail_p_kwh": 12.22,
+        "petrol_duty_p_litre": 58.26,
+        "diesel_duty_p_litre": 58.26
+      }
+    }
+  },
+  "social_discount_rate": 0.035,
+  "social_discount_rate_source": "HM Treasury Green Book 2026 (unchanged)",
   "notes": [
-    "Commuting VoT is identical across all non-working modes in TAG (one rate for bus, car, rail etc.)",
-    "Business VoT varies by mode: car driver \u00a316.74, PSV passenger \u00a39.49, working avg \u00a318.23",
-    "Prices year is 2014 for VoT, 2020 for carbon appraisal values"
+    "Source VoT gives 2014 prices (VTTS Phase 2 study year). A1.3.1 gives 2023 prices (current TAG price year).",
+    "Commuting VoT is identical across all non-working modes in TAG (one rate for bus, car, rail etc.).",
+    "Business VoT varies by mode: car driver \u00a316.74, PSV passenger \u00a39.49, working avg \u00a318.23 (2014 prices).",
+    "Carbon appraisal values are in 2020 prices. Use for monetising carbon in BCR. Use DESNZ for emission factors.",
+    "A1.3.7 fuel prices are forecasts in 2023 prices, used for vehicle operating cost calculations."
   ]
 }
