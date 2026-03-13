@@ -18,8 +18,12 @@ elif [[ -d "src/aequitas/intelligence" ]]; then
     echo "Phase: Intelligence layer in progress"
 elif [[ -d "src/aequitas/processing" ]]; then
     echo "Phase: Data pipeline in progress"
+elif [[ -f "data/audit/master_lsoa_table.parquet" ]]; then
+    NB03=$(ls notebooks/03*.ipynb 2>/dev/null | wc -l | tr -d ' ')
+    NB04=$(ls notebooks/04*.ipynb 2>/dev/null | wc -l | tr -d ' ')
+    echo "Phase: 0 IN PROGRESS — Series 03: ${NB03}/8 notebooks exist (03a/03b/03c/03h=full; 03d/03e/03f/03g=need rebuild to plan standard). Series 04: ${NB04}/6 not started. Use subagent-driven-development with plan at docs/superpowers/plans/2026-03-12-phase0-complete-eda.md. Next task: rebuild 03d (GIAS schools)."
 elif [[ -f "notebooks/01_data_audit.ipynb" ]]; then
-    echo "Phase: Data audit notebook exists"
+    echo "Phase: 0 — Data audit in progress"
 else
     echo "Phase: 0 — Data audit not started"
 fi
