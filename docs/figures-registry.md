@@ -65,7 +65,7 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | ST-004 | Archetype: Deprived Young Diverse Car-Free Urban | 6,023 LSOAs (17.8%) | ✅ Confirmed | 02e_multivariate_clustering.ipynb | |
 | ST-005 | Archetype: Elderly Rural | 4,588 LSOAs (13.6%) | ✅ Confirmed | 02e_multivariate_clustering.ipynb | |
 | ST-006 | Archetype: Deprived Car-Free Urban | 6,200 LSOAs (18.4%) | ✅ Confirmed | 02e_multivariate_clustering.ipynb | |
-| ST-007 | Coverage prediction R² | TBD | ❌ Unverified | Old project reported ~0.089 but used wrong data (7,696 LSOAs, IMD 2019) | Re-run Random Forest in Layer 4 EDA on correct Aequitas data. Do not cite 0.089 until re-derived. |
+| ST-007 | Coverage prediction R² (RF, log1p target) | 0.4719 (test); CV 0.2719±0.1698 | ✅ Confirmed | 04d_ml_suite.ipynb | 33,755 LSOAs, 9 socio-economic features + urban_enc. log1p transform applied due to extreme outliers. ~53–72% of variance is policy-driven, not demographics. Old 0.089 figure was wrong data (7,696 LSOAs, IMD 2019) — superseded. |
 | ST-008 | Disability % (TS038, England mean) | 17.49% | ✅ Confirmed | 03a_disability_ts038.ipynb | Disabled under Equality Act / total population |
 | ST-009 | Disability % range (TS038) | 1.81%–44.68% | ✅ Confirmed | 03a_disability_ts038.ipynb | England LSOAs only |
 | ST-010 | Mean route length (km) | 23.0 km (median 18.7 km) | ✅ Confirmed | 04a_route_geometry.ipynb | Based on max shape variant per route; 7,241 routes with geometry |
@@ -81,6 +81,10 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | ST-020 | Dissimilarity Index (bus service) | 0.4212 | ✅ Confirmed | 04c_equity_framework.ipynb | 42.1% of trips would need to redistribute for population-proportional coverage |
 | ST-021 | Triple-deprived LSOAs | 612 (1.8%) | ✅ Confirmed | 04c_equity_framework.ipynb | High IMD + high no-car + high elderly simultaneously; mean SQI 6.3 pts below rest |
 | ST-022 | Quadruple-vulnerable LSOAs | 611 (1.8%) | ✅ Confirmed | 04c_equity_framework.ipynb | Triple-deprived + high disability |
+| ST-023 | HDBSCAN LSOA clusters | 2 clusters, 87.7% noise | ✅ Confirmed | 04d_ml_suite.ipynb | min_cluster_size=100; high noise reflects genuine heterogeneity — GMM used for practical soft membership |
+| ST-024 | Top SHAP feature (coverage prediction) | nocar_pct | ✅ Confirmed | 04d_ml_suite.ipynb | Car-free household % is strongest demographic predictor of bus service level |
+| ST-025 | Isolation Forest anomalies | 1,688 (5.0%) | ✅ Confirmed | 04d_ml_suite.ipynb | contamination=0.05; confirmed by both IF and LOF |
+| ST-026 | 2SFCA zero-access LSOAs | 6,776 (20.1%) | ✅ Confirmed | 04d_ml_suite.ipynb | Higher than GT-007 (4,245) because stops with no BODS trips also score zero in 2SFCA |
 
 ---
 
@@ -179,4 +183,5 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | 04a_route_geometry.ipynb | GT-027, ST-010, ST-011 | See Category 1 + 2 |
 | 04b_service_quality_depth.ipynb | ST-012, ST-013, ST-014, ST-015, ST-016 | See Category 2 |
 | 04c_equity_framework.ipynb | ST-017, ST-018, ST-019, ST-020, ST-021, ST-022 | See Category 2 |
+| 04d_ml_suite.ipynb | ST-007 (updated), ST-023, ST-024, ST-025, ST-026 | See Category 2 |
 | *Series 04 analytical layers (remaining)* | TBD | Add here as notebooks complete |
