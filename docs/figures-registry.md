@@ -97,6 +97,7 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | CO2-001 | Bus CO2 emissions (average local) | 0.10385 kg CO2e/pax-km | ✅ Confirmed | DESNZ GHG Conversion Factors 2025, Business travel- land sheet | Extracted 2026-03-13 via 03g_desnz_carbon.ipynb. London bus = 0.06875, coach = 0.02776 |
 | CO2-002 | Car CO2 emissions (average) | 0.17304 kg CO2e/km | ✅ Confirmed | DESNZ GHG Conversion Factors 2025, Business travel- land sheet | Extracted 2026-03-13. Per vehicle-km. Per pax-km = 0.11164 (÷1.55 occupancy) |
 | CO2-003 | National rail CO2 emissions (average) | 0.03546 kg CO2e/pax-km | ✅ Confirmed | DESNZ GHG Conversion Factors 2025 | Extracted 2026-03-13 via 03g_desnz_carbon.ipynb |
+| NTS-001 | Average car occupancy (all trips) | 1.55 persons | ✅ Confirmed | 03g_desnz_carbon.ipynb | DfT NTS 2023, Table NTS0905; used in CO2-002 per-pax-km derivation |
 
 ---
 
@@ -159,6 +160,6 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | 03d_schools_gias.ipynb | GT-023, GT-024 | See Category 1 |
 | 03e_employment_bres.ipynb | GT-025, GT-026 | See Category 1 |
 | 03f_tag_databook.ipynb | TAG-001 through TAG-005 | See Category 3 |
-| 03g_desnz_carbon.ipynb | CO2-001, CO2-002, CO2-003 | See Category 4 |
+| 03g_desnz_carbon.ipynb | CO2-001, CO2-002, CO2-003, NTS-001 | See Category 4 |
 | 03h_codepoint_postcodes.ipynb | GT-020 | See Category 1 |
 | *Series 04 analytical layers (pending)* | TBD | Add here as notebooks complete |
