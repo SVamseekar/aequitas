@@ -3,7 +3,7 @@
 Single source of truth for every specific number, rate, cost, correlation, and statistical claim in the project.
 
 **Rule:** No figure enters any notebook, pipeline, narrative, or document without a registry entry.
-**Last updated:** 2026-03-12
+**Last updated:** 2026-03-13
 
 ---
 
@@ -48,8 +48,8 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | GT-017 | GIAS secondary + all-through schools (England, geocoded) | 3,336 | ✅ Confirmed | 03d_schools_gias.ipynb | Secondary (3,173) + All-through (163) open; pre-England-filter total=3,339; 3 dropped by England bounding box / missing coords; postcode geocoding applied |
 | GT-023 | GIAS open schools (England, geocoded) | 26,544 | ✅ Confirmed | 03d_schools_gias.ipynb | Open only, out-of-bounds schools filtered; 97.5% coord coverage; postcode geocoding applied |
 | GT-024 | GIAS secondary-equiv schools (England, geocoded) | 3,336 | ✅ Confirmed | 03d_schools_gias.ipynb | Secondary + All-through; geocoded England only; 87.6% within 400m of bus stop |
-| GT-025 | BRES England MSOAs (2023) | 6,791 | ✅ Confirmed | 03e_employment_bres.ipynb | 27.3M total employees; LSOA level suppressed by ONS |
-| GT-026 | LSOAs with employment proxy | 31,217 (92.5%) | ✅ Confirmed | 03e_employment_bres.ipynb | Derived from LA-level BRES aggregation; 2,538 LSOAs unmatched (small LAs) |
+| GT-025 | BRES England MSOAs (2023) | 6,791 | ✅ Confirmed | 03e_employment_bres.ipynb | 27,343,200 total employees; LSOA level suppressed by ONS |
+| GT-026 | LSOAs with employment proxy | 32,919 (97.5%) | ✅ Confirmed | 03e_employment_bres.ipynb | Population-weighted MSOA→LSOA proxy via ONS OA21/LSOA21/MSOA21 lookup; 836 LSOAs unmatched (Wales-only MSOAs in lookup) |
 
 ---
 
