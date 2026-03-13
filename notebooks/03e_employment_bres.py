@@ -14,9 +14,10 @@
 # **Validation standard:** PASS / WARN / FAIL consistent with 01_data_audit.
 
 # %%
-import time
-import urllib.request
 import json
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -24,12 +25,17 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from loguru import logger
 
 # %%
 ROOT = Path("/Users/souravamseekarmarti/Projects/aequitas")
 DATA = ROOT / "data"
 FIGURES = DATA / "audit"
 
+# Cache path for the ONS LSOA→MSOA lookup (avoids re-fetching on re-runs)
+LOOKUP_CACHE = DATA / "audit/lsoa_msoa_lookup_cache.parquet"
+
+logger.info("03e — NOMIS BRES Employment Audit")
 print("03e — NOMIS BRES Employment Audit")
 print("=" * 50)
 
@@ -40,6 +46,7 @@ print("=" * 50)
 bres_path = DATA / "raw/nomis/bres_msoa_2023.csv"
 bres_raw = pd.read_csv(bres_path)
 
+logger.info(f"Loaded BRES CSV: {bres_raw.shape[0]} rows × {bres_raw.shape[1]} cols")
 print(f"Raw shape:   {bres_raw.shape}")
 print(f"Columns:     {bres_raw.columns.tolist()}")
 print(f"Dtypes:\n{bres_raw.dtypes}")
@@ -60,11 +67,13 @@ checks = []
 eng_msoa_count = len(bres_eng)
 status = "PASS" if eng_msoa_count == 6791 else ("WARN" if eng_msoa_count >= 6700 else "FAIL")
 checks.append(("GT-018", status, f"England MSOAs = {eng_msoa_count} (expect 6,791)"))
+logger.info(f"GT-018: England MSOAs = {eng_msoa_count}")
 
 # Null check
 null_count = bres_eng["OBS_VALUE"].isnull().sum()
 status = "PASS" if null_count == 0 else "FAIL"
 checks.append(("NULL-01", status, f"OBS_VALUE nulls = {null_count} (expect 0)"))
+logger.info(f"NULL-01: OBS_VALUE nulls = {null_count}")
 
 # OBS_VALUE range
 obs_min = int(bres_eng["OBS_VALUE"].min())
@@ -76,6 +85,7 @@ checks.append(("RANGE-01", "INFO", f"OBS_VALUE range: {obs_min:,} – {obs_max:,
 # GT-019: Total employees
 status = "PASS" if 25_000_000 <= total_employees <= 30_000_000 else "WARN"
 checks.append(("GT-019", status, f"Total England employees = {total_employees:,} (expect ~27.3M)"))
+logger.info(f"GT-019: Total England employees = {total_employees:,}")
 
 for chk_id, status, msg in checks:
     print(f"[{status:4s}] {chk_id}: {msg}")
@@ -125,6 +135,9 @@ print(bottom20.head().to_string(index=False))
 # **Method:** Download OA21/LSOA21/MSOA21 lookup from ONS ArcGIS REST service
 # (`OA21_LAD22_LSOA21_MSOA21_LEP22_EN_LU_V2`). Deduplicate to unique LSOA21CD→MSOA21CD pairs.
 # This is the authoritative ONS 2021 geographic hierarchy.
+#
+# **Cache:** Result is written to `data/audit/lsoa_msoa_lookup_cache.parquet` on first run.
+# Subsequent runs load from cache, skipping the API entirely.
 
 # %%
 SERVICE_URL = (
@@ -132,17 +145,24 @@ SERVICE_URL = (
     "OA21_LAD22_LSOA21_MSOA21_LEP22_EN_LU_V2/FeatureServer/0/query"
 )
 PAGE_SIZE = 1000
+MAX_RETRIES = 3
+
 
 def fetch_lsoa_msoa_lookup() -> pd.DataFrame:
     """Download LSOA21→MSOA21 lookup from ONS Open Geography Portal.
 
     Paginates through all 178,605 OA records and deduplicates to unique LSOA→MSOA pairs.
-    Returns a DataFrame with columns LSOA21CD, MSOA21CD.
+    Each page fetch is retried up to MAX_RETRIES times with exponential backoff on network
+    errors. Returns a DataFrame with columns LSOA21CD, MSOA21CD.
+
+    Raises:
+        RuntimeError: If a page fetch fails after all retries.
     """
     records = []
     offset = 0
     total_fetched = 0
 
+    logger.info("Fetching ONS LSOA21→MSOA21 lookup (paginated)...")
     print("Fetching ONS LSOA21→MSOA21 lookup (paginated)...")
     while True:
         params = (
@@ -154,9 +174,25 @@ def fetch_lsoa_msoa_lookup() -> pd.DataFrame:
             f"&resultOffset={offset}"
         )
         url = SERVICE_URL + params
-        req = urllib.request.Request(url, headers={"User-Agent": "aequitas-eda/1.0"})
-        with urllib.request.urlopen(req, timeout=30) as r:
-            data = json.loads(r.read())
+
+        # Retry with exponential backoff on transient network errors
+        for attempt in range(MAX_RETRIES):
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "aequitas-eda/1.0"})
+                with urllib.request.urlopen(req, timeout=30) as r:
+                    data = json.loads(r.read())
+                break
+            except (urllib.error.URLError, TimeoutError) as exc:
+                if attempt == MAX_RETRIES - 1:
+                    raise RuntimeError(
+                        f"ONS API failed after {MAX_RETRIES} attempts at offset {offset}"
+                    ) from exc
+                wait = 2 ** attempt
+                logger.warning(
+                    f"ONS API error at offset {offset}, attempt {attempt + 1}/{MAX_RETRIES} "
+                    f"— retrying in {wait}s: {exc}"
+                )
+                time.sleep(wait)
 
         features = data.get("features", [])
         if not features:
@@ -170,6 +206,7 @@ def fetch_lsoa_msoa_lookup() -> pd.DataFrame:
         exceeded = data.get("exceededTransferLimit", False)
 
         if total_fetched % 20000 == 0 or not exceeded:
+            logger.info(f"Fetched {total_fetched:,} OA records...")
             print(f"  Fetched {total_fetched:,} OA records...")
 
         if not exceeded or len(features) < PAGE_SIZE:
@@ -178,15 +215,29 @@ def fetch_lsoa_msoa_lookup() -> pd.DataFrame:
         offset += PAGE_SIZE
         time.sleep(0.05)  # polite rate limiting
 
+    logger.info(f"Total OA records downloaded: {total_fetched:,}")
     print(f"Total OA records downloaded: {total_fetched:,}")
     df = pd.DataFrame(records, columns=["LSOA21CD", "MSOA21CD"])
     # Deduplicate to unique LSOA→MSOA pairs (each LSOA maps to exactly 1 MSOA)
     df = df.drop_duplicates(subset="LSOA21CD").reset_index(drop=True)
+    logger.info(f"Unique LSOA→MSOA pairs: {len(df):,}")
     print(f"Unique LSOA→MSOA pairs: {len(df):,}")
     return df
 
 
-lsoa_msoa_lookup = fetch_lsoa_msoa_lookup()
+# Load from cache if available, otherwise fetch from ONS API and cache result
+if LOOKUP_CACHE.exists():
+    logger.info(f"Loading LSOA→MSOA lookup from cache: {LOOKUP_CACHE}")
+    print(f"Loading from cache: {LOOKUP_CACHE}")
+    lsoa_msoa_lookup = pd.read_parquet(LOOKUP_CACHE)
+    logger.info(f"Cache loaded: {len(lsoa_msoa_lookup):,} rows")
+    print(f"Cache loaded: {len(lsoa_msoa_lookup):,} rows")
+else:
+    lsoa_msoa_lookup = fetch_lsoa_msoa_lookup()
+    lsoa_msoa_lookup.to_parquet(LOOKUP_CACHE, index=False)
+    logger.info(f"Lookup cached to: {LOOKUP_CACHE}")
+    print(f"Cached to: {LOOKUP_CACHE}")
+
 print(f"\nLookup sample:")
 print(lsoa_msoa_lookup.head(5).to_string(index=False))
 
@@ -203,21 +254,51 @@ eng_lsoa_in_lookup = len(lsoa_msoa_eng)
 # Expect 33,755 England LSOAs
 status = "PASS" if eng_lsoa_in_lookup == 33755 else ("WARN" if eng_lsoa_in_lookup >= 33000 else "FAIL")
 lookup_checks.append(("LOOKUP-01", status, f"England LSOAs in lookup = {eng_lsoa_in_lookup:,} (expect 33,755)"))
+logger.info(f"LOOKUP-01: England LSOAs in lookup = {eng_lsoa_in_lookup:,}")
 
 # Each LSOA maps to exactly one MSOA — check no duplicates remain
 dup_count = lsoa_msoa_eng.duplicated(subset="LSOA21CD").sum()
 status = "PASS" if dup_count == 0 else "FAIL"
 lookup_checks.append(("LOOKUP-02", status, f"Duplicate LSOA entries = {dup_count} (expect 0)"))
+logger.info(f"LOOKUP-02: Duplicate LSOA entries = {dup_count}")
 
 # MSOAs in lookup should match BRES MSOAs
 msoa_in_lookup = set(lsoa_msoa_eng["MSOA21CD"].unique())
 msoa_in_bres = set(bres_eng["GEOGRAPHY_CODE"].unique())
 msoa_overlap = len(msoa_in_lookup & msoa_in_bres)
+msoa_only_in_bres = msoa_in_bres - msoa_in_lookup
 status = "PASS" if msoa_overlap >= 6700 else "WARN"
 lookup_checks.append(("LOOKUP-03", status, f"MSOAs in both lookup and BRES = {msoa_overlap:,} (expect ~6,791)"))
+logger.info(f"LOOKUP-03: MSOAs in both lookup and BRES = {msoa_overlap:,}; only-in-BRES = {len(msoa_only_in_bres)}")
 
 for chk_id, status, msg in lookup_checks:
     print(f"[{status:4s}] {chk_id}: {msg}")
+
+# %% [markdown]
+# ## Section 4c — Diagnose MSOAs present in BRES but absent from ONS lookup (LOOKUP-04)
+#
+# LOOKUP-03 may report MSOAs in BRES that have no match in the ONS OA→LSOA→MSOA lookup.
+# This cell identifies them by name and employment volume to determine whether the gap
+# is negligible (expected for boundary edge cases) or material.
+
+# %%
+print(f"\nMSOAs in BRES but NOT in ONS lookup ({len(msoa_only_in_bres)}):")
+missing_df = bres_eng[bres_eng["GEOGRAPHY_CODE"].isin(msoa_only_in_bres)][
+    ["GEOGRAPHY_CODE", "GEOGRAPHY_NAME", "OBS_VALUE"]
+].sort_values("OBS_VALUE", ascending=False)
+print(missing_df.to_string())
+
+missing_emp = missing_df["OBS_VALUE"].sum()
+missing_pct = missing_emp / total_employees * 100
+status = "PASS" if missing_pct < 0.5 else "WARN"
+lookup_checks.append(("LOOKUP-04", status,
+    f"Employment in unmatched MSOAs = {missing_emp:,} ({missing_pct:.2f}% of total"
+    f" — below 0.5% threshold is acceptable)"))
+logger.info(
+    f"LOOKUP-04: {len(msoa_only_in_bres)} unmatched MSOAs, "
+    f"{missing_emp:,} employees ({missing_pct:.2f}% of total) — {status}"
+)
+print(f"\n[{status:4s}] LOOKUP-04: Employment in unmatched MSOAs = {missing_emp:,} ({missing_pct:.2f}% of total)")
 
 # %% [markdown]
 # ## Section 5 — Load master LSOA table and create population-weighted proxy
@@ -230,6 +311,7 @@ for chk_id, status, msg in lookup_checks:
 
 # %%
 master = pd.read_parquet(DATA / "audit/master_lsoa_table.parquet")
+logger.info(f"Master LSOA table loaded: {master.shape[0]} rows × {master.shape[1]} cols")
 print(f"Master LSOA table: {master.shape}")
 print(f"Population column: 'population' — {master['population'].describe().to_dict()}")
 
@@ -245,6 +327,7 @@ master_with_msoa = master_with_msoa.merge(
 master_with_msoa = master_with_msoa.rename(columns={"MSOA21CD": "msoa_cd"})
 
 msoa_unmatched = master_with_msoa["msoa_cd"].isnull().sum()
+logger.info(f"LSOAs without MSOA code after merge: {msoa_unmatched}")
 print(f"\nLSOAs without MSOA code: {msoa_unmatched}")
 
 # Merge BRES employment totals
@@ -254,7 +337,13 @@ bres_for_merge = bres_eng[["GEOGRAPHY_CODE", "OBS_VALUE"]].rename(
 master_with_msoa = master_with_msoa.merge(bres_for_merge, on="msoa_cd", how="left")
 
 employment_unmatched = master_with_msoa["msoa_employment"].isnull().sum()
+logger.info(f"LSOAs without BRES employment match: {employment_unmatched}")
 print(f"LSOAs without BRES employment match: {employment_unmatched}")
+
+# Cast msoa_employment to nullable Int64 — left join introduces NaN which coerces to float64
+master_with_msoa["msoa_employment"] = pd.array(
+    master_with_msoa["msoa_employment"], dtype=pd.Int64Dtype()
+)
 
 # %%
 # Compute MSOA total population for weighting
@@ -273,11 +362,12 @@ master_with_msoa["pop_weight"] = np.where(
     np.nan
 )
 
-# Apply weight to get LSOA employment proxy
+# Apply weight to get LSOA employment proxy (float64 intentional — fractional values expected)
 master_with_msoa["employment_proxy"] = (
-    master_with_msoa["msoa_employment"] * master_with_msoa["pop_weight"]
+    master_with_msoa["msoa_employment"].astype("float64") * master_with_msoa["pop_weight"]
 )
 
+logger.info(f"employment_proxy computed: {master_with_msoa['employment_proxy'].notna().sum():,} non-null LSOAs")
 print("\nemployment_proxy summary:")
 print(master_with_msoa["employment_proxy"].describe())
 
@@ -295,8 +385,8 @@ proxy_by_msoa = (
 )
 validation_df = proxy_by_msoa.merge(bres_for_merge, on="msoa_cd", how="inner")
 validation_df["diff_pct"] = (
-    (validation_df["proxy_sum"] - validation_df["msoa_employment"]).abs()
-    / validation_df["msoa_employment"]
+    (validation_df["proxy_sum"] - validation_df["msoa_employment"].astype("float64")).abs()
+    / validation_df["msoa_employment"].astype("float64")
 ) * 100
 
 max_diff = validation_df["diff_pct"].max()
@@ -312,6 +402,7 @@ proxy_checks = []
 status = "PASS" if max_diff < 1.0 else ("WARN" if max_diff < 5.0 else "FAIL")
 proxy_checks.append(("PROXY-01", status,
                       f"Max MSOA proxy sum error = {max_diff:.4f}% (expect <1%)"))
+logger.info(f"PROXY-01: Max MSOA proxy sum error = {max_diff:.4f}% — {status}")
 
 lsoa_coverage = master_with_msoa["employment_proxy"].notna().sum()
 coverage_pct = lsoa_coverage / len(master_with_msoa) * 100
@@ -319,6 +410,7 @@ status = "PASS" if coverage_pct >= 95.0 else ("WARN" if coverage_pct >= 85.0 els
 proxy_checks.append(("PROXY-02", status,
                       f"LSOAs with employment proxy = {lsoa_coverage:,} / {len(master_with_msoa):,} "
                       f"({coverage_pct:.1f}%) — expect ≥95%"))
+logger.info(f"PROXY-02: LSOA coverage = {lsoa_coverage:,} ({coverage_pct:.1f}%) — {status}")
 
 for chk_id, status, msg in proxy_checks:
     print(f"[{status:4s}] {chk_id}: {msg}")
@@ -344,10 +436,12 @@ print("Employment desert × High deprivation cross-tab:")
 print(cross_tab)
 
 triple_jeopardy = proxy_valid[proxy_valid["employment_desert"] & proxy_valid["high_deprivation"]]
+logger.info(f"Triple jeopardy LSOAs (employment desert + high deprivation): {len(triple_jeopardy):,}")
 print(f"\nLSOAs in employment desert AND high deprivation: {len(triple_jeopardy):,}")
 
 # Correlation: employment proxy vs IMD score
 corr = proxy_valid[["employment_proxy", "imd_score"]].corr().iloc[0, 1]
+logger.info(f"Pearson correlation (employment_proxy vs imd_score): {corr:.4f}")
 print(f"\nPearson correlation (employment_proxy vs imd_score): {corr:.4f}")
 
 # Scatter plot
@@ -388,6 +482,7 @@ output_cols = [
 out_df = master_with_msoa[output_cols].copy()
 out_path = DATA / "audit/lsoa_employment_proxy.parquet"
 out_df.to_parquet(out_path, index=False)
+logger.info(f"Saved output: {out_path} ({len(out_df):,} rows)")
 print(f"Saved: {out_path}")
 print(f"Rows: {len(out_df):,}")
 print(f"Columns: {out_df.columns.tolist()}")
@@ -417,9 +512,9 @@ for chk_id, status, msg in all_checks:
 print(f"\nTotal: {pass_count} PASS | {warn_count} WARN | {fail_count} FAIL | {info_count} INFO")
 
 if fail_count > 0:
-    print("\n⚠ CRITICAL: FAILs require investigation before downstream use.")
+    print("\nCRITICAL: FAILs require investigation before downstream use.")
 elif warn_count > 0:
-    print("\n⚠ WARNs: Review before using in production pipeline.")
+    print("\nWARNs: Review before using in production pipeline.")
 else:
     print("\nAll checks PASS. Output ready for Series 04.")
 
