@@ -138,7 +138,7 @@ logger.info(f"Top 500 deserts: {top500.shape}, routes: {routes.shape}")
 # %%
 # Build working dataset — merge service quality, equity, and master
 base = (
-    master[["lsoa_cd", "lsoa_nm", "lad_nm", "imd_score", "imd_decile",
+    master[["lsoa_cd", "lsoa_nm", "lad_cd", "lad_nm", "imd_score", "imd_decile",
             "population", "urban_rural", "region", "nocar_pct", "elderly_pct",
             "unemployment_rate", "disability_pct"]]
     .merge(
@@ -192,7 +192,7 @@ logger.info(f"Bottom IMD decile LSOAs: {len(bottom_decile)}")
 
 # Gap = (median - actual) for those BELOW median; 0 for those already at/above median
 bottom_decile["trips_gap"] = (national_median_trips - bottom_decile["trips_per_capita"]).clip(lower=0)
-bottom_decile["annual_additional_trips"] = bottom_decile["trips_gap"] * bottom_decile["population"] * 250  # 250 weekdays/year
+bottom_decile["annual_additional_trips"] = bottom_decile["trips_gap"] * bottom_decile["population"] * 250  # weekday-equivalent annual (250 weekdays)
 
 # Cost to provide additional trips — operating cost model
 # trip_cost = veh-km cost / passengers per veh-km (load factor)
@@ -273,7 +273,7 @@ top500_full = top500.merge(
 
 # Gap to national median for each desert LSOA
 top500_full["trips_gap"] = (national_median_trips - top500_full["trips_per_capita"]).clip(lower=0)
-top500_full["annual_additional_trips"] = top500_full["trips_gap"] * top500_full["population"] * 250
+top500_full["annual_additional_trips"] = top500_full["trips_gap"] * top500_full["population"] * 250  # weekday-equivalent annual
 
 logger.info(f"Top 500 deserts with positive gap: {(top500_full['trips_gap'] > 0).sum()}")
 
@@ -609,9 +609,18 @@ print("Fig 04e-03: Tornado chart saved")
 
 # %%
 # Compute BCR for all LSOAs with a positive gap (not just top 500)
+# NOTE: BCR degeneracy — both benefits and costs are proportional to annual_additional_trips,
+# so the annuity factor cancels and BCR reduces to (benefit_rate / cost_rate).
+# With fixed VoT, carbon price, and urban/rural cost bands, this yields exactly 2 unique BCR
+# values: ~1.118 (urban) and ~1.324 (rural). The bcr column is NOT a per-LSOA discriminator.
+# Use trips_gap or investment_gap_annual_cost for LSOA-level prioritisation instead.
+# A meaningful per-LSOA BCR would require fixed infrastructure costs or trip-purpose variation.
 econ = base.copy()
 econ["trips_gap"]               = (national_median_trips - econ["trips_per_capita"]).clip(lower=0)
-econ["annual_additional_trips"] = econ["trips_gap"] * econ["population"] * 250
+# × 250 weekdays — all trip counts are WEEKDAY-EQUIVALENT ANNUAL (not calendar-year).
+# Internally consistent with lsoa_equity_metrics.parquet trips_per_capita (derived from
+# BODS weekday GTFS). Calendar-year figures would be ~29% higher (÷ 250 × 365).
+econ["annual_additional_trips"] = econ["trips_gap"] * econ["population"] * 250  # weekday-equivalent
 econ["is_urban"]                = econ["urban_rural"].str.contains("Urban", na=False)
 econ["cost_per_trip"]           = np.where(econ["is_urban"], trip_cost_urban, trip_cost_rural)
 econ["annual_operating_cost"]   = econ["annual_additional_trips"] * econ["cost_per_trip"]
@@ -640,10 +649,8 @@ econ["bcr_band"] = econ["bcr"].apply(bcr_band)
 
 # Investment gap columns
 econ["investment_gap_annual_cost"] = econ["annual_operating_cost"]
-econ["investment_gap_pv_30yr"]     = econ["pv_costs"].apply(
-    lambda x: pv_annuity(x / max(APPRAISAL_YEARS / 30, 1), 30, SOCIAL_DISCOUNT_RATE)
-    if not np.isnan(x) else np.nan
-)
+# NOTE: investment_gap_pv_30yr removed — applying pv_annuity() to pv_costs (which is already
+# a present value) would produce a double-discounted figure with no economic meaning.
 
 # Modal shift (central)
 econ["modal_shift_additional_trips"] = (
@@ -663,7 +670,7 @@ print(econ["bcr_band"].value_counts().to_string())
 # %%
 # Select output columns
 output_econ_cols = [
-    "lsoa_cd", "lsoa_nm", "lad_nm", "region", "urban_rural",
+    "lsoa_cd", "lsoa_nm", "lad_cd", "lad_nm", "region", "urban_rural",
     "imd_decile", "imd_score", "population",
     "trips_per_capita", "trips_gap",
     "annual_additional_trips", "annual_operating_cost",
