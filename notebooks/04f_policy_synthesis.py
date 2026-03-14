@@ -445,6 +445,11 @@ lad_agg = (
 )
 
 # Merge HHI — map region HHI to each LAD
+# IMPORTANT: HHI is computed at region level (9 values). ALL LADs within the same region
+# receive the identical HHI score as the region_hhi component.
+# E.g., all 64 South East LADs share HHI ~422; all 13 North East LADs share HHI ~1,609.
+# Phase 1 narrative templates must not present this as a LAD-level or operator-level metric.
+# A true LAD-level HHI would require route-to-LAD assignment from BODS agency.txt × LSOA join.
 region_hhi = hhi_df.set_index("primary_region")["hhi"].to_dict()
 lad_agg["region_hhi"] = lad_agg["region"].map(region_hhi).fillna(lad_agg["region"].map(
     # fallback for any region name mismatch
