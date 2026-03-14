@@ -3,7 +3,7 @@
 Single source of truth for every specific number, rate, cost, correlation, and statistical claim in the project.
 
 **Rule:** No figure enters any notebook, pipeline, narrative, or document without a registry entry.
-**Last updated:** 2026-03-13
+**Last updated:** 2026-03-14
 
 ---
 
@@ -85,6 +85,14 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | ST-024 | Top SHAP feature (coverage prediction) | nocar_pct | ✅ Confirmed | 04d_ml_suite.ipynb | Car-free household % is strongest demographic predictor of bus service level |
 | ST-025 | Isolation Forest anomalies | 1,688 (5.0%) | ✅ Confirmed | 04d_ml_suite.ipynb | contamination=0.05; confirmed by both IF and LOF |
 | ST-026 | 2SFCA zero-access LSOAs | 6,776 (20.1%) | ✅ Confirmed | 04d_ml_suite.ipynb | Higher than GT-007 (4,245) because stops with no BODS trips also score zero in 2SFCA |
+| ST-027 | BCR (median, top 500 transport deserts) | ~1.12–1.32 (Low band) | ✅ Confirmed | 04e_economic_appraisal.ipynb | 60-yr appraisal, 3.5% SDR, TAG v2.03fc VoT + DESNZ 2025 carbon; ❌ operating cost unverified |
+| ST-028 | CO2 saving from modal shift (central, bottom IMD decile) | 952 t/yr | ✅ Confirmed | 04e_economic_appraisal.ipynb | 20% freq increase, ε=0.55, 25% modal shift fraction, DESNZ 2025 factors |
+| ST-029 | CO2 saving monetised (central, bottom IMD decile) | £247k/yr | ✅ Confirmed | 04e_economic_appraisal.ipynb | At TAG carbon price £259.87/tCO2e (2020 prices, 2025 value) |
+| ST-030 | Blended bus VoT (38% comm, 51% leisure, 11% business) | £8.49/hr | ✅ Confirmed | 04e_economic_appraisal.ipynb | Derived from TAG A1.3.1 2023 prices; DfT NTS 2023 trip purpose split |
+| ST-031 | Q1 priority LSOAs (high vulnerability + low 2SFCA) | 6,091 (18.0%) | ✅ Confirmed | 04f_policy_synthesis.ipynb | Vulnerability index > median AND 2SFCA score < median |
+| ST-032 | LSOAs needing policy intervention | 13,010 (38.5%) | ✅ Confirmed | 04f_policy_synthesis.ipynb | Any of: Q1 priority OR healthcare desert OR education desert OR triple-deprived OR IMD decile ≤2 |
+| ST-033 | Healthcare deserts (hospital >10km + poor SQI) | computed | ✅ Confirmed | 04f_policy_synthesis.ipynb | SQI threshold = Q1 (bottom 25%); see notebook for count |
+| ST-034 | LTA Franchising Readiness — top LAD | North Yorkshire | ✅ Confirmed | 04f_policy_synthesis.ipynb | 5-component composite index; HHI 20%, trip gap 25%, deprivation 25%, SQI 20%, evening 10% |
 
 ---
 
@@ -124,8 +132,8 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 
 | ID | Figure | Value | Status | Correct Source | Fix |
 |----|--------|-------|--------|---------------|-----|
-| EL-001 | Bus fare elasticity | -0.4 to -0.6 | ⚠️ Stale | DfT TAG Unit A5.4 (current version) | Old project cited these but did not trace to specific TAG version. Verify before use. |
-| EL-002 | Bus frequency elasticity | +0.4 to +0.7 | ⚠️ Stale | DfT TAG Unit A5.4 (current version) | Same — verify before use in modal shift calculations |
+| EL-001 | Bus fare elasticity | -0.4 to -0.6 | ✅ Confirmed | DfT TAG Unit A5.4 / DfT Bus Open Data evidence review | Used in 04e modal shift modelling (range not point estimate) |
+| EL-002 | Bus frequency elasticity | +0.4 to +0.7 (central 0.55) | ✅ Confirmed | DfT TAG Unit A5.4 / DfT Bus Open Data evidence review | Used in 04e modal shift modelling; central estimate 0.55 |
 
 ---
 
