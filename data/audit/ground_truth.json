@@ -575,5 +575,35 @@
     "high_issues": 1,
     "audit_log_path": "data/audit/data_quality_audit_log.csv"
   },
-  "locked_at": "2026-03-11T17:29:18.628485"
+  "locked_at": "2026-03-11T17:29:18.628485",
+  "analytics": {
+    "gini_coefficient": 0.5741,
+    "palma_ratio": 5.702,
+    "concentration_index": 0.1358,
+    "dissimilarity_index": 0.4212,
+    "triple_deprived_lsoas": 612,
+    "quadruple_vulnerable_lsoas": 611,
+    "mean_sqi": 65.4,
+    "median_headway_min": 33.3,
+    "evening_isolated_lsoas": 5189,
+    "sunday_desert_lsoas": 6745,
+    "routes_with_geometry": 7241,
+    "mean_route_length_km": 23.0,
+    "cross_la_routes": 5143,
+    "rf_r2_test": 0.4719,
+    "top_shap_feature": "nocar_pct",
+    "anomalies_count": 1688,
+    "zero_access_lsoas_2sfca": 6776,
+    "q1_priority_lsoas": 6091,
+    "lsoas_needing_intervention": 13010,
+    "lta_readiness_lad_count": 298,
+    "policy_scenarios_count": 4,
+    "imd_stop_pearson_r": -0.0644,
+    "lsoas_zero_bus_stops": 4245
+  },
+  "tolerances": {
+    "exact": ["triple_deprived_lsoas", "policy_scenarios_count", "top_shap_feature"],
+    "within_50": ["evening_isolated_lsoas", "sunday_desert_lsoas", "routes_with_geometry", "cross_la_routes", "anomalies_count", "zero_access_lsoas_2sfca", "q1_priority_lsoas", "lsoas_zero_bus_stops"],
+    "within_pct_5": ["gini_coefficient", "palma_ratio", "concentration_index", "mean_sqi", "rf_r2_test", "mean_route_length_km"]
+  }
 }
