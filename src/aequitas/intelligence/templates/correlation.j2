@@ -1,0 +1,8 @@
+{% if r is not none -%}
+Analysis of {{ n|int }} LSOAs shows a **{{ strength }} {{ direction }} correlation** between {{ x_label }} and {{ y_label }} (r = {{ r|round(3) }}, p = {{ p_value|round(4) }}).
+{% if direction == "positive" -%}
+LSOAs with higher {{ x_label }} tend to have higher {{ y_label }}.
+{%- elif direction == "negative" -%}
+LSOAs with higher {{ x_label }} tend to have lower {{ y_label }}.
+{%- endif %}
+{%- endif %}

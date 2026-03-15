@@ -1,0 +1,7 @@
+{% if scenario -%}
+**Scenario {{ scenario.scenario }}: {{ scenario.name }}** — targeting {{ scenario.scope }}.
+{{ scenario.population_affected|int|format_thousands }} residents affected.
+Estimated cost: £{{ scenario.estimated_annual_cost_m|round(1) }}m/year.
+CO₂ saving: {{ scenario.co2_saving_t_yr|int }} t/yr.
+Confidence: {{ scenario.confidence }}.
+{%- endif %}

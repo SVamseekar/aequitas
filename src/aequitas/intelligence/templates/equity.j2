@@ -1,0 +1,7 @@
+{% if gini is not none -%}
+The Gini coefficient for bus service distribution is **{{ gini|round(4) }}**, {{ "exceeding" if gini > 0.36 else "below" }} the UK income Gini of 0.36 — indicating {% if gini > 0.36 %}greater inequality in service access than in incomes{% else %}relatively equitable distribution{% endif %}.
+The Palma ratio of **{{ palma|round(2) }}** means the top 10% of LSOAs receive {{ palma|round(1) }}× more service than the bottom 40%.
+{%- if concentration_index is not none %}
+The Concentration Index of **{{ "%+.4f"|format(concentration_index) }}** indicates service is concentrated in {{ "more affluent" if concentration_index > 0 else "more deprived" }} areas.
+{%- endif %}
+{%- endif %}

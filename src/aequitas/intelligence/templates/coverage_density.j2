@@ -1,0 +1,10 @@
+{% if stops_per_1000 -%}
+{% if stops_per_1000.best -%}
+**{{ stops_per_1000.best.name }}** leads England with **{{ stops_per_1000.best.value|round(2) }} stops per 1,000 residents**.
+{% endif -%}
+{% if stops_per_1000.worst -%}
+**{{ stops_per_1000.worst.name }}** has the lowest coverage at {{ stops_per_1000.worst.value|round(2) }} stops per 1,000 residents.
+{% endif -%}
+{%- else %}
+Coverage density data unavailable for this filter combination.
+{%- endif %}
