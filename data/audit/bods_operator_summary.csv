@@ -1,0 +1,635 @@
+agency_name,n_routes,total_trips,mean_trips_per_route,max_trips
+Bee Network,579,45797,79.09671848013816,2145
+Stagecoach East Scotland,327,31379,95.96024464831804,2156
+Stagecoach East Midlands,278,24757,89.05395683453237,1359
+Stagecoach West Scotland,259,24532,94.71814671814671,580
+National Express,242,7163,29.59917355371901,294
+Stagecoach Midlands,215,21551,100.23720930232558,1214
+Go North East,210,13801,65.71904761904761,671
+Stagecoach South East,209,14614,69.92344497607655,532
+Stagecoach South West,202,14522,71.89108910891089,674
+Stagecoach South,181,33891,187.24309392265192,1390
+National Express West Midlands,178,43612,245.01123595505618,1545
+Stagecoach Cumbria and North Lancashire,176,24147,137.19886363636363,1130
+Stagecoach Merseyside and South Lancashire,166,9350,56.325301204819276,448
+Go Ahead London,164,92012,561.0487804878048,2041
+Go Cornwall Bus,142,4341,30.570422535211268,187
+"First Bristol, Bath & the West",137,80169,585.1751824817518,3832
+Stagecoach North East,136,18203,133.84558823529412,787
+First South Yorkshire,135,16726,123.8962962962963,834
+Arriva North West,131,15471,118.09923664122137,570
+Diamond Bus,131,6367,48.603053435114504,364
+Stagecoach Yorkshire,128,16044,125.34375,922
+Stagecoach London,127,57298,451.1653543307087,2131
+Arriva North East,125,12303,98.424,389
+First Essex,121,60108,496.7603305785124,2944
+First Norfolk & Suffolk,121,30789,254.45454545454547,1498
+Metroline Travel,118,61641,522.3813559322034,1614
+Arriva Midlands,115,8132,70.71304347826087,297
+Stagecoach South Wales,110,6933,63.027272727272724,353
+First South & West Wales,106,6011,56.70754716981132,314
+Metrobus,106,18947,178.74528301886792,1119
+Stagecoach Bluebird,101,3266,32.336633663366335,151
+morebus,98,14551,148.4795918367347,1315
+Stagecoach West,96,11829,123.21875,802
+Central Connect,96,2305,24.010416666666668,146
+Centrebus,96,3800,39.583333333333336,160
+Nottingham City Transport,95,23111,243.2736842105263,900
+East Yorkshire,93,3824,41.11827956989247,196
+Stephensons of Essex,88,1016,11.545454545454545,80
+First Greater Glasgow,87,14687,168.816091954023,508
+Bluestar,86,11735,136.45348837209303,1424
+Warrington's Own Buses,85,3264,38.4,310
+McGill's Bus Service,83,26442,318.578313253012,2227
+Arriva Wales,82,4248,51.80487804878049,333
+Transport UK,81,39664,489.679012345679,1737
+JH Coaches,80,102,1.275,3
+Arriva Yorkshire,80,7492,93.65,302
+Arriva Kent and Surrey,79,7721,97.73417721518987,458
+Sanders Coaches,77,1000,12.987012987012987,214
+FlixBus,76,5072,66.73684210526316,1162
+Brighton & Hove Bus and Coach Company,73,33668,461.2054794520548,3056
+Compass Travel,73,1539,21.08219178082192,162
+D & G Bus,73,2861,39.19178082191781,116
+Nu-Venture,71,706,9.943661971830986,109
+Reading Buses,70,24972,356.74285714285713,2695
+Stagecoach East,69,8163,118.30434782608695,382
+The Keighley Bus Company,67,2097,31.29850746268657,317
+Hedingham & Chambers,67,1610,24.029850746268657,104
+Carousel Buses,63,2969,47.12698412698413,237
+First Leeds,63,46327,735.3492063492064,2541
+Lothian Buses,62,56084,904.5806451612904,3674
+Team Pennine,62,1445,23.306451612903224,154
+First Worcestershire,61,4369,71.62295081967213,483
+Salisbury Reds,61,5026,82.39344262295081,780
+Cardiff Bus,60,5674,94.56666666666666,370
+Newport Bus,59,1992,33.76271186440678,110
+Arriva Herts and Essex,59,5252,89.01694915254237,416
+Al's Coaches,58,243,4.189655172413793,82
+London United,58,31772,547.7931034482758,1445
+PC Coaches,55,679,12.345454545454546,72
+Red Eagle,54,661,12.24074074074074,78
+West Coast Motors,54,4013,74.31481481481481,884
+Red Rose Travel,54,1421,26.314814814814813,93
+Swindon's Bus Company,53,2620,49.43396226415094,415
+Midland Bluebird,51,6858,134.47058823529412,1182
+Faresaver,51,1481,29.03921568627451,169
+Replacement Service,50,12007,240.14,861
+Dartline Coaches,48,1271,26.479166666666668,549
+Huyton Travel,47,3078,65.48936170212765,278
+Plymouth Citybus,47,3095,65.85106382978724,228
+Arriva London North,45,29745,661.0,1826
+Gateshead Central Buses,45,2069,45.977777777777774,376
+Arriva Beds and Bucks,45,4976,110.57777777777778,720
+trentbarton,44,8748,198.8181818181818,624
+TransportConnect,44,911,20.704545454545453,72
+Ipswich Buses,43,2583,60.06976744186046,347
+TLC Travel,42,1418,33.76190476190476,225
+First Aberdeen,42,9310,221.66666666666666,940
+Arriva London,41,25926,632.3414634146342,1292
+Stagecoach Oxfordshire,41,6341,154.65853658536585,676
+Yeomans Travel,41,514,12.536585365853659,82
+Pulhams Coaches,41,757,18.463414634146343,91
+Go-Coach Hire,38,416,10.947368421052632,65
+Diamond Bus East Midlands,38,776,20.42105263157895,86
+Oxford Bus Company,37,5438,146.97297297297297,487
+First Potteries,37,9394,253.8918918918919,1207
+Select Bus Services,37,602,16.27027027027027,93
+Thames Travel,37,1911,51.648648648648646,329
+FromeBus,36,359,9.972222222222221,35
+National Express Coventry,34,10060,295.88235294117646,1025
+High Peak,34,1105,32.5,183
+Konectbus,34,1221,35.911764705882355,138
+Flexibus,34,154,4.529411764705882,27
+Preston Bus,34,2438,71.70588235294117,370
+Highland Council,34,531,15.617647058823529,188
+Notts and Derby,33,1254,38.0,345
+Houston's Minicoaches,33,1875,56.81818181818182,244
+First Buses of Somerset,32,4372,136.625,412
+TM Travel,32,1012,31.625,121
+The Burnley Bus Company,32,3800,118.75,474
+NIBSbuses,31,339,10.935483870967742,43
+First Bradford,31,15740,507.741935483871,1869
+Southern Vectis,30,2304,76.8,515
+Borders Buses,30,1472,49.06666666666667,160
+Moffat & Williamson,29,800,27.586206896551722,98
+Uno,29,1943,67.0,397
+Brylaine Travel,29,306,10.551724137931034,36
+"First Portsmouth, Fareham & Gosport",28,23422,836.5,3104
+Tanat Valley Coaches,28,295,10.535714285714286,34
+Hodgsons,28,447,15.964285714285714,61
+Travelmasters,28,105,3.75,46
+Caledonian MacBrayne,28,4856,173.42857142857142,732
+Country Bus,27,632,23.40740740740741,56
+Falcon Buses,27,1141,42.25925925925926,214
+Newbury & District,26,516,19.846153846153847,102
+Stuart's Coaches,26,1019,39.19230769230769,136
+Chaserider,26,1424,54.76923076923077,130
+Sleafordian Coaches,26,91,3.5,30
+Weardale Motor Services,26,395,15.192307692307692,57
+Shiel Buses,25,340,13.6,55
+Hams Travel,25,183,7.32,77
+"First Halifax, Calder Valley & Huddersfield",25,10802,432.08,1092
+Thames Valley Buses,25,1477,59.08,262
+Northstar,25,205,8.2,56
+Phil Anslow Travel,24,623,25.958333333333332,82
+Pilkingtonbus,24,215,8.958333333333334,47
+Cuckmere Buses,23,172,7.478260869565218,21
+Sargeants Brothers,23,363,15.782608695652174,68
+Shuttle Buses,23,1261,54.82608695652174,230
+Xplore Dundee,23,5585,242.82608695652175,748
+A2B Bus and Coach,23,354,15.391304347826088,63
+York Pullman,23,840,36.52173913043478,440
+First York,23,18263,794.0434782608696,1822
+Morris Travel,23,225,9.782608695652174,27
+CT4N,23,397,17.26086956521739,60
+Somerset Council,23,191,8.304347826086957,40
+Lynx,22,630,28.636363636363637,136
+Dews Coaches,22,231,10.5,28
+Blackpool Transport,22,3373,153.3181818181818,830
+Coach Services,21,278,13.238095238095237,45
+MD Coaches,21,71,3.380952380952381,8
+First Halifax,21,10392,494.85714285714283,1316
+Adventure Travel,21,1040,49.523809523809526,149
+Coastliner,21,658,31.333333333333332,156
+Scottish Borders Council,21,185,8.80952380952381,22
+DGC Buses,21,368,17.523809523809526,77
+Go Ahead Luton Parkway,21,4331,206.23809523809524,783
+East Coast Buses,20,3162,158.1,533
+First Leicester,20,8845,442.25,944
+Redline,20,1035,51.75,265
+Diamond Bus South East,20,813,40.65,248
+Mulleys Motorways,19,190,10.0,28
+The Harrogate Bus Company,19,1265,66.57894736842105,341
+London Underground (TfL),19,42666,2245.5789473684213,6102
+Borderbus,19,199,10.473684210526315,46
+"First Wessex, Dorset & South Somerset",19,9011,474.2631578947368,2230
+Bus Link,19,106,5.578947368421052,37
+Hornsbys Bus & Coach,19,364,19.157894736842106,84
+ARG Travel,19,1412,74.3157894736842,264
+Bland's,19,107,5.631578947368421,20
+1st Bus Stop Ltd,18,82,4.555555555555555,22
+Scottish Citylink,18,1804,100.22222222222223,464
+Simonds,18,491,27.27777777777778,176
+Kirkby Lonsdale Coaches,18,349,19.38888888888889,104
+Arriva Derby,18,1963,109.05555555555556,183
+London Sovereign,18,8114,450.77777777777777,827
+Chalkwell Garage & Coach Hire,18,288,16.0,73
+Hatch Green Coaches,18,264,14.666666666666666,56
+White Bus Services,18,1128,62.666666666666664,208
+Harris Coaches,17,600,35.294117647058826,88
+Z & S Transport,17,105,6.176470588235294,27
+Bennetts,17,34,2.0,2
+Hattons Travel,17,561,33.0,134
+Arriva London South,17,12083,710.7647058823529,1855
+Tyne and Wear Metro,16,2230,139.375,658
+Stotts Coaches,16,210,13.125,35
+JMB Travel,16,1768,110.5,514
+A2B Travel,16,899,56.1875,156
+Wilfreda Beehive,16,30,1.875,2
+South Wales Transport,16,413,25.8125,68
+Connexions Buses,16,445,27.8125,95
+McColls Travel,16,1163,72.6875,274
+Richards Bros,16,299,18.6875,114
+Watermill Coaches,15,180,12.0,40
+Thomas Murphy,15,30,2.0,2
+LMS Travel,15,133,8.866666666666667,36
+Cotswold Green,15,109,7.266666666666667,26
+Taylors Travel,15,31,2.066666666666667,4
+Metrolink,15,11692,779.4666666666667,1189
+Torbay Buses,14,182,13.0,46
+Nottinghamshire County Council Fleet Services,14,180,12.857142857142858,42
+OTS,14,310,22.142857142857142,56
+Canavan Travel,14,423,30.214285714285715,100
+Lothian Country Buses,14,3460,247.14285714285714,635
+Go To Town,14,281,20.071428571428573,69
+Globe Coaches,14,453,32.357142857142854,76
+Nick Maddy Coaches,14,39,2.7857142857142856,8
+McCall's Coaches,14,324,23.142857142857142,52
+Ember,14,3229,230.64285714285714,897
+Gwynfor Coaches,14,410,29.285714285714285,76
+Lloyds Coaches,13,438,33.69230769230769,90
+Globe Holidays,13,192,14.76923076923077,65
+Marshalls of Sutton on Trent,13,73,5.615384615384615,16
+Hotel Hoppa,13,372,28.615384615384617,53
+The Blackburn Bus Company,13,1671,128.53846153846155,389
+Dochertys Midland Coaches,13,117,9.0,72
+Autocar Bus & Coach Services,13,174,13.384615384615385,66
+South West Coaches,13,245,18.846153846153847,55
+DANSA,13,95,7.3076923076923075,17
+P & O Lloyd,13,286,22.0,54
+Axe Valley Mini-Travel,12,127,10.583333333333334,82
+Richmonds Coaches,12,97,8.083333333333334,31
+Our Bus,12,52,4.333333333333333,15
+Cumfybus,11,284,25.818181818181817,108
+J P Minibus,11,150,13.636363636363637,32
+Star Cabs,11,68,6.181818181818182,14
+Link Network,11,108,9.818181818181818,56
+Uni-Link,11,3988,362.54545454545456,1080
+Sharpes of Nottingham,11,29,2.6363636363636362,3
+Sullivan Buses,11,373,33.90909090909091,212
+Fords Coaches,11,22,2.0,2
+Bay Travel,11,442,40.18181818181818,62
+Dales and District,11,187,17.0,68
+Delaine Buses,11,328,29.818181818181817,169
+M & H Coaches,11,191,17.363636363636363,49
+Stanton's of Stoke,10,116,11.6,51
+Taw & Torridge,10,47,4.7,24
+Ashcroft Travel,10,106,10.6,24
+The Big Lemon,10,382,38.2,104
+National Express Accessible Transport,10,27,2.7,4
+Marchants Coaches,10,20,2.0,2
+Lochs Motor Transport,10,241,24.1,52
+Celtic Travel,10,229,22.9,111
+John Dix Travel,10,20,2.0,2
+Regent Coaches,10,118,11.8,25
+Owen's Travelmaster,10,123,12.3,26
+ASD Coaches,10,159,15.9,64
+West Oxfordshire Community Transport,10,83,8.3,19
+PVT Transfer,10,600,60.0,220
+Hobson Travel,9,192,21.333333333333332,45
+Aimee's,9,45,5.0,12
+Yorkshire Travel Group,9,246,27.333333333333332,85
+Tyrers Coaches,9,136,15.11111111111111,64
+Reptons Coaches,9,36,4.0,10
+Kinchbus,9,1722,191.33333333333334,807
+Tally Ho!,9,187,20.77777777777778,95
+Grayscroft Coaches,9,35,3.888888888888889,11
+CommMiniBus,9,33,3.6666666666666665,11
+Pembrokeshire County Council,9,57,6.333333333333333,10
+First Berkshire & The Thames Valley,9,5107,567.4444444444445,1186
+Kevs Cars and Coaches,8,247,30.875,82
+Sunbeam Luxury Coaches,8,20,2.5,5
+South Staffs Coach Hire,8,30,3.75,16
+R Robertson & Son,8,159,19.875,60
+Marshalls Coaches,8,17,2.125,3
+Mid Wales Travel,8,97,12.125,28
+Let's Go,8,605,75.625,264
+Fourways Coaches,8,9,1.125,2
+D & E Coaches,8,98,12.25,36
+David Goodfellow Travel,8,177,22.125,52
+Blueworks Private Hire,8,50,6.25,16
+Bakers Dolphin,8,16,2.0,2
+Damory Coaches,8,136,17.0,38
+A Lyles and Son,8,58,7.25,44
+Ambassador Travel,7,24,3.4285714285714284,7
+George Rapson Travel,7,59,8.428571428571429,21
+Telford's Coaches,7,81,11.571428571428571,24
+Squarepeg,7,127,18.142857142857142,32
+Minsterley,7,98,14.0,35
+F R Willetts,7,21,3.0,10
+London Transit,7,4822,688.8571428571429,1020
+Eurocoaches,7,89,12.714285714285714,24
+Cardinal Buses,7,17,2.4285714285714284,3
+Edwards Coaches,7,448,64.0,200
+LandFlight,7,311,44.42857142857143,60
+Whitelaw Coaches,7,863,123.28571428571429,278
+Catterall's,7,14,2.0,2
+Orkney Ferries,7,797,113.85714285714286,219
+Eastern Scottish,7,174,24.857142857142858,46
+Dilwyn's Coaches,7,228,32.57142857142857,68
+Cresta Coaches,7,21,3.0,5
+Coachstyle,7,134,19.142857142857142,57
+Shetland Ferries,7,1121,160.14285714285714,318
+DRM Bus,7,142,20.285714285714285,62
+SD Travel,7,193,27.571428571428573,52
+J & D S Halcrow,7,112,16.0,61
+Coventry Minibuses,7,16,2.2857142857142856,4
+Garelochhead Minibuses & Coaches,6,115,19.166666666666668,41
+Littles Travel,6,48,8.0,16
+Lothian Community Transport,6,6,1.0,1
+Redroute Buses,6,71,11.833333333333334,29
+Prentice Coaches,6,243,40.5,78
+Beestons,6,41,6.833333333333333,26
+Flyer,6,382,63.666666666666664,169
+Berwyn,6,98,16.333333333333332,29
+Coastliner Buses,6,240,40.0,212
+Caerphilly County Borough Council,6,49,8.166666666666666,23
+Deveron Coaches,6,28,4.666666666666667,18
+Carlone Buses,6,38,6.333333333333333,16
+Carolean Coaches,6,356,59.333333333333336,103
+Libra Travel,6,43,7.166666666666667,14
+Crosskeys Coaches,6,12,2.0,2
+Aintree Coachlines,6,49,8.166666666666666,28
+Andrews of Tideswell,6,71,11.833333333333334,18
+JW Lodge & Sons,6,14,2.3333333333333335,4
+Vision Bus,6,350,58.333333333333336,118
+West Berkshire Council Transport Services,6,27,4.5,11
+WightLink,6,831,138.5,250
+A B Coaches,6,12,2.0,2
+Travelsure,6,68,11.333333333333334,16
+21 Transport,5,51,10.2,18
+Solus Coaches,5,69,13.8,27
+Xelabus,5,14,2.8,3
+Oakleys Coaches,5,60,12.0,24
+Western Dales Community Bus,5,40,8.0,11
+Westerbus,5,13,2.6,4
+Walsall Community Transport,5,156,31.2,38
+Sweeneys Garage,5,33,6.6,12
+Glen Valley Tours,5,82,16.4,44
+Black Cat Travel,5,98,19.6,49
+Goodsir,5,54,10.8,16
+United Coaches,5,351,70.2,143
+Whippet Coaches,5,270,54.0,124
+Williams Coaches,5,158,31.6,63
+W Brownrigg,5,81,16.2,32
+Totness Community Bus,5,29,5.8,11
+Peter Hogg of Jedburgh,5,62,12.4,28
+Evans Coaches Tregaron,5,40,8.0,17
+Stanley Travel,5,252,50.4,149
+Isle Valley Transport,5,23,4.6,10
+Hunters Executive Coaches,5,370,74.0,176
+Townlynx,5,52,10.4,43
+Brookline,5,44,8.8,36
+Llew Jones,5,204,40.8,102
+Nefyn,4,127,31.75,77
+Fowlers Travel,4,9,2.25,3
+Red Funnel,4,520,130.0,202
+CT Coaches,4,36,9.0,16
+Sussex Coaches,4,49,12.25,43
+Nottingham Minibuses and Coaches Ltd,4,28,7.0,10
+HcL,4,42,10.5,16
+Phoenix Coaches,4,114,28.5,36
+Brian Jones Coaches,4,10,2.5,3
+Blackburn Private Hire,4,48,12.0,26
+C G Myall & Son,4,16,4.0,10
+First & Last Mile,4,8,2.0,2
+Moray Council,4,26,6.5,10
+Beeline Coaches,4,47,11.75,39
+Cumbria Classic Coaches,4,10,2.5,4
+Avondale Coaches,4,1358,339.5,480
+Andersons of Langholm,4,14,3.5,4
+Argyll & Bute Council Ferries,4,450,112.5,150
+Thornes Independent Ltd,4,12,3.0,6
+Pat's Coaches,4,32,8.0,26
+Park's of Hamilton,4,104,26.0,60
+Ashbourne Community Transport,4,56,14.0,21
+Lord's Travel,4,20,5.0,12
+Langston & Tasker,4,16,4.0,10
+Hunts Coaches,4,44,11.0,24
+Vale Travel,4,73,18.25,43
+Archway Travel,4,276,69.0,76
+Bear Buses,4,8,2.0,2
+South Yorkshire Future Tram,4,4480,1120.0,1709
+Coopers Tours,4,10,2.5,4
+Wilkins Travel (Port Talbot),3,6,2.0,3
+Olympia Travel,3,6,2.0,2
+Peoples Bus,3,6,2.0,4
+Bus Na Comhairle,3,140,46.666666666666664,66
+Imperial Coaches Ltd,3,6,2.0,2
+Short's Travel,3,104,34.666666666666664,72
+Smith & Sons,3,20,6.666666666666667,16
+Centaur Coaches,3,13,4.333333333333333,5
+Safeguard Buses,3,408,136.0,157
+Elizabeth Yule Transport,3,70,23.333333333333332,54
+ABILITY (Northants),3,12,4.0,5
+Colchri Coaches,3,126,42.0,45
+O.R.Jones,3,40,13.333333333333334,26
+Redwoods Travel,3,6,2.0,2
+Travel Wisharts,3,51,17.0,37
+Thames Clippers,3,527,175.66666666666666,290
+Lawson's of Corby,3,6,2.0,2
+Lewis Y Llan,3,38,12.666666666666666,23
+Ridgways Coaches,3,63,21.0,42
+Howards Travel,3,16,5.333333333333333,8
+London Docklands Light Railway - TfL,3,7591,2530.3333333333335,4215
+Greenslades Tours,3,76,25.333333333333332,72
+Thomas of Rhondda,3,113,37.666666666666664,55
+Harpurs Coaches,3,4,1.3333333333333333,2
+Green Mountain Travel,3,55,18.333333333333332,24
+The Durness Bus,3,18,6.0,7
+Golden Tours,3,48,16.0,26
+Thandi Red Limited,3,6,2.0,2
+Felix Taxis & Co.,3,30,10.0,16
+Valentines Travel,3,27,9.0,10
+Maghull Coaches,3,7,2.3333333333333335,5
+Viscount Travel,3,63,21.0,35
+Belle Vue Coaches,3,28,9.333333333333334,24
+Starline,3,7,2.3333333333333335,3
+Ross Travel,3,132,44.0,45
+Murdo MacIver,3,49,16.333333333333332,22
+Roberts Coaches,3,288,96.0,96
+Stirling Council,3,58,19.333333333333332,36
+Taf Valley Coaches,3,57,19.0,20
+D A Travel,3,91,30.333333333333332,43
+Berry's Coaches,3,60,20.0,24
+Cruise Loch Lomond,3,119,39.666666666666664,80
+TK Travel,3,15,5.0,5
+Belle Coaches,3,3,1.0,1
+McNairn's Coaches,3,111,37.0,48
+Irving of Dalston,3,10,3.3333333333333335,4
+Wright Brothers Coaches,2,4,2.0,2
+Community Transport Glasgow,2,142,71.0,88
+Rooster Bus,2,4,2.0,2
+Select Coaches,2,26,13.0,15
+Yarranton Brothers,2,43,21.5,22
+Coastal and Country Coaches,2,36,18.0,20
+Wrexham Taxis,2,46,23.0,34
+Annandale Community Transport,2,5,2.5,4
+Wilson's of Rhu,2,126,63.0,64
+Bullocks Coaches,2,4,2.0,2
+Travel Cornwall,2,4,2.0,2
+Tranport for Tongue,2,6,3.0,4
+Todd's Travel,2,79,39.5,41
+Atwest,2,36,18.0,23
+BM Coaches,2,65,32.5,48
+Sweyne Coaches,2,47,23.5,45
+Wastbus,2,15,7.5,13
+Stevenson's Travel,2,9,4.5,5
+Acme Transport Services,2,4,2.0,2
+Station Coaches,2,56,28.0,36
+Burnbrae Garage,2,7,3.5,5
+Shoreline Suncruisers,2,47,23.5,45
+West Midlands Metro,2,1280,640.0,724
+AMK,2,19,9.5,16
+St Ives Minibus Services,2,38,19.0,30
+ABUS,2,4,2.0,2
+Charlton Mini's,2,22,11.0,12
+South Harris Coaches,2,37,18.5,26
+City Transport,2,176,88.0,146
+Skills Motor Coaches Limited,2,165,82.5,96
+SightSeeing Manchester,2,44,22.0,41
+Coach Event Services,2,63,31.5,39
+Bristol Ferry Boat Company,2,88,44.0,72
+Hopleys Coaches,2,52,26.0,30
+Mendip Community Transport,2,33,16.5,31
+Docklands Buses,2,818,409.0,409
+Dunnett's Transport,2,11,5.5,8
+James Bevan,2,4,2.0,2
+Edward Thomas,2,19,9.5,17
+Jonathan Boyd,2,32,16.0,20
+Jones Login,2,6,3.0,4
+Eifion's Coaches,2,21,10.5,16
+K and K Transport,2,9,4.5,5
+Ellenvale Coaches,2,10,5.0,8
+Northlink Ferries,2,36,18.0,28
+North Area Transport Association,2,16,8.0,8
+Evolve Bus & Coach,2,38,19.0,20
+"New Bharat Coaches (Southall, London)",2,6,3.0,4
+FIRST CAPITAL EAST LIMI,2,547,273.5,277
+Hawkes Coaches,2,6,3.0,4
+Haines Coaches,2,4,2.0,2
+Mudeford Ferry,2,312,156.0,252
+Moving People,2,48,24.0,27
+L & G Coaches,2,4,2.0,2
+Millport Motors,2,314,157.0,267
+Grindles Coaches,2,4,2.0,2
+Lochaber Action on Disability,2,15,7.5,11
+Mersey Ferries,2,72,36.0,46
+Holmeswood Coaches Ltd,2,110,55.0,55
+Gatwick Hoppa,2,80,40.0,71
+Glenfarg Community Transport Group,2,86,43.0,44
+MacLeod's Coaches,2,13,6.5,10
+MacDonald's Coaches,2,15,7.5,12
+Duck Tours,2,8,4.0,4
+M & R Travel,2,4,2.0,2
+Islay Coaches,2,80,40.0,48
+Peter Hodgson Travel,2,9,4.5,7
+Premier Coaches,2,31,15.5,28
+R & J Coaches,2,4,2.0,2
+Isle of Hoy Development Trust,2,22,11.0,18
+Denbighshire Council,2,16,8.0,12
+Peter MacLennan,2,49,24.5,45
+Peter's Minibus Hire,2,40,20.0,24
+Reays Coaches,2,10,5.0,5
+Redwing Coaches,2,13,6.5,8
+R G Jamieson & Son,2,22,11.0,18
+A and J Taxis,1,153,153.0,153
+Hadlow Rural Community School,1,3,3.0,3
+Lakeland Coaches,1,6,6.0,6
+Hovertravel,1,80,80.0,80
+Lakeside Coaches,1,23,23.0,23
+Leadhills and Wanlockhead Railway,1,16,16.0,16
+Lewis Taxi,1,2,2.0,2
+Andrew's,1,18,18.0,18
+Ardlui Hotel,1,114,114.0,114
+A2B Cars (Maesteg),1,10,10.0,10
+H Semmence & Co.,1,2,2.0,2
+Hunter Cabs & Mini Buses,1,3,3.0,3
+Liverpool City Sights,1,36,36.0,36
+Whites Coaches,1,4,4.0,4
+A C Williams,1,2,2.0,2
+Zero2 Bus Museum,1,11,11.0,11
+Ulva Ferry,1,136,136.0,136
+Lochcarron Garage,1,4,4.0,4
+Grenitote Travel,1,10,10.0,10
+London Tramlink,1,1880,1880.0,1880
+Arisaig Marine,1,30,30.0,30
+Thomas Herbert Jones & Partners,1,68,68.0,68
+Green Line (operated by Arriva),1,480,480.0,480
+Astons Coaches,1,16,16.0,16
+Gosport-Portsmouth Ferry,1,888,888.0,888
+Lucketts of Watford,1,72,72.0,72
+Historic Scotland,1,78,78.0,78
+A & J Coaches,1,2,2.0,2
+Ugobus,1,54,54.0,54
+Kevin's Coaches,1,3,3.0,3
+Highland Ferries,1,18,18.0,18
+Wilsons Buses,1,80,80.0,80
+AK Transport,1,2,2.0,2
+J R Services,1,4,4.0,4
+Western Isles Cruises,1,107,107.0,107
+Hebridean Transport,1,36,36.0,36
+Western Ferries,1,557,557.0,557
+Hebridean MiniBus Service,1,12,12.0,12
+Heatons Coaches,1,2,2.0,2
+Jacksons of Silsden Ltd,1,24,24.0,24
+Aberdeenshire Council,1,8,8.0,8
+Johnson Transport,1,12,12.0,12
+J A & G D Nicolson,1,17,17.0,17
+Itchenor Ferry,1,72,72.0,72
+Wilma Ann Nicolson,1,12,12.0,12
+BK Marine,1,2,2.0,2
+K&P Coaches,1,114,114.0,114
+IFS Cloud Cable Car,1,1016,1016.0,1016
+Woolwich Free Ferry,1,128,128.0,128
+WMV Motor Hirer,1,19,19.0,19
+Hedge The Distance,1,2,2.0,2
+WM Travel,1,4,4.0,4
+Iain McGregor,1,153,153.0,153
+WESTlink,1,12,12.0,12
+KP Cabs,1,24,24.0,24
+Keepings Coaches,1,68,68.0,68
+Keith and Dufftown Railway,1,6,6.0,6
+Village & Valleys Travel,1,2,2.0,2
+Vickery's Coaches,1,2,2.0,2
+Kempsford Transport UK Ltd,1,22,22.0,22
+J R Dent Coaches,1,2,2.0,2
+Hayling Ferry Limited,1,174,174.0,174
+Air-Rail Link,1,3786,3786.0,3786
+Cruisers,1,12,12.0,12
+Gem Travel,1,2,2.0,2
+Plymouth Boat Trips,1,254,254.0,254
+Clynnog & Trefor / Berwyn Coaches,1,74,74.0,74
+Pentland Ferries,1,18,18.0,18
+Skye Ferry,1,228,228.0,228
+Climate Action Strathaven,1,62,62.0,62
+Paul's Travel,1,4,4.0,4
+Padstow Harbour Commissioners,1,306,306.0,306
+South Ayrshire Community Transport,1,20,20.0,20
+South Somerset Community Transport,1,16,16.0,16
+Chepstow Classic Buses,1,2,2.0,2
+Edinburgh Trams,1,893,893.0,893
+Orkney Travel,1,2,2.0,2
+Cavern City Tours,1,14,14.0,14
+Operator,1,4,4.0,4
+St Mawes Ferry,1,100,100.0,100
+Number Seven Boat Trips,1,358,358.0,358
+Peyton Travel,1,8,8.0,8
+Sheffield Community Transport,1,42,42.0,42
+Cairn Valley Community Transport,1,2,2.0,2
+Dartmouth Higher Ferry,1,558,558.0,558
+Cowes Ferry,1,1332,1332.0,1332
+River Link,1,684,684.0,684
+Reading RailAir,1,630,630.0,630
+D M K Motors,1,20,20.0,20
+SPT Subway,1,870,870.0,870
+Salcombe Ferry,1,206,206.0,206
+Quality Line,1,52,52.0,52
+Sandbanks Ferry,1,588,588.0,588
+Dan's Coach Travel,1,13,13.0,13
+Community Transport South Wiltshire,1,31,31.0,31
+Scoraig Ferry,1,10,10.0,10
+Prentice Westwood,1,8,8.0,8
+Scraggs,1,16,16.0,16
+"Polruan Passenger Ferry, Bodinnick Vehicle Ferry",1,762,762.0,762
+Polruan Ferry Co Ltd,1,419,419.0,419
+Nottingham Express Transit (Tram),1,1513,1513.0,1513
+CVS Ltd,1,1,1.0,1
+Tendring Community Transport,1,18,18.0,18
+Stringers,1,43,43.0,43
+Flagfinders,1,9,9.0,9
+Flushing Ferry,1,90,90.0,90
+Minibus Plus.com,1,10,10.0,10
+Sweeneys Cruises,1,12,12.0,12
+Mikro Coaches,1,10,10.0,10
+Forge Travel,1,22,22.0,22
+GM Buses,1,21,21.0,21
+Galson Motors,1,6,6.0,6
+Gatwick Airport inter-terminal Shuttle,1,492,492.0,492
+Tamar Bridge & Torpoint Ferry Joint Committee,1,1137,1137.0,1137
+Martins Car Hire,1,8,8.0,8
+Taunton Minibuses,1,4,4.0,4
+Bayliss Executive Travel,1,4,4.0,4
+Banga Buses,1,165,165.0,165
+Balmaha Boatyard,1,96,96.0,96
+Mountain Goat Holidays and Tours,1,8,8.0,8
+Strathspey Steam Railway,1,6,6.0,6
+Nexus Ferry,1,218,218.0,218
+Stowmarket Minibus and Coach Hire,1,4,4.0,4
+Nauticalia Ferry,1,207,207.0,207
+Fal River Links,1,410,410.0,410
+Fareline Bus & Coach Services,1,2,2.0,2
+Bournemouth Boating Services,1,108,108.0,108
+Bournemouth Boating Ser,1,36,36.0,36
+Ferryhill Village Travel,1,3,3.0,3
+Boultons of Shropshire,1,10,10.0,10
+Bo'ness and Kinneil Railway,1,32,32.0,32
+NBM Hire Ltd,1,11,11.0,11
+NATIONAL EXPRESS OPERAT,1,6,6.0,6
+Station Taxis,1,4,4.0,4
+Steam Ship Sir Walter Scott,1,12,12.0,12
+Steer Community Transport,1,3,3.0,3
+N N Cresswell,1,10,10.0,10
+Mountbatten Water Taxis,1,189,189.0,189
+united minibuses and coaches ltd,1,33,33.0,33

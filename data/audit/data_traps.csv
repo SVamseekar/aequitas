@@ -1,0 +1,27 @@
+Dataset,Severity,Trap
+NaPTAN,CRITICAL,"Must filter StopType to BCT/BCS/BCE — other types are rail, ferry, metro"
+NaPTAN,CRITICAL,Must filter ATCO prefix 0xx-4xx for England — bounding box includes Wales (5xx) and Scotland (6xx)
+NaPTAN,CRITICAL,Must filter Status='act' — inactive stops inflate counts
+NaPTAN,HIGH,"52,449 stops have null Easting/Northing — excluded from spatial join"
+NaPTAN,MEDIUM,"Includes vans — some stops serve commercial vehicles, skews rural counts"
+BODS,CRITICAL,Cross-region deduplication required — same route appears in multiple regional feeds
+BODS,CRITICAL,Stop count ≠ service level — must derive frequency from stop_times.txt
+BODS,HIGH,stop_times.txt is 5.8 GB — requires chunked reading
+BODS,HIGH,GTFS times can exceed 24:00:00 for services past midnight
+BODS,MEDIUM,frequencies.txt may be empty — all services use exact timetables
+BODS,MEDIUM,BODS stop_id may not always match NaPTAN ATCOCode format
+IMD 2025,HIGH,"Uses 2021 LSOA boundaries — zero mismatch with Census, but RUC uses 2011 boundaries"
+IMD 2025,MEDIUM,Score is NOT linearly proportional to deprivation — use ranks or deciles for comparison
+IMD 2025,MEDIUM,"Domain weights are FIXED (e.g., Income 22.5%) — cannot be policy-adjusted"
+IMD 2025,LOW,Sub-domain scores may use different scales — cannot compare directly across sub-domains
+Census TS001,CRITICAL,"Population denominator must use Census total (~56.49M), NEVER pipeline-filtered"
+Census TS045,HIGH,"HOUSEHOLD-level, NOT person-level — do not divide by population"
+Census TS045,MEDIUM,High no-car % is ambiguous: wealthy city centre OR poor deprived area
+Census TS021,MEDIUM,2021 Census added Roma explicitly — NOT comparable to 2011
+Census TS021,LOW,Multiple-tick for mixed groups — possible double-counting at sub-category level
+Census TS007a,LOW,Age bands are 5-year groups — cannot get exact age distributions
+NOMIS TS066,HIGH,"Our formula uses % of total 16+ pop, not % of economically active — definition matters"
+RUC 2021,MEDIUM,Based on 2011 boundaries mapped to 2021 — some edge cases
+Boundaries,HIGH,"GeoJSON files are ~1 GB — load once, do all spatial operations"
+General,CRITICAL,All per-capita metrics must use Census 2021 population as denominator
+General,HIGH,"Region assignment must use spatial join (centroid → region polygon), NOT API"
