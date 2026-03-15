@@ -38,9 +38,9 @@ Census 2021:
   Sum of all LSOA populations: ___
   Sum cross-checked against ONS England total (~56.3M): ___
 
-IMD 2019:
-  Total LSOAs: ___
-  LSOAs with no match in Census 2021 boundaries: ___
+IMD 2025:
+  Total LSOAs: 33,755 ✓ LOCKED
+  LSOAs with no match in Census 2021 boundaries: 0 ✓ LOCKED (uses 2021 boundaries)
 
 Spatial joins:
   Bus stops successfully assigned to an LSOA: ___  (target: >95%)
