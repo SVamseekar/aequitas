@@ -1,0 +1,4 @@
+{% if best and worst -%}
+**{{ best.name }}** leads England with **{{ best.value|round(2) }} {{ unit }}**, {{ best.pct_above|round(1) }}% above the national average of {{ national_avg|round(2) }} {{ unit }}.
+{{ worst.name }} has the lowest at {{ worst.value|round(2) }} {{ unit }} ({{ worst.pct_below|round(1) }}% below average).
+{%- endif %}

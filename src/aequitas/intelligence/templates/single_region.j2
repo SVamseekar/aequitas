@@ -1,0 +1,3 @@
+{% if region_name and value is not none -%}
+**{{ region_name }}** records **{{ value|round(2) }} {{ unit }}**, {{ vs_national_pct|round(1) }}% {{ "above" if vs_national_pct >= 0 else "below" }} the national average of {{ national_avg|round(2) }} {{ unit }}.
+{%- endif %}

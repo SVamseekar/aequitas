@@ -1,0 +1,6 @@
+{% if n_below > 0 -%}
+**{{ n_below|int }} areas** ({{ pct_below|round(1) }}% of the total) fall below the target of {{ target|round(2) }} {{ unit }}, with an average gap of {{ mean_gap|round(2) }} {{ unit }}.
+Closing this gap would require an estimated investment of £{{ (total_annual_cost_m)|round(1) }}m per year.
+{%- else %}
+All areas meet or exceed the target of {{ target|round(2) }} {{ unit }}.
+{%- endif %}
