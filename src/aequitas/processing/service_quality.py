@@ -128,11 +128,11 @@ def _stream_stop_times(
     service_day_type = calendar.apply(classify_service, axis=1)
     service_to_day: dict[str, str] = dict(zip(calendar["service_id"].astype(str), service_day_type))
 
-    # Trip → day_type lookup
-    trip_to_day: dict[str, str] = {
-        str(row["trip_id"]): service_to_day.get(str(row["service_id"]), "other")
-        for _, row in trips_df[["trip_id", "service_id"]].iterrows()
-    }
+    # Trip → day_type lookup (vectorised — iterrows over 1.75M rows is too slow)
+    trip_to_day: dict[str, str] = dict(zip(
+        trips_df["trip_id"].astype(str),
+        trips_df["service_id"].astype(str).map(service_to_day).fillna("other"),
+    ))
 
     logger.info("Streaming stop_times.txt for headway computation")
     # Accumulate (stop_id, day_type) → list of departure times
@@ -158,8 +158,10 @@ def _stream_stop_times(
                 if chunk.empty:
                     continue
 
-                # Parse departure times vectorised
-                chunk["dep_min"] = chunk["departure_time"].apply(_parse_gtfs_time)
+                # Parse departure times vectorised (split HH:MM:SS → minutes)
+                parts = chunk["departure_time"].str.split(":", expand=True)
+                chunk["dep_min"] = pd.to_numeric(parts[0], errors="coerce") * 60 + pd.to_numeric(parts[1], errors="coerce")
+                chunk["dep_min"] = chunk["dep_min"].fillna(-1).astype(int)
                 chunk = chunk[chunk["dep_min"] >= 0]
 
                 # Map trip → day_type
