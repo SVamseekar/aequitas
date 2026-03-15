@@ -46,7 +46,15 @@ No co-author lines. Clean, descriptive messages only.
 - Every metric on screen must trace to source data through a documented formula
 
 ## Current Phase
-**Phase 0 — Data audit + EDA COMPLETE (2026-03-14).** 19 notebooks total (01, 02–02i, 03a–03h, 04a–04f). 103 checks, 0 FAIL, ground truth locked. All 8 policy dimensions covered, all 9 socio-economic factors confirmed. → **Phase 1 (pipeline build) begins next.**
+**Phase 1 — Data Pipeline + Warehouse (started 2026-03-15).** Building `src/aequitas/` Python package: ingestion → processing → analytics → intelligence → DuckDB warehouse. One CLI command from raw data to populated warehouse.
+
+Phase 0 (Data audit + EDA) COMPLETE 2026-03-14: 19 notebooks, 103 checks, 0 FAIL, ground truth locked.
+
+## Build Phases (Revised 2026-03-15)
+1. **Phase 0 — Data audit + EDA** ✅ COMPLETE (2026-03-14)
+2. **Phase 1 — Pipeline + Warehouse** ← CURRENT. Raw data → Parquet → analytics → InsightEngine → DuckDB. Plan: `docs/superpowers/plans/2026-03-15-phase1-pipeline-warehouse.md`
+3. **Phase 2 — Frontend + RAG** — React dashboard + FAISS/Gemini chatbot
+4. **Phase 3 — Deploy + CI/CD** — GitHub Actions, hosting, PDF export
 
 ## Ground Truth (Locked — do not change without re-running audit)
 | Entity | Count | Source |

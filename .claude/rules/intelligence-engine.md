@@ -8,7 +8,7 @@ paths:
 
 - InsightEngine is deterministic — Jinja2 templates + evidence-gated rules only, NO LLM calls here
 - A rule must not fire unless its evidence threshold is met — suppress > mislead, always
-- TAG 2024 constants live in `core/constants.py` only — never hardcode BCR values or time values inline
+- TAG Databook v2.03fc (Dec 2025, rebased to 2023 prices, includes May 2026 changes) constants live in `core/constants.py` only — never hardcode BCR values or time values inline. File downloaded to `data/raw/tag/` — extract values before building economic appraisal module.
 - Every metric that appears in a narrative must be traceable to a specific column in a specific Parquet file
 - No hardcoded narrative text — 0 lines of hardcoded strings in output
 - Narrative tone: consulting-grade, quantified, no qualitative vagueness

@@ -1225,7 +1225,15 @@ Any value outside these ranges triggers a pipeline halt.
 
 ## 14. Build Sequence
 
-### 14.1 Phase Dependencies
+> **SUPERSEDED (2026-03-15):** The 5-phase structure below was written pre-EDA. After Phase 0 completed (19 notebooks, ground truth locked), phases were consolidated to 3:
+> 1. **Phase 1 — Pipeline + Warehouse** (merged Data Foundation + Warehouse + Intelligence + ML)
+> 2. **Phase 2 — Frontend + RAG** (merged Dashboard + Chatbot)
+> 3. **Phase 3 — Deploy + CI/CD**
+>
+> Current plan: `docs/superpowers/plans/2026-03-15-phase1-pipeline-warehouse.md`
+> The architectural guidance in Sections 8-13 above remains valid. Only the phase decomposition changed.
+
+### 14.1 Phase Dependencies (Original — superseded)
 
 ```
 Phase 1: Data Foundation
