@@ -56,7 +56,7 @@ CORE_TABLES: dict[str, str] = {
             section_id VARCHAR,
             stats JSON,
             chart_data JSON,
-            narrative JSON,
+            narrative VARCHAR,
             PRIMARY KEY (region, urban_rural, section_id)
         )
     """,
