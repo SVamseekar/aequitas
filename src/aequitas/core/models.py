@@ -111,7 +111,7 @@ class SectionResult(BaseModel):
     section_id: str
     stats: dict
     chart_data: dict
-    narrative: dict
+    narrative: str
 
 
 class ProvenanceEntry(BaseModel):
