@@ -215,6 +215,24 @@ def run_warehouse(cfg: PipelineConfig | None = None) -> StageReport:
     return report
 
 
+def run_rag_index(cfg: PipelineConfig | None = None) -> StageReport:
+    """Build FAISS index from DuckDB narratives."""
+    if cfg is None:
+        cfg = PipelineConfig()
+
+    from aequitas.rag.index_builder import build_faiss_index
+
+    t0 = time.perf_counter()
+    result = build_faiss_index(cfg)
+    return StageReport(
+        stage="rag_index",
+        duration_s=time.perf_counter() - t0,
+        output_files=[Path(p) for p in [result.get("index_path", ""), result.get("metadata_path", "")] if p],
+        checks_passed=1 if result.get("n_chunks", 0) > 0 else 0,
+        checks_failed=0 if result.get("n_chunks", 0) > 0 else 1,
+    )
+
+
 def run_validation(cfg: PipelineConfig | None = None) -> StageReport:
     """Stage 6: Run ground truth validation gates."""
     if cfg is None:
