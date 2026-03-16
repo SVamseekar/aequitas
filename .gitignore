@@ -23,7 +23,7 @@ build/
 *.duckdb.wal
 
 # ML models
-models/
+data/models/
 *.pkl
 *.joblib
 *.faiss
