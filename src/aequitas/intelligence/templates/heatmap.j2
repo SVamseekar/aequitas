@@ -1,0 +1,3 @@
+{% if worst_cell is not none -%}
+The interaction between {{ x_dimension }} and {{ y_dimension }} reveals that the worst-served cell is **{{ worst_cell.label }}** with a mean {{ metric_name }} of {{ worst_cell.value|round(1) }}. The best-served is **{{ best_cell.label }}** at {{ best_cell.value|round(1) }}.
+{%- endif %}

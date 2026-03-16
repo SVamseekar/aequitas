@@ -1,0 +1,6 @@
+{% if median is not none -%}
+The median {{ metric_name }} is **{{ median|round(2) }} {{ unit }}** (10th–90th percentile: {{ p10|round(2) }}–{{ p90|round(2) }}). The distribution is {{ skew_label }}, with {{ n_outliers|int }} outliers beyond 3× IQR.
+{% if cv is not none -%}
+Coefficient of variation: {{ (cv * 100)|round(1) }}% — {{ "high heterogeneity" if cv > 0.5 else "moderate variation" if cv > 0.25 else "relatively uniform" }}.
+{%- endif %}
+{%- endif %}

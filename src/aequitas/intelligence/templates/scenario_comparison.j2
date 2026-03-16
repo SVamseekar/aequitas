@@ -1,0 +1,9 @@
+{% if scenarios -%}
+Across {{ scenarios|length }} policy scenarios:
+{% for s in scenarios -%}
+- **{{ s.name }}**: {{ s.population|int }} people affected, £{{ s.cost_m|round(1) }}m/yr, {{ s.co2_t|int }} t CO₂ saved/yr
+{% endfor %}
+{% if best_bcr_scenario -%}
+**{{ best_bcr_scenario }}** delivers the highest value for money.
+{%- endif %}
+{%- endif %}

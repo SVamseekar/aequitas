@@ -1,0 +1,6 @@
+{% if urban_value is not none and rural_value is not none -%}
+**Urban** areas have **{{ urban_value|round(2) }} {{ unit }}** compared to **{{ rural_value|round(2) }} {{ unit }}** in rural areas — a gap of {{ gap_pct|round(1) }}%.
+{% if n_urban and n_rural -%}
+Based on {{ n_urban|int }} urban and {{ n_rural|int }} rural LSOAs.
+{%- endif %}
+{%- endif %}

@@ -1,0 +1,6 @@
+{% if n_clusters is not none -%}
+Clustering reveals **{{ n_clusters|int }}** distinct groups.
+{% for cluster in clusters -%}
+**Cluster {{ cluster.id }}** ({{ cluster.n|int }} {{ entity_type }}, {{ cluster.pct|round(1) }}%): {{ cluster.description }}.
+{% endfor %}
+{%- endif %}

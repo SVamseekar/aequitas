@@ -1,0 +1,6 @@
+{% if co2_saving_tonnes is not none -%}
+Modal shift from car to bus in {{ scope }} would save **{{ co2_saving_tonnes|round(0)|int }} tonnes CO₂/year**, valued at **£{{ co2_value_k|round(0)|int }}k** at the TAG carbon price of £{{ carbon_price|round(2) }}/tCO₂e.
+{% if modal_shift_trips is not none -%}
+This is based on {{ modal_shift_trips|int }} car trips replaced annually.
+{%- endif %}
+{%- endif %}

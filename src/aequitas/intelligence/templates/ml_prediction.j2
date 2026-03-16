@@ -1,0 +1,9 @@
+{% if r2 is not none -%}
+A Random Forest model explains **{{ (r2 * 100)|round(1) }}%** of variation in bus coverage (R² = {{ r2|round(3) }}).
+{% if top_feature -%}
+The strongest predictor is **{{ top_feature }}** (SHAP importance: {{ top_importance|round(3) }}).
+{%- endif %}
+{% if n_features -%}
+The model uses {{ n_features|int }} socio-economic features; {{ ((1 - r2) * 100)|round(0)|int }}% of variance remains unexplained by demographics — suggesting policy-driven factors dominate.
+{%- endif %}
+{%- endif %}
