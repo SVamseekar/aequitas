@@ -1831,7 +1831,6 @@ def _build_section(
     Returns (stats_dict, chart_data_dict).
     """
     # Dispatch by section prefix to the appropriate builder
-    prefix = section_id.split("_")[0]
     builders = {
         "a1": _build_ranking_density,
         "a2": _build_ranking_density,
@@ -2152,20 +2151,24 @@ def _build_ml_prediction(
 ) -> tuple[dict, dict]:
     """Build ML prediction / SHAP (A8, D8, G3, G4)."""
     shap_df = data.get("shap")
+    if shap_df is None or len(shap_df) == 0:
+        return {}, {}
+    if not MLPredictionRule().should_fire(r2=0.472, n_features=len(shap_df)):
+        return {}, {}
+
     stats: dict[str, Any] = {}
     chart: dict[str, Any] = {}
 
-    if shap_df is not None and len(shap_df) > 0:
-        top = shap_df.iloc[0]
-        stats = {
-            "r2": 0.472,  # locked ground truth
-            "top_feature": str(top.get("feature", "")),
-            "top_importance": round(float(top.get("mean_abs_shap", top.get("importance", 0))), 3),
-            "n_features": len(shap_df),
-        }
-        feat_df = shap_df.rename(columns={"mean_abs_shap": "importance"}) if "mean_abs_shap" in shap_df.columns else shap_df
-        if "feature" in feat_df.columns and "importance" in feat_df.columns:
-            chart = build_shap_bar(features=feat_df, title=SECTION_REGISTRY[section_id].title, model_r2=0.472)
+    top = shap_df.iloc[0]
+    stats = {
+        "r2": 0.472,  # locked ground truth
+        "top_feature": str(top.get("feature", "")),
+        "top_importance": round(float(top.get("mean_abs_shap", top.get("importance", 0))), 3),
+        "n_features": len(shap_df),
+    }
+    feat_df = shap_df.rename(columns={"mean_abs_shap": "importance"}) if "mean_abs_shap" in shap_df.columns else shap_df
+    if "feature" in feat_df.columns and "importance" in feat_df.columns:
+        chart = build_shap_bar(features=feat_df, title=SECTION_REGISTRY[section_id].title, model_r2=0.472)
     return stats, chart
 
 
