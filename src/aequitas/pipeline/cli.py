@@ -62,6 +62,13 @@ def validate() -> None:
     run_validation()
 
 
+@main.command()
+def rag() -> None:
+    """Build FAISS index for RAG chatbot."""
+    from aequitas.pipeline._stages import run_rag_index
+    run_rag_index()
+
+
 @main.command("run")
 def run_all() -> None:
     """Run all pipeline stages end-to-end."""
@@ -72,6 +79,7 @@ def run_all() -> None:
         run_intelligence,
         run_warehouse,
         run_validation,
+        run_rag_index,
     )
 
     stages = [
@@ -81,6 +89,7 @@ def run_all() -> None:
         ("intelligence", run_intelligence),
         ("warehouse", run_warehouse),
         ("validate", run_validation),
+        ("rag_index", run_rag_index),
     ]
 
     for name, fn in stages:
