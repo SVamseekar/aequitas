@@ -126,14 +126,21 @@ def _load_all_data(cfg: PipelineConfig) -> dict[str, pd.DataFrame] | None:
     processed = cfg.processed_dir
     audit = cfg.audit_dir
 
+    # Phase 0 outputs all landed in data/audit/; data/processed/ is populated by Phase 1.
+    # Fall back to audit/ when processed/ copy is absent so the test suite can run against
+    # the existing Phase 0 Parquets without requiring a full Phase 1 pipeline run.
+    def _p(filename: str) -> Path:
+        proc = processed / filename
+        return proc if proc.exists() else audit / filename
+
     paths: dict[str, Path] = {
-        "lsoa_sq": processed / "lsoa_service_quality.parquet",
-        "lsoa_eq": processed / "lsoa_equity_metrics.parquet",
-        "lsoa_acc": processed / "lsoa_2sfca.parquet",
-        "lsoa_econ": processed / "lsoa_economic_appraisal.parquet",
-        "lsoa_policy": processed / "lsoa_policy_synthesis.parquet",
-        "routes": processed / "route_geometries.parquet",
-        "lta": processed / "lta_franchising_readiness.parquet",
+        "lsoa_sq": _p("lsoa_service_quality.parquet"),
+        "lsoa_eq": _p("lsoa_equity_metrics.parquet"),
+        "lsoa_acc": _p("lsoa_2sfca.parquet"),
+        "lsoa_econ": _p("lsoa_economic_appraisal.parquet"),
+        "lsoa_policy": _p("lsoa_policy_synthesis.parquet"),
+        "routes": _p("route_geometries.parquet"),
+        "lta": _p("lta_franchising_readiness.parquet"),
         "headways": audit / "stop_headways.parquet",
         "coverage_pred": audit / "coverage_prediction.parquet",
         "shap": audit / "shap_importance.parquet",
