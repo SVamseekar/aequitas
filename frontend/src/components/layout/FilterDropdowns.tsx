@@ -7,7 +7,7 @@ export function FilterDropdowns() {
 
   return (
     <div className="flex gap-2">
-      <Select value={region} onValueChange={(v) => { if (v !== null) setRegion(v) }}>
+      <Select value={region} onValueChange={(v: string | null) => { if (v !== null) setRegion(v) }}>
         <SelectTrigger className="w-[180px] bg-white/10 border-white/20 text-white text-sm">
           <SelectValue placeholder="Region" />
         </SelectTrigger>
@@ -17,7 +17,7 @@ export function FilterDropdowns() {
           ))}
         </SelectContent>
       </Select>
-      <Select value={urbanRural} onValueChange={(v) => { if (v !== null) setUrbanRural(v) }}>
+      <Select value={urbanRural} onValueChange={(v: string | null) => { if (v !== null) setUrbanRural(v) }}>
         <SelectTrigger className="w-[130px] bg-white/10 border-white/20 text-white text-sm">
           <SelectValue placeholder="Area type" />
         </SelectTrigger>
