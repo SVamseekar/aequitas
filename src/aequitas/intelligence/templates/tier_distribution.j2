@@ -1,0 +1,6 @@
+{% if n_tier1 is not none -%}
+Of {{ n_total|int }} LADs assessed for franchising readiness: **{{ n_tier1|int }}** in Tier 1 (high readiness), **{{ n_tier2|int }}** in Tier 2 (medium), and **{{ n_tier3|int }}** in Tier 3 (low).
+{% if top_lad -%}
+The highest-readiness LAD is **{{ top_lad }}** (score: {{ top_score|round(1) }}/100).
+{%- endif %}
+{%- endif %}

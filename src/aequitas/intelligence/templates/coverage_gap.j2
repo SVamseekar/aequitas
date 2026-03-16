@@ -1,0 +1,6 @@
+{% if pct_covered is not none -%}
+**{{ pct_covered|round(1) }}%** of England's population lives within 400m of a bus stop. **{{ n_zero_access|int }}** LSOAs ({{ pct_zero_access|round(1) }}%) have zero access, affecting an estimated {{ pop_zero_access|int }} residents.
+{% if worst_region -%}
+The largest concentration of zero-access LSOAs is in **{{ worst_region }}**.
+{%- endif %}
+{%- endif %}

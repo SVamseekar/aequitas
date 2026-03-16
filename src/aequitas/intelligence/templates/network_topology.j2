@@ -1,0 +1,4 @@
+{% if n_cross_la is not none -%}
+**{{ n_cross_la|int }}** routes ({{ pct_cross_la|round(1) }}%) cross local authority boundaries. {% if densest_corridor %}The densest cross-LA corridor is **{{ densest_corridor }}** with {{ densest_count|int }} routes.{% endif %}
+Mean route length: {{ mean_length|round(1) }} km (median {{ median_length|round(1) }} km).
+{%- endif %}
