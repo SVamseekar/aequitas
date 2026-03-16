@@ -1,0 +1,56 @@
+"""Dependency injection — shared resources loaded at startup."""
+from __future__ import annotations
+
+import json
+from contextlib import asynccontextmanager
+from typing import Any
+
+import duckdb
+from loguru import logger
+
+from aequitas.api.config import ApiConfig
+
+_state: dict[str, Any] = {}
+
+
+def get_db() -> duckdb.DuckDBPyConnection:
+    """Return the shared DuckDB connection."""
+    return _state["db"]
+
+
+def get_faiss() -> tuple[Any, list[dict] | None]:
+    """Return (faiss_index, faiss_metadata) or (None, None)."""
+    return _state.get("faiss_index"), _state.get("faiss_metadata")
+
+
+def get_embedding_model() -> Any:
+    """Return the sentence-transformer embedding model or None."""
+    return _state.get("embedding_model")
+
+
+@asynccontextmanager
+async def lifespan(app: Any):  # type: ignore[type-arg]
+    """Load DuckDB + FAISS on startup, close on shutdown."""
+    cfg = ApiConfig()
+
+    # DuckDB
+    logger.info(f"Opening DuckDB: {cfg.db_path}")
+    _state["db"] = duckdb.connect(str(cfg.db_path), read_only=True)
+
+    # FAISS (optional — chat won't work without it but dashboard still does)
+    if cfg.faiss_index_path.exists():
+        import faiss
+        logger.info(f"Loading FAISS index: {cfg.faiss_index_path}")
+        _state["faiss_index"] = faiss.read_index(str(cfg.faiss_index_path))
+        _state["faiss_metadata"] = json.loads(cfg.faiss_metadata_path.read_text())
+
+        from sentence_transformers import SentenceTransformer
+        _state["embedding_model"] = SentenceTransformer("all-MiniLM-L6-v2")
+        logger.info("FAISS + embedding model loaded")
+    else:
+        logger.warning(f"FAISS index not found at {cfg.faiss_index_path} — chat disabled")
+
+    yield
+
+    _state["db"].close()
+    _state.clear()
