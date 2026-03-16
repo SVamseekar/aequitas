@@ -1,5 +1,6 @@
 """Pipeline configuration — paths, thresholds, filter space."""
 
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -26,6 +27,12 @@ class PipelineConfig:
     # BODS chunking
     stop_times_chunk_size: int = 1_000_000
     shapes_chunk_size: int = 500_000
+
+    # RAG / API
+    faiss_index_path: Path = field(default_factory=lambda: Path("data/faiss_index.bin"))
+    faiss_metadata_path: Path = field(default_factory=lambda: Path("data/faiss_metadata.json"))
+    gemini_api_key: str = field(default_factory=lambda: os.environ.get("GEMINI_API_KEY", ""))
+    api_cors_origins: list[str] = field(default_factory=lambda: ["http://localhost:5173"])
 
     def filter_combinations(self) -> list[tuple[str, str]]:
         """All 30 filter combinations: (region, urban_rural)."""
