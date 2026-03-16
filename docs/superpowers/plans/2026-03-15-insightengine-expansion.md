@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Expand InsightEngine from 7 templates / ~60 narratives to 28 templates / 51 chart+narrative pairs with populated chart_data payloads, covering all analytical questions from the Blueprint + Phase 0 additions.
+**Goal:** Expand InsightEngine from 7 templates / ~60 narratives to 27 templates / 51 chart+narrative pairs with populated chart_data payloads, covering all analytical questions from the Blueprint + Phase 0 additions.
 
-**Architecture:** Add new templates, evidence gate rules, chart_data builder functions, and a section registry. Rewire precompute.py to loop over all 51 sections using the registry. No changes to pipeline stages, analytics modules, or DuckDB DDL.
+**Architecture:** Add new templates, evidence gate rules, chart_data builder functions, and a section registry. Rewire precompute.py to loop over all 51 sections using the registry. One prerequisite pipeline change: export SHAP importance to Parquet (currently in-memory only). LAD profiles (lad_profile.j2, 298 × 5 = 1,490 rows) deferred to a follow-up task.
 
 **Tech Stack:** Python 3.12+, Jinja2, pandas, numpy, scipy, DuckDB, pytest
 
@@ -53,6 +53,140 @@ tests/intelligence/
 ├── test_chart_data_builder.py   — CREATE: tests for chart_data builder functions
 ├── test_section_registry.py     — CREATE: tests for registry completeness
 ├── test_templates_new.py        — CREATE: tests for 20 new templates
+```
+
+---
+
+## Chunk 0: Prerequisites
+
+### Task 0: Export SHAP Importance to Parquet
+
+`shap_importance.parquet` does not exist yet — `compute_shap_importance()` runs in-memory during notebook 04d but never persists. We need it for sections A8, D8, G3, G4.
+
+**Files:**
+- Create: `src/aequitas/analytics/shap_export.py`
+- Create: `tests/analytics/test_shap_export.py`
+- Modify: `src/aequitas/pipeline/_stages.py` (add to audit_files list)
+
+- [ ] **Step 1: Write failing test**
+
+```python
+# tests/analytics/test_shap_export.py
+"""Test SHAP importance export."""
+
+import pandas as pd
+import pytest
+from unittest.mock import patch, MagicMock
+from aequitas.analytics.shap_export import export_shap_importance
+from aequitas.core.config import PipelineConfig
+
+
+def test_export_shap_produces_parquet(tmp_path):
+    """SHAP export creates a Parquet with feature + mean_abs_shap columns."""
+    cfg = PipelineConfig()
+    cfg_audit = cfg.audit_dir
+
+    # Only run if master_lsoa_table exists (CI may not have it)
+    master_path = cfg_audit / "master_lsoa_table.parquet"
+    if not master_path.exists():
+        pytest.skip("master_lsoa_table.parquet not available")
+
+    out = export_shap_importance(cfg, output_dir=tmp_path)
+    assert out.exists()
+    df = pd.read_parquet(out)
+    assert "feature" in df.columns
+    assert "mean_abs_shap" in df.columns
+    assert len(df) >= 5  # at least 5 features
+    # Should be sorted descending
+    assert df["mean_abs_shap"].is_monotonic_decreasing
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `cd /Users/souravamseekarmarti/Projects/aequitas && uv run python -m pytest tests/analytics/test_shap_export.py -v 2>&1 | head -10`
+Expected: ImportError — module doesn't exist yet
+
+- [ ] **Step 3: Implement shap_export.py**
+
+```python
+# src/aequitas/analytics/shap_export.py
+"""Export SHAP feature importance to Parquet for InsightEngine consumption.
+
+Trains a lightweight RF model on master_lsoa_table features, computes SHAP
+values, and saves to shap_importance.parquet.
+"""
+
+from pathlib import Path
+
+import pandas as pd
+from loguru import logger
+
+from aequitas.analytics.ml_prediction import train_coverage_model, compute_shap_importance
+from aequitas.core.config import PipelineConfig
+
+# The 9 socio-economic features used in coverage prediction
+_FEATURE_COLS = [
+    "imd_score",
+    "unemployment_rate",
+    "nocar_pct",
+    "elderly_pct",
+    "income_score",
+    "nonwhite_pct",
+    "disability_pct",
+    "geo_barriers_score",
+    "imd_decile",
+]
+
+
+def export_shap_importance(
+    cfg: PipelineConfig | None = None,
+    output_dir: Path | None = None,
+) -> Path:
+    """Train RF model and export SHAP importance to Parquet.
+
+    Args:
+        cfg: Pipeline configuration.
+        output_dir: Override output directory (default: cfg.audit_dir).
+
+    Returns:
+        Path to the written shap_importance.parquet.
+    """
+    if cfg is None:
+        cfg = PipelineConfig()
+    out_dir = output_dir or cfg.audit_dir
+
+    master = pd.read_parquet(cfg.audit_dir / "master_lsoa_table.parquet")
+
+    # Prepare features + target
+    available = [c for c in _FEATURE_COLS if c in master.columns]
+    X = master[available].fillna(0)
+    y = master["trips_per_capita"].fillna(0).values if "trips_per_capita" in master.columns else master[available[0]].values
+
+    model, metrics = train_coverage_model(X, y)
+    logger.info(f"SHAP export: RF R²={metrics['r2_test']:.3f}")
+
+    importance = compute_shap_importance(model, X)
+
+    out_path = out_dir / "shap_importance.parquet"
+    importance.to_parquet(out_path, index=False)
+    logger.info(f"SHAP importance exported: {len(importance)} features → {out_path}")
+    return out_path
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `cd /Users/souravamseekarmarti/Projects/aequitas && uv run python -m pytest tests/analytics/test_shap_export.py -v`
+Expected: PASS (or skip if no master_lsoa_table)
+
+- [ ] **Step 5: Add to pipeline audit_files check**
+
+In `src/aequitas/pipeline/_stages.py`, add `"shap_importance.parquet"` to the `audit_files` list in `run_analytics()`.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/aequitas/analytics/shap_export.py tests/analytics/test_shap_export.py src/aequitas/pipeline/_stages.py
+git commit -m "feat(analytics): export SHAP importance to Parquet for InsightEngine"
 ```
 
 ---
@@ -985,7 +1119,7 @@ Saturday service drops {{ saturday_pct_drop|round(0)|int }}% from weekday levels
 ```jinja2
 {# distribution.j2 #}
 {% if median is not none -%}
-The median {{ metric_name }} is **{{ median|round(2) }} {{ unit }}** (IQR: {{ iqr_low|round(2) }}–{{ iqr_high|round(2) }}). The distribution is {{ skew_label }}, with {{ n_outliers|int }} outliers beyond 3× IQR.
+The median {{ metric_name }} is **{{ median|round(2) }} {{ unit }}** (10th–90th percentile: {{ p10|round(2) }}–{{ p90|round(2) }}). The distribution is {{ skew_label }}, with {{ n_outliers|int }} outliers beyond 3× IQR.
 {% if cv is not none -%}
 Coefficient of variation: {{ (cv * 100)|round(1) }}% — {{ "high heterogeneity" if cv > 0.5 else "moderate variation" if cv > 0.25 else "relatively uniform" }}.
 {%- endif %}
@@ -1137,7 +1271,7 @@ TEMPLATE_TEST_CASES = [
     ("ml_prediction", {"r2": 0.472, "top_feature": "nocar_pct", "top_importance": 0.142, "n_features": 9}),
     ("service_hours", {"median_first_service": "06:32", "median_last_service": "18:45", "n_evening_isolated": 5189, "pct_evening_isolated": 15.4}),
     ("weekend_penalty", {"sunday_pct_drop": 80.0, "n_sunday_desert": 6745, "pct_sunday_desert": 20.0, "saturday_pct_drop": 35.0}),
-    ("distribution", {"median": 18.7, "unit": "km", "metric_name": "route length", "iqr_low": 8.4, "iqr_high": 28.7, "skew_label": "right-skewed", "n_outliers": 23, "cv": 0.85}),
+    ("distribution", {"median": 18.7, "unit": "km", "metric_name": "route length", "p10": 8.4, "p90": 28.7, "skew_label": "right-skewed", "n_outliers": 23, "cv": 0.85}),
     ("market_concentration", {"hhi": 2800, "region_name": "North East", "top_operator": "Arriva", "top_operator_share": 45.2}),
     ("ml_clusters", {"n_clusters": 4, "entity_type": "LSOAs", "clusters": [{"id": 0, "n": 16944, "pct": 50.2, "description": "Affluent urban"}, {"id": 1, "n": 6023, "pct": 17.8, "description": "Deprived car-free"}]}),
     ("network_topology", {"n_cross_la": 5143, "pct_cross_la": 37.7, "densest_corridor": "Greater Manchester–Lancashire", "densest_count": 142, "mean_length": 23.0, "median_length": 18.7}),
@@ -1249,11 +1383,13 @@ _SECTION_TEMPLATES: dict[str, str] = {
 }
 ```
 
-In `InsightEngine.__init__()`, add the custom filter:
+In `InsightEngine.__init__()`, after the `Environment(...)` call, add:
 
 ```python
-self._env.filters["format_thousands"] = lambda v: f"{int(v):,}"
+        self._env.filters["format_thousands"] = lambda v: f"{int(v):,}"
 ```
+
+This also fixes the existing bug where `policy_scenario.j2` uses `format_thousands` but it was never registered.
 
 - [ ] **Step 6: Run tests to verify they pass**
 
@@ -1449,15 +1585,15 @@ git commit -m "feat(intelligence): section registry — 51 sections mapped to te
 In `src/aequitas/warehouse/schema.py`, add to `ANALYTICS_PARQUET_SOURCES`:
 
 ```python
-    # New tables for expanded sections
-    "stop_headways": "data/processed/stop_headways.parquet",
-    "coverage_prediction": "data/processed/coverage_prediction.parquet",
-    "shap_importance": "data/processed/shap_importance.parquet",
-    "route_clusters": "data/processed/route_clusters.parquet",
-    "lsoa_clusters": "data/processed/lsoa_clusters_hdbscan.parquet",
-    "anomalies": "data/processed/anomalies.parquet",
-    "modal_shift_scenarios": "data/processed/modal_shift_scenarios.parquet",
-    "policy_scenarios": "data/processed/policy_scenarios.parquet",
+    # New tables for expanded sections (all in data/audit/ — Phase 0 outputs)
+    "stop_headways": "data/audit/stop_headways.parquet",
+    "coverage_prediction": "data/audit/coverage_prediction.parquet",
+    "shap_importance": "data/audit/shap_importance.parquet",
+    "route_clusters": "data/audit/route_clusters.parquet",
+    "lsoa_clusters": "data/audit/lsoa_clusters_hdbscan.parquet",
+    "anomalies": "data/audit/anomalies.parquet",
+    "modal_shift_scenarios": "data/audit/modal_shift_scenarios.parquet",
+    "policy_scenarios": "data/audit/policy_scenarios.parquet",
 ```
 
 - [ ] **Step 2: Verify existing tests still pass**
@@ -1484,8 +1620,9 @@ git commit -m "feat(warehouse): add 8 analytics Parquet sources for expanded sec
 This is the most complex task. The new precompute.py must:
 1. Import the section registry instead of hardcoded `_SECTIONS`
 2. Load all required Parquet files (not just policy + equity)
-3. Build stats AND chart_data for each section
-4. Use the section registry to determine which template to render
+3. Build stats AND chart_data for each section (no empty chart_data)
+4. Call evidence gate rules in each builder — return ({}, {}) if gate fails
+5. Use the section registry to determine which template to render
 
 - [ ] **Step 1: Rewrite precompute.py**
 
@@ -1530,6 +1667,27 @@ from aequitas.intelligence.chart_data_builder import (
     build_stacked_bar,
 )
 from aequitas.intelligence.engine import InsightEngine
+from aequitas.intelligence.rules import (
+    CorrelationRule,
+    GiniEquityRule,
+    GapToInvestmentRule,
+    MinLsoaRule,
+    DesertRule,
+    UrbanRuralRule,
+    MLPredictionRule,
+    DistributionRule,
+    MarketConcentrationRule,
+    ClusterRule,
+    NetworkRule,
+    HeatmapRule,
+    DecileRule,
+    DemographicRule,
+    AccessibilityRule,
+    AnomalyRule,
+    CarbonRule,
+    TierRule,
+    ScenarioComparisonRule,
+)
 from aequitas.intelligence.section_registry import SECTION_REGISTRY
 
 
@@ -1683,10 +1841,10 @@ def _build_section(
         "a6": _build_urban_rural,
         "a7": _build_gap_to_target,
         "a8": _build_ml_prediction,
-        "b1": _build_ranking_service,
+        "b1": _build_ranking_density,
         "b2": _build_service_hours,
         "b3": _build_weekend_penalty,
-        "b4": _build_ranking_routes,
+        "b4": _build_ranking_density,
         "b5": _build_correlation,
         "c1": _build_distribution,
         "c2": _build_distribution,
@@ -1708,7 +1866,7 @@ def _build_section(
         "f3": _build_demographic,
         "f4": _build_accessibility,
         "f5": _build_urban_rural,
-        "f6": _build_ranking_equity,
+        "f6": _build_ranking_density,
         "g1": _build_clusters,
         "g2": _build_anomaly,
         "g3": _build_ml_prediction,
@@ -1717,7 +1875,7 @@ def _build_section(
         "j1": _build_economic_value,
         "j2": _build_bcr,
         "j3": _build_carbon,
-        "j4": _build_ranking_investment,
+        "j4": _build_ranking_density,
         "bsa1": _build_franchising,
         "bsa2": _build_market_concentration,
         "bsa3": _build_tier_dist,
@@ -1728,10 +1886,8 @@ def _build_section(
         "ps5": _build_scenario_comparison,
     }
 
-    builder = builders.get(section_id.rsplit("_", 1)[0] if "_" in section_id else section_id)
-    if builder is None:
-        # Try exact match
-        builder = builders.get(section_id)
+    prefix = section_id.split("_")[0]
+    builder = builders.get(prefix)
     if builder is None:
         return {}, {}
 
@@ -1797,7 +1953,7 @@ def _build_coverage_gap(
     if acc is None:
         return {}, {}
     filtered = _filter_data(acc, region, urban_rural)
-    if len(filtered) == 0:
+    if not MinLsoaRule().should_fire(n_lsoas=len(filtered)):
         return {}, {}
 
     score_col = "sfca_score" if "sfca_score" in filtered.columns else None
@@ -1805,13 +1961,32 @@ def _build_coverage_gap(
         return {}, {}
 
     n_zero = int((filtered[score_col] == 0).sum())
+    pct_covered = round((1 - n_zero / len(filtered)) * 100, 1)
     stats = {
-        "pct_covered": round((1 - n_zero / len(filtered)) * 100, 1),
+        "pct_covered": pct_covered,
         "n_zero_access": n_zero,
         "pct_zero_access": round(n_zero / len(filtered) * 100, 1),
         "pop_zero_access": int(filtered.loc[filtered[score_col] == 0, "population"].sum()) if "population" in filtered.columns else 0,
     }
-    return stats, {}
+
+    # chart_data: stacked bar (covered/not by region)
+    chart: dict = {}
+    if "region" in filtered.columns:
+        by_region = filtered.groupby("region").apply(
+            lambda g: pd.Series({
+                "covered": round((g[score_col] > 0).mean() * 100, 1),
+                "not_covered": round((g[score_col] == 0).mean() * 100, 1),
+            })
+        ).reset_index()
+        chart = build_stacked_bar(
+            categories=by_region["region"].tolist(),
+            series=[
+                {"name": "Covered", "values": by_region["covered"].tolist()},
+                {"name": "Not covered", "values": by_region["not_covered"].tolist()},
+            ],
+            title=SECTION_REGISTRY[section_id].title,
+        )
+    return stats, chart
 
 
 def _build_equity(
@@ -1819,6 +1994,7 @@ def _build_equity(
 ) -> tuple[dict, dict]:
     """Build equity metrics (A4, F1)."""
     eq = data.get("equity")
+    policy = data.get("policy")
     if eq is None:
         return {}, {}
     cols = ["gini", "palma_ratio", "concentration_index"]
@@ -1829,7 +2005,18 @@ def _build_equity(
         "palma": float(eq["palma_ratio"].iloc[0]),
         "concentration_index": float(eq["concentration_index"].iloc[0]),
     }
-    return stats, {}
+
+    # chart_data: Lorenz curve from policy data
+    chart: dict = {}
+    if policy is not None and "trips_per_capita" in policy.columns and "population" in policy.columns:
+        filtered = _filter_data(policy, region, urban_rural)
+        if GiniEquityRule().should_fire(n_lsoas=len(filtered)):
+            chart = build_lorenz_curve(
+                values=filtered["trips_per_capita"].fillna(0),
+                weights=filtered["population"].fillna(1),
+                title=SECTION_REGISTRY[section_id].title,
+            )
+    return stats, chart
 
 
 def _build_desert(
@@ -1848,6 +2035,9 @@ def _build_desert(
         return {}, {}
 
     deserts = filtered[filtered[desert_col] == 0]
+    if not DesertRule().should_fire(n_desert_lsoas=len(deserts)):
+        return {}, {}
+
     stats = {
         "n_desert_lsoas": len(deserts),
         "pop_affected": int(deserts["population"].sum()) if "population" in deserts.columns else 0,
@@ -1856,7 +2046,20 @@ def _build_desert(
         top_region = deserts["region"].value_counts().idxmax()
         stats["largest_region"] = str(top_region)
         stats["largest_region_count"] = int(deserts["region"].value_counts().max())
-    return stats, {}
+
+    # chart_data: choropleth of desert % by LAD
+    chart: dict = {}
+    lta = data.get("lta")
+    if lta is not None and "lad_cd" in lta.columns:
+        lad_data = lta[["lad_cd", "lad_nm"]].copy()
+        if "sunday_desert_rate" in lta.columns:
+            lad_data["value"] = (lta["sunday_desert_rate"] * 100).round(1)
+            lad_data = lad_data.rename(columns={"lad_cd": "area_code", "lad_nm": "area_name"})
+            chart = build_choropleth(
+                data=lad_data, title=SECTION_REGISTRY[section_id].title,
+                geography="lad", metric="pct_lsoas_no_service", colour_scale="RdYlGn",
+            )
+    return stats, chart
 
 
 def _build_urban_rural(
@@ -1873,7 +2076,7 @@ def _build_urban_rural(
 
     urban = filtered[filtered["urban_rural"].str.lower().str.startswith("urban")]
     rural = filtered[filtered["urban_rural"].str.lower().str.startswith("rural")]
-    if len(urban) == 0 or len(rural) == 0:
+    if not UrbanRuralRule().should_fire(n_urban=len(urban), n_rural=len(rural)):
         return {}, {}
 
     u_val = float(urban[metric].mean())
@@ -1888,7 +2091,19 @@ def _build_urban_rural(
         "n_urban": len(urban),
         "n_rural": len(rural),
     }
-    return stats, {}
+
+    # chart_data: grouped bar by region
+    chart: dict = {}
+    if "region" in filtered.columns:
+        regions = sorted(filtered["region"].unique())
+        u_vals = [round(float(urban[urban["region"] == r][metric].mean()), 2) if len(urban[urban["region"] == r]) > 0 else 0 for r in regions]
+        r_vals = [round(float(rural[rural["region"] == r][metric].mean()), 2) if len(rural[rural["region"] == r]) > 0 else 0 for r in regions]
+        chart = build_grouped_bar(
+            categories=list(regions),
+            series=[{"name": "Urban", "values": u_vals}, {"name": "Rural", "values": r_vals}],
+            title=SECTION_REGISTRY[section_id].title,
+        )
+    return stats, chart
 
 
 def _build_gap_to_target(
@@ -1904,6 +2119,9 @@ def _build_gap_to_target(
 
     median = float(filtered["trips_per_capita"].median())
     below = filtered[filtered["trips_per_capita"] < median]
+    if not GapToInvestmentRule().should_fire(n_below_target=len(below)):
+        return {}, {}
+
     stats = {
         "n_below": len(below),
         "pct_below": round(len(below) / len(filtered) * 100, 1),
@@ -1912,7 +2130,21 @@ def _build_gap_to_target(
         "mean_gap": round(float((median - below["trips_per_capita"]).mean()), 2) if len(below) > 0 else 0.0,
         "total_annual_cost_m": round(float(len(below) * 500 / 1_000_000), 1),
     }
-    return stats, {}
+
+    # chart_data: horizontal bar of gap by region
+    chart: dict = {}
+    if "region" in filtered.columns:
+        by_region = filtered.groupby("region").apply(
+            lambda g: round(float((median - g.loc[g["trips_per_capita"] < median, "trips_per_capita"]).sum()), 1) if (g["trips_per_capita"] < median).any() else 0
+        ).reset_index()
+        by_region.columns = ["label", "value"]
+        by_region = by_region[by_region["value"] > 0]
+        if len(by_region) > 0:
+            chart = build_horizontal_bar(
+                data=by_region, title=SECTION_REGISTRY[section_id].title,
+                x_label="Total gap (trips/capita)", y_label="Region",
+            )
+    return stats, chart
 
 
 def _build_ml_prediction(
@@ -1937,13 +2169,6 @@ def _build_ml_prediction(
     return stats, chart
 
 
-def _build_ranking_service(
-    section_id: str, data: dict, region: str, urban_rural: str,
-) -> tuple[dict, dict]:
-    """Build ranking for service frequency (B1)."""
-    return _build_ranking_density(section_id, data, region, urban_rural)
-
-
 def _build_service_hours(
     section_id: str, data: dict, region: str, urban_rural: str,
 ) -> tuple[dict, dict]:
@@ -1952,7 +2177,7 @@ def _build_service_hours(
     if sq is None:
         return {}, {}
     filtered = _filter_data(sq, region, urban_rural)
-    if len(filtered) == 0:
+    if not MinLsoaRule().should_fire(n_lsoas=len(filtered)):
         return {}, {}
 
     stats: dict[str, Any] = {}
@@ -1964,7 +2189,22 @@ def _build_service_hours(
         n_ei = int(filtered["evening_isolated"].sum())
         stats["n_evening_isolated"] = n_ei
         stats["pct_evening_isolated"] = round(n_ei / len(filtered) * 100, 1)
-    return stats, {}
+
+    # chart_data: grouped bar (first/last service by region)
+    chart: dict = {}
+    if "region" in filtered.columns and "first_service_min" in filtered.columns and "last_service_min" in filtered.columns:
+        by_region = filtered.groupby("region").agg(
+            first=("first_service_min", "median"), last=("last_service_min", "median")
+        ).reset_index()
+        chart = build_grouped_bar(
+            categories=by_region["region"].tolist(),
+            series=[
+                {"name": "First service (min)", "values": by_region["first"].round(0).tolist()},
+                {"name": "Last service (min)", "values": by_region["last"].round(0).tolist()},
+            ],
+            title=SECTION_REGISTRY[section_id].title,
+        )
+    return stats, chart
 
 
 def _build_weekend_penalty(
@@ -1975,7 +2215,7 @@ def _build_weekend_penalty(
     if sq is None:
         return {}, {}
     filtered = _filter_data(sq, region, urban_rural)
-    if len(filtered) == 0:
+    if not MinLsoaRule().should_fire(n_lsoas=len(filtered)):
         return {}, {}
 
     stats: dict[str, Any] = {}
@@ -1985,16 +2225,25 @@ def _build_weekend_penalty(
         stats["pct_sunday_desert"] = round(n_sd / len(filtered) * 100, 1)
     if "total_weekday_departures" in filtered.columns and "total_sunday_departures" in filtered.columns:
         wd = float(filtered["total_weekday_departures"].sum())
-        su = float(filtered["total_sunday_departures"].sum()) if "total_sunday_departures" in filtered.columns else 0
+        su = float(filtered["total_sunday_departures"].sum())
         stats["sunday_pct_drop"] = round((1 - su / wd) * 100, 1) if wd > 0 else 0
-    return stats, {}
 
-
-def _build_ranking_routes(
-    section_id: str, data: dict, region: str, urban_rural: str,
-) -> tuple[dict, dict]:
-    """Build ranking for routes (B4)."""
-    return _build_ranking_density(section_id, data, region, urban_rural)
+    # chart_data: grouped bar (weekday/sunday by region)
+    chart: dict = {}
+    if "region" in filtered.columns and "total_weekday_departures" in filtered.columns:
+        by_region = filtered.groupby("region").agg(
+            weekday=("total_weekday_departures", "mean"),
+            sunday=("total_sunday_departures", "mean") if "total_sunday_departures" in filtered.columns else ("total_weekday_departures", lambda x: 0),
+        ).reset_index()
+        chart = build_grouped_bar(
+            categories=by_region["region"].tolist(),
+            series=[
+                {"name": "Weekday", "values": by_region["weekday"].round(1).tolist()},
+                {"name": "Sunday", "values": by_region["sunday"].round(1).tolist()},
+            ],
+            title=SECTION_REGISTRY[section_id].title,
+        )
+    return stats, chart
 
 
 def _build_correlation(
@@ -2027,6 +2276,9 @@ def _build_correlation(
         return {}, {}
 
     corr = calculate_correlation(filtered[x_col], filtered[y_col])
+    if not CorrelationRule().should_fire(n=corr.n, p_value=corr.p_value):
+        return {}, {}
+
     stats = {
         "r": corr.r,
         "p_value": corr.p_value,
@@ -2037,7 +2289,7 @@ def _build_correlation(
         "y_label": y_label,
     }
 
-    id_col = "lsoa_code" if "lsoa_code" in filtered.columns else filtered.columns[0]
+    id_col = "lsoa_code" if "lsoa_code" in filtered.columns else "lsoa_cd" if "lsoa_cd" in filtered.columns else filtered.columns[0]
     chart = build_scatter_regression(
         df=filtered, x_col=x_col, y_col=y_col, id_col=id_col,
         title=SECTION_REGISTRY[section_id].title, x_label=x_label, y_label=y_label,
@@ -2066,15 +2318,19 @@ def _build_distribution(
     if col not in routes.columns:
         return {}, {}
 
-    desc = describe_distribution(routes[col].dropna())
+    values = routes[col].dropna()
+    if not DistributionRule().should_fire(n=len(values)):
+        return {}, {}
+
+    desc = describe_distribution(values)
     skew = "right-skewed" if desc.mean > desc.median * 1.1 else "left-skewed" if desc.mean < desc.median * 0.9 else "approximately symmetric"
 
     stats = {
         "median": desc.median,
         "unit": unit,
         "metric_name": name.lower(),
-        "iqr_low": desc.p10,
-        "iqr_high": desc.p90,
+        "p10": desc.p10,
+        "p90": desc.p90,
         "skew_label": skew,
         "n_outliers": desc.outliers,
         "cv": desc.cv,
@@ -2100,35 +2356,75 @@ def _build_market_concentration(
     if "region_hhi" not in lta.columns:
         return {}, {}
 
-    by_region = lta.groupby("region" if "region" in lta.columns else lta.columns[0])["region_hhi"].first()
+    by_region = lta.groupby("region")["region_hhi"].first().reset_index()
+    by_region.columns = ["label", "value"]
+    n_operators = len(by_region)
+    if not MarketConcentrationRule().should_fire(n_operators=n_operators):
+        return {}, {}
+
     stats = {
-        "hhi": round(float(by_region.mean()), 0),
+        "hhi": round(float(by_region["value"].mean()), 0),
         "region_name": "England" if region == "all" else region,
     }
-    return stats, {}
+
+    chart = build_horizontal_bar(
+        data=by_region, title=SECTION_REGISTRY[section_id].title,
+        x_label="HHI", y_label="Region",
+    )
+    return stats, chart
 
 
 def _build_clusters(
     section_id: str, data: dict, region: str, urban_rural: str,
 ) -> tuple[dict, dict]:
     """Build cluster sections (C6, D6, G1)."""
-    key = "route_clusters" if section_id.startswith("c6") or section_id.startswith("g1") else "clusters"
+    is_route = section_id.startswith("c6") or section_id.startswith("g1")
+    key = "route_clusters" if is_route else "clusters"
     df = data.get(key)
     if df is None:
         return {}, {}
 
-    cluster_col = [c for c in df.columns if "cluster" in c.lower()]
-    if not cluster_col:
+    cluster_col = "cluster" if is_route else "hdbscan_label"
+    if cluster_col not in df.columns:
         return {}, {}
 
-    labels = df[cluster_col[0]].unique()
-    n_clusters = len([l for l in labels if l >= 0])  # exclude noise (-1)
+    valid = df[df[cluster_col] >= 0]  # exclude noise (-1)
+    unique_labels = sorted(valid[cluster_col].unique())
+    n_clusters = len(unique_labels)
+    if not ClusterRule().should_fire(n_clusters=n_clusters):
+        return {}, {}
+
+    entity_type = "routes" if is_route else "LSOAs"
+
+    # Build cluster descriptions
+    clusters_info = []
+    archetype_col = "hdbscan_archetype" if "hdbscan_archetype" in df.columns else None
+    for cid in unique_labels:
+        mask = valid[cluster_col] == cid
+        n = int(mask.sum())
+        pct = round(n / len(valid) * 100, 1)
+        desc = str(df.loc[mask, archetype_col].iloc[0]) if archetype_col and mask.any() else f"Cluster {cid}"
+        clusters_info.append({"id": int(cid), "n": n, "pct": pct, "description": desc})
+
     stats = {
         "n_clusters": n_clusters,
-        "entity_type": "routes" if "route" in key else "LSOAs",
-        "clusters": [],
+        "entity_type": entity_type,
+        "clusters": clusters_info,
     }
-    return stats, {}
+
+    # chart_data: scatter_clusters (needs x/y projection — use first 2 numeric cols as proxy)
+    chart: dict = {}
+    numeric_cols = valid.select_dtypes(include="number").columns.tolist()
+    id_col = "route_id" if is_route else "lsoa_cd"
+    if len(numeric_cols) >= 2 and id_col in valid.columns:
+        scatter_df = valid[[numeric_cols[0], numeric_cols[1], cluster_col, id_col]].copy()
+        scatter_df.columns = ["x", "y", "cluster", "id"]
+        cluster_labels = {int(c["id"]): c["description"] for c in clusters_info}
+        chart = build_scatter_clusters(
+            data=scatter_df, cluster_labels=cluster_labels,
+            title=SECTION_REGISTRY[section_id].title,
+        )
+    return stats, chart
 
 
 def _build_network(
@@ -2138,6 +2434,8 @@ def _build_network(
     routes = data.get("routes")
     if routes is None:
         return {}, {}
+    if not NetworkRule().should_fire(n_routes=len(routes)):
+        return {}, {}
 
     n_cross = int(routes["cross_la_flag"].sum()) if "cross_la_flag" in routes.columns else 0
     stats = {
@@ -2146,7 +2444,18 @@ def _build_network(
         "mean_length": round(float(routes["route_length_km"].mean()), 1) if "route_length_km" in routes.columns else 0,
         "median_length": round(float(routes["route_length_km"].median()), 1) if "route_length_km" in routes.columns else 0,
     }
-    return stats, {}
+
+    # chart_data: choropleth of cross-LA route density by LAD
+    chart: dict = {}
+    lta = data.get("lta")
+    if lta is not None and "lad_cd" in lta.columns and "mean_trips_per_cap" in lta.columns:
+        lad_data = lta[["lad_cd", "lad_nm", "mean_trips_per_cap"]].copy()
+        lad_data.columns = ["area_code", "area_name", "value"]
+        chart = build_choropleth(
+            data=lad_data, title=SECTION_REGISTRY[section_id].title,
+            geography="lad", metric="cross_la_route_density", colour_scale="Viridis",
+        )
+    return stats, chart
 
 
 def _build_heatmap(
@@ -2162,6 +2471,11 @@ def _build_heatmap(
         return {}, {}
 
     pivot = filtered.groupby(["urban_rural", "imd_decile"])["trips_per_capita"].mean().unstack(fill_value=0)
+    cell_counts = filtered.groupby(["urban_rural", "imd_decile"]).size().unstack(fill_value=0)
+    min_cell = int(cell_counts.min().min())
+    if not HeatmapRule().should_fire(min_cell_n=min_cell):
+        return {}, {}
+
     x_labels = [str(d) for d in sorted(pivot.columns)]
     y_labels = list(pivot.index)
     values = pivot.values.tolist()
@@ -2204,6 +2518,10 @@ def _build_equity_decile(
     if "imd_decile" not in filtered.columns or "trips_per_capita" not in filtered.columns:
         return {}, {}
 
+    decile_counts = [int((filtered["imd_decile"] == d).sum()) for d in range(1, 11)]
+    if not DecileRule().should_fire(decile_counts=decile_counts):
+        return {}, {}
+
     by_decile = filtered.groupby("imd_decile")["trips_per_capita"].mean()
     most = float(by_decile.get(1, 0))
     least = float(by_decile.get(10, 0))
@@ -2215,7 +2533,16 @@ def _build_equity_decile(
         "unit": "trips/capita",
         "ratio": ratio,
     }
-    return stats, {}
+
+    # chart_data: horizontal bar of service by decile
+    decile_df = by_decile.reset_index()
+    decile_df.columns = ["label", "value"]
+    decile_df["label"] = decile_df["label"].astype(str)
+    chart = build_horizontal_bar(
+        data=decile_df, title=SECTION_REGISTRY[section_id].title,
+        x_label="Trips per capita", y_label="IMD Decile",
+    )
+    return stats, chart
 
 
 def _build_demographic(
@@ -2232,6 +2559,9 @@ def _build_demographic(
     median_nw = float(filtered["nonwhite_pct"].median())
     high = filtered[filtered["nonwhite_pct"] >= median_nw]
     low = filtered[filtered["nonwhite_pct"] < median_nw]
+    if not DemographicRule().should_fire(group_counts=[len(high), len(low)]):
+        return {}, {}
+
     nat_avg = float(filtered["trips_per_capita"].mean())
 
     groups = []
@@ -2243,7 +2573,14 @@ def _build_demographic(
             "vs_national_pct": round((val - nat_avg) / nat_avg * 100, 1) if nat_avg != 0 else 0,
         })
     stats = {"groups": groups, "unit": "trips/capita"}
-    return stats, {}
+
+    # chart_data: grouped bar
+    chart = build_grouped_bar(
+        categories=[g["label"] for g in groups],
+        series=[{"name": "Trips/capita", "values": [g["value"] for g in groups]}],
+        title=SECTION_REGISTRY[section_id].title,
+    )
+    return stats, chart
 
 
 def _build_accessibility(
@@ -2259,20 +2596,26 @@ def _build_accessibility(
         return {}, {}
 
     n_zero = int((filtered[score_col] == 0).sum())
+    if not AccessibilityRule().should_fire(n_pois=n_zero):
+        return {}, {}
+
     stats = {
         "n_beyond_threshold": n_zero,
         "poi_type": "LSOAs",
         "pct_beyond": round(n_zero / len(filtered) * 100, 1),
         "threshold_m": 400,
     }
-    return stats, {}
 
-
-def _build_ranking_equity(
-    section_id: str, data: dict, region: str, urban_rural: str,
-) -> tuple[dict, dict]:
-    """Build ranking by regional Gini (F6)."""
-    return _build_ranking_density(section_id, data, region, urban_rural)
+    # chart_data: horizontal bar (zero-access LSOAs by region)
+    chart: dict = {}
+    if "region" in filtered.columns:
+        by_region = filtered[filtered[score_col] == 0].groupby("region").size().reset_index()
+        by_region.columns = ["label", "value"]
+        chart = build_horizontal_bar(
+            data=by_region, title=SECTION_REGISTRY[section_id].title,
+            x_label="LSOAs with zero access", y_label="Region",
+        )
+    return stats, chart
 
 
 def _build_anomaly(
@@ -2288,6 +2631,9 @@ def _build_anomaly(
         return {}, {}
 
     anomalies = df[df[type_col] != "normal"]
+    if not AnomalyRule().should_fire(n_anomalies=len(anomalies)):
+        return {}, {}
+
     stats = {
         "n_anomalies": len(anomalies),
         "pct_anomalies": round(len(anomalies) / len(df) * 100, 1),
@@ -2295,7 +2641,16 @@ def _build_anomaly(
         "n_inefficiency": int((anomalies[type_col] == "inefficiency_affluent_poor_served").sum()),
         "n_policy_failure": int((anomalies[type_col] == "policy_failure_elderly_no_service").sum()),
     }
-    return stats, {}
+
+    # chart_data: scatter (SQI vs IMD, anomalies highlighted)
+    chart: dict = {}
+    if "service_quality_index" in df.columns and "imd_score" in df.columns and "lsoa_cd" in df.columns:
+        chart = build_scatter_regression(
+            df=df, x_col="imd_score", y_col="service_quality_index", id_col="lsoa_cd",
+            title=SECTION_REGISTRY[section_id].title,
+            x_label="IMD Score", y_label="Service Quality Index",
+        )
+    return stats, chart
 
 
 def _build_scenario(
@@ -2315,18 +2670,32 @@ def _build_scenario(
         return {}, {}
 
     r = row.iloc[0]
+    pop = int(r.get("population_affected", 0))
+    cost = float(r.get("estimated_annual_cost_m", 0))
+    co2 = float(r.get("co2_saving_t_yr", 0)) if pd.notna(r.get("co2_saving_t_yr")) else 0
+
     stats = {
         "scenario": {
             "scenario": str(r.get("scenario", "")),
             "name": str(r.get("name", "")),
             "scope": str(r.get("scope", "")),
-            "population_affected": int(r.get("population_affected", 0)),
-            "estimated_annual_cost_m": float(r.get("estimated_annual_cost_m", 0)),
-            "co2_saving_t_yr": int(r.get("co2_saving_t_yr", 0)),
+            "population_affected": pop,
+            "estimated_annual_cost_m": cost,
+            "co2_saving_t_yr": int(co2),
             "confidence": str(r.get("confidence", "indicative")),
         }
     }
-    return stats, {}
+
+    # chart_data: horizontal bar (cost, CO2, population as separate metrics)
+    bar_data = pd.DataFrame({
+        "label": ["Population affected", "Annual cost (£m)", "CO₂ saved (t/yr)"],
+        "value": [pop / 1e6, cost, co2],
+    })
+    chart = build_horizontal_bar(
+        data=bar_data, title=SECTION_REGISTRY[section_id].title,
+        x_label="Value", y_label="Metric",
+    )
+    return stats, chart
 
 
 def _build_economic_value(
@@ -2337,16 +2706,27 @@ def _build_economic_value(
     if econ is None:
         return {}, {}
     filtered = _filter_data(econ, region, urban_rural)
-    if len(filtered) == 0:
+    if not MinLsoaRule().should_fire(n_lsoas=len(filtered)):
         return {}, {}
 
     stats = {
         "annual_benefit": float(filtered["annual_benefit_gbp"].sum()) if "annual_benefit_gbp" in filtered.columns else 0,
         "region_name": "England" if region == "all" else region,
         "n_trips": int(filtered["trips_per_day"].sum()) if "trips_per_day" in filtered.columns else 0,
-        "vot": 8.49,  # blended TAG VoT
+        "vot": 8.49,  # TAG v2.03fc, blended commute/other
     }
-    return stats, {}
+
+    # chart_data: horizontal bar (benefit by region)
+    chart: dict = {}
+    if "region" in filtered.columns and "annual_benefit_gbp" in filtered.columns:
+        by_region = filtered.groupby("region")["annual_benefit_gbp"].sum().reset_index()
+        by_region.columns = ["label", "value"]
+        by_region["value"] = (by_region["value"] / 1e6).round(1)  # £m
+        chart = build_horizontal_bar(
+            data=by_region, title=SECTION_REGISTRY[section_id].title,
+            x_label="Annual benefit (£m)", y_label="Region",
+        )
+    return stats, chart
 
 
 def _build_bcr(
@@ -2368,7 +2748,18 @@ def _build_bcr(
         "investment_m": round(float(filtered["investment_gap_annual_cost"].sum()) / 1e6, 1) if "investment_gap_annual_cost" in filtered.columns else 0,
         "appraisal_years": 60,
     }
-    return stats, {}
+
+    # chart_data: horizontal bar (BCR by region)
+    chart: dict = {}
+    if "region" in filtered.columns:
+        by_region = filtered.groupby("region")["bcr_central"].mean().reset_index()
+        by_region.columns = ["label", "value"]
+        by_region["value"] = by_region["value"].round(2)
+        chart = build_horizontal_bar(
+            data=by_region, title=SECTION_REGISTRY[section_id].title,
+            x_label="BCR", y_label="Region",
+        )
+    return stats, chart
 
 
 def _build_carbon(
@@ -2379,27 +2770,35 @@ def _build_carbon(
     if ms is None or len(ms) == 0:
         return {}, {}
 
-    # Use central scenario
-    central = ms[ms["elasticity"] == 0.55] if "elasticity" in ms.columns else ms
+    # Use central elasticity (0.55)
+    el_col = "elasticity_value" if "elasticity_value" in ms.columns else "elasticity"
+    central = ms[ms[el_col] == 0.55] if el_col in ms.columns else ms
     if len(central) == 0:
         central = ms.iloc[[0]]
     r = central.iloc[0]
 
+    co2_saving = float(r.get("net_co2_saving_tonnes_pa", r.get("co2_saved_tonnes", 0)))
+    if not CarbonRule().should_fire(co2_saving=co2_saving):
+        return {}, {}
+
     stats = {
-        "co2_saving_tonnes": float(r.get("co2_saved_tonnes", 0)),
+        "co2_saving_tonnes": co2_saving,
         "scope": str(r.get("scope", "England")),
-        "co2_value_k": round(float(r.get("co2_saved_tonnes", 0)) * 259.87 / 1000, 0),
+        "co2_value_k": round(co2_saving * 259.87 / 1000, 0),
         "carbon_price": 259.87,
-        "modal_shift_trips": int(r.get("modal_shift_trips", 0)),
+        "modal_shift_trips": int(r.get("car_trips_replaced_pa", r.get("modal_shift_trips", 0))),
     }
-    return stats, {}
 
-
-def _build_ranking_investment(
-    section_id: str, data: dict, region: str, urban_rural: str,
-) -> tuple[dict, dict]:
-    """Build ranking by investment priority / BCR (J4)."""
-    return _build_ranking_density(section_id, data, region, urban_rural)
+    # chart_data: horizontal bar (CO2 by scope/scenario)
+    co2_by_scope = central.groupby("scope")["net_co2_saving_tonnes_pa"].first().reset_index() if "scope" in central.columns else pd.DataFrame()
+    chart: dict = {}
+    if len(co2_by_scope) > 0:
+        co2_by_scope.columns = ["label", "value"]
+        chart = build_horizontal_bar(
+            data=co2_by_scope, title=SECTION_REGISTRY[section_id].title,
+            x_label="Net CO₂ saved (t/yr)", y_label="Scope",
+        )
+    return stats, chart
 
 
 def _build_franchising(
@@ -2410,8 +2809,10 @@ def _build_franchising(
     if lta is None:
         return {}, {}
 
-    score_col = "franchising_readiness_score" if "franchising_readiness_score" in lta.columns else None
+    score_col = "franchising_readiness" if "franchising_readiness" in lta.columns else None
     if score_col is None:
+        return {}, {}
+    if not MinLsoaRule().should_fire(n_lsoas=len(lta)):
         return {}, {}
 
     sorted_lta = lta.sort_values(score_col, ascending=False)
@@ -2419,7 +2820,7 @@ def _build_franchising(
     worst = sorted_lta.iloc[-1]
     nat_avg = float(sorted_lta[score_col].mean())
 
-    name_col = "lad_name" if "lad_name" in lta.columns else lta.columns[0]
+    name_col = "lad_nm" if "lad_nm" in lta.columns else lta.columns[0]
     stats = {
         "best": {
             "name": str(best[name_col]),
@@ -2434,7 +2835,15 @@ def _build_franchising(
         "national_avg": round(nat_avg, 1),
         "unit": "readiness score",
     }
-    return stats, {}
+
+    # chart_data: horizontal bar (top/bottom 20 LADs)
+    top20 = sorted_lta.head(20)[[name_col, score_col]].copy()
+    top20.columns = ["label", "value"]
+    chart = build_horizontal_bar(
+        data=top20, title=SECTION_REGISTRY[section_id].title,
+        x_label="Franchising readiness", y_label="LAD", national_avg=nat_avg,
+    )
+    return stats, chart
 
 
 def _build_tier_dist(
@@ -2444,21 +2853,42 @@ def _build_tier_dist(
     lta = data.get("lta")
     if lta is None or "readiness_tier" not in lta.columns:
         return {}, {}
+    if not TierRule().should_fire(n_lads=len(lta)):
+        return {}, {}
 
-    tier_counts = lta["readiness_tier"].value_counts()
+    # readiness_tier is text like "Tier 1 — High", extract the number
+    tier_nums = lta["readiness_tier"].str.extract(r"Tier (\d)")[0].astype(float)
+    tier_counts = tier_nums.value_counts()
     stats = {
         "n_total": len(lta),
         "n_tier1": int(tier_counts.get(1, 0)),
         "n_tier2": int(tier_counts.get(2, 0)),
         "n_tier3": int(tier_counts.get(3, 0)),
     }
-    name_col = "lad_name" if "lad_name" in lta.columns else lta.columns[0]
-    score_col = "franchising_readiness_score" if "franchising_readiness_score" in lta.columns else None
+    name_col = "lad_nm" if "lad_nm" in lta.columns else lta.columns[0]
+    score_col = "franchising_readiness" if "franchising_readiness" in lta.columns else None
     if score_col:
         top = lta.sort_values(score_col, ascending=False).iloc[0]
         stats["top_lad"] = str(top[name_col])
         stats["top_score"] = round(float(top[score_col]), 1)
-    return stats, {}
+
+    # chart_data: stacked bar (tiers by region)
+    chart: dict = {}
+    if "region" in lta.columns:
+        lta_with_tier = lta.copy()
+        lta_with_tier["_tier_num"] = tier_nums
+        by_region = lta_with_tier.groupby("region")["_tier_num"].value_counts().unstack(fill_value=0)
+        regions = list(by_region.index)
+        chart = build_stacked_bar(
+            categories=regions,
+            series=[
+                {"name": "Tier 1 (High)", "values": [int(by_region.loc[r].get(1.0, 0)) for r in regions]},
+                {"name": "Tier 2 (Medium)", "values": [int(by_region.loc[r].get(2.0, 0)) for r in regions]},
+                {"name": "Tier 3 (Low)", "values": [int(by_region.loc[r].get(3.0, 0)) for r in regions]},
+            ],
+            title=SECTION_REGISTRY[section_id].title,
+        )
+    return stats, chart
 
 
 def _build_scenario_comparison(
@@ -2466,7 +2896,9 @@ def _build_scenario_comparison(
 ) -> tuple[dict, dict]:
     """Build scenario comparison (PS5)."""
     scenarios = data.get("scenarios")
-    if scenarios is None or len(scenarios) < 2:
+    if scenarios is None:
+        return {}, {}
+    if not ScenarioComparisonRule().should_fire(n_scenarios=len(scenarios)):
         return {}, {}
 
     items = []
@@ -2474,15 +2906,27 @@ def _build_scenario_comparison(
         items.append({
             "name": str(r.get("name", "")),
             "population": int(r.get("population_affected", 0)),
-            "cost_m": round(float(r.get("estimated_annual_cost_m", 0)), 1),
-            "co2_t": int(r.get("co2_saving_t_yr", 0)),
+            "cost_m": round(float(r.get("estimated_annual_cost_m", 0)) if pd.notna(r.get("estimated_annual_cost_m")) else 0, 1),
+            "co2_t": int(r.get("co2_saving_t_yr", 0)) if pd.notna(r.get("co2_saving_t_yr")) else 0,
         })
 
     stats = {
         "scenarios": items,
         "best_bcr_scenario": str(scenarios.iloc[0].get("name", "")) if len(scenarios) > 0 else "",
     }
-    return stats, {}
+
+    # chart_data: grouped bar (all scenarios side by side)
+    names = [i["name"] for i in items]
+    chart = build_grouped_bar(
+        categories=names,
+        series=[
+            {"name": "Population (millions)", "values": [round(i["population"] / 1e6, 2) for i in items]},
+            {"name": "Cost (£m/yr)", "values": [i["cost_m"] for i in items]},
+            {"name": "CO₂ saved (t/yr)", "values": [i["co2_t"] for i in items]},
+        ],
+        title=SECTION_REGISTRY[section_id].title,
+    )
+    return stats, chart
 ```
 
 - [ ] **Step 2: Run all intelligence tests**
@@ -2530,5 +2974,14 @@ Expected: 58 template mappings (51 new + 7 existing), narrative generated, not s
 
 ```bash
 git add -A
-git commit -m "feat: InsightEngine expansion complete — 51 sections, 28 templates, chart_data builder"
+git commit -m "feat: InsightEngine expansion complete — 51 sections, 27 templates, chart_data builder"
 ```
+
+---
+
+## Future Work (deferred)
+
+- **LAD Profiles:** `lad_profile.j2` wrapping 5 sub-narratives for each of 298 LADs (1,490 additional rows). Spec Section 5 defines this but it is not included in this plan to keep scope focused on the 51 topic-page sections.
+- **Generalized suppression in engine.py:** The coverage_density-specific suppression logic (line 91) should be replaced with a generic evidence-gate dispatch using section_registry metadata. For now, builder-level gating returns empty stats which triggers engine.py's existing `not stats` → suppress path.
+- **`data/processed/` path consolidation:** The 7 original `ANALYTICS_PARQUET_SOURCES` entries still point to `data/processed/` which has no Parquets. These will need updating when the pipeline actually writes to `processed_dir`.
+- **VoT price year documentation:** VoT=8.49 needs a comment tracing to specific TAG cell reference and price year.
