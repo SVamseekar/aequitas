@@ -18,6 +18,8 @@ def get_sections(
 ) -> SectionsResponse:
     """Return sections for a given dimension."""
     db = get_db()
+    if db is None:
+        return SectionsResponse(dimension=dimension, sections=[])
     rows = query_sections(db, dimension, region, urban_rural)
     return SectionsResponse(
         dimension=dimension,

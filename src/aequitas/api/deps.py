@@ -13,9 +13,9 @@ from aequitas.api.config import ApiConfig
 _state: dict[str, Any] = {}
 
 
-def get_db() -> duckdb.DuckDBPyConnection:
-    """Return the shared DuckDB connection."""
-    return _state["db"]
+def get_db() -> duckdb.DuckDBPyConnection | None:
+    """Return the shared DuckDB connection, or None if warehouse not built yet."""
+    return _state.get("db")
 
 
 def get_faiss() -> tuple[Any, list[dict] | None]:
@@ -34,8 +34,11 @@ async def lifespan(app: Any):  # type: ignore[type-arg]
     cfg = ApiConfig()
 
     # DuckDB
-    logger.info(f"Opening DuckDB: {cfg.db_path}")
-    _state["db"] = duckdb.connect(str(cfg.db_path), read_only=True)
+    if cfg.db_path.exists():
+        logger.info(f"Opening DuckDB: {cfg.db_path}")
+        _state["db"] = duckdb.connect(str(cfg.db_path), read_only=True)
+    else:
+        logger.warning(f"Warehouse not found at {cfg.db_path} — run pipeline first. API will start but return empty results.")
 
     # FAISS (optional — chat won't work without it but dashboard still does)
     if cfg.faiss_index_path.exists():
@@ -52,5 +55,6 @@ async def lifespan(app: Any):  # type: ignore[type-arg]
 
     yield
 
-    _state["db"].close()
+    if "db" in _state:
+        _state["db"].close()
     _state.clear()

@@ -21,6 +21,8 @@ def get_lsoa(
     if table not in ALLOWED_TABLES:
         raise HTTPException(400, f"Table '{table}' not allowed. Choose from: {sorted(ALLOWED_TABLES)}")
     db = get_db()
+    if db is None:
+        return LsoaResponse(rows=[], total=0)
     field_list = [f.strip() for f in fields.split(",")] if fields else None
     rows, total = query_lsoa(db, table, region, field_list, limit)
     return LsoaResponse(rows=rows, total=total)

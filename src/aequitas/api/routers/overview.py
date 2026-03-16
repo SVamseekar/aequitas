@@ -45,6 +45,11 @@ def get_overview(
 ) -> OverviewResponse:
     """Return headline stats for all 8 dimensions."""
     db = get_db()
+    if db is None:
+        return OverviewResponse(dimensions=[
+            DimensionOverview(id=dim_id, name=name, headline_stat=HeadlineStat(value=0.0, label=label, severity="low"), summary="", route=route)
+            for dim_id, (name, label, route) in _DIMENSION_META.items()
+        ])
     rows = query_overview(db, region, urban_rural)
 
     dimensions = []

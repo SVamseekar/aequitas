@@ -14,6 +14,8 @@ router = APIRouter()
 def get_provenance(metric_id: str) -> ProvenanceResponse:
     """Return provenance trail for a metric."""
     db = get_db()
+    if db is None:
+        raise HTTPException(503, "Warehouse not available — run pipeline first")
     result = query_provenance(db, metric_id)
     if not result:
         raise HTTPException(404, f"No provenance for metric '{metric_id}'")
