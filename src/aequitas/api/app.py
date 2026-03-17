@@ -20,7 +20,7 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=cfg.cors_origins,
-        allow_methods=["GET", "POST"],
+        allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["*"],
     )
 
@@ -30,11 +30,12 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     # Register routers
-    from aequitas.api.routers import overview, sections, lsoa, provenance, chat
+    from aequitas.api.routers import overview, sections, lsoa, provenance, chat, conversations
     app.include_router(overview.router, prefix="/api")
     app.include_router(sections.router, prefix="/api")
     app.include_router(lsoa.router, prefix="/api")
     app.include_router(provenance.router, prefix="/api")
     app.include_router(chat.router, prefix="/api")
+    app.include_router(conversations.router, prefix="/api")
 
     return app
