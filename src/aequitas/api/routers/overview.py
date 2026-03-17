@@ -12,28 +12,31 @@ from aequitas.api.services.warehouse import query_overview
 router = APIRouter()
 
 _DIMENSION_META = {
-    "equity": ("Equity & Deprivation", "Gini coefficient", "/equity"),
-    "accessibility": ("Accessibility", "Service deserts", "/accessibility"),
-    "service_quality": ("Service Quality", "Mean headway", "/service-quality"),
+    "equity": ("Equity & Deprivation", "Disparity ratio", "/equity"),
+    "accessibility": ("Accessibility", "400m coverage %", "/accessibility"),
+    "service_quality": ("Service Quality", "Avg trips/capita", "/service-quality"),
     "route_network": ("Route Network", "Operator HHI", "/route-network"),
-    "correlations": ("Socio-Economic & ML", "Top SHAP feature", "/correlations"),
-    "economic": ("Economic Appraisal", "National BCR", "/economic"),
-    "bus_services_act": ("Bus Services Act 2025", "Mean readiness", "/bus-services-act"),
-    "scenarios": ("Policy Scenarios", "Best scenario BCR", "/scenarios"),
+    "correlations": ("Socio-Economic & ML", "Deprivation r", "/correlations"),
+    "economic": ("Economic Appraisal", "CO2 saving (t)", "/economic"),
+    "bus_services_act": ("Bus Services Act 2025", "Avg readiness", "/bus-services-act"),
+    "scenarios": ("Policy Scenarios", "Population affected", "/scenarios"),
 }
 
 
 def _severity(dim_id: str, value: float) -> str:
-    """Simple severity classification."""
-    thresholds = {
-        "equity": (0.4, 0.3),
-        "accessibility": (5000, 3000),
-        "service_quality": (30, 15),
+    """Simple severity classification based on dimension-specific thresholds."""
+    thresholds: dict[str, tuple[float, float]] = {
+        "equity": (3.0, 2.0),        # disparity ratio
+        "accessibility": (90.0, 70.0),  # % covered (inverted — high is good)
+        "service_quality": (0.3, 0.15),  # trips/capita
+        "route_network": (2500, 1500),   # HHI (>2500 = concentrated)
+        "correlations": (0.3, 0.1),      # |r|
     }
     high, med = thresholds.get(dim_id, (float("inf"), float("inf")))
-    if value >= high:
+    v = abs(value) if dim_id == "correlations" else value
+    if v >= high:
         return "high"
-    if value >= med:
+    if v >= med:
         return "medium"
     return "low"
 

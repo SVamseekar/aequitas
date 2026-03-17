@@ -7,30 +7,48 @@ from typing import Any
 
 import duckdb
 
-# Dimension → section_ids that belong to it
-# These match the section_ids produced by warehouse.precompute._SECTIONS
+# Dimension → section_id prefixes. The 51 section IDs follow a naming convention:
+# a1_*, a2_*, ..., b1_*, ..., bsa1_*, ps1_*, etc.
+# Each dimension maps to one or more prefix groups.
 DIMENSION_PREFIXES: dict[str, list[str]] = {
-    "equity": ["equity"],
-    "accessibility": ["coverage_density", "gap_to_target"],
-    "service_quality": ["coverage_density"],
-    "route_network": ["coverage_density"],
-    "correlations": ["correlation"],
-    "economic": ["gap_to_target"],
-    "bus_services_act": ["policy_scenario"],
-    "scenarios": ["policy_scenario"],
+    "equity": ["f"],
+    "accessibility": ["a"],
+    "service_quality": ["b"],
+    "route_network": ["c"],
+    "correlations": ["d", "g"],
+    "economic": ["j"],
+    "bus_services_act": ["bsa"],
+    "scenarios": ["ps"],
 }
 
 # Headline section per dimension (section_id, stat_key)
+# Keys must match actual stats produced by precompute.py
 HEADLINE_SECTIONS: dict[str, tuple[str, str]] = {
-    "equity": ("equity", "gini"),
-    "accessibility": ("coverage_density", "stops_per_1000"),
-    "service_quality": ("coverage_density", "stops_per_1000"),
-    "route_network": ("coverage_density", "stops_per_1000"),
-    "correlations": ("correlation", "r2"),
-    "economic": ("gap_to_target", "total_annual_cost_m"),
-    "bus_services_act": ("policy_scenario", "readiness_score"),
-    "scenarios": ("policy_scenario", "best_bcr"),
+    "equity": ("f2_disparity_ratio", "ratio"),
+    "accessibility": ("a3_walking_distance", "pct_covered"),
+    "service_quality": ("b1_frequency", "national_avg"),
+    "route_network": ("c3_operator_hhi", "hhi"),
+    "correlations": ("d1_coverage_deprivation", "r"),
+    "economic": ("j3_carbon", "co2_saving_tonnes"),
+    "bus_services_act": ("bsa1_franchising_readiness", "national_avg"),
+    "scenarios": ("ps1_freq_restoration", "scenario.population_affected"),
 }
+
+
+def _build_prefix_pattern(prefixes: list[str]) -> str:
+    """Build a SQL WHERE clause for prefix-based section_id matching.
+
+    Single-letter prefixes (e.g. "b") use regexp to match "b<digit>..."
+    to avoid collisions like "b%" matching "bsa1_*". Multi-letter prefixes
+    (e.g. "bsa", "ps") use plain LIKE.
+    """
+    conditions = []
+    for p in prefixes:
+        if len(p) == 1:
+            conditions.append(f"regexp_matches(section_id, '^{p}[0-9]')")
+        else:
+            conditions.append(f"section_id LIKE '{p}%'")
+    return " OR ".join(conditions)
 
 
 def query_sections(
@@ -40,21 +58,21 @@ def query_sections(
     urban_rural: str = "all",
 ) -> list[dict[str, Any]]:
     """Query section_results for a dimension's sections."""
-    section_ids = DIMENSION_PREFIXES.get(dimension, [])
-    if not section_ids:
+    prefixes = DIMENSION_PREFIXES.get(dimension, [])
+    if not prefixes:
         return []
 
-    placeholders = ", ".join("?" for _ in section_ids)
+    where_prefix = _build_prefix_pattern(prefixes)
     rows = db.execute(
         f"""
         SELECT section_id, stats, chart_data, narrative
         FROM section_results
-        WHERE section_id IN ({placeholders})
+        WHERE ({where_prefix})
           AND region = ?
           AND urban_rural = ?
         ORDER BY section_id
         """,
-        [*section_ids, region, urban_rural],
+        [region, urban_rural],
     ).fetchall()
 
     results = []
@@ -89,8 +107,15 @@ def query_overview(
 
         if row:
             stats = json.loads(row[0]) if isinstance(row[0], str) else (row[0] or {})
-            raw = stats.get(stat_key, 0)
-            # Extract a scalar — some stats are nested dicts (e.g. stops_per_1000)
+            # Support dot-path keys like "scenario.population_affected"
+            raw: Any = stats
+            for part in stat_key.split("."):
+                if isinstance(raw, dict):
+                    raw = raw.get(part, 0)
+                else:
+                    raw = 0
+                    break
+            # Extract a scalar — some stats are nested dicts
             if isinstance(raw, dict):
                 value = float(raw.get("national_avg", raw.get("value", 0)))
             elif isinstance(raw, (int, float)):

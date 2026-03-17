@@ -17,6 +17,27 @@ interface Props {
   chartData: Record<string, unknown>
 }
 
+/** Transform categories/series format to flat GroupedDatum[] */
+function normalizeGroupedData(chartData: Record<string, unknown>): GroupedDatum[] {
+  // Already flat format
+  if (Array.isArray(chartData.data) && chartData.data.length > 0 && "group" in (chartData.data[0] as Record<string, unknown>)) {
+    return chartData.data as GroupedDatum[]
+  }
+  // categories/series format → flatten
+  const categories = chartData.categories as string[] | undefined
+  const series = chartData.series as { name: string; values: number[] }[] | undefined
+  if (categories && series) {
+    const flat: GroupedDatum[] = []
+    for (const s of series) {
+      for (let i = 0; i < categories.length; i++) {
+        flat.push({ label: categories[i], group: s.name, value: s.values[i] ?? 0 })
+      }
+    }
+    return flat
+  }
+  return (chartData.data ?? []) as GroupedDatum[]
+}
+
 export default function HorizontalBarChart({ chartData }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const variant = (chartData.type as string | undefined) ?? "horizontal_bar"
@@ -29,7 +50,8 @@ export default function HorizontalBarChart({ chartData }: Props) {
     const marks: Plot.Markish[] = []
 
     if (variant === "grouped_bar") {
-      const data = (chartData.data ?? []) as GroupedDatum[]
+      const data = normalizeGroupedData(chartData)
+      if (data.length === 0) { ref.current.replaceChildren(); return }
       marks.push(
         Plot.barX(data, Plot.groupY({ x: "sum" }, {
           y: "label", x: "value", fill: "group",
@@ -37,7 +59,8 @@ export default function HorizontalBarChart({ chartData }: Props) {
         })),
       )
     } else if (variant === "stacked_bar") {
-      const data = (chartData.data ?? []) as GroupedDatum[]
+      const data = normalizeGroupedData(chartData)
+      if (data.length === 0) { ref.current.replaceChildren(); return }
       marks.push(
         Plot.barX(data, Plot.stackX({
           y: "label", x: "value", fill: "group",
@@ -46,6 +69,7 @@ export default function HorizontalBarChart({ chartData }: Props) {
       )
     } else {
       const data = (chartData.data ?? []) as BarDatum[]
+      if (data.length === 0) { ref.current.replaceChildren(); return }
       marks.push(
         Plot.barX(data, {
           y: "label", x: "value", fill: CATEGORICAL[0],
