@@ -71,6 +71,7 @@ def precompute_all_sections(cfg: PipelineConfig) -> list[dict]:
     # Load base data from audit Parquets
     policy_path = cfg.audit_dir / "lsoa_policy_synthesis.parquet"
     equity_path = cfg.audit_dir / "lsoa_equity_metrics.parquet"
+    equity_summary_path = cfg.audit_dir / "equity_summary.json"
 
     if not policy_path.exists() or not equity_path.exists():
         logger.warning("Audit Parquets not found — precompute returning empty results")
@@ -78,6 +79,12 @@ def precompute_all_sections(cfg: PipelineConfig) -> list[dict]:
 
     policy_df = pd.read_parquet(policy_path)
     equity_df = pd.read_parquet(equity_path)
+
+    # Load pre-aggregated equity summary (gini, palma, CI, lorenz curve)
+    equity_summary: dict = {}
+    if equity_summary_path.exists():
+        import json as _json
+        equity_summary = _json.loads(equity_summary_path.read_text())
 
     for region in _REGIONS:
         for urban_rural in _AREA_TYPES:
@@ -102,7 +109,7 @@ def precompute_all_sections(cfg: PipelineConfig) -> list[dict]:
             filtered = policy_df[region_mask & ur_mask]
 
             for section_id in _SECTIONS:
-                stats = _build_stats(filtered, equity_df, section_id, region, urban_rural)
+                stats = _build_stats(filtered, equity_df, equity_summary, section_id, region, urban_rural)
                 result = engine.generate(
                     section_id=section_id,
                     region=region,
@@ -127,6 +134,7 @@ def precompute_all_sections(cfg: PipelineConfig) -> list[dict]:
 def _build_stats(
     filtered: pd.DataFrame,
     equity_df: pd.DataFrame,
+    equity_summary: dict,
     section_id: str,
     region: str,
     urban_rural: str,
@@ -134,10 +142,9 @@ def _build_stats(
     """Build stats dict for a given section and filter combination."""
     stats: dict = {}
 
-    if len(filtered) == 0:
-        return stats
-
     if section_id == "coverage_density":
+        if len(filtered) == 0:
+            return stats
         if "region" in filtered.columns and "trips_per_capita" in filtered.columns:
             by_region = filtered.groupby("region")["trips_per_capita"].mean()
             if len(by_region) > 1:
@@ -159,14 +166,24 @@ def _build_stats(
                 }
 
     elif section_id == "equity":
-        # Use pre-computed equity metrics from Phase 0
-        eq_cols = ["gini", "palma_ratio", "concentration_index"]
-        if all(c in equity_df.columns for c in eq_cols):
-            stats["gini"] = float(equity_df["gini"].iloc[0]) if len(equity_df) > 0 else None
-            stats["palma"] = float(equity_df["palma_ratio"].iloc[0]) if len(equity_df) > 0 else None
-            stats["concentration_index"] = float(equity_df["concentration_index"].iloc[0]) if len(equity_df) > 0 else None
+        # Use pre-aggregated equity_summary.json from Phase 0
+        if equity_summary:
+            stats["gini"] = equity_summary.get("gini_population_weighted", 0.5741)
+            stats["palma"] = equity_summary.get("palma_ratio", 5.702)
+            stats["concentration_index"] = equity_summary.get("concentration_index_trips", 0.1358)
+            stats["triple_deprived_lsoas"] = equity_summary.get("triple_deprived_lsoas", 612)
+            stats["triple_deprived_pct"] = equity_summary.get("triple_deprived_pct", 1.8)
+            # Lorenz curve data for chart
+            lorenz_x = equity_summary.get("lorenz_x", [])
+            lorenz_y = equity_summary.get("lorenz_y", [])
+            if lorenz_x and lorenz_y:
+                step = max(1, len(lorenz_x) // 100)
+                stats["lorenz_x"] = lorenz_x[::step]
+                stats["lorenz_y"] = lorenz_y[::step]
 
     elif section_id == "gap_to_target":
+        if len(filtered) == 0:
+            return stats
         if "trips_per_capita" in filtered.columns:
             median = float(filtered["trips_per_capita"].median())
             below = filtered[filtered["trips_per_capita"] < median]

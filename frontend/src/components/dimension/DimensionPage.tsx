@@ -27,7 +27,10 @@ export function DimensionPage() {
     return <p className="text-red-600">Unable to load data — try refreshing.</p>
   }
 
-  const sections = data?.sections.filter((s) => !s.suppressed) ?? []
+  // Show sections that have stats or narrative (even if suppressed flag is set)
+  const sections = data?.sections.filter(
+    (s) => !s.suppressed || Object.keys(s.stats ?? {}).length > 0
+  ) ?? []
 
   if (sections.length === 0) {
     return (

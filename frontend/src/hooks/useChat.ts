@@ -41,8 +41,14 @@ export function useChat(): UseChatReturn {
         })
 
         if (!resp.ok) {
-          const text = await resp.text()
-          throw new Error(text)
+          let msg = "Chat service unavailable"
+          try {
+            const body = await resp.json()
+            if (body.detail) msg = body.detail
+          } catch {
+            // ignore parse failure
+          }
+          throw new Error(msg)
         }
 
         const reader = resp.body?.getReader()
@@ -100,6 +106,14 @@ export function useChat(): UseChatReturn {
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Chat failed")
+        // Remove the empty assistant placeholder on error
+        setMessages((prev) => {
+          const last = prev[prev.length - 1]
+          if (last?.role === "assistant" && !last.content.trim()) {
+            return prev.slice(0, -1)
+          }
+          return prev
+        })
       } finally {
         setIsStreaming(false)
       }
