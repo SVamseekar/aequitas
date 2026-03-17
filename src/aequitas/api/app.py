@@ -30,7 +30,7 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     # Register routers
-    from aequitas.api.routers import overview, sections, lsoa, provenance, chat, conversations, metrics
+    from aequitas.api.routers import overview, sections, lsoa, provenance, chat, conversations, metrics, export
     app.include_router(overview.router, prefix="/api")
     app.include_router(sections.router, prefix="/api")
     app.include_router(lsoa.router, prefix="/api")
@@ -38,5 +38,6 @@ def create_app() -> FastAPI:
     app.include_router(chat.router, prefix="/api")
     app.include_router(conversations.router, prefix="/api")
     app.include_router(metrics.router, prefix="/api")
+    app.include_router(export.router, prefix="/api")
 
     return app
