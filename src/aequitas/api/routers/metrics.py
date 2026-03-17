@@ -1,7 +1,9 @@
 """Metrics router — GET /api/metrics/ticker."""
 from __future__ import annotations
 
+import duckdb
 from fastapi import APIRouter
+from loguru import logger
 
 from aequitas.api.deps import get_db
 
@@ -9,8 +11,8 @@ router = APIRouter(tags=["metrics"])
 
 # Locked ground truth values (Phase 0 audit — do not change without re-running audit)
 _FALLBACK: list[dict] = [
-    {"key": "gini", "label": "Gini Coefficient", "value": "0.574", "sub": "bus service inequality"},
-    {"key": "palma", "label": "Palma Ratio", "value": "5.70×", "sub": "top 10% vs bottom 40%"},
+    {"key": "gini", "label": "Gini Coefficient", "value": "0.5741", "sub": "bus service inequality"},
+    {"key": "palma", "label": "Palma Ratio", "value": "5.702×", "sub": "top 10% vs bottom 40%"},
     {"key": "concentration_index", "label": "Concentration Index", "value": "+0.1358", "sub": "pro-rich bias"},
     {"key": "evening_isolated", "label": "Evening Isolated", "value": "15.4%", "sub": "5,189 LSOAs"},
     {"key": "sunday_deserts", "label": "Sunday Deserts", "value": "20.0%", "sub": "6,745 LSOAs"},
@@ -41,10 +43,14 @@ def get_ticker_metrics() -> list[dict]:
               )
             """
         ).fetchall()
-    except Exception:  # warehouse may not have section_results yet
+    except duckdb.CatalogException:
+        logger.warning("section_results table not found — returning fallback ticker")
         return _FALLBACK
 
     if not rows:
+        logger.info("No ticker rows in warehouse — returning fallback")
         return _FALLBACK
 
-    return _FALLBACK  # warehouse live values — extend here once warehouse is populated
+    # TODO: map warehouse rows to ticker format once warehouse is populated
+    logger.debug("Ticker query returned rows but live mapping not yet implemented")
+    return _FALLBACK

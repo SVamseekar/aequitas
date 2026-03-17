@@ -40,6 +40,10 @@ async def lifespan(app: Any):  # type: ignore[type-arg]
     else:
         logger.warning(f"Warehouse not found at {cfg.db_path} — run pipeline first. API will start but return empty results.")
 
+    # Gemini API key check
+    if not cfg.gemini_api_key:
+        logger.warning("GEMINI_API_KEY not set — chat responses will fail")
+
     # FAISS (optional — chat won't work without it but dashboard still does)
     if cfg.faiss_index_path.exists():
         import faiss

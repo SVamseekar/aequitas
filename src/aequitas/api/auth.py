@@ -4,6 +4,7 @@ from __future__ import annotations
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
+from loguru import logger
 
 from aequitas.api.config import ApiConfig
 
@@ -21,7 +22,7 @@ def verify_supabase_jwt(
     cfg = ApiConfig()
 
     if not cfg.supabase_jwt_secret:
-        # Dev mode — skip signature validation
+        logger.warning("SUPABASE_JWT_SECRET not set — JWT validation DISABLED (dev mode)")
         return {"sub": "dev-user"}
 
     if not credentials:
