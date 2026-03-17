@@ -166,6 +166,7 @@ def run_analytics(cfg: PipelineConfig | None = None) -> StageReport:
         "lsoa_policy_synthesis.parquet",
         "lta_franchising_readiness.parquet",
         "policy_scenarios.parquet",
+        "shap_importance.parquet",
     ]
     for fname in audit_files:
         if (cfg.audit_dir / fname).exists():

@@ -28,7 +28,8 @@ def test_core_tables_are_valid_ddl():
 
 
 def test_analytics_parquet_sources_have_expected_keys():
-    expected = {
+    """All original sources are present; new expanded sources are also allowed."""
+    required = {
         "lsoa_service_quality",
         "lsoa_equity_metrics",
         "lsoa_accessibility",
@@ -37,4 +38,11 @@ def test_analytics_parquet_sources_have_expected_keys():
         "route_details",
         "lta_readiness",
     }
-    assert expected == set(ANALYTICS_PARQUET_SOURCES.keys())
+    assert required.issubset(set(ANALYTICS_PARQUET_SOURCES.keys()))
+    # New expanded sources must also be present
+    new_sources = {
+        "stop_headways", "coverage_prediction", "shap_importance",
+        "route_clusters", "lsoa_clusters", "anomalies",
+        "modal_shift_scenarios", "policy_scenarios",
+    }
+    assert new_sources.issubset(set(ANALYTICS_PARQUET_SOURCES.keys()))

@@ -1,0 +1,6 @@
+{% if most_deprived_value is not none -%}
+The most deprived decile receives **{{ most_deprived_value|round(1) }} {{ unit }}** compared to **{{ least_deprived_value|round(1) }} {{ unit }}** for the least deprived — a ratio of {{ ratio|round(1) }}:1.
+{% if bottom_20_pct is not none -%}
+The bottom 20% of LSOAs by deprivation receive only {{ bottom_20_pct|round(1) }}% of all bus trips.
+{%- endif %}
+{%- endif %}

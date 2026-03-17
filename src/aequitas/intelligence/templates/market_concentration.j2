@@ -1,0 +1,6 @@
+{% if hhi is not none -%}
+{{ region_name }} has an HHI of **{{ hhi|round(0)|int }}**, indicating a {{ "highly concentrated" if hhi > 2500 else "moderately concentrated" if hhi > 1500 else "competitive" }} operator market.
+{% if top_operator -%}
+The largest operator is **{{ top_operator }}** with {{ top_operator_share|round(1) }}% market share.
+{%- endif %}
+{%- endif %}

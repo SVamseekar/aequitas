@@ -1,0 +1,6 @@
+{% if n_anomalies is not none -%}
+**{{ n_anomalies|int }}** LSOAs ({{ pct_anomalies|round(1) }}%) are flagged as anomalous. Of these:
+- **{{ n_positive|int }}** are "deprived but well-served" (policy successes)
+- **{{ n_inefficiency|int }}** are "affluent but poorly served" (potential inefficiencies)
+- **{{ n_policy_failure|int }}** are "elderly with no service" (equity gaps)
+{%- endif %}

@@ -1,0 +1,6 @@
+{% if sunday_pct_drop is not none -%}
+Sunday service drops **{{ sunday_pct_drop|round(0)|int }}%** compared to weekday levels. **{{ n_sunday_desert|int }}** LSOAs ({{ pct_sunday_desert|round(1) }}%) have zero Sunday service.
+{% if saturday_pct_drop is not none -%}
+Saturday service drops {{ saturday_pct_drop|round(0)|int }}% from weekday levels.
+{%- endif %}
+{%- endif %}
