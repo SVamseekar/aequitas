@@ -37,7 +37,12 @@ export default function LorenzCurveChart({ chartData }: Props) {
       subtitle,
       marks: [
         Plot.line(equality, { x: "cum_pop", y: "cum_service", stroke: "#999", strokeDasharray: "4,3", strokeWidth: 1 }),
-        Plot.line(points, { x: "cum_pop", y: "cum_service", stroke: "#4e79a7", strokeWidth: 2 }),
+        Plot.line(points, {
+          x: "cum_pop", y: "cum_service", stroke: "#4e79a7", strokeWidth: 2,
+          tip: true,
+          title: (d: CurvePoint) =>
+            `Population: ${(d.cum_pop * 100).toFixed(1)}%\nService: ${(d.cum_service * 100).toFixed(1)}%`,
+        }),
         Plot.areaY(points, { x: "cum_pop", y1: "cum_service", y2: "cum_pop", fill: "#4e79a7", fillOpacity: 0.1 }),
       ],
     })
