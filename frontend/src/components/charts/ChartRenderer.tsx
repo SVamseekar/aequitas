@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react"
+import { lazy, Suspense, Component, type ReactNode } from "react"
 import { DataTable } from "./DataTable"
 
 const HorizontalBarChart = lazy(() => import("./HorizontalBarChart"))
@@ -6,6 +6,20 @@ const ScatterRegressionChart = lazy(() => import("./ScatterRegressionChart"))
 const LorenzCurveChart = lazy(() => import("./LorenzCurveChart"))
 const ShapBarChart = lazy(() => import("./ShapBarChart"))
 const ChoroplethMap = lazy(() => import("./ChoroplethMap"))
+const HeatmapChart = lazy(() => import("./HeatmapChart"))
+const BoxViolinChart = lazy(() => import("./BoxViolinChart"))
+const ScatterClustersChart = lazy(() => import("./ScatterClustersChart"))
+
+class ChartErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false }
+  static getDerivedStateFromError() { return { hasError: true } }
+  render() {
+    if (this.state.hasError) {
+      return <p className="text-gray-400 text-sm py-4">Chart could not be rendered</p>
+    }
+    return this.props.children
+  }
+}
 
 interface Props {
   chartData: Record<string, unknown>
@@ -18,20 +32,41 @@ export function ChartRenderer({ chartData }: Props) {
   const type = chartData.type as string | undefined
   const fallback = <div className="h-64 bg-gray-100 animate-pulse rounded" />
 
+  let chart: ReactNode
   switch (type) {
     case "horizontal_bar":
     case "grouped_bar":
     case "stacked_bar":
-      return <Suspense fallback={fallback}><HorizontalBarChart chartData={chartData} /></Suspense>
+      chart = <HorizontalBarChart chartData={chartData} />
+      break
     case "scatter_regression":
-      return <Suspense fallback={fallback}><ScatterRegressionChart chartData={chartData} /></Suspense>
+      chart = <ScatterRegressionChart chartData={chartData} />
+      break
     case "lorenz_curve":
-      return <Suspense fallback={fallback}><LorenzCurveChart chartData={chartData} /></Suspense>
+      chart = <LorenzCurveChart chartData={chartData} />
+      break
     case "shap_bar":
-      return <Suspense fallback={fallback}><ShapBarChart chartData={chartData} /></Suspense>
+      chart = <ShapBarChart chartData={chartData} />
+      break
     case "choropleth":
-      return <Suspense fallback={fallback}><ChoroplethMap chartData={chartData} /></Suspense>
+      chart = <ChoroplethMap chartData={chartData} />
+      break
+    case "heatmap":
+      chart = <HeatmapChart chartData={chartData} />
+      break
+    case "box_violin":
+      chart = <BoxViolinChart chartData={chartData} />
+      break
+    case "scatter_clusters":
+      chart = <ScatterClustersChart chartData={chartData} />
+      break
     default:
       return <DataTable chartData={chartData} />
   }
+
+  return (
+    <ChartErrorBoundary>
+      <Suspense fallback={fallback}>{chart}</Suspense>
+    </ChartErrorBoundary>
+  )
 }

@@ -27,23 +27,40 @@ export function DimensionPage() {
     return <p className="text-red-600">Unable to load data — try refreshing.</p>
   }
 
-  // Show sections that have stats or narrative (even if suppressed flag is set)
+  // Show all sections that have any content (stats, chart, or narrative)
   const sections = data?.sections.filter(
-    (s) => !s.suppressed || Object.keys(s.stats ?? {}).length > 0
+    (s) =>
+      Object.keys(s.stats ?? {}).length > 0 ||
+      Object.keys(s.chart_data ?? {}).length > 0 ||
+      (s.narrative?.trim().length ?? 0) > 0
   ) ?? []
 
   if (sections.length === 0) {
     return (
-      <p className="text-gray-500">
-        No data available for {regionName} ({areaName}). Try selecting "All England" for national-level analysis.
-      </p>
+      <div className="text-center py-12">
+        <p className="text-gray-500 text-lg">
+          No data available for <strong>{regionName}</strong> ({areaName}).
+        </p>
+        <p className="text-gray-400 text-sm mt-2">
+          Try selecting "All England" and "All Areas" for national-level analysis.
+        </p>
+      </div>
     )
   }
 
+  const withCharts = sections.filter((s) => Object.keys(s.chart_data ?? {}).length > 0).length
+  const withNarrative = sections.filter((s) => (s.narrative?.trim().length ?? 0) > 0).length
+
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 mb-1">{dim?.name}</h2>
-      <p className="text-gray-500 text-sm mb-6">{dim?.description}</p>
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-900">{dim?.name}</h2>
+        <p className="text-gray-500 text-sm mt-1">{dim?.description}</p>
+        <p className="text-gray-400 text-xs mt-2">
+          {sections.length} sections | {withCharts} charts | {withNarrative} narratives |
+          {" "}{regionName} | {areaName}
+        </p>
+      </div>
       {sections.map((s) => (
         <SectionCard key={s.section_id} section={s} />
       ))}
