@@ -21,6 +21,37 @@ from aequitas.core.config import PipelineConfig
 from aequitas.warehouse.schema import ANALYTICS_PARQUET_SOURCES, CORE_TABLES
 
 
+def load_core_tables(conn: duckdb.DuckDBPyConnection, cfg: PipelineConfig) -> None:
+    """Load core LSOA reference tables from Phase 0 audit parquets.
+
+    Falls back to audit/ when processed/ copy is absent, matching the
+    same fallback logic used by precompute.py.
+
+    Args:
+        conn: Open DuckDB connection (read-write).
+        cfg: Pipeline configuration with audit_dir and processed_dir.
+    """
+    def _p(filename: str) -> Path:
+        proc = cfg.processed_dir / filename
+        return proc if proc.exists() else cfg.audit_dir / filename
+
+    parquet_map: dict[str, str] = {
+        "lsoa_demographics": "master_lsoa_table.parquet",
+        "lsoa_service_quality": "lsoa_service_quality.parquet",
+        "lsoa_equity_metrics": "lsoa_equity_metrics.parquet",
+    }
+    for table_name, filename in parquet_map.items():
+        path = _p(filename)
+        if path.exists():
+            conn.execute(
+                f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM read_parquet('{path}')"
+            )
+            count = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
+            logger.info(f"Loaded {table_name}: {count:,} rows from {path.name}")
+        else:
+            logger.warning(f"Parquet not found for {table_name}: {path}")
+
+
 def build_warehouse(
     cfg: PipelineConfig,
     overwrite: bool = False,
@@ -54,6 +85,9 @@ def build_warehouse(
                 conn.execute(f"DROP TABLE IF EXISTS {table_name}")
             conn.execute(ddl)
             logger.debug(f"Created core table: {table_name}")
+
+        # Step 1.5: Load LSOA reference tables from Phase 0 parquets
+        load_core_tables(conn, cfg)
 
         # Step 2: Insert precomputed section results
         if section_results:
