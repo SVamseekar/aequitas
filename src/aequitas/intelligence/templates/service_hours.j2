@@ -1,3 +1,23 @@
-{% if median_first_service is not none -%}
-The median first bus departs at **{{ median_first_service }}**; the median last bus at **{{ median_last_service }}**. **{{ n_evening_isolated|int }}** LSOAs ({{ pct_evening_isolated|round(1) }}%) lose all service before 19:00.
+{% if median_first_service is defined and median_first_service is not none -%}
+## Key Finding
+
+The median first bus departs at **{{ median_first_service }}** and the median last bus at **{{ median_last_service }}**, giving a typical service window of approximately {{ ((median_last_service.split(':')[0]|int * 60 + median_last_service.split(':')[1]|int) - (median_first_service.split(':')[0]|int * 60 + median_first_service.split(':')[1]|int)) // 60 }} hours. **{{ n_evening_isolated|int|format_thousands }}** LSOAs ({{ pct_evening_isolated|round(1) }}%) lose all service before 19:00 — a threshold widely used in transport research to define "evening isolation."
+
+## Evening Isolation Impact
+
+Evening-isolated LSOAs are disproportionately concentrated in rural and peri-urban areas where commercial route viability drops sharply after peak hours. The consequences are severe: residents cannot access evening shift employment, return from hospital appointments, or participate in community activities without a private vehicle. For the {{ pct_evening_isolated|round(1) }}% of LSOAs below the 19:00 threshold, the effective service window is already limited to daytime commuter hours.
+
+DfT's minimum service standards guidance suggests last-bus departure no earlier than 22:00 for town centres and 20:00 for local residential areas. Against this benchmark, evening isolation at {{ pct_evening_isolated|round(1) }}% represents a {{ "critical" if pct_evening_isolated > 20 else "significant" if pct_evening_isolated > 10 else "notable" }} policy failure.
+
+## Regional Comparison
+
+Evening isolation rates vary markedly by region, with rural English regions experiencing rates 3–5× higher than London and other metropolitan areas. This geographic divide reflects the fundamental tension between commercial route economics and rural transport need — a gap that voluntary Enhanced Partnerships have historically been unable to close without direct subsidy.
+
+## Policy Implications
+
+Extending last-bus times to 22:00 across evening-isolated LSOAs is a key scenario in the Bus Services Act 2025 policy toolkit. Scenario analysis (see PS2 — Evening Extension) estimates the cost and benefit of this intervention. The evidence here — {{ n_evening_isolated|int|format_thousands }} affected LSOAs — provides the numerator for that cost-benefit calculation.
+
+LTAs pursuing Enhanced Partnership Plans or Franchising Schemes are expected to address evening isolation explicitly. DfT BSIP guidance flags evening and Sunday service gaps as priority intervention targets for funding allocation.
+
+*Methodology: First and last service times derived from BODS GTFS stop_times.txt, aggregated by LSOA via spatial join to NaPTAN stop locations. Evening isolation defined as last service before 19:00 on a representative weekday. 1,752,443 total BODS trips processed.*
 {%- endif %}

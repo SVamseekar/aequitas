@@ -1,6 +1,35 @@
-{% if n_tier1 is not none -%}
-Of {{ n_total|int }} LADs assessed for franchising readiness: **{{ n_tier1|int }}** in Tier 1 (high readiness), **{{ n_tier2|int }}** in Tier 2 (medium), and **{{ n_tier3|int }}** in Tier 3 (low).
+{% if n_tier1 is defined and n_tier1 is not none -%}
+## Key Finding
+
+Of **{{ n_total|int }}** Local Authority Districts assessed for Bus Services Act 2025 franchising readiness:
+- **{{ n_tier1|int }} ({{ (n_tier1 / n_total * 100)|round(1) }}%)** in **Tier 1** — high readiness (score ≥ 70/100)
+- **{{ n_tier2|int }} ({{ (n_tier2 / n_total * 100)|round(1) }}%)** in **Tier 2** — medium readiness (score 40–70/100)
+- **{{ n_tier3|int }} ({{ (n_tier3 / n_total * 100)|round(1) }}%)** in **Tier 3** — low readiness (score < 40/100)
+
 {% if top_lad -%}
-The highest-readiness LAD is **{{ top_lad }}** (score: {{ top_score|round(1) }}/100).
+The highest-readiness LAD is **{{ top_lad }}** (score: {{ top_score|round(1) }}/100), demonstrating the profile of an authority well-positioned to exercise Bus Services Act powers.
 {%- endif %}
+
+## What Readiness Means
+
+Franchising readiness is assessed across five dimensions under the Bus Services Act 2025 framework:
+1. **Market concentration** — high HHI areas have stronger justification for franchising
+2. **Service performance** — areas with declining service levels against a performance gap need
+3. **LTA capacity** — authority has the resources and expertise to manage franchise tendering
+4. **Network complexity** — manageable network scale for initial franchising attempt
+5. **Public support** — evidence of stakeholder support for the franchising direction
+
+Tier 1 LADs should consider initiating franchising assessments in the current BSIP cycle. Tier 2 LADs should build capacity while pursuing Enhanced Partnership Plans. Tier 3 LADs are best served by Enhanced Partnerships in the near term.
+
+## Act 2025 Context
+
+The Bus Services Act 2025 makes franchising available to all LTAs with a Local Transport Plan, not just Combined Authorities as under the 2017 Act. This significantly expands the universe of potential franchising authorities. The tier distribution here shows that {{ n_tier1|int }} LADs are ready to act — each represents a potential early adopter that can build the evidence base for wider rollout.
+
+Manchester's Bee Network (launched 2023) provides the proof-of-concept for franchising. Its early outcomes — higher ridership, improved reliability, operator accountability — strengthen the policy case for Tier 1 LADs to proceed.
+
+## Policy Implications
+
+Franchising readiness tiers provide DfT with a national prioritisation framework for support resources (technical assistance, funding, regulatory guidance). Concentrating capacity-building support on Tier 2 LADs while Tier 1 LADs self-direct their franchising assessments is an efficient allocation of central government support.
+
+*Methodology: Franchising readiness composite score computed from five sub-indicators: operator HHI, service gap evidence, LTA budget per capita, network scale, and BSIP engagement. Scored 0–100. Source data: BODS GTFS, IMD 2025, LTA transport expenditure returns, BSIP submissions.*
 {%- endif %}

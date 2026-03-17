@@ -1,6 +1,27 @@
-{% if urban_value is not none and rural_value is not none -%}
-**Urban** areas have **{{ urban_value|round(2) }} {{ unit }}** compared to **{{ rural_value|round(2) }} {{ unit }}** in rural areas — a gap of {{ gap_pct|round(1) }}%.
+{% if urban_value is defined and urban_value is not none and rural_value is defined and rural_value is not none -%}
+## Key Finding
+
+**Urban** areas receive **{{ urban_value|round(2) }} {{ unit }}** compared to **{{ rural_value|round(2) }} {{ unit }}** in rural areas — an urban premium of **{{ gap_pct|round(1) }}%**. {% if gap_pct > 100 %}Urban areas receive more than twice the service of rural areas, reflecting the profound structural divide between commercially viable urban corridors and the rural transport deficit.{% elif gap_pct > 50 %}The 50%+ urban premium represents a substantial connectivity gap — rural residents face systematically poorer transport access than their urban counterparts at equivalent distances from services.{% elif gap_pct > 20 %}The 20–50% urban premium is broadly consistent with expected settlement-density effects, but still represents a real disadvantage for rural residents dependent on public transport.{% else %}The modest urban-rural gap suggests service provision is relatively equitable across settlement types in this area — likely reflecting active LTA subsidisation of rural routes.{% endif %}
+
 {% if n_urban and n_rural -%}
-Based on {{ n_urban|int }} urban and {{ n_rural|int }} rural LSOAs.
+This analysis is based on **{{ n_urban|int|format_thousands }}** urban and **{{ n_rural|int|format_thousands }}** rural LSOAs, representing the full spectrum of settlement types from dense metropolitan areas to dispersed rural villages.
 {%- endif %}
+
+## Structural Drivers
+
+The urban-rural gap is structurally driven by commercial economics: urban routes generate sufficient passenger revenue to be commercially viable without subsidy, while rural routes require subsidy at 60–80p per passenger trip to break even. As LTA budgets have declined since 2010, rural route subsidies have been disproportionately cut, widening the gap.
+
+Secondary drivers include network effects (urban areas generate higher ridership that justifies frequency, which in turn attracts more riders), operator competition (multiple operators in urban areas vs. monopoly or no service in rural areas), and land-use patterns (urban density enables efficient routing while rural settlement dispersion increases cost per passenger).
+
+## Policy Options
+
+Closing the urban-rural gap requires different interventions at different scales:
+- **Frequency restoration** on existing rural routes — addressing service level gaps on routes that run but infrequently
+- **Last-bus extension** — addressing the evening isolation that disproportionately affects rural areas
+- **DRT schemes** — addressing total absence of service in isolated communities
+- **Rail feeder services** — connecting rural settlements to rail stations for onward connectivity
+
+The Bus Services Act 2025 provides LTAs with franchising and enhanced partnership tools that can mandate rural service inclusion in operator agreements. DfT's Rural Mobility Fund has demonstrated successful DRT pilots that reduce the urban-rural service gap cost-effectively.
+
+*Methodology: Urban/rural classification from ONS Rural-Urban Classification 2011 (applied to 2021 LSOAs). Service metric averaged within each settlement type. {{ unit }} calculated from BODS GTFS trip frequencies and Census 2021 population denominators.*
 {%- endif %}

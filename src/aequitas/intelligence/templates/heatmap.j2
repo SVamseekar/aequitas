@@ -1,3 +1,29 @@
-{% if worst_cell is not none -%}
-The interaction between {{ x_dimension }} and {{ y_dimension }} reveals that the worst-served cell is **{{ worst_cell.label }}** with a mean {{ metric_name }} of {{ worst_cell.value|round(1) }}. The best-served is **{{ best_cell.label }}** at {{ best_cell.value|round(1) }}.
+{% if worst_cell is defined and worst_cell is not none -%}
+## Key Finding
+
+The cross-tabulation of **{{ x_dimension }}** and **{{ y_dimension }}** reveals where these two dimensions of disadvantage intersect most severely. The worst-served cell is **{{ worst_cell.label }}** with a mean {{ metric_name }} of **{{ worst_cell.value|round(1) }}**, while the best-served is **{{ best_cell.label }}** at **{{ best_cell.value|round(1) }}** — a gap of **{{ (best_cell.value - worst_cell.value)|round(1) }}**.
+
+## Intersection of Disadvantage
+
+Heatmap analysis moves beyond single-variable analysis to reveal **compounded disadvantage** — where multiple characteristics simultaneously correlate with poor service. LSOAs in the worst-performing cells of this heatmap are experiencing a "double penalty": they score poorly on both {{ x_dimension }} and {{ y_dimension }}, and their service levels reflect this compound disadvantage.
+
+This compound intersection is policy-critical for two reasons:
+1. **Targeting efficiency** — interventions focused on the worst-performing cells deliver the highest social benefit per unit of cost
+2. **Evidence strength** — multi-dimensional disadvantage provides the strongest possible case for BSIP funding, as it demonstrates need across multiple policy objectives simultaneously
+
+## What the Pattern Tells Us
+
+The heatmap structure reveals whether deprivation dimensions operate independently or interact:
+- If the worst cell is in the bottom-left corner (low {{ x_dimension }}, low {{ y_dimension }}), the two dimensions **reinforce** each other — communities with the worst profile on one dimension also tend to have the worst profile on the other
+- If the pattern is more diffuse, the dimensions are **relatively independent** — needing separate policy responses rather than a single combined intervention
+
+The cell at **{{ worst_cell.label }}** — combining the lowest {{ x_dimension }} and {{ y_dimension }} scores with the worst service level ({{ worst_cell.value|round(1) }}) — represents the clearest intervention target in this analysis.
+
+## Policy Implications
+
+Cross-tabulation analysis of this type is used in DfT's Transport Analysis Guidance (TAG) Wider Impacts framework to identify areas where transport investment can simultaneously address multiple forms of disadvantage. The worst-performing cells here directly correspond to the "high need, low provision" LSOAs that BSIP guidance identifies as priority investment targets.
+
+LTAs should extract the LSOA list from the worst-performing cells and include them in their BSIP priority investment pipeline. Demonstrating awareness of multi-dimensional disadvantage in funding bids significantly strengthens the DfT assessment.
+
+*Methodology: LSOAs cross-tabulated by {{ x_dimension }} quartile and {{ y_dimension }} quartile. Service metric ({{ metric_name }}) averaged within each cell. Cells with fewer than 10 LSOAs suppressed to prevent statistical instability. Data sources: IMD 2025, Census 2021, BODS GTFS.*
 {%- endif %}

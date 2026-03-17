@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from loguru import logger
 
 from aequitas.intelligence.context import AnalysisScope, resolve_context
 from aequitas.intelligence.rules import RankingRule
@@ -157,7 +158,8 @@ class InsightEngine:
             try:
                 template = self._env.get_template(template_name)
                 narrative = template.render(**stats).strip()
-            except Exception:
+            except Exception as exc:
+                logger.warning(f"Narrative generation failed for {section_id}: {exc}")
                 suppressed = True
                 narrative = ""
 
