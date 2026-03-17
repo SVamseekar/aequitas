@@ -12,6 +12,9 @@ interface Props {
 }
 
 export function ChartRenderer({ chartData }: Props) {
+  if (!chartData || Object.keys(chartData).length === 0) {
+    return null
+  }
   const type = chartData.type as string | undefined
   const fallback = <div className="h-64 bg-gray-100 animate-pulse rounded" />
 

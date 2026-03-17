@@ -7,29 +7,29 @@ from typing import Any
 
 import duckdb
 
-# Dimension → section_id prefix(es)
+# Dimension → section_ids that belong to it
+# These match the section_ids produced by warehouse.precompute._SECTIONS
 DIMENSION_PREFIXES: dict[str, list[str]] = {
-    "equity": ["f"],
-    "accessibility": ["a"],
-    "service_quality": ["b"],
-    "route_network": ["c"],
-    "correlations": ["d", "g"],
-    "economic": ["j"],
-    "bus_services_act": ["bsa"],
-    "scenarios": ["ps"],
+    "equity": ["equity"],
+    "accessibility": ["coverage_density", "gap_to_target"],
+    "service_quality": ["coverage_density"],
+    "route_network": ["coverage_density"],
+    "correlations": ["correlation"],
+    "economic": ["gap_to_target"],
+    "bus_services_act": ["policy_scenario"],
+    "scenarios": ["policy_scenario"],
 }
 
-# Headline section per dimension (for /api/overview)
+# Headline section per dimension (section_id, stat_key)
 HEADLINE_SECTIONS: dict[str, tuple[str, str]] = {
-    # dimension: (section_id, stat_key)
-    "equity": ("f1_gini", "gini"),
-    "accessibility": ("a5_service_deserts", "desert_count"),
-    "service_quality": ("b1_frequency", "mean_headway"),
-    "route_network": ("c3_operator_hhi", "national_hhi"),
-    "correlations": ("d8_feature_importance", "top_feature_importance"),
-    "economic": ("j2_bcr", "national_bcr"),
-    "bus_services_act": ("bsa1_franchising_readiness", "mean_readiness"),
-    "scenarios": ("ps5_scenario_comparison", "best_scenario_bcr"),
+    "equity": ("equity", "gini"),
+    "accessibility": ("coverage_density", "stops_per_1000"),
+    "service_quality": ("coverage_density", "stops_per_1000"),
+    "route_network": ("coverage_density", "stops_per_1000"),
+    "correlations": ("correlation", "r2"),
+    "economic": ("gap_to_target", "total_annual_cost_m"),
+    "bus_services_act": ("policy_scenario", "readiness_score"),
+    "scenarios": ("policy_scenario", "best_bcr"),
 }
 
 
@@ -40,24 +40,21 @@ def query_sections(
     urban_rural: str = "all",
 ) -> list[dict[str, Any]]:
     """Query section_results for a dimension's sections."""
-    prefixes = DIMENSION_PREFIXES.get(dimension, [])
-    if not prefixes:
+    section_ids = DIMENSION_PREFIXES.get(dimension, [])
+    if not section_ids:
         return []
 
-    # Build WHERE clause for prefix matching
-    prefix_conditions = " OR ".join(
-        f"section_id LIKE '{p}%'" for p in prefixes
-    )
+    placeholders = ", ".join("?" for _ in section_ids)
     rows = db.execute(
         f"""
         SELECT section_id, stats, chart_data, narrative
         FROM section_results
-        WHERE ({prefix_conditions})
+        WHERE section_id IN ({placeholders})
           AND region = ?
           AND urban_rural = ?
         ORDER BY section_id
         """,
-        [region, urban_rural],
+        [*section_ids, region, urban_rural],
     ).fetchall()
 
     results = []
@@ -92,9 +89,16 @@ def query_overview(
 
         if row:
             stats = json.loads(row[0]) if isinstance(row[0], str) else (row[0] or {})
-            value = stats.get(stat_key, 0)
+            raw = stats.get(stat_key, 0)
+            # Extract a scalar — some stats are nested dicts (e.g. stops_per_1000)
+            if isinstance(raw, dict):
+                value = float(raw.get("national_avg", raw.get("value", 0)))
+            elif isinstance(raw, (int, float)):
+                value = float(raw)
+            else:
+                value = 0.0
         else:
-            value = 0
+            value = 0.0
 
         results.append({
             "id": dim_id,

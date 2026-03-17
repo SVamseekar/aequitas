@@ -21,19 +21,26 @@ from aequitas.core.config import PipelineConfig
 from aequitas.warehouse.schema import ANALYTICS_PARQUET_SOURCES, CORE_TABLES
 
 
-def build_warehouse(cfg: PipelineConfig, overwrite: bool = False) -> None:
+def build_warehouse(
+    cfg: PipelineConfig,
+    overwrite: bool = False,
+    section_results: list[dict] | None = None,
+) -> None:
     """Create and populate the DuckDB warehouse from processed Parquet files.
 
     Steps:
     1. Create/open DuckDB file at cfg.warehouse_path
     2. Create all core table schemas
-    3. Load analytics Parquet files as DuckDB tables
-    4. (Precompute phase handled by warehouse.precompute module)
+    3. Insert precomputed section_results (if provided)
+    4. Load analytics Parquet files as DuckDB tables
 
     Args:
         cfg: Pipeline configuration with warehouse_path and processed_dir.
         overwrite: If True, drop and recreate existing tables.
+        section_results: Precomputed section results from precompute_all_sections().
     """
+    import json as _json
+
     warehouse_path = cfg.warehouse_path
     warehouse_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -48,7 +55,28 @@ def build_warehouse(cfg: PipelineConfig, overwrite: bool = False) -> None:
             conn.execute(ddl)
             logger.debug(f"Created core table: {table_name}")
 
-        # Step 2: Load analytics Parquet tables
+        # Step 2: Insert precomputed section results
+        if section_results:
+            conn.execute("DELETE FROM section_results")
+            conn.executemany(
+                "INSERT OR REPLACE INTO section_results "
+                "(region, urban_rural, section_id, stats, chart_data, narrative) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                [
+                    (
+                        r["region"],
+                        r["urban_rural"],
+                        r["section_id"],
+                        _json.dumps(r.get("stats", {})),
+                        _json.dumps(r.get("chart_data", {})),
+                        r.get("narrative", ""),
+                    )
+                    for r in section_results
+                ],
+            )
+            logger.info(f"Inserted {len(section_results)} section results")
+
+        # Step 3: Load analytics Parquet tables
         for table_name, parquet_rel_path in ANALYTICS_PARQUET_SOURCES.items():
             parquet_path = Path(parquet_rel_path)
             if not parquet_path.is_absolute():

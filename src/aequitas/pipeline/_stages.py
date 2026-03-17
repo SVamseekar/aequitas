@@ -207,7 +207,15 @@ def run_warehouse(cfg: PipelineConfig | None = None) -> StageReport:
     t0 = time.perf_counter()
 
     from aequitas.warehouse.builder import build_warehouse as _build
-    _build(cfg, overwrite=True)
+
+    # Pick up section results if intelligence stage ran in this process
+    section_results: list[dict] | None = getattr(cfg, "_section_results", None)
+    if section_results is None:
+        # Fallback: recompute (e.g. when warehouse stage is run standalone)
+        from aequitas.warehouse.precompute import precompute_all_sections
+        section_results = precompute_all_sections(cfg)
+
+    _build(cfg, overwrite=True, section_results=section_results)
 
     duration = time.perf_counter() - t0
     report = StageReport("warehouse", duration, [cfg.warehouse_path], 1, 0)
