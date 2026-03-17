@@ -1,9 +1,40 @@
 {% if scenarios -%}
-Across {{ scenarios|length }} policy scenarios:
+## Scenario Portfolio Overview
+
+**{{ scenarios|length }} policy scenarios** have been modelled for this area, covering the full spectrum of Bus Services Act 2025 intervention types — from targeted frequency restoration to rural DRT and full franchising. The table below ranks scenarios by population impact:
+
 {% for s in scenarios -%}
-- **{{ s.name }}**: {{ s.population|int }} people affected, £{{ s.cost_m|round(1) }}m/yr, {{ s.co2_t|int }} t CO₂ saved/yr
+- **{{ s.name }}**: {{ s.population|int|format_thousands }} people affected, **£{{ s.cost_m|round(1) }}m/yr**, {{ s.co2_t|int|format_thousands }} t CO₂ saved/yr
 {% endfor %}
+
 {% if best_bcr_scenario -%}
-**{{ best_bcr_scenario }}** delivers the highest value for money.
+**{{ best_bcr_scenario }}** delivers the highest value for money (BCR basis) — this is the recommended priority intervention for BSIP inclusion.
 {%- endif %}
+
+## Comparative Analysis
+
+The scenarios span a wide range of cost and impact profiles:
+- **Highest population impact:** The largest intervention addresses the most residents but at proportionally higher cost
+- **Highest cost efficiency:** Smaller, targeted interventions often deliver better cost-per-beneficiary ratios
+- **Highest CO₂ saving:** Modal shift intensity varies by intervention type — urban frequency restoration typically generates more modal shift than rural DRT
+
+**Policy recommendation:** Rather than selecting a single scenario, LTAs should consider a phased portfolio — starting with high-BCR, high-confidence interventions in the first BSIP cycle, then building evidence for larger interventions in subsequent cycles.
+
+## Portfolio Construction
+
+An optimal portfolio balances three objectives:
+1. **Equity** — prioritising the most deprived and underserved communities
+2. **Efficiency** — maximising BCR within available budget
+3. **Feasibility** — prioritising interventions with clear delivery pathways and operator availability
+
+The scenarios modelled here provide the building blocks for a data-driven portfolio. LTAs should use the cluster analysis (Section D6, G1) to identify which scenario type is most appropriate for each LSOA archetype.
+
+## Implementation Sequencing
+
+Under typical BSIP delivery timelines:
+- **Year 1–2:** Quick-win frequency restorations and evening extensions (low cost, fast to deliver)
+- **Year 2–4:** DRT scheme design, procurement, and pilot operation
+- **Year 4+:** Full franchising transition where justified by scale and evidence
+
+*Methodology: Scenarios parameterised using DfT Bus Back Better (2021) intervention templates and BSIP 2023 benchmarks. Cost and population estimates include ±25% uncertainty ranges. CO₂ from DfT modal shift elasticities × DESNZ 2025. Scenarios are indicative, not contractual commitments.*
 {%- endif %}

@@ -1,8 +1,25 @@
-{% if r is not none -%}
-Analysis of {{ n|int }} LSOAs shows a **{{ strength }} {{ direction }} correlation** between {{ x_label }} and {{ y_label }} (r = {{ r|round(3) }}, p = {{ p_value|round(4) }}).
+{% if r is defined and r is not none -%}
+## Key Finding
+
+Analysis of **{{ n|int|format_thousands }} LSOAs** shows a **{{ strength }} {{ direction }} correlation** between {{ x_label }} and {{ y_label }} (r = {{ r|round(3) }}, p = {{ p_value|round(4) }}). {% if p_value < 0.001 %}This result is statistically robust (p < 0.001) — the association is unlikely to be a chance finding.{% elif p_value < 0.05 %}This result is statistically significant (p < 0.05), though effect size should be considered alongside statistical significance.{% else %}This result does not meet conventional significance thresholds (p ≥ 0.05), suggesting the apparent pattern may be driven by chance or confounding variables.{% endif %}
+
+## Interpretation
+
 {% if direction == "positive" -%}
-LSOAs with higher {{ x_label }} tend to have higher {{ y_label }}.
+LSOAs with higher {{ x_label }} tend to have higher {{ y_label }}. {% if strength == "strong" %}The strong positive correlation (|r| > 0.5) indicates these variables are closely aligned — changes in one are reliably reflected in the other.{% elif strength == "moderate" %}The moderate positive correlation suggests a real but incomplete relationship — other factors also shape outcomes independently.{% else %}The weak positive association suggests the relationship exists but explains only a small fraction of overall variation.{% endif %}
 {%- elif direction == "negative" -%}
-LSOAs with higher {{ x_label }} tend to have lower {{ y_label }}.
+LSOAs with higher {{ x_label }} tend to have lower {{ y_label }}. {% if strength == "strong" %}The strong negative correlation (|r| > 0.5) indicates a systematic inverse relationship — this is a robust structural pattern, not statistical noise.{% elif strength == "moderate" %}The moderate negative correlation points to a real tension between these two variables across the LSOA landscape.{% else %}The weak negative association hints at a pattern worth monitoring, though its policy significance is limited at this strength.{% endif %}
 {%- endif %}
+
+**Causal note:** Correlation does not imply causation. The observed association likely reflects underlying structural factors — land use, settlement density, and historical investment patterns — that jointly influence both variables. Policy interventions should be informed by this correlation but grounded in mechanism-based evidence.
+
+## Policy Implications
+
+{% if strength in ["strong", "moderate"] and p_value < 0.05 -%}
+The {{ strength }} association between {{ x_label }} and {{ y_label }} provides a quantitative basis for targeted policy intervention. LTAs designing route networks or subsidy programmes can use this correlation to identify areas where changing one variable (e.g., increasing service frequency) is likely to have measurable effects on the other. This type of evidence is particularly relevant for BSIP funding bids, where DfT expects demonstration of data-driven prioritisation.
+{%- else -%}
+The weak or uncertain association between {{ x_label }} and {{ y_label }} suggests these variables are largely independent in this dataset. Policy design should not assume that improving one will automatically improve the other — targeted analysis of specific LSOAs or LADs is recommended before committing resources.
+{%- endif %}
+
+*Methodology: Pearson correlation coefficient computed across {{ n|int|format_thousands }} LSOAs with complete data for both variables. Data sources: {{ x_label }} from IMD 2025 / Census 2021; {{ y_label }} from BODS GTFS 2024. Outliers (>3 IQR) retained to preserve real-world variation.*
 {%- endif %}

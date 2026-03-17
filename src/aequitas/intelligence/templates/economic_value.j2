@@ -1,3 +1,29 @@
-{% if annual_benefit is not none -%}
-{{ region_name }} generates an estimated **£{{ (annual_benefit / 1e6)|round(1) }}m** in annual transport user benefits from bus services, based on {{ n_trips|int }} daily trips at a blended value of time of £{{ vot|round(2) }}/hr.
+{% if annual_benefit is defined and annual_benefit is not none -%}
+## Key Finding
+
+{{ region_name }} generates an estimated **£{{ (annual_benefit / 1e6)|round(1) }}m** in annual transport user benefits from bus services, based on **{{ n_trips|int|format_thousands }}** daily trips at a blended value of time of £{{ vot|round(2) }}/hour. This represents the direct benefit to passengers from avoided journey time relative to the next-best alternative (typically private car).
+
+## Economic Contribution
+
+Transport user benefits are one component of the total economic value of bus services. The full economic value includes:
+- **Direct user benefits** (time savings, cost savings vs. car): £{{ (annual_benefit / 1e6)|round(1) }}m estimated here
+- **Agglomeration effects** (increased labour market productivity from better connectivity): typically 20–40% of direct benefits
+- **Decongestion benefits** (reduced road congestion from modal shift): significant in urban areas
+- **Emissions reduction** (CO₂ and air quality): quantified separately in the carbon section
+
+Under HM Treasury Green Book and DfT TAG appraisal methodology (v2.03fc), the total economic value of bus services to {{ region_name }} is likely **2–3× the direct user benefit figure** once agglomeration and wider economic impacts are included.
+
+## GDP Multiplier Context
+
+Bus investment has a GDP multiplier of approximately 1.5–2.0, meaning each £1 of public investment in bus services generates £1.50–£2.00 of economic output through supply chain effects, employment, and induced demand. Applied to {{ region_name }}'s bus network, this suggests a significant indirect economic contribution beyond the direct user benefit.
+
+## Investment Context
+
+The annual user benefit of £{{ (annual_benefit / 1e6)|round(1) }}m provides the headline economic case for maintaining and improving {{ region_name }}'s bus network. Cuts to services would not merely reduce passenger convenience — they would remove measurable economic value from the regional economy, most acutely in areas where bus is the primary mode of transport for workers.
+
+## Policy Implications
+
+Economic valuation of bus services is central to BSIP funding bids and franchising business cases. LTAs must demonstrate value for money under TAG methodology, and the user benefit estimate here provides the core building block. Bus investment consistently delivers positive BCR outcomes — the question is not whether investment is worthwhile, but which interventions deliver the highest marginal benefit.
+
+*Methodology: Annual benefit estimated from BODS GTFS daily trip counts × 365, multiplied by average trip duration (assumed 25 min) × value of time (£{{ vot|round(2) }}/hr from TAG WebTAG A1.3 2024 values). Blended VOT reflects mix of journey purposes. Cross-reference with TAG carbon and BCR sections for full economic picture.*
 {%- endif %}

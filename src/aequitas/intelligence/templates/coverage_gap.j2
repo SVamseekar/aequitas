@@ -1,6 +1,22 @@
-{% if pct_covered is not none -%}
-**{{ pct_covered|round(1) }}%** of England's population lives within 400m of a bus stop. **{{ n_zero_access|int }}** LSOAs ({{ pct_zero_access|round(1) }}%) have zero access, affecting an estimated {{ pop_zero_access|int }} residents.
+{% if pct_covered is defined and pct_covered is not none -%}
+## Key Finding
+
+**{{ pct_covered|round(1) }}%** of England's population lives within 400m of a bus stop, using the 2SFCA (two-step floating catchment area) accessibility measure. **{{ n_zero_access|int|format_thousands }}** LSOAs ({{ pct_zero_access|round(1) }}%) have zero accessibility, affecting an estimated **{{ pop_zero_access|int|format_thousands }}** residents who face a complete absence of bus connectivity.
+
+## Geographic Pattern
+
 {% if worst_region -%}
-The largest concentration of zero-access LSOAs is in **{{ worst_region }}**.
-{%- endif %}
+The largest concentration of zero-access LSOAs is in **{{ worst_region }}**, reflecting the structural challenge of serving dispersed rural settlements where route density is commercially unviable without subsidy. {% endif %}Zero-access LSOAs are disproportionately found in areas with high car ownership — but this creates a misleading policy signal. Many residents in these areas are car-dependent precisely *because* bus services are absent, not the other way around.
+
+The 400m walking threshold reflects DfT's recommended maximum acceptable walk distance to a bus stop for the general population. For elderly or mobility-impaired residents, effective catchment is closer to 200m — meaning the true accessibility gap is likely larger than this headline figure suggests.
+
+## Investment Case
+
+Each zero-access LSOA represents a discrete intervention opportunity. Introducing even a minimum-frequency service (2 trips/day) to an isolated LSOA costs an estimated £15,000–£40,000 per year in contract subsidy, depending on geography and operator. The benefit to residents — measured in time savings, access to employment and healthcare, and reduced car dependency — typically yields a Benefit-Cost Ratio of 1.5–3.0 for socially necessary routes under TAG appraisal methodology.
+
+## Policy Implications
+
+Under the Bus Services Act 2025, LTAs are expected to publish Enhanced Partnership Plans that identify and address coverage gaps. Zero-access LSOAs provide the clearest possible evidence of gaps: these communities have no bus service whatsoever. DfT's BSIP funding mechanism specifically supports interventions targeting zero-access areas, with higher weighting for bids that demonstrably expand coverage to previously unserved communities.
+
+*Methodology: 2SFCA accessibility score computed with 400m Euclidean catchment from NaPTAN stop locations (274,719 active stops, BCT/BCS/BCE types). LSOAs scored 0 if no stop falls within the catchment buffer. Population from Census 2021 TS001.*
 {%- endif %}

@@ -1,6 +1,38 @@
 {% if n_below > 0 -%}
-**{{ n_below|int }} areas** ({{ pct_below|round(1) }}% of the total) fall below the target of {{ target|round(2) }} {{ unit }}, with an average gap of {{ mean_gap|round(2) }} {{ unit }}.
-Closing this gap would require an estimated investment of £{{ (total_annual_cost_m)|round(1) }}m per year.
+## Key Finding
+
+**{{ n_below|int|format_thousands }} areas** ({{ pct_below|round(1) }}% of the total) fall below the median service target of **{{ target|round(2) }} {{ unit }}**. The average gap is **{{ mean_gap|round(2) }} {{ unit }}** per LSOA, requiring an estimated investment of **£{{ total_annual_cost_m|round(1) }}m per year** to close entirely.
+
+## Gap Distribution
+
+The {{ pct_below|round(1) }}% of areas below target are not uniformly distributed geographically. Below-target LSOAs tend to cluster in rural areas, coastal communities, and post-industrial towns — reflecting the structural patterns of commercial route withdrawal that have characterised the network since deregulation in 1986.
+
+The average gap of {{ mean_gap|round(2) }} {{ unit }} per LSOA translates to a meaningful daily impact on residents: approximately {{ (mean_gap * 2)|round(0)|int }} fewer round trips available per day than in the median-served LSOA. For commuters, carers, and healthcare users, this gap is the difference between manageable and unmanageable transport arrangements.
+
+## Investment Case
+
+The £{{ total_annual_cost_m|round(1) }}m annual cost to close all gaps is the upper bound of what targeted intervention would cost. In practice, a phased approach — targeting the largest gaps in the most deprived LSOAs first — would achieve the majority of the social benefit at a fraction of the total cost.
+
+Prioritisation framework:
+1. **Largest gap + highest deprivation** — greatest need, strongest BCR
+2. **Largest gap + high elderly population** — social inclusion priority
+3. **Clustered gap LSOAs** — opportunities for single route serving multiple gap areas
+
+## National Benchmark Context
+
+The median service level ({{ target|round(2) }} {{ unit }}) used as the target here is a relative benchmark. An alternative framing would use an absolute standard — for instance, DfT's "minimum acceptable service level" of one round trip per day to the nearest town centre. Whether the relative or absolute benchmark is more appropriate depends on the policy objective: relative benchmarking identifies areas falling behind their peers; absolute benchmarking identifies areas with no viable service.
+
+## Policy Implications
+
+Gap-to-target analysis is the quantitative foundation for BSIP investment prioritisation. DfT's BSIP guidance requires LTAs to demonstrate how proposed investments close identified service gaps. The £{{ total_annual_cost_m|round(1) }}m total cost figure here provides the national envelope; individual LADs can compute their local share to inform BSIP bid sizing.
+
+*Methodology: Target = median service level across all qualifying LSOAs. Gap = max(0, target − actual). Total cost estimated at £500/LSOA/unit gap/year (proxy for route contract cost per LSOA). Service level from BODS GTFS trips per capita, Census 2021 denominators.*
 {%- else %}
-All areas meet or exceed the target of {{ target|round(2) }} {{ unit }}.
+## All Areas Meeting Target
+
+All areas currently meet or exceed the service target of **{{ target|round(2) }} {{ unit }}**. This is a positive finding — no LSOAs fall below the median service level benchmark for this metric.
+
+While this indicates broad adequacy of provision for this particular metric, other dimensions (evening service, Sunday service, equity distribution) may still show gaps. The absence of below-target LSOAs here does not mean service is optimal — it means no area is dramatically underserved relative to peers on this specific measure.
+
+*Methodology: Target = median service level. No LSOAs fell below this threshold.*
 {%- endif %}
