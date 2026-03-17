@@ -6,8 +6,10 @@ interface Props {
 
 export function Markdown({ content }: Props) {
   return (
-    <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700">
-      <ReactMarkdown>{content}</ReactMarkdown>
+    <div className="prose prose-sm max-w-none prose-invert">
+      <ReactMarkdown disallowedElements={["script", "iframe", "object", "embed"]}>
+        {content}
+      </ReactMarkdown>
     </div>
   )
 }

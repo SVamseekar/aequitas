@@ -108,10 +108,10 @@ export function SectionCard({ section }: Props) {
         {/* Ranking summary */}
         {hasRanking && (
           <div className="px-5 pb-3">
-            {rankingStats.map(([, val]) => {
+            {rankingStats.map(([statKey, val]) => {
               const obj = val as { best: { name: string; value: number }; worst: { name: string; value: number } }
               return (
-                <div key="ranking" className="flex gap-4 text-xs">
+                <div key={statKey} className="flex gap-4 text-xs">
                   <span className="text-green-400">Best: <strong>{obj.best.name}</strong> ({obj.best.value})</span>
                   <span className="text-red-400">Worst: <strong>{obj.worst.name}</strong> ({obj.worst.value})</span>
                   {nationalAvg !== undefined && (

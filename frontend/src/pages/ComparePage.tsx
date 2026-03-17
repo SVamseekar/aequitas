@@ -46,7 +46,7 @@ function RegionColumn({ dimension, region }: { dimension: string; region: string
       <div className="space-y-3">
         {sections.slice(0, 8).map((s) => {
           const stats = Object.entries(s.stats ?? {}).filter(([k, v]) =>
-            typeof v === "number" || typeof v === "string" && k !== "unit" && k !== "entity_type"
+            k !== "unit" && k !== "entity_type" && (typeof v === "number" || typeof v === "string")
           )
           return (
             <div key={s.section_id} className="border border-border rounded bg-card p-3">

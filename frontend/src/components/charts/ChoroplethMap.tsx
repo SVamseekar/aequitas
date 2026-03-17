@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react"
+import { useRef, useEffect, useMemo } from "react"
 import maplibregl, { type StyleSpecification } from "maplibre-gl"
 import "maplibre-gl/dist/maplibre-gl.css"
 
@@ -19,6 +19,7 @@ interface Props {
 export default function ChoroplethMap({ chartData }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
+  const chartDataKey = useMemo(() => JSON.stringify(chartData), [chartData])
 
   useEffect(() => {
     if (!ref.current) return
@@ -48,7 +49,7 @@ export default function ChoroplethMap({ chartData }: Props) {
             {
               id: "background",
               type: "background",
-              paint: { "background-color": "#f8f9fa" },
+              paint: { "background-color": "#0f1117" },
             },
             {
               id: "regions-fill",
@@ -100,12 +101,13 @@ export default function ChoroplethMap({ chartData }: Props) {
             const props = e.features[0].properties as Record<string, unknown>
             const name = String(props["area_name"] ?? props["RGN22NM"] ?? "Unknown")
             const value = props["value"] as number | undefined
-            popup
-              .setLngLat(e.lngLat)
-              .setHTML(
-                `<strong>${name}</strong><br/>${metric}: ${value !== undefined ? Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}`,
-              )
-              .addTo(map)
+            const el = document.createElement("div")
+            const strong = document.createElement("strong")
+            strong.textContent = name
+            el.appendChild(strong)
+            el.appendChild(document.createElement("br"))
+            el.appendChild(document.createTextNode(`${metric}: ${value !== undefined ? Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}`))
+            popup.setLngLat(e.lngLat).setDOMContent(el).addTo(map)
             map.getCanvas().style.cursor = "pointer"
           })
 
@@ -125,7 +127,8 @@ export default function ChoroplethMap({ chartData }: Props) {
       mapRef.current?.remove()
       mapRef.current = null
     }
-  }, [chartData])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- stabilized via JSON key
+  }, [chartDataKey])
 
   return (
     <div

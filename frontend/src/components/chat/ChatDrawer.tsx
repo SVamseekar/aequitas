@@ -98,8 +98,8 @@ export function ChatDrawer({ open, onClose }: Props) {
             </div>
           ) : (
             <>
-              {messages.map((m, i) => (
-                <ChatMessage key={i} role={m.role} content={m.content} />
+              {messages.map((m) => (
+                <ChatMessage key={m.id} role={m.role} content={m.content} />
               ))}
               {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
               <div ref={messagesEnd} />

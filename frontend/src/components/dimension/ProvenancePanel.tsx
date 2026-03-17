@@ -1,31 +1,9 @@
-import { useQuery } from "@tanstack/react-query"
 import { X, BookOpen } from "lucide-react"
-
-interface ProvenanceData {
-  metric_id: string
-  formula?: string
-  source_files?: string[]
-  notebook?: string
-  input_values?: Record<string, unknown>
-  description?: string
-}
+import { useProvenance } from "@/api/hooks"
 
 interface Props {
   metricId: string
   onClose: () => void
-}
-
-function useProvenance(metricId: string) {
-  return useQuery<ProvenanceData>({
-    queryKey: ["provenance", metricId],
-    queryFn: async () => {
-      const res = await fetch(`/api/provenance/${metricId}`)
-      if (!res.ok) throw new Error("Not found")
-      return res.json() as Promise<ProvenanceData>
-    },
-    staleTime: Infinity,
-    retry: false,
-  })
 }
 
 export function ProvenancePanel({ metricId, onClose }: Props) {

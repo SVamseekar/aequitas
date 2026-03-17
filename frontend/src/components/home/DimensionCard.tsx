@@ -16,11 +16,8 @@ const DIMENSION_ICONS: Record<string, string> = {
 function formatHeadline(dim: DimensionOverview): string {
   const v = dim.headline_stat.value
   if (v === 0) return "—"
-  // Large numbers (population, CO2)
   if (v >= 10000) return v.toLocaleString(undefined, { maximumFractionDigits: 0 })
-  // Percentages
   if (dim.headline_stat.label.includes("%")) return `${v.toFixed(1)}%`
-  // Small decimals (r, ratio)
   if (v < 10) return v.toFixed(v < 1 ? 3 : 1)
   return v.toLocaleString(undefined, { maximumFractionDigits: 1 })
 }
@@ -36,20 +33,20 @@ export function DimensionCard({ dim }: Props) {
   return (
     <Link
       to={dim.route}
-      className="group block bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all"
+      className="group block bg-card rounded border border-border p-5 hover:border-indigo-500/40 hover:bg-card/80 transition-all"
     >
       <div className="flex items-start gap-3">
-        <span className="inline-flex items-center justify-center w-8 h-8 rounded bg-indigo-50 text-indigo-600 text-xs font-bold shrink-0">
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded bg-indigo-500/10 text-indigo-400 text-xs font-bold shrink-0 font-mono">
           {icon}
         </span>
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+          <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-400 transition-colors">
             {dim.name}
           </h3>
-          <p className="text-2xl font-bold mt-1" style={{ color: severityColor }}>
+          <p className="text-2xl font-bold font-mono mt-1" style={{ color: severityColor }}>
             {formatHeadline(dim)}
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">{dim.headline_stat.label}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{dim.headline_stat.label}</p>
         </div>
       </div>
     </Link>

@@ -85,7 +85,7 @@ export default function ProfilePage() {
             Account
           </h2>
           <button
-            onClick={() => { void signOut(); navigate("/auth") }}
+            onClick={async () => { await signOut(); navigate("/auth") }}
             className="px-4 py-2 text-xs font-mono text-red-400 border border-red-400/30 rounded hover:bg-red-400/10 transition-colors"
           >
             SIGN OUT

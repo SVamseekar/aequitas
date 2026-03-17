@@ -8,8 +8,8 @@ interface TickerMetric {
 }
 
 const FALLBACK: TickerMetric[] = [
-  { key: "gini", label: "Gini Coefficient", value: "0.574", sub: "bus service inequality" },
-  { key: "palma", label: "Palma Ratio", value: "5.70×", sub: "top 10% vs bottom 40%" },
+  { key: "gini", label: "Gini Coefficient", value: "0.5741", sub: "bus service inequality" },
+  { key: "palma", label: "Palma Ratio", value: "5.702×", sub: "top 10% vs bottom 40%" },
   { key: "concentration_index", label: "Concentration Index", value: "+0.1358", sub: "pro-rich bias" },
   { key: "evening_isolated", label: "Evening Isolated", value: "15.4%", sub: "5,189 LSOAs" },
   { key: "sunday_deserts", label: "Sunday Deserts", value: "20.0%", sub: "6,745 LSOAs" },

@@ -6,8 +6,8 @@ import { toast, Toaster } from "sonner"
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react"
 
 const HEADLINE_STATS = [
-  { label: "GINI COEFF", value: "0.574", note: "bus service" },
-  { label: "PALMA RATIO", value: "5.70×", note: "top 10% vs bottom 40%" },
+  { label: "GINI COEFF", value: "0.5741", note: "bus service" },
+  { label: "PALMA RATIO", value: "5.702×", note: "top 10% vs bottom 40%" },
   { label: "EVENING ISO", value: "15.4%", note: "of LSOAs" },
 ]
 
