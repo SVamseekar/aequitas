@@ -66,7 +66,9 @@ export function ChartRenderer({ chartData }: Props) {
 
   return (
     <ChartErrorBoundary>
-      <Suspense fallback={fallback}>{chart}</Suspense>
+      <div className="chart-animate-in">
+        <Suspense fallback={fallback}>{chart}</Suspense>
+      </div>
     </ChartErrorBoundary>
   )
 }
