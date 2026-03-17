@@ -43,7 +43,15 @@ export default function ScatterClustersChart({ chartData }: Props) {
           fill: (d: ClusterPoint) => String(d.cluster),
           opacity: 0.7,
           r: 3,
+          tip: true,
+          title: (d: ClusterPoint) => {
+            const clusterLabel = clusters.find((c) => String(c.label) === String(d.cluster))?.label ?? d.cluster
+            const xLbl = (chartData.x_label as string | undefined) ?? "X"
+            const yLbl = (chartData.y_label as string | undefined) ?? "Y"
+            return `${d.id ? d.id + "\n" : ""}Cluster: ${clusterLabel}\n${xLbl}: ${Number(d.x).toFixed(3)}\n${yLbl}: ${Number(d.y).toFixed(3)}`
+          },
         }),
+        Plot.crosshairX(data, { x: "x", y: "y" }),
       ],
     })
 

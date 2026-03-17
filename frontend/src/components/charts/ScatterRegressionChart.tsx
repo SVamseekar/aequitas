@@ -27,8 +27,17 @@ export default function ScatterRegressionChart({ chartData }: Props) {
     const pValue = chartData.p_value as number | undefined
     const regression = chartData.regression_line as RegressionLine | undefined
 
+    const xLabel = (chartData.x_label as string | undefined) ?? "X"
+    const yLabel = (chartData.y_label as string | undefined) ?? "Y"
+
     const marks: Plot.Markish[] = [
-      Plot.dot(data, { x: "x", y: "y", fill: CATEGORICAL[0], opacity: 0.6, r: 3 }),
+      Plot.dot(data, {
+        x: "x", y: "y", fill: CATEGORICAL[0], opacity: 0.6, r: 3,
+        tip: true,
+        title: (d: ScatterDatum) =>
+          `${d.id ? d.id + "\n" : ""}${xLabel}: ${Number(d.x).toFixed(3)}\n${yLabel}: ${Number(d.y).toFixed(3)}`,
+      }),
+      Plot.crosshairX(data, { x: "x", y: "y" }),
     ]
 
     if (regression && data.length > 0) {
@@ -49,8 +58,8 @@ export default function ScatterRegressionChart({ chartData }: Props) {
     const chart = Plot.plot({
       width: 700,
       height: 450,
-      x: { label: (chartData.x_label as string | undefined) ?? "X" },
-      y: { label: (chartData.y_label as string | undefined) ?? "Y" },
+      x: { label: xLabel },
+      y: { label: yLabel },
       subtitle,
       marks,
     })
