@@ -1,5 +1,8 @@
 """Build FAISS index from pre-computed InsightEngine narratives."""
 
+# To rebuild: python -m aequitas.rag build
+# Or: python -c "from aequitas.core.config import PipelineConfig; from aequitas.rag.index_builder import build_faiss_index; build_faiss_index(PipelineConfig())"
+
 from __future__ import annotations
 
 import json

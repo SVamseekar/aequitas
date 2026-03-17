@@ -22,8 +22,10 @@ build/
 *.duckdb
 *.duckdb.wal
 
-# ML models
+# ML models & FAISS indices
 data/models/
+data/faiss_index.bin
+data/faiss_metadata.json
 *.pkl
 *.joblib
 *.faiss
