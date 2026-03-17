@@ -9,6 +9,10 @@ import { DimensionPage } from "./components/dimension/DimensionPage"
 
 const AuthPage = lazy(() => import("./pages/AuthPage"))
 const ProfilePage = lazy(() => import("./pages/ProfilePage"))
+const LandingPage = lazy(() => import("./pages/LandingPage"))
+const AboutPage = lazy(() => import("./pages/AboutPage"))
+const DisclaimerPage = lazy(() => import("./pages/DisclaimerPage"))
+const ContactPage = lazy(() => import("./pages/ContactPage"))
 
 // Saved sub-pages rendered inside a simple wrapper
 const SavedPage = lazy(() =>
@@ -44,7 +48,11 @@ export default function App() {
         <BrowserRouter>
           <Suspense fallback={fallback}>
             <Routes>
-              {/* Public */}
+              {/* Public — marketing + info pages */}
+              <Route path="/landing" element={<LandingPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/disclaimer" element={<DisclaimerPage />} />
+              <Route path="/contact" element={<ContactPage />} />
               <Route path="/auth" element={<AuthPage />} />
 
               {/* Protected — main app shell */}
