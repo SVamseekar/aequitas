@@ -155,10 +155,6 @@ def precompute_all_sections(cfg: PipelineConfig) -> list[dict]:
 
     for region in _REGIONS:
         for urban_rural in _AREA_TYPES:
-            # Skip single-region × urban/rural combos (low analytical value)
-            if region != "all" and urban_rural != "all":
-                continue
-
             for section_id in SECTION_REGISTRY:
                 try:
                     stats, chart_data = _build_section(
