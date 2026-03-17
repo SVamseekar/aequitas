@@ -35,7 +35,12 @@ export default function HeatmapChart({ chartData }: Props) {
       y: { label: null },
       color: { scheme: "YlOrRd", legend: true, label: "Value" },
       marks: [
-        Plot.cell(cells, { x: "x", y: "y", fill: "value" }),
+        Plot.cell(cells, {
+          x: "x", y: "y", fill: "value",
+          tip: true,
+          title: (d: { x: string; y: string; value: number }) =>
+            `${d.x} × ${d.y}\nValue: ${d.value.toFixed(2)}`,
+        }),
         Plot.text(cells, {
           x: "x",
           y: "y",

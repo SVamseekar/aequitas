@@ -32,6 +32,8 @@ export default function ShapBarChart({ chartData }: Props) {
           x: "importance",
           fill: CATEGORICAL[1],
           sort: { y: "x", reverse: true },
+          tip: true,
+          title: (d: FeatureDatum) => `${d.name}\nImportance: ${d.importance.toFixed(4)}`,
         }),
         Plot.text(features, {
           y: "name",

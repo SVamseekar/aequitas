@@ -22,8 +22,8 @@ export default function BoxViolinChart({ chartData }: Props) {
     if (!ref.current) return
     const data = (chartData.data ?? []) as BoxDatum[]
 
-    // Build flat arrays for link/rect marks
-    const whiskers = data.map((d) => ({ y: d.group, x1: d.min, x2: d.max }))
+    // Build flat arrays for link/rect marks — keep orig BoxDatum reference for tooltips
+    const whiskers = data.map((d) => ({ ...d, y: d.group, x1: d.min, x2: d.max }))
     const boxes = data.map((d) => ({ y: d.group, x1: d.q1, x2: d.q3 }))
     const medians = data.map((d) => ({ y: d.group, x: d.median }))
 
@@ -34,10 +34,13 @@ export default function BoxViolinChart({ chartData }: Props) {
       x: { label: (chartData.x_label as string | undefined) ?? "Value" },
       y: { label: null },
       marks: [
-        // Whisker lines (min to max)
+        // Whisker lines (min to max) — carries tooltip for full quartile stats
         Plot.link(whiskers, {
           x1: "x1", x2: "x2", y1: "y", y2: "y",
           stroke: "#666", strokeWidth: 1,
+          tip: true,
+          title: (d: BoxDatum & { y: string; x1: number; x2: number }) =>
+            `${d.group}\nMin: ${d.min.toFixed(2)}\nQ1: ${d.q1.toFixed(2)}\nMedian: ${d.median.toFixed(2)}\nQ3: ${d.q3.toFixed(2)}\nMax: ${d.max.toFixed(2)}`,
         }),
         // Boxes (Q1 to Q3)
         Plot.rectX(boxes, {
