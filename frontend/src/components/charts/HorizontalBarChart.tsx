@@ -56,6 +56,8 @@ export default function HorizontalBarChart({ chartData }: Props) {
         Plot.barX(data, Plot.groupY({ x: "sum" }, {
           y: "label", x: "value", fill: "group",
           sort: { y: "x", reverse: true },
+          tip: true,
+          title: (d: GroupedDatum) => `${d.label} — ${d.group}\n${xLabel}: ${Number(d.value).toLocaleString()}`,
         })),
       )
     } else if (variant === "stacked_bar") {
@@ -65,6 +67,8 @@ export default function HorizontalBarChart({ chartData }: Props) {
         Plot.barX(data, Plot.stackX({
           y: "label", x: "value", fill: "group",
           sort: { y: "x", reverse: true },
+          tip: true,
+          title: (d: GroupedDatum) => `${d.label} — ${d.group}\n${xLabel}: ${Number(d.value).toLocaleString()}`,
         })),
       )
     } else {
@@ -74,6 +78,8 @@ export default function HorizontalBarChart({ chartData }: Props) {
         Plot.barX(data, {
           y: "label", x: "value", fill: CATEGORICAL[0],
           sort: { y: "x", reverse: true },
+          tip: true,
+          title: (d: BarDatum) => `${d.label}\n${xLabel}: ${d.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
         }),
         Plot.text(data, {
           y: "label", x: "value",
