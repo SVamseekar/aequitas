@@ -25,3 +25,6 @@ class ApiConfig:
             "AEQUITAS_CORS_ORIGINS", "http://localhost:5173"
         ).split(",")
     )
+    supabase_jwt_secret: str = field(
+        default_factory=lambda: os.environ.get("SUPABASE_JWT_SECRET", "")
+    )  # Empty = dev mode (skip JWT validation)
