@@ -1,5 +1,6 @@
 import { Link } from "react-router"
 import { FilterDropdowns } from "./FilterDropdowns"
+import { UserMenu } from "./UserMenu"
 
 export function Header() {
   return (
@@ -8,7 +9,10 @@ export function Header() {
         <Link to="/" className="text-xl font-semibold tracking-tight">
           Aequitas
         </Link>
-        <FilterDropdowns />
+        <div className="flex items-center gap-4">
+          <FilterDropdowns />
+          <UserMenu />
+        </div>
       </div>
     </header>
   )
