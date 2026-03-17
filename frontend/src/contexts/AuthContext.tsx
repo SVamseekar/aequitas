@@ -22,16 +22,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Set up listener FIRST, then check existing session
+    // onAuthStateChange fires INITIAL_SESSION on mount — no separate getSession needed
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, sess) => {
-      setSession(sess)
-      setUser(sess?.user ?? null)
-      setLoading(false)
-    })
-
-    supabase.auth.getSession().then(({ data: { session: sess } }) => {
       setSession(sess)
       setUser(sess?.user ?? null)
       setLoading(false)

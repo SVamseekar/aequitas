@@ -12,7 +12,7 @@ export function ChatMessage({ role, content }: Props) {
         className={`max-w-[85%] rounded-lg px-4 py-2 text-sm ${
           role === "user"
             ? "bg-indigo-600 text-white"
-            : "bg-gray-100 text-gray-900"
+            : "bg-muted text-foreground"
         }`}
       >
         {role === "assistant" ? <Markdown content={content || "..."} /> : content}

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router"
 import { ArrowLeft } from "lucide-react"
 
 const DIMENSIONS = [
-  { name: "Equity & Deprivation", metrics: "Gini coefficient (0.574), Lorenz curve, Palma ratio (5.70×), Concentration Index (+0.1358 pro-rich), triple-deprived LSOAs (612, 1.8%)." },
+  { name: "Equity & Deprivation", metrics: "Gini coefficient (0.5741), Lorenz curve, Palma ratio (5.702×), Concentration Index (+0.1358 pro-rich), triple-deprived LSOAs (612, 1.8%)." },
   { name: "Accessibility", metrics: "2SFCA with 400m Euclidean catchment — gaps to jobs (BRES 2023), NHS hospitals/GPs, and secondary schools. 6,776 LSOAs with zero access." },
   { name: "Service Quality", metrics: "Headway analysis, evening isolation (5,189 LSOAs, 15.4%), Sunday deserts (6,745, 20.0%), mean SQI 65.4/100." },
   { name: "Route Network", metrics: "13,099 deduplicated BODS routes, 7,241 with geometry (53.1%), mean length 23.0 km, operator HHI concentration, 37.7% cross-LA." },

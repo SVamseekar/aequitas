@@ -15,7 +15,7 @@ class ChartErrorBoundary extends Component<{ children: ReactNode }, { hasError: 
   static getDerivedStateFromError() { return { hasError: true } }
   render() {
     if (this.state.hasError) {
-      return <p className="text-gray-400 text-sm py-4">Chart could not be rendered</p>
+      return <p className="text-muted-foreground text-xs py-4">Chart could not be rendered</p>
     }
     return this.props.children
   }
@@ -30,7 +30,7 @@ export function ChartRenderer({ chartData }: Props) {
     return null
   }
   const type = chartData.type as string | undefined
-  const fallback = <div className="h-64 bg-gray-100 animate-pulse rounded" />
+  const fallback = <div className="h-64 bg-muted animate-pulse rounded" />
 
   let chart: ReactNode
   switch (type) {

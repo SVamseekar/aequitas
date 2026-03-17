@@ -52,7 +52,8 @@ export function DimensionPage() {
 
   const withCharts = sections.filter((s) => Object.keys(s.chart_data ?? {}).length > 0).length
   const withNarrative = sections.filter((s) => (s.narrative?.trim().length ?? 0) > 0).length
-  const exportUrl = `/api/export/${dimensionId}?region=${region}&urban_rural=${urbanRural}`
+  const exportParams = new URLSearchParams({ region, urban_rural: urbanRural })
+  const exportUrl = `/api/export/${encodeURIComponent(dimensionId)}?${exportParams}`
 
   return (
     <div>

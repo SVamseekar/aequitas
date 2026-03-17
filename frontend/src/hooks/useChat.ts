@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react"
 
 interface Message {
+  id: string
   role: "user" | "assistant"
   content: string
 }
@@ -13,25 +14,38 @@ interface UseChatReturn {
   clearMessages: () => void
 }
 
+let msgCounter = 0
+function nextId(): string {
+  return `msg_${++msgCounter}_${Date.now()}`
+}
+
 export function useChat(): UseChatReturn {
   const [messages, setMessages] = useState<Message[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const conversationId = useRef<string | null>(null)
   const messagesRef = useRef<Message[]>(messages)
+  const controllerRef = useRef<AbortController | null>(null)
   messagesRef.current = messages
 
   const sendMessage = useCallback(
     async (query: string, context: Record<string, string>) => {
+      // Abort any in-flight stream
+      controllerRef.current?.abort()
+      const controller = new AbortController()
+      controllerRef.current = controller
+
       setError(null)
-      setMessages((prev) => [...prev, { role: "user", content: query }])
+      const userMsg: Message = { id: nextId(), role: "user", content: query }
+      const assistantMsg: Message = { id: nextId(), role: "assistant", content: "" }
+      setMessages((prev) => [...prev, userMsg, assistantMsg])
       setIsStreaming(true)
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }])
 
       try {
         const resp = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
           body: JSON.stringify({
             query,
             context,
@@ -67,6 +81,12 @@ export function useChat(): UseChatReturn {
           buffer = lines.pop() ?? ""
 
           for (const line of lines) {
+            // Empty line = SSE event separator — reset event type
+            if (line === "") {
+              currentEventType = "chunk"
+              continue
+            }
+
             if (line.startsWith("event: ")) {
               currentEventType = line.slice(7).trim()
               continue
@@ -100,11 +120,12 @@ export function useChat(): UseChatReturn {
               } catch {
                 // ignore malformed JSON
               }
-              currentEventType = "chunk"
+              // Do NOT reset currentEventType here — SSE spec resets on blank line
             }
           }
         }
       } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return
         setError(e instanceof Error ? e.message : "Chat failed")
         // Remove the empty assistant placeholder on error
         setMessages((prev) => {
@@ -118,10 +139,13 @@ export function useChat(): UseChatReturn {
         setIsStreaming(false)
       }
     },
-    []
+    // State setters + refs are stable — deps are intentionally empty
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
   )
 
   const clearMessages = useCallback(() => {
+    controllerRef.current?.abort()
     setMessages([])
     conversationId.current = null
     setError(null)

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { listConversations, deleteConversation, type ConversationRow } from "@/lib/db"
 import { MessageSquarePlus, Trash2, MessageSquare, X } from "lucide-react"
@@ -28,23 +28,32 @@ export function ChatSidebar({ open, onClose, activeId, onSelect, onNew }: Props)
   const [conversations, setConversations] = useState<ConversationRow[]>([])
   const [loading, setLoading] = useState(true)
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     if (!user) return
     setLoading(true)
-    const data = await listConversations(user.id)
-    setConversations(data)
-    setLoading(false)
-  }
+    try {
+      const data = await listConversations(user.id)
+      setConversations(data)
+    } catch {
+      // silently ignore — list will be stale
+    } finally {
+      setLoading(false)
+    }
+  }, [user])
 
   useEffect(() => {
     if (open && user) void refresh()
-  }, [open, user])
+  }, [open, user, refresh])
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
-    await deleteConversation(id)
-    if (activeId === id) onNew()
-    void refresh()
+    try {
+      await deleteConversation(id)
+      if (activeId === id) onNew()
+      void refresh()
+    } catch {
+      // silently ignore — item stays in list
+    }
   }
 
   return (

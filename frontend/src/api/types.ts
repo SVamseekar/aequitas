@@ -36,6 +36,9 @@ export interface ProvenanceResponse {
   formula: string
   inputs: Record<string, string>
   source_files: string[]
+  description?: string
+  notebook?: string
+  input_values?: Record<string, unknown>
 }
 
 export interface LsoaResponse {

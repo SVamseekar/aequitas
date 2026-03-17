@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router"
+import { useNavigate, Link } from "react-router"
 import { useAuth } from "@/contexts/AuthContext"
 import {
   ArrowRight, Scale, MapPin, Bus, Network,
@@ -6,8 +6,8 @@ import {
 } from "lucide-react"
 
 const HEADLINE_STATS = [
-  { label: "Gini Coefficient", value: "0.574", sub: "Bus service inequality" },
-  { label: "Palma Ratio", value: "5.70×", sub: "Top 10% vs bottom 40%" },
+  { label: "Gini Coefficient", value: "0.5741", sub: "Bus service inequality" },
+  { label: "Palma Ratio", value: "5.702×", sub: "Top 10% vs bottom 40%" },
   { label: "Evening Isolated", value: "15.4%", sub: "of LSOAs" },
   { label: "Sunday Deserts", value: "20.0%", sub: "of LSOAs" },
 ]
@@ -91,12 +91,12 @@ export default function LandingPage() {
             AEQUITAS
           </span>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/about")}
+            <Link
+              to="/about"
               className="text-[11px] text-muted-foreground hover:text-foreground transition-colors font-mono"
             >
               ABOUT
-            </button>
+            </Link>
             {user ? (
               <button
                 onClick={() => navigate("/")}
@@ -184,9 +184,9 @@ export default function LandingPage() {
             POLICY ANALYSIS TOOL — NOT OFFICIAL DfT GUIDANCE
           </span>
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate("/about")} className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground font-mono uppercase tracking-wider transition-colors">About</button>
-            <button onClick={() => navigate("/disclaimer")} className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground font-mono uppercase tracking-wider transition-colors">Disclaimer</button>
-            <button onClick={() => navigate("/contact")} className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground font-mono uppercase tracking-wider transition-colors">Contact</button>
+            <Link to="/about" className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground font-mono uppercase tracking-wider transition-colors">About</Link>
+            <Link to="/disclaimer" className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground font-mono uppercase tracking-wider transition-colors">Disclaimer</Link>
+            <Link to="/contact" className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground font-mono uppercase tracking-wider transition-colors">Contact</Link>
           </div>
         </div>
       </footer>
