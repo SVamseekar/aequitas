@@ -37,8 +37,6 @@ def load_core_tables(conn: duckdb.DuckDBPyConnection, cfg: PipelineConfig) -> No
 
     parquet_map: dict[str, str] = {
         "lsoa_demographics": "master_lsoa_table.parquet",
-        "lsoa_service_quality": "lsoa_service_quality.parquet",
-        "lsoa_equity_metrics": "lsoa_equity_metrics.parquet",
     }
     for table_name, filename in parquet_map.items():
         path = _p(filename)
@@ -62,8 +60,9 @@ def build_warehouse(
     Steps:
     1. Create/open DuckDB file at cfg.warehouse_path
     2. Create all core table schemas
-    3. Insert precomputed section_results (if provided)
-    4. Load analytics Parquet files as DuckDB tables
+    3. Load LSOA reference tables from Phase 0 parquets (lsoa_demographics)
+    4. Insert precomputed section_results (if provided)
+    5. Load analytics Parquet files as DuckDB tables
 
     Args:
         cfg: Pipeline configuration with warehouse_path and processed_dir.
