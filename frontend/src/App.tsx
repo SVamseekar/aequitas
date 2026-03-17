@@ -13,6 +13,7 @@ const LandingPage = lazy(() => import("./pages/LandingPage"))
 const AboutPage = lazy(() => import("./pages/AboutPage"))
 const DisclaimerPage = lazy(() => import("./pages/DisclaimerPage"))
 const ContactPage = lazy(() => import("./pages/ContactPage"))
+const ComparePage = lazy(() => import("./pages/ComparePage"))
 
 // Saved sub-pages rendered inside a simple wrapper
 const SavedPage = lazy(() =>
@@ -60,6 +61,9 @@ export default function App() {
                 <Route index element={<HomePage />} />
                 <Route path=":dimensionSlug" element={<DimensionPage />} />
               </Route>
+
+              {/* Protected — compare page (standalone, no AppShell) */}
+              <Route path="/compare" element={<ProtectedRoute><ComparePage /></ProtectedRoute>} />
 
               {/* Protected — standalone pages */}
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
