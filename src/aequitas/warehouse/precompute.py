@@ -93,13 +93,33 @@ def _load_parquet_safe(path: Path) -> pd.DataFrame | None:
     return None
 
 
+# ONS code → region name mapping (policy parquets use names, warehouse uses codes)
+_REGION_CODE_TO_NAME: dict[str, str] = {
+    "E12000001": "North East",
+    "E12000002": "North West",
+    "E12000003": "Yorkshire and The Humber",
+    "E12000004": "East Midlands",
+    "E12000005": "West Midlands",
+    "E12000006": "East of England",
+    "E12000007": "London",
+    "E12000008": "South East",
+    "E12000009": "South West",
+}
+
+
 def _filter_data(
     df: pd.DataFrame, region: str, urban_rural: str,
 ) -> pd.DataFrame:
-    """Apply region and urban/rural filters to a DataFrame."""
+    """Apply region and urban/rural filters to a DataFrame.
+
+    Handles both ONS region codes (E12000007) and region names (London)
+    in the data by trying both the code and its name equivalent.
+    """
     mask = pd.Series(True, index=df.index)
     if region != "all" and "region" in df.columns:
-        mask &= df["region"] == region
+        region_name = _REGION_CODE_TO_NAME.get(region, region)
+        # Match either the ONS code or the region name
+        mask &= (df["region"] == region) | (df["region"] == region_name)
     if urban_rural != "all" and "urban_rural" in df.columns:
         mask &= df["urban_rural"].str.lower().str.startswith(urban_rural)
     return df[mask]
@@ -174,6 +194,11 @@ def _load_all_data(cfg: PipelineConfig) -> dict[str, pd.DataFrame]:
 
     Falls back to audit/ when processed/ copy is absent so tests can run
     against Phase 0 outputs without a full Phase 1 pipeline run.
+
+    After loading, enriches sparse parquets (accessibility, service_quality,
+    clusters, anomalies) with region/population/urban_rural via left-join
+    to policy. Also merges socio-economic factors from master_lsoa_table
+    into policy so correlation builders (d2-d5, f3) find the columns they need.
     """
     def _p(filename: str) -> Path:
         proc = cfg.processed_dir / filename
@@ -193,13 +218,95 @@ def _load_all_data(cfg: PipelineConfig) -> dict[str, pd.DataFrame]:
         "clusters": cfg.audit_dir / "lsoa_clusters_hdbscan.parquet",
         "route_clusters": cfg.audit_dir / "route_clusters.parquet",
         "coverage_pred": cfg.audit_dir / "coverage_prediction.parquet",
-        "shap": cfg.audit_dir / "shap_importance.parquet",
     }
     data: dict[str, pd.DataFrame] = {}
     for key, path in sources.items():
         df = _load_parquet_safe(path)
         if df is not None:
             data[key] = df
+
+    # Load master_lsoa_table for socio-economic factors
+    master = _load_parquet_safe(_p("master_lsoa_table.parquet"))
+
+    # Load SHAP from CSV (no parquet exists — only shap_summary.csv)
+    shap_csv = cfg.audit_dir / "shap_summary.csv"
+    if shap_csv.exists():
+        shap_df = pd.read_csv(shap_csv)
+        if "mean_abs_shap" in shap_df.columns:
+            shap_df = shap_df.rename(columns={"mean_abs_shap": "importance"})
+        data["shap"] = shap_df
+
+    # --- Enrich sparse parquets with region/population/urban_rural ---
+    policy_df = data.get("policy")
+    if policy_df is not None:
+        # Merge socio-economic factors from master into policy
+        if master is not None:
+            extra_cols = [
+                "unemployment_rate", "nocar_pct", "elderly_pct",
+                "income_score", "nonwhite_pct", "disability_pct",
+            ]
+            available = [c for c in extra_cols if c in master.columns and c not in policy_df.columns]
+            if available:
+                policy_df = policy_df.merge(
+                    master[["lsoa_cd"] + available],
+                    on="lsoa_cd", how="left",
+                )
+            data["policy"] = policy_df
+
+        lookup_cols = ["lsoa_cd", "region", "urban_rural", "population"]
+        lookup = policy_df[lookup_cols].drop_duplicates(subset=["lsoa_cd"])
+
+        # Enrich accessibility (has LSOA21CD, no region/population/urban_rural)
+        if "accessibility" in data:
+            acc = data["accessibility"]
+            if "LSOA21CD" in acc.columns:
+                acc = acc.rename(columns={"LSOA21CD": "lsoa_cd"})
+            acc = acc.merge(lookup, on="lsoa_cd", how="left")
+            data["accessibility"] = acc
+
+        # Enrich service_quality (has LSOA21CD, no region)
+        if "service_quality" in data:
+            sq = data["service_quality"]
+            if "LSOA21CD" in sq.columns:
+                sq = sq.rename(columns={"LSOA21CD": "lsoa_cd"})
+            if "region" not in sq.columns:
+                sq = sq.merge(lookup[["lsoa_cd", "region"]], on="lsoa_cd", how="left")
+            data["service_quality"] = sq
+
+        # Enrich clusters with region/population for D6
+        if "clusters" in data:
+            cl = data["clusters"]
+            if "region" not in cl.columns:
+                cl = cl.merge(lookup, on="lsoa_cd", how="left")
+                data["clusters"] = cl
+
+        # Enrich anomalies with region
+        if "anomalies" in data:
+            an = data["anomalies"]
+            if "lsoa_cd" in an.columns and "region" not in an.columns:
+                an = an.merge(lookup[["lsoa_cd", "region"]], on="lsoa_cd", how="left")
+                data["anomalies"] = an
+
+        # Enrich coverage_prediction with region
+        if "coverage_pred" in data:
+            cp = data["coverage_pred"]
+            if "lsoa_cd" in cp.columns and "region" not in cp.columns:
+                cp = cp.merge(lookup, on="lsoa_cd", how="left")
+                data["coverage_pred"] = cp
+
+    # --- Fix route column names ---
+    if "routes" in data:
+        r = data["routes"]
+        renames: dict[str, str] = {}
+        if "length_km" in r.columns and "route_length_km" not in r.columns:
+            renames["length_km"] = "route_length_km"
+        if "primary_region" in r.columns and "region" not in r.columns:
+            renames["primary_region"] = "region"
+        if "cross_la" in r.columns and "cross_la_flag" not in r.columns:
+            renames["cross_la"] = "cross_la_flag"
+        if renames:
+            data["routes"] = r.rename(columns=renames)
+
     return data
 
 
@@ -366,29 +473,71 @@ def _build_coverage_gap(
 def _build_equity(
     section_id: str, data: dict, region: str, urban_rural: str,
 ) -> tuple[dict, dict]:
-    """Build equity metrics (A4, F1)."""
-    eq = data.get("equity")
+    """Build equity metrics (A4, F1).
+
+    Computes Gini, Palma ratio, and Concentration Index from policy
+    trips_per_capita + population (the equity parquet doesn't store these
+    as columns — they're scalar outputs of notebook 04c).
+    """
     policy = data.get("policy")
-    if eq is None:
+    if policy is None:
         return {}, {}
-    cols = ["gini", "palma_ratio", "concentration_index"]
-    if not all(c in eq.columns for c in cols):
+    filtered = _filter_data(policy, region, urban_rural)
+    if "trips_per_capita" not in filtered.columns or "population" not in filtered.columns:
         return {}, {}
+    if not GiniEquityRule().should_fire(n_lsoas=len(filtered)):
+        return {}, {}
+
+    import numpy as np
+    from scipy import stats as scipy_stats
+
+    values = filtered["trips_per_capita"].fillna(0).values
+    weights = filtered["population"].fillna(1).values
+
+    # Gini coefficient
+    sorted_idx = values.argsort()
+    sv = values[sorted_idx]
+    sw = weights[sorted_idx]
+    cum_pop = np.cumsum(sw) / sw.sum()
+    weighted_vals = sv * sw
+    cum_service = np.cumsum(weighted_vals) / weighted_vals.sum()
+    cum_pop = np.concatenate([[0], cum_pop])
+    cum_service = np.concatenate([[0], cum_service])
+    trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
+    area_under = float(trapezoid(cum_service, cum_pop))
+    gini = round(1 - 2 * area_under, 4)
+
+    # Palma ratio (top 10% / bottom 40% by population-weighted service)
+    n = len(sv)
+    bottom_40_idx = int(n * 0.4)
+    top_10_idx = int(n * 0.9)
+    bottom_40_service = float(weighted_vals[:bottom_40_idx].sum())
+    top_10_service = float(weighted_vals[top_10_idx:].sum())
+    palma = round(top_10_service / bottom_40_service, 3) if bottom_40_service > 0 else 0.0
+
+    # Concentration index
+    if "imd_score" in filtered.columns:
+        imd = filtered["imd_score"].fillna(0).values
+        tpc = filtered["trips_per_capita"].fillna(0).values
+        pop = filtered["population"].fillna(1).values
+        imd_rank = scipy_stats.rankdata(imd) / len(imd)
+        mean_tpc = float((tpc * pop).sum() / pop.sum())
+        ci = float(2 * ((tpc * pop * imd_rank).sum() / (pop.sum() * mean_tpc)) - 1) if mean_tpc > 0 else 0.0
+        ci = round(ci, 4)
+    else:
+        ci = 0.0
+
     stats: dict[str, Any] = {
-        "gini": float(eq["gini"].iloc[0]),
-        "palma": float(eq["palma_ratio"].iloc[0]),
-        "concentration_index": float(eq["concentration_index"].iloc[0]),
+        "gini": gini,
+        "palma": palma,
+        "concentration_index": ci,
     }
 
-    chart: dict = {}
-    if policy is not None and "trips_per_capita" in policy.columns and "population" in policy.columns:
-        filtered = _filter_data(policy, region, urban_rural)
-        if GiniEquityRule().should_fire(n_lsoas=len(filtered)):
-            chart = build_lorenz_curve(
-                values=filtered["trips_per_capita"].fillna(0),
-                weights=filtered["population"].fillna(1),
-                title=SECTION_REGISTRY[section_id].title,
-            )
+    chart = build_lorenz_curve(
+        values=filtered["trips_per_capita"].fillna(0),
+        weights=filtered["population"].fillna(1),
+        title=SECTION_REGISTRY[section_id].title,
+    )
     return stats, chart
 
 
@@ -465,7 +614,7 @@ def _build_urban_rural(
 
     chart: dict = {}
     if "region" in filtered.columns:
-        regions = sorted(filtered["region"].unique())
+        regions = sorted(filtered["region"].dropna().unique())
         u_vals = [round(float(urban[urban["region"] == r][metric].mean()), 2) if len(urban[urban["region"] == r]) > 0 else 0 for r in regions]
         r_vals = [round(float(rural[rural["region"] == r][metric].mean()), 2) if len(rural[rural["region"] == r]) > 0 else 0 for r in regions]
         chart = build_grouped_bar(
@@ -675,7 +824,7 @@ def _build_distribution(
 
     metric_map: dict[str, tuple[str, str, str]] = {
         "c1": ("route_length_km", "Route Length", "km"),
-        "c2": ("num_stops", "Stops per Route", "stops"),
+        "c2": ("stop_count", "Stops per Route", "stops"),
     }
     prefix = section_id.split("_")[0]
     mapping = metric_map.get(prefix)
@@ -796,7 +945,8 @@ def _build_network(
     if not NetworkRule().should_fire(n_routes=len(routes)):
         return {}, {}
 
-    n_cross = int(routes["cross_la_flag"].sum()) if "cross_la_flag" in routes.columns else 0
+    cross_col = "cross_la_flag" if "cross_la_flag" in routes.columns else "cross_la"
+    n_cross = int(routes[cross_col].astype(bool).sum()) if cross_col in routes.columns else 0
     stats: dict[str, Any] = {
         "n_cross_la": n_cross,
         "pct_cross_la": round(n_cross / len(routes) * 100, 1) if len(routes) > 0 else 0,
@@ -828,8 +978,13 @@ def _build_heatmap_section(
     if "imd_decile" not in filtered.columns or "urban_rural" not in filtered.columns or "trips_per_capita" not in filtered.columns:
         return {}, {}
 
-    pivot = filtered.groupby(["urban_rural", "imd_decile"])["trips_per_capita"].mean().unstack(fill_value=0)
-    cell_counts = filtered.groupby(["urban_rural", "imd_decile"]).size().unstack(fill_value=0)
+    # Drop rows with NaN in groupby columns to avoid NaN-to-int conversion errors
+    clean = filtered.dropna(subset=["urban_rural", "imd_decile", "trips_per_capita"])
+    if len(clean) == 0:
+        return {}, {}
+
+    pivot = clean.groupby(["urban_rural", "imd_decile"])["trips_per_capita"].mean().unstack(fill_value=0)
+    cell_counts = clean.groupby(["urban_rural", "imd_decile"]).size().unstack(fill_value=0)
     min_cell = int(cell_counts.min().min())
     if not HeatmapRule().should_fire(min_cell_n=min_cell):
         return {}, {}
@@ -1062,16 +1217,19 @@ def _build_economic_value(
     if not MinLsoaRule().should_fire(n_lsoas=len(filtered)):
         return {}, {}
 
+    benefit_col = "annual_total_benefit" if "annual_total_benefit" in filtered.columns else "annual_benefit_gbp"
+    trips_col = "annual_additional_trips" if "annual_additional_trips" in filtered.columns else "trips_per_day"
+
     stats: dict[str, Any] = {
-        "annual_benefit": float(filtered["annual_benefit_gbp"].sum()) if "annual_benefit_gbp" in filtered.columns else 0,
+        "annual_benefit": float(filtered[benefit_col].sum()) if benefit_col in filtered.columns else 0,
         "region_name": "England" if region == "all" else region,
-        "n_trips": int(filtered["trips_per_day"].sum()) if "trips_per_day" in filtered.columns else 0,
+        "n_trips": int(filtered[trips_col].sum()) if trips_col in filtered.columns else 0,
         "vot": 8.49,  # TAG v2.03fc, blended commute/other
     }
 
     chart: dict = {}
-    if "region" in filtered.columns and "annual_benefit_gbp" in filtered.columns:
-        by_region = filtered.groupby("region")["annual_benefit_gbp"].sum().reset_index()
+    if "region" in filtered.columns and benefit_col in filtered.columns:
+        by_region = filtered.groupby("region")[benefit_col].sum().reset_index()
         by_region.columns = ["label", "value"]
         by_region["value"] = (by_region["value"] / 1e6).round(1)
         chart = build_horizontal_bar(
@@ -1089,10 +1247,11 @@ def _build_bcr(
     if econ is None:
         return {}, {}
     filtered = _filter_data(econ, region, urban_rural)
-    if "bcr_central" not in filtered.columns or len(filtered) == 0:
+    bcr_col = "bcr" if "bcr" in filtered.columns else "bcr_central"
+    if bcr_col not in filtered.columns or len(filtered) == 0:
         return {}, {}
 
-    mean_bcr = float(filtered["bcr_central"].mean())
+    mean_bcr = float(filtered[bcr_col].mean())
     stats: dict[str, Any] = {
         "bcr": round(mean_bcr, 2),
         "area_name": "England" if region == "all" else region,
@@ -1103,7 +1262,7 @@ def _build_bcr(
 
     chart: dict = {}
     if "region" in filtered.columns:
-        by_region = filtered.groupby("region")["bcr_central"].mean().reset_index()
+        by_region = filtered.groupby("region")[bcr_col].mean().reset_index()
         by_region.columns = ["label", "value"]
         by_region["value"] = by_region["value"].round(2)
         chart = build_horizontal_bar(
