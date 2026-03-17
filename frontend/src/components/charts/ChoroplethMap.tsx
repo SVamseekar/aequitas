@@ -81,7 +81,38 @@ export default function ChoroplethMap({ chartData }: Props) {
           style,
           center: [-1.5, 52.8],
           zoom: 5.5,
+          scrollZoom: true,
+          dragPan: true,
+          doubleClickZoom: true,
           attributionControl: false,
+        })
+
+        const metric = (chartData.metric as string | undefined) ?? "Value"
+        const popup = new maplibregl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          className: "maplibre-hover-popup",
+        })
+
+        map.on("load", () => {
+          map.on("mousemove", "regions-fill", (e) => {
+            if (!e.features || e.features.length === 0) return
+            const props = e.features[0].properties as Record<string, unknown>
+            const name = String(props["area_name"] ?? props["RGN22NM"] ?? "Unknown")
+            const value = props["value"] as number | undefined
+            popup
+              .setLngLat(e.lngLat)
+              .setHTML(
+                `<strong>${name}</strong><br/>${metric}: ${value !== undefined ? Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"}`,
+              )
+              .addTo(map)
+            map.getCanvas().style.cursor = "pointer"
+          })
+
+          map.on("mouseleave", "regions-fill", () => {
+            popup.remove()
+            map.getCanvas().style.cursor = ""
+          })
         })
 
         mapRef.current = map
