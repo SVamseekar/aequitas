@@ -1,5 +1,4 @@
 """Verify every section's chart_data.type matches a frontend ChartRenderer case."""
-import json
 import duckdb
 import pytest
 
@@ -12,7 +11,12 @@ FRONTEND_CHART_TYPES = {
 
 @pytest.fixture
 def db():
-    conn = duckdb.connect("data/aequitas.duckdb", read_only=True)
+    from pathlib import Path
+    project_root = Path(__file__).parent.parent.parent  # tests/warehouse/ → tests/ → root
+    db_path = project_root / "data" / "aequitas.duckdb"
+    if not db_path.exists():
+        pytest.skip(f"Warehouse not built yet: {db_path}")
+    conn = duckdb.connect(str(db_path), read_only=True)
     yield conn
     conn.close()
 
