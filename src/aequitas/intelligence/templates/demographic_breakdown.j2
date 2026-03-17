@@ -1,0 +1,5 @@
+{% if groups -%}
+{% for group in groups -%}
+LSOAs in the **{{ group.label }}** category have **{{ group.value|round(2) }} {{ unit }}**, {{ group.vs_national_pct|round(1) }}% {{ "above" if group.vs_national_pct >= 0 else "below" }} the national average.
+{% endfor %}
+{%- endif %}

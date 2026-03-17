@@ -1,0 +1,3 @@
+{% if n_beyond_threshold is not none -%}
+**{{ n_beyond_threshold|int }}** {{ poi_type }} ({{ pct_beyond|round(1) }}%) are beyond {{ threshold_m|int }}m of a bus stop. {% if affected_population %}This affects an estimated **{{ affected_population|int }}** people.{% endif %}
+{%- endif %}

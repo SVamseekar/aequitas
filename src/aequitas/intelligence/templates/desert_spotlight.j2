@@ -1,0 +1,6 @@
+{% if n_desert_lsoas > 0 -%}
+**{{ n_desert_lsoas|int }}** LSOAs have no bus stops within their boundaries, affecting approximately **{{ pop_affected|int }}** people. {% if largest_region %}The largest concentration is in **{{ largest_region }}** ({{ largest_region_count|int }} LSOAs).{% endif %}
+{% if mean_imd_score is not none -%}
+Desert LSOAs have a mean IMD score of {{ mean_imd_score|round(1) }}, {{ "above" if mean_imd_score > national_mean_imd else "below" }} the national average of {{ national_mean_imd|round(1) }}.
+{%- endif %}
+{%- endif %}

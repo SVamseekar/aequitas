@@ -1,0 +1,8 @@
+{% if bcr is not none -%}
+Closing coverage gaps in **{{ area_name }}** has a BCR of **{{ bcr|round(2) }}** ({{ vfm_band }} value for money). The investment required is **£{{ (investment_m)|round(1) }}m** over {{ appraisal_years|int }} years.
+{% if bcr < 1.0 -%}
+This intervention does not meet the minimum value-for-money threshold.
+{%- elif bcr >= 2.0 -%}
+This represents a high-value investment opportunity.
+{%- endif %}
+{%- endif %}
