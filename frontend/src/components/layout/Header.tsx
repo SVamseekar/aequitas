@@ -4,10 +4,13 @@ import { UserMenu } from "./UserMenu"
 
 export function Header() {
   return (
-    <header className="bg-[#1a1a2e] text-white">
-      <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="text-xl font-semibold tracking-tight">
-          Aequitas
+    <header className="border-b border-border bg-card/50">
+      <div className="mx-auto max-w-7xl px-4 h-14 flex items-center justify-between">
+        <Link
+          to="/"
+          className="flex items-center gap-2.5 text-sm font-mono font-bold tracking-widest uppercase text-foreground hover:text-indigo-400 transition-colors"
+        >
+          AEQUITAS
         </Link>
         <div className="flex items-center gap-4">
           <FilterDropdowns />
