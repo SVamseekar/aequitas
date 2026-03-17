@@ -1,6 +1,7 @@
 """Conversations router — CRUD for persisted chat sessions via Supabase."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
@@ -108,6 +109,17 @@ async def add_message(
     if body.role not in ("user", "assistant"):
         raise HTTPException(400, "role must be 'user' or 'assistant'")
     sb = _get_supabase()
+    # Verify ownership: conversation must belong to this user
+    conv = (
+        sb.table("conversations")
+        .select("id")
+        .eq("id", str(conversation_id))
+        .eq("user_id", user["sub"])
+        .execute()
+    )
+    if not conv.data:
+        raise HTTPException(404, "Conversation not found")
+
     resp = (
         sb.table("messages")
         .insert({
@@ -121,7 +133,9 @@ async def add_message(
     if not resp.data:
         raise HTTPException(500, "Failed to save message")
     # Touch conversation updated_at
-    sb.table("conversations").update({"updated_at": "now()"}).eq("id", str(conversation_id)).execute()
+    sb.table("conversations").update(
+        {"updated_at": datetime.now(timezone.utc).isoformat()}
+    ).eq("id", str(conversation_id)).execute()
     return resp.data[0]
 
 

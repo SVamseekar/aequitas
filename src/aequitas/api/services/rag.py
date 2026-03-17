@@ -57,8 +57,11 @@ def build_prompt(
     # Add history (last 3 turns = 6 messages)
     if history:
         for msg in history[-6:]:
-            role = "user" if msg.get("role") == "user" else "model"
-            messages.append({"role": role, "parts": [msg.get("content", "")]})
+            # Support both HistoryMessage objects and raw dicts
+            role_val = getattr(msg, "role", None) or msg.get("role", "")
+            content_val = getattr(msg, "content", None) or msg.get("content", "")
+            role = "user" if role_val == "user" else "model"
+            messages.append({"role": role, "parts": [content_val]})
 
     messages.append({"role": "user", "parts": [query]})
     return messages
@@ -95,8 +98,8 @@ async def stream_gemini(
             },
         }
     except Exception as e:
-        logger.error(f"Gemini streaming error: {e}")
+        logger.error(f"Gemini streaming error: {type(e).__name__}: {e}")
         yield {
             "event": "error",
-            "data": {"message": str(e), "code": "gemini_error"},
+            "data": {"message": "An error occurred generating the response", "code": "gemini_error"},
         }

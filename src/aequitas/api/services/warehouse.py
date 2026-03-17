@@ -6,6 +6,7 @@ import re
 from typing import Any
 
 import duckdb
+from loguru import logger
 
 # Dimension → section_id prefixes. The 51 section IDs follow a naming convention:
 # a1_*, a2_*, ..., b1_*, ..., bsa1_*, ps1_*, etc.
@@ -24,7 +25,7 @@ DIMENSION_PREFIXES: dict[str, list[str]] = {
 # Headline section per dimension (section_id, stat_key)
 # Keys must match actual stats produced by precompute.py
 HEADLINE_SECTIONS: dict[str, tuple[str, str]] = {
-    "equity": ("f2_disparity_ratio", "ratio"),
+    "equity": ("f1_gini", "gini"),
     "accessibility": ("a3_walking_distance", "pct_covered"),
     "service_quality": ("b1_frequency", "national_avg"),
     "route_network": ("c3_operator_hhi", "hhi"),
@@ -41,6 +42,9 @@ def _build_prefix_pattern(prefixes: list[str]) -> str:
     Single-letter prefixes (e.g. "b") use regexp to match "b<digit>..."
     to avoid collisions like "b%" matching "bsa1_*". Multi-letter prefixes
     (e.g. "bsa", "ps") use plain LIKE.
+
+    Safety: prefixes are sourced exclusively from the DIMENSION_PREFIXES constant
+    above — they are never derived from user input, so SQL injection is not possible.
     """
     conditions = []
     for p in prefixes:
@@ -60,9 +64,11 @@ def query_sections(
     """Query section_results for a dimension's sections."""
     prefixes = DIMENSION_PREFIXES.get(dimension, [])
     if not prefixes:
+        logger.debug(f"No prefixes for dimension={dimension}")
         return []
 
     where_prefix = _build_prefix_pattern(prefixes)
+    logger.debug(f"Querying sections: dimension={dimension}, region={region}, urban_rural={urban_rural}")
     rows = db.execute(
         f"""
         SELECT section_id, stats, chart_data, narrative
@@ -153,6 +159,7 @@ def query_lsoa(
 ) -> tuple[list[dict], int]:
     """Query LSOA-level analytics table."""
     if table not in ALLOWED_TABLES:
+        logger.warning(f"Rejected LSOA query for disallowed table: {table}")
         raise ValueError(f"Table '{table}' not in allowed list: {ALLOWED_TABLES}")
 
     # Count

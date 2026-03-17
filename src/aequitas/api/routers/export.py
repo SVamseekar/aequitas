@@ -1,9 +1,10 @@
 """PDF export router — GET /api/export/{dimension}."""
 from __future__ import annotations
 
+import re
 from io import BytesIO
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
@@ -11,7 +12,7 @@ from reportlab.lib.units import cm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from aequitas.api.deps import get_db
-from aequitas.api.services.warehouse import query_sections
+from aequitas.api.services.warehouse import DIMENSION_PREFIXES, query_sections
 
 router = APIRouter(tags=["export"])
 
@@ -83,6 +84,9 @@ async def export_dimension_pdf(
     urban_rural: str = Query("all"),
 ) -> StreamingResponse:
     """Generate a PDF report for a dimension + filter combination."""
+    if dimension not in DIMENSION_PREFIXES:
+        raise HTTPException(400, f"Unknown dimension: {dimension}")
+
     db = get_db()
     sections: list[dict] = []
     if db is not None:
@@ -90,7 +94,9 @@ async def export_dimension_pdf(
         sections = rows
 
     pdf_bytes = _build_pdf(dimension, sections, region, urban_rural)
-    filename = f"aequitas_{dimension}_{region}_{urban_rural}.pdf"
+    # Sanitize filename — strip anything not alphanumeric, underscore, or hyphen
+    safe = re.sub(r"[^a-zA-Z0-9_-]", "_", f"aequitas_{dimension}_{region}_{urban_rural}")
+    filename = f"{safe}.pdf"
 
     return StreamingResponse(
         iter([pdf_bytes]),

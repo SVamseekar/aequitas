@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import json
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sse_starlette.sse import EventSourceResponse
 
+from aequitas.api.auth import verify_supabase_jwt
 from aequitas.api.config import ApiConfig
 from aequitas.api.deps import get_embedding_model, get_faiss
 from aequitas.api.models.requests import ChatRequest
@@ -15,7 +16,10 @@ router = APIRouter()
 
 
 @router.post("/chat")
-async def chat(req: ChatRequest) -> EventSourceResponse:
+async def chat(
+    req: ChatRequest,
+    user: dict = Depends(verify_supabase_jwt),  # noqa: ARG001 — enforces auth
+) -> EventSourceResponse:
     """Stream Gemini response grounded in FAISS-retrieved narratives."""
     faiss_index, faiss_metadata = get_faiss()
     embedding_model = get_embedding_model()
