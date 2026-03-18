@@ -224,6 +224,14 @@ def _load_all_data(cfg: PipelineConfig) -> dict[str, pd.DataFrame]:
     # Load master_lsoa_table for socio-economic factors
     master = _load_parquet_safe(_p("master_lsoa_table.parquet"))
 
+    # Normalise LSOA column name: pipeline outputs lsoa_code, audit parquets
+    # use lsoa_cd. Canonical name for warehouse/precompute is lsoa_cd.
+    for key in list(data.keys()):
+        if "lsoa_code" in data[key].columns and "lsoa_cd" not in data[key].columns:
+            data[key] = data[key].rename(columns={"lsoa_code": "lsoa_cd"})
+    if master is not None and "lsoa_code" in master.columns and "lsoa_cd" not in master.columns:
+        master = master.rename(columns={"lsoa_code": "lsoa_cd"})
+
     # Load SHAP from CSV (no parquet exists — only shap_summary.csv)
     shap_csv = cfg.audit_dir / "shap_summary.csv"
     if shap_csv.exists():
@@ -289,6 +297,22 @@ def _load_all_data(cfg: PipelineConfig) -> dict[str, pd.DataFrame]:
             if "lsoa_cd" in cp.columns and "region" not in cp.columns:
                 cp = cp.merge(lookup, on="lsoa_cd", how="left")
                 data["coverage_pred"] = cp
+
+        # Enrich economic parquet — region column is "Unknown" for all rows
+        # because lsoa_economic_appraisal.parquet was built without ONS region codes.
+        # Overwrite region/urban_rural from policy lookup to fix j1/j2/j4.
+        if "economic" in data:
+            econ = data["economic"]
+            if "lsoa_cd" in econ.columns and (
+                "region" not in econ.columns
+                or econ["region"].eq("Unknown").all()
+            ):
+                econ = econ.drop(columns=["region", "urban_rural"], errors="ignore")
+                econ = econ.merge(
+                    lookup[["lsoa_cd", "region", "urban_rural"]],
+                    on="lsoa_cd", how="left",
+                )
+                data["economic"] = econ
 
     # --- Fix route column names ---
     if "routes" in data:
@@ -377,10 +401,22 @@ def _build_section(
 # Builder functions — each returns (stats_dict, chart_data_dict)
 # ---------------------------------------------------------------------------
 
+# Per-section metric and label for ranking charts — avoids all sections
+# showing the same trips_per_capita ranking.
+_RANKING_METRICS: dict[str, tuple[str, str]] = {
+    "a1": ("trips_per_capita", "trips/capita"),
+    "a2": ("stop_count", "stops"),
+    "b1": ("service_quality_index", "SQI"),
+    "b4": ("total_weekday_departures", "departures/day"),
+    "f6": ("gini_contribution", "Gini contribution"),
+    "j4": ("investment_gap", "investment gap"),
+}
+
+
 def _build_ranking_density(
     section_id: str, data: dict, region: str, urban_rural: str,
 ) -> tuple[dict, dict]:
-    """Build ranking for route/stop density by region."""
+    """Build ranking by region using the section-appropriate metric."""
     policy = data.get("policy")
     if policy is None:
         return {}, {}
@@ -388,21 +424,44 @@ def _build_ranking_density(
     if len(filtered) == 0 or "region" not in filtered.columns:
         return {}, {}
 
-    metric = "trips_per_capita"
+    prefix = section_id.split("_")[0]
+    metric, unit = _RANKING_METRICS.get(prefix, ("trips_per_capita", "trips/capita"))
+    # Fall back to trips_per_capita if the preferred metric isn't available
+    if metric not in filtered.columns:
+        metric, unit = "trips_per_capita", "trips/capita"
     if metric not in filtered.columns:
         return {}, {}
 
+    x_label = unit.replace("_", " ").title()
+
     by_region = filtered.groupby("region")[metric].mean().reset_index()
     by_region.columns = ["label", "value"]
-    nat_avg = float(by_region["value"].mean())
+
+    # Compute national averages from all-England data for pct comparisons
+    nat_df = policy.groupby("region")[metric].mean().reset_index()
+    nat_avg = float(nat_df[metric].mean()) if len(nat_df) > 0 else float(by_region["value"].mean())
 
     if len(by_region) < 2:
-        return {}, {}
+        # Single-region filter: emit single_region stats for ranking template
+        region_name = str(by_region.iloc[0]["label"]) if len(by_region) > 0 else (region if region != "all" else "England")
+        region_val = float(by_region.iloc[0]["value"]) if len(by_region) > 0 else 0.0
+        vs_nat = round((region_val - nat_avg) / nat_avg * 100, 1) if nat_avg > 0 else 0.0
+        stats = {
+            "best": {"name": region_name, "value": round(region_val, 2), "pct_above": max(vs_nat, 0)},
+            "worst": {"name": region_name, "value": round(region_val, 2), "pct_below": max(-vs_nat, 0)},
+            "national_avg": round(nat_avg, 2),
+            "unit": unit,
+        }
+        chart = build_horizontal_bar(
+            data=by_region, title=SECTION_REGISTRY[section_id].title,
+            x_label=x_label, y_label="Region", national_avg=nat_avg,
+        )
+        return stats, chart
 
     best_idx = by_region["value"].idxmax()
     worst_idx = by_region["value"].idxmin()
 
-    stats: dict[str, Any] = {
+    stats = {
         "best": {
             "name": str(by_region.loc[best_idx, "label"]),
             "value": round(float(by_region.loc[best_idx, "value"]), 2),
@@ -414,11 +473,11 @@ def _build_ranking_density(
             "pct_below": round((nat_avg - float(by_region.loc[worst_idx, "value"])) / nat_avg * 100, 1),
         },
         "national_avg": round(nat_avg, 2),
-        "unit": "trips/capita",
+        "unit": unit,
     }
     chart = build_horizontal_bar(
         data=by_region, title=SECTION_REGISTRY[section_id].title,
-        x_label="Trips per capita", y_label="Region", national_avg=nat_avg,
+        x_label=x_label, y_label="Region", national_avg=nat_avg,
     )
     return stats, chart
 
@@ -485,7 +544,6 @@ def _build_equity(
         return {}, {}
 
     import numpy as np
-    from scipy import stats as scipy_stats
 
     values = filtered["trips_per_capita"].fillna(0).values
     weights = filtered["population"].fillna(1).values
@@ -503,23 +561,31 @@ def _build_equity(
     area_under = float(trapezoid(cum_service, cum_pop))
     gini = round(1 - 2 * area_under, 4)
 
-    # Palma ratio (top 10% / bottom 40% by population-weighted service)
-    n = len(sv)
-    bottom_40_idx = int(n * 0.4)
-    top_10_idx = int(n * 0.9)
-    bottom_40_service = float(weighted_vals[:bottom_40_idx].sum())
-    top_10_service = float(weighted_vals[top_10_idx:].sum())
-    palma = round(top_10_service / bottom_40_service, 3) if bottom_40_service > 0 else 0.0
+    # Palma ratio — canonical formula from analytics/equity.py:
+    # population-weighted mean of top 10% / bottom 40% using cumulative pop fractions
+    cum_pop_frac = np.cumsum(sw) / sw.sum()
+    bottom_mask = cum_pop_frac <= 0.40
+    top_mask = cum_pop_frac > 0.90
+    bottom_mean = float(np.average(sv[bottom_mask], weights=sw[bottom_mask])) if bottom_mask.sum() > 0 else 0.0
+    top_mean = float(np.average(sv[top_mask], weights=sw[top_mask])) if top_mask.sum() > 0 else 0.0
+    palma = round(top_mean / bottom_mean, 3) if bottom_mean > 0 else float("inf")
 
-    # Concentration index
+    # Concentration Index — canonical Wagstaff covariance method from analytics/equity.py
     if "imd_score" in filtered.columns:
-        imd = filtered["imd_score"].fillna(0).values
+        imd_vals = filtered["imd_score"].fillna(0).values
         tpc = filtered["trips_per_capita"].fillna(0).values
         pop = filtered["population"].fillna(1).values
-        imd_rank = scipy_stats.rankdata(imd) / len(imd)
-        mean_tpc = float((tpc * pop).sum() / pop.sum())
-        ci = float(2 * ((tpc * pop * imd_rank).sum() / (pop.sum() * mean_tpc)) - 1) if mean_tpc > 0 else 0.0
-        ci = round(ci, 4)
+        rank_order = np.argsort(imd_vals)
+        pop_by_rank = pop[rank_order]
+        total_pop = pop_by_rank.sum()
+        frac_rank = (np.cumsum(pop_by_rank) - 0.5 * pop_by_rank) / total_pop
+        service_by_rank = tpc[rank_order]
+        mean_tpc = float(np.average(service_by_rank, weights=pop_by_rank))
+        cov = float(np.average(
+            (service_by_rank - mean_tpc) * (frac_rank - 0.5),
+            weights=pop_by_rank,
+        ))
+        ci = round(2 * cov / mean_tpc, 4) if mean_tpc > 0 else 0.0
     else:
         ci = 0.0
 
@@ -548,11 +614,15 @@ def _build_desert(
     if len(filtered) == 0:
         return {}, {}
 
-    desert_col = "total_weekday_departures" if "total_weekday_departures" in filtered.columns else None
-    if desert_col is None:
+    # Use no_service boolean (True = zero service) — total_weekday_departures is never 0
+    # because it counts all stops in the LSOA, not just departures from served stops.
+    if "no_service" in filtered.columns:
+        deserts = filtered[filtered["no_service"] == True]  # noqa: E712
+    elif "trips_per_capita" in filtered.columns:
+        deserts = filtered[filtered["trips_per_capita"] == 0]
+    else:
         return {}, {}
 
-    deserts = filtered[filtered[desert_col] == 0]
     if not DesertRule().should_fire(n_desert_lsoas=len(deserts)):
         return {}, {}
 
@@ -763,7 +833,18 @@ def _build_weekend_penalty(
 def _build_correlation(
     section_id: str, data: dict, region: str, urban_rural: str,
 ) -> tuple[dict, dict]:
-    """Build correlation section (B5, C5, D1-D5)."""
+    """Build correlation section (B5, C5, D1-D5).
+
+    c5 (length vs frequency) uses the routes parquet directly —
+    route_length_km and stop_count both exist there. All other sections
+    use the policy LSOA parquet.
+    """
+    prefix = section_id.split("_")[0]
+
+    # c5 uses route-level data, not LSOA policy
+    if prefix == "c5":
+        return _build_correlation_routes(section_id, data)
+
     policy = data.get("policy")
     if policy is None:
         return {}, {}
@@ -771,7 +852,6 @@ def _build_correlation(
 
     col_map: dict[str, tuple[str, str, str, str]] = {
         "b5": ("imd_score", "service_quality_index", "IMD Score", "Service Quality Index"),
-        "c5": ("route_length_km", "trips_per_day", "Route Length (km)", "Trips per Day"),
         "d1": ("imd_score", "trips_per_capita", "IMD Score", "Trips per Capita"),
         "d2": ("unemployment_rate", "trips_per_capita", "Unemployment Rate", "Trips per Capita"),
         "d3": ("nocar_pct", "trips_per_capita", "% No Car", "Trips per Capita"),
@@ -779,7 +859,6 @@ def _build_correlation(
         "d5": ("income_score", "trips_per_capita", "Income Score", "Trips per Capita"),
     }
 
-    prefix = section_id.split("_")[0]
     mapping = col_map.get(prefix)
     if mapping is None:
         return {}, {}
@@ -805,6 +884,49 @@ def _build_correlation(
     id_col = "lsoa_code" if "lsoa_code" in filtered.columns else ("lsoa_cd" if "lsoa_cd" in filtered.columns else filtered.columns[0])
     chart = build_scatter_regression(
         df=filtered, x_col=x_col, y_col=y_col, id_col=id_col,
+        title=SECTION_REGISTRY[section_id].title, x_label=x_label, y_label=y_label,
+    )
+    return stats, chart
+
+
+def _build_correlation_routes(
+    section_id: str, data: dict,
+) -> tuple[dict, dict]:
+    """Build c5 (route length vs stop count) from routes parquet.
+
+    Routes have no region column so this is always national-level —
+    the same result is stored for all 30 filter combos.
+    """
+    routes = data.get("routes")
+    if routes is None:
+        return {}, {}
+
+    # Normalise column name (routes parquet uses length_km; rename guard already applied)
+    x_col = "route_length_km" if "route_length_km" in routes.columns else "length_km"
+    y_col = "stop_count"
+    if x_col not in routes.columns or y_col not in routes.columns:
+        return {}, {}
+
+    # Drop NaN from both columns together to keep series aligned
+    aligned = routes[[x_col, y_col]].dropna()
+    corr = calculate_correlation(aligned[x_col], aligned[y_col])
+    if not CorrelationRule().should_fire(n=corr.n, p_value=corr.p_value):
+        return {}, {}
+
+    x_label = "Route Length (km)"
+    y_label = "Stops per Route"
+    stats: dict[str, Any] = {
+        "r": corr.r,
+        "p_value": corr.p_value,
+        "n": corr.n,
+        "strength": corr.strength,
+        "direction": corr.direction,
+        "x_label": x_label,
+        "y_label": y_label,
+    }
+    id_col = "route_id" if "route_id" in routes.columns else routes.columns[0]
+    chart = build_scatter_regression(
+        df=routes, x_col=x_col, y_col=y_col, id_col=id_col,
         title=SECTION_REGISTRY[section_id].title, x_label=x_label, y_label=y_label,
     )
     return stats, chart
@@ -885,24 +1007,82 @@ def _build_market_concentration(
 def _build_clusters(
     section_id: str, data: dict, region: str, urban_rural: str,
 ) -> tuple[dict, dict]:
-    """Build cluster sections (C6, D6, G1)."""
+    """Build cluster sections (C6, D6, G1).
+
+    For LSOA clusters (D6): uses the clusters parquet if available; falls back to
+    policy (which has hdbscan_archetype and gmm_label from notebooks 04d/02e).
+    Prefers HDBSCAN non-noise labels; if < 2 remain after filtering, falls back
+    to GMM labels (always 4 components across all LSOAs).
+    """
     is_route = section_id.startswith("c6") or section_id.startswith("g1")
-    key = "route_clusters" if is_route else "clusters"
-    df = data.get(key)
-    if df is None:
+
+    if is_route:
+        df = data.get("route_clusters")
+        if df is None:
+            return {}, {}
+        cluster_col = "cluster"
+        if cluster_col not in df.columns:
+            return {}, {}
+        valid = df[df[cluster_col] >= 0]
+        unique_labels = sorted(valid[cluster_col].unique())
+        entity_type = "routes"
+        archetype_col = None
+    else:
+        # LSOA clusters: prefer dedicated file, fall back to policy.
+        # Use explicit None check — DataFrames are truthy-ambiguous.
+        _clusters = data.get("clusters")
+        df = _clusters if _clusters is not None else data.get("policy")
+        if df is None:
+            return {}, {}
+
+        filtered = _filter_data(df, region, urban_rural)
+        if len(filtered) == 0:
+            return {}, {}
+
+        # Try HDBSCAN first (hdbscan_archetype is the label in policy)
+        if "hdbscan_archetype" in filtered.columns:
+            non_noise = filtered[filtered["hdbscan_archetype"] != "Noise"]
+            unique_archetypes = [a for a in non_noise["hdbscan_archetype"].unique() if pd.notna(a)]
+            if len(unique_archetypes) >= ClusterRule.MIN_CLUSTERS:
+                # Build from hdbscan_archetype strings (no numeric ID)
+                clusters_info = []
+                for aid in sorted(unique_archetypes):
+                    n = int((non_noise["hdbscan_archetype"] == aid).sum())
+                    pct = round(n / len(non_noise) * 100, 1)
+                    clusters_info.append({"id": aid, "n": n, "pct": pct, "description": str(aid)})
+                stats: dict[str, Any] = {
+                    "n_clusters": len(unique_archetypes),
+                    "entity_type": "LSOAs",
+                    "clusters": clusters_info,
+                    "noise_pct": round(len(filtered[filtered["hdbscan_archetype"] == "Noise"]) / len(filtered) * 100, 1),
+                }
+                return stats, {}
+
+        # Fall back to GMM labels (4 components, present on all LSOAs)
+        if "gmm_label" in filtered.columns:
+            gmm_labels = sorted(filtered["gmm_label"].dropna().unique())
+            if not ClusterRule().should_fire(n_clusters=len(gmm_labels)):
+                return {}, {}
+            clusters_info = []
+            for cid in gmm_labels:
+                n = int((filtered["gmm_label"] == cid).sum())
+                pct = round(n / len(filtered) * 100, 1)
+                clusters_info.append({"id": int(cid), "n": n, "pct": pct, "description": f"Cluster {int(cid) + 1}"})
+            stats = {
+                "n_clusters": len(gmm_labels),
+                "entity_type": "LSOAs",
+                "clusters": clusters_info,
+                "cluster_method": "GMM",
+            }
+            return stats, {}
+
         return {}, {}
 
-    cluster_col = "cluster" if is_route else "hdbscan_label"
-    if cluster_col not in df.columns:
-        return {}, {}
-
-    valid = df[df[cluster_col] >= 0]  # exclude noise (-1)
-    unique_labels = sorted(valid[cluster_col].unique())
     if not ClusterRule().should_fire(n_clusters=len(unique_labels)):
         return {}, {}
 
-    entity_type = "routes" if is_route else "LSOAs"
-    archetype_col = "hdbscan_archetype" if "hdbscan_archetype" in df.columns else None
+    entity_type = "routes"
+    archetype_col = None
     clusters_info = []
     for cid in unique_labels:
         mask = valid[cluster_col] == cid
@@ -911,7 +1091,7 @@ def _build_clusters(
         desc = str(df.loc[mask, archetype_col].iloc[0]) if archetype_col and mask.any() else f"Cluster {cid}"
         clusters_info.append({"id": int(cid), "n": n, "pct": pct, "description": desc})
 
-    stats: dict[str, Any] = {
+    stats = {
         "n_clusters": len(unique_labels),
         "entity_type": entity_type,
         "clusters": clusters_info,
@@ -919,7 +1099,7 @@ def _build_clusters(
 
     chart: dict = {}
     numeric_cols = valid.select_dtypes(include="number").columns.tolist()
-    id_col = "route_id" if is_route else "lsoa_cd"
+    id_col = "route_id" if "route_id" in valid.columns else valid.columns[0]
     if len(numeric_cols) >= 2 and id_col in valid.columns:
         scatter_df = valid[[numeric_cols[0], numeric_cols[1], cluster_col, id_col]].copy()
         scatter_df.columns = ["x", "y", "cluster", "id"]
@@ -982,7 +1162,11 @@ def _build_heatmap_section(
     pivot = clean.groupby(["urban_rural", "imd_decile"])["trips_per_capita"].mean().unstack(fill_value=0)
     cell_counts = clean.groupby(["urban_rural", "imd_decile"]).size().unstack(fill_value=0)
     min_cell = int(cell_counts.min().min())
-    if not HeatmapRule().should_fire(min_cell_n=min_cell):
+    # For filtered subsets (single region), scale threshold proportionally —
+    # national has ~33k LSOAs; a single region has ~1k–5k so min cell drops ~10×.
+    # Use 1 as minimum acceptable cell count for regional sub-filters.
+    effective_min = max(1, HeatmapRule.MIN_CELL_N * len(clean) // 33755)
+    if min_cell < effective_min:
         return {}, {}
 
     x_labels = [str(d) for d in sorted(pivot.columns)]
@@ -1029,7 +1213,11 @@ def _build_equity_decile(
         return {}, {}
 
     decile_counts = [int((filtered["imd_decile"] == d).sum()) for d in range(1, 11)]
-    if not DecileRule().should_fire(decile_counts=decile_counts):
+    # Scale minimum per-decile threshold proportionally for regional sub-filters.
+    # National: ~3,376 per decile → min 100. Single region (~1/9): ~375 → min ~11.
+    scaled_min = max(3, DecileRule.MIN_PER_DECILE * len(filtered) // 33755)
+    # All 10 deciles must be present AND each must exceed the scaled threshold.
+    if len(decile_counts) != 10 or not all(c >= scaled_min for c in decile_counts):
         return {}, {}
 
     by_decile = filtered.groupby("imd_decile")["trips_per_capita"].mean()

@@ -99,7 +99,7 @@ export default function LandingPage() {
             </Link>
             {user ? (
               <button
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/dashboard")}
                 className="flex items-center gap-2 px-4 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors"
               >
                 Open Terminal <ArrowRight className="w-3.5 h-3.5" />
@@ -166,7 +166,7 @@ export default function LandingPage() {
           {DIMENSIONS.map((d) => (
             <button
               key={d.title}
-              onClick={() => navigate(user ? d.route : "/auth")}
+              onClick={() => navigate(user ? `/dashboard${d.route}` : "/auth")}
               className="text-left p-4 rounded border border-border bg-card hover:border-indigo-500/40 hover:bg-card/80 transition-all group"
             >
               <d.icon className="w-5 h-5 text-indigo-400 mb-3 group-hover:scale-110 transition-transform" />

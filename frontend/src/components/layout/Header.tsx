@@ -7,7 +7,7 @@ export function Header() {
     <header className="border-b border-border bg-card/50">
       <div className="mx-auto max-w-7xl px-4 h-14 flex items-center justify-between">
         <Link
-          to="/"
+          to="/dashboard"
           className="flex items-center gap-2.5 text-sm font-mono font-bold tracking-widest uppercase text-foreground hover:text-indigo-400 transition-colors"
         >
           AEQUITAS

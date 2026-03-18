@@ -21,7 +21,7 @@ export function ProvenancePanel({ metricId, onClose }: Props) {
             <BookOpen className="w-4 h-4 text-indigo-400" />
             <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-foreground">Data Provenance</h3>
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Close provenance panel">
             <X className="w-4 h-4" />
           </button>
         </div>

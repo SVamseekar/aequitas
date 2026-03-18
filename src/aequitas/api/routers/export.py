@@ -4,7 +4,8 @@ from __future__ import annotations
 import re
 from io import BytesIO
 
-from fastapi import APIRouter, HTTPException, Query
+import duckdb
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
@@ -82,12 +83,11 @@ async def export_dimension_pdf(
     dimension: str,
     region: str = Query("all"),
     urban_rural: str = Query("all"),
+    db: duckdb.DuckDBPyConnection | None = Depends(get_db),
 ) -> StreamingResponse:
     """Generate a PDF report for a dimension + filter combination."""
     if dimension not in DIMENSION_PREFIXES:
         raise HTTPException(400, f"Unknown dimension: {dimension}")
-
-    db = get_db()
     sections: list[dict] = []
     if db is not None:
         rows = query_sections(db, dimension, region, urban_rural)

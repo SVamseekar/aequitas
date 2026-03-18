@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { listSavedAnalyses, deleteSavedAnalysis, type SavedAnalysisRow } from "@/lib/db"
 import { Trash2, ChevronDown, ChevronUp, Bookmark } from "lucide-react"
@@ -9,15 +9,15 @@ export function SavedAnalyses() {
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     if (!user) return
     setLoading(true)
     const data = await listSavedAnalyses(user.id)
     setAnalyses(data)
     setLoading(false)
-  }
+  }, [user])
 
-  useEffect(() => { void refresh() }, [user])
+  useEffect(() => { void refresh() }, [refresh])
 
   const handleDelete = async (id: string) => {
     await deleteSavedAnalysis(id)

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { listPolicyNotes, createPolicyNote, deletePolicyNote, type PolicyNoteRow } from "@/lib/db"
 import { Plus, Trash2, FileText } from "lucide-react"
@@ -23,15 +23,15 @@ export function PolicyNotes() {
     { dimension: "equity", region: "all", stance: "monitor", thesis: "" }
   )
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     if (!user) return
     setLoading(true)
     const data = await listPolicyNotes(user.id)
     setNotes(data)
     setLoading(false)
-  }
+  }, [user])
 
-  useEffect(() => { void refresh() }, [user])
+  useEffect(() => { void refresh() }, [refresh])
 
   const handleCreate = async () => {
     if (!user || !form.thesis.trim()) return

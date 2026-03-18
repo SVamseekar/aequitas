@@ -28,11 +28,13 @@ interface Props {
 
 export function DimensionCard({ dim }: Props) {
   const icon = DIMENSION_ICONS[dim.id] ?? dim.id[0].toUpperCase()
-  const severityColor = SEVERITY[dim.headline_stat.severity as keyof typeof SEVERITY] ?? SEVERITY.low
+  const severityColor = (dim.headline_stat.severity in SEVERITY
+    ? SEVERITY[dim.headline_stat.severity as keyof typeof SEVERITY]
+    : SEVERITY.low)
 
   return (
     <Link
-      to={dim.route}
+      to={dim.route.slice(1)}
       className="group block bg-card rounded border border-border p-5 hover:border-indigo-500/40 hover:bg-card/80 transition-all"
     >
       <div className="flex items-start gap-3">

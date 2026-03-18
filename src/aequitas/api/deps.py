@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Generator
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -13,9 +14,21 @@ from aequitas.api.config import ApiConfig
 _state: dict[str, Any] = {}
 
 
-def get_db() -> duckdb.DuckDBPyConnection | None:
-    """Return the shared DuckDB connection, or None if warehouse not built yet."""
-    return _state.get("db")
+def get_db() -> Generator[duckdb.DuckDBPyConnection | None, None, None]:
+    """FastAPI dependency — opens a fresh read-only DuckDB connection per request.
+
+    The connection is automatically closed after the request completes.
+    Yields None if warehouse path was not found at startup.
+    """
+    db_path = _state.get("db_path")
+    if db_path is None:
+        yield None
+        return
+    conn = duckdb.connect(str(db_path), read_only=True)
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 def get_faiss() -> tuple[Any, list[dict] | None]:
@@ -33,10 +46,10 @@ async def lifespan(app: Any):  # type: ignore[type-arg]
     """Load DuckDB + FAISS on startup, close on shutdown."""
     cfg = ApiConfig()
 
-    # DuckDB
+    # DuckDB — store path only; each request opens a fresh read-only connection
     if cfg.db_path.exists():
-        logger.info(f"Opening DuckDB: {cfg.db_path}")
-        _state["db"] = duckdb.connect(str(cfg.db_path), read_only=True)
+        logger.info(f"DuckDB warehouse found: {cfg.db_path}")
+        _state["db_path"] = cfg.db_path
     else:
         logger.warning(f"Warehouse not found at {cfg.db_path} — run pipeline first. API will start but return empty results.")
 
@@ -59,6 +72,4 @@ async def lifespan(app: Any):  # type: ignore[type-arg]
 
     yield
 
-    if "db" in _state:
-        _state["db"].close()
     _state.clear()

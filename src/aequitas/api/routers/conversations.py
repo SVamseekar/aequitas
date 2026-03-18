@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from aequitas.api.auth import verify_supabase_jwt
@@ -42,7 +42,7 @@ def _get_supabase() -> Any:
             raise RuntimeError("Supabase not configured")
         return create_client(url, key)
     except Exception as exc:
-        raise HTTPException(503, f"Supabase unavailable: {exc}") from exc
+        raise HTTPException(503, "Supabase unavailable") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -85,8 +85,10 @@ async def create_conversation(
 async def get_messages(
     conversation_id: UUID,
     user: dict = Depends(verify_supabase_jwt),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
 ) -> list[dict]:
-    """Return all messages for a conversation (ownership verified via RLS)."""
+    """Return messages for a conversation with pagination."""
     sb = _get_supabase()
     resp = (
         sb.table("messages")
@@ -94,6 +96,7 @@ async def get_messages(
         .eq("conversation_id", str(conversation_id))
         .eq("user_id", user["sub"])
         .order("created_at", desc=False)
+        .range(offset, offset + limit - 1)
         .execute()
     )
     return resp.data or []

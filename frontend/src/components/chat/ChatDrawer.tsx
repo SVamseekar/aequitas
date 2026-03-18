@@ -8,6 +8,9 @@ import { ChatMessage } from "./ChatMessage"
 import { SuggestedQuestions } from "./SuggestedQuestions"
 import { QuickActions } from "./QuickActions"
 
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 interface Props {
   open: boolean
   onClose: () => void
@@ -20,6 +23,7 @@ export function ChatDrawer({ open, onClose }: Props) {
   const [input, setInput] = useState("")
   const messagesEnd = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const drawerRef = useRef<HTMLDivElement>(null)
 
   const slug = location.pathname.replace("/", "")
   const currentDimension = DIMENSIONS.find((d) => d.route === `/${slug}`)?.id ?? ""
@@ -27,6 +31,60 @@ export function ChatDrawer({ open, onClose }: Props) {
   useEffect(() => {
     messagesEnd.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
+
+  // Auto-focus textarea when drawer opens
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => {
+        textareaRef.current?.focus()
+      })
+    }
+  }, [open])
+
+  // Escape key closes the drawer
+  useEffect(() => {
+    if (!open) return
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault()
+        onClose()
+      }
+    }
+    document.addEventListener("keydown", handleEscape)
+    return () => document.removeEventListener("keydown", handleEscape)
+  }, [open, onClose])
+
+  // Focus trap: Tab/Shift+Tab cycle within the drawer
+  useEffect(() => {
+    if (!open) return
+    const drawer = drawerRef.current
+    if (!drawer) return
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return
+      const focusable = Array.from(
+        drawer.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+      )
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+    document.addEventListener("keydown", handleTab)
+    return () => document.removeEventListener("keydown", handleTab)
+  }, [open])
 
   const handleInput = useCallback(() => {
     const el = textareaRef.current
@@ -40,7 +98,6 @@ export function ChatDrawer({ open, onClose }: Props) {
     if (!input.trim() || isStreaming) return
     sendMessage(input.trim(), { dimension: currentDimension, region, urban_rural: urbanRural })
     setInput("")
-    // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto"
     }
@@ -63,7 +120,13 @@ export function ChatDrawer({ open, onClose }: Props) {
         aria-hidden="true"
       />
       {/* Drawer */}
-      <div className="fixed top-0 right-0 h-full w-[420px] bg-background border-l border-border shadow-2xl z-50 flex flex-col">
+      <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Ask Aequitas chat"
+        className="fixed top-0 right-0 h-full w-[420px] bg-background border-l border-border shadow-2xl z-50 flex flex-col"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
@@ -75,6 +138,7 @@ export function ChatDrawer({ open, onClose }: Props) {
               type="button"
               className="text-[10px] font-mono text-muted-foreground hover:text-foreground uppercase tracking-wider transition-colors"
               onClick={clearMessages}
+              aria-label="Clear chat messages"
             >
               Clear
             </button>
@@ -121,7 +185,7 @@ export function ChatDrawer({ open, onClose }: Props) {
                 }
               }}
               onInput={handleInput}
-              placeholder="Ask a question… (Shift+Enter for new line)"
+              placeholder="Ask a question... (Shift+Enter for new line)"
               rows={1}
               className="flex-1 resize-none rounded border border-border bg-card px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
               style={{ minHeight: "36px", maxHeight: "120px" }}
@@ -133,11 +197,11 @@ export function ChatDrawer({ open, onClose }: Props) {
               disabled={isStreaming || !input.trim()}
               className="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
             >
-              {isStreaming ? "…" : "Send"}
+              {isStreaming ? "..." : "Send"}
             </button>
           </div>
           <p className="text-[9px] text-muted-foreground/30 mt-2 font-mono">
-            Grounded in pre-computed analytics · Powered by Gemini Flash
+            Grounded in pre-computed analytics - Powered by Gemini Flash
           </p>
         </div>
       </div>

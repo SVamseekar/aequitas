@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import duckdb
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from loguru import logger
 
 from aequitas.api.deps import get_db
@@ -21,13 +21,14 @@ _FALLBACK: list[dict] = [
 
 
 @router.get("/metrics/ticker")
-def get_ticker_metrics() -> list[dict]:
+def get_ticker_metrics(
+    db: duckdb.DuckDBPyConnection | None = Depends(get_db),
+) -> list[dict]:
     """Return headline stats for the metrics ticker.
 
     Attempts to pull live values from the warehouse; falls back to Phase 0
     locked ground truth if the warehouse is not yet populated.
     """
-    db = get_db()
     if db is None:
         return _FALLBACK
 
