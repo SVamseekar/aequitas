@@ -81,12 +81,14 @@ export function ChatSidebar({ open, onClose, activeId, onSelect, onNew }: Props)
               onClick={onNew}
               className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="New chat"
+              aria-label="New chat"
             >
               <MessageSquarePlus className="w-4 h-4" />
             </button>
             <button
               onClick={onClose}
               className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Close chat history"
             >
               <X className="w-4 h-4" />
             </button>
@@ -127,6 +129,7 @@ export function ChatSidebar({ open, onClose, activeId, onSelect, onNew }: Props)
                   <button
                     onClick={(e) => void handleDelete(e, c.id)}
                     className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/10 text-muted-foreground/30 hover:text-red-400 transition-all shrink-0"
+                    aria-label="Delete conversation"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>

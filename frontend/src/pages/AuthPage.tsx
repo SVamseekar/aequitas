@@ -28,7 +28,7 @@ export default function AuthPage() {
     )
   }
 
-  if (user) return <Navigate to="/" replace />
+  if (user) return <Navigate to="/dashboard" replace />
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,7 +38,7 @@ export default function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
         toast.success("Welcome back")
-        navigate("/")
+        navigate("/dashboard")
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -58,7 +58,7 @@ export default function AuthPage() {
   const handleGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/` },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     })
     if (error) toast.error("Google sign-in failed")
   }

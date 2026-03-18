@@ -1,11 +1,45 @@
-import { Download } from "lucide-react"
+import { Component, type ReactNode } from "react"
+import { Download, AlertTriangle } from "lucide-react"
 import { useParams } from "react-router"
 import { useFilters, useSections } from "@/api/hooks"
 import { DIMENSIONS, REGIONS, AREA_TYPES } from "@/lib/constants"
 import { SectionCard } from "./SectionCard"
 import { ScenarioBuilder } from "./ScenarioBuilder"
 
-export function DimensionPage() {
+// Error boundary to catch rendering crashes in child components
+interface ErrorBoundaryState {
+  hasError: boolean
+  error: Error | null
+}
+
+class DimensionErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false, error: null }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <AlertTriangle className="w-8 h-8 text-red-400/60 mb-3" />
+          <p className="text-sm text-foreground font-medium">Something went wrong rendering this page.</p>
+          <p className="text-xs text-muted-foreground mt-1">{this.state.error?.message}</p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="mt-4 px-4 py-1.5 text-xs font-mono border border-border rounded hover:bg-muted transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
+function DimensionPageContent() {
   const { dimensionSlug } = useParams<{ dimensionSlug: string }>()
   const dim = DIMENSIONS.find((d) => d.route === `/${dimensionSlug}`)
   const dimensionId = dim?.id ?? dimensionSlug ?? ""
@@ -26,7 +60,13 @@ export function DimensionPage() {
   }
 
   if (error) {
-    return <p className="text-red-500 text-xs">Unable to load data — try refreshing.</p>
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <AlertTriangle className="w-8 h-8 text-red-400/60 mb-3" />
+        <p className="text-sm text-foreground">Unable to load data.</p>
+        <p className="text-xs text-muted-foreground mt-1">Check your connection and try refreshing the page.</p>
+      </div>
+    )
   }
 
   // Show all sections that have any content (stats, chart, or narrative)
@@ -83,5 +123,13 @@ export function DimensionPage() {
         <SectionCard key={s.section_id} section={s} />
       ))}
     </div>
+  )
+}
+
+export function DimensionPage() {
+  return (
+    <DimensionErrorBoundary>
+      <DimensionPageContent />
+    </DimensionErrorBoundary>
   )
 }

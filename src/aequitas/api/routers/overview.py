@@ -1,7 +1,8 @@
 """Overview router — GET /api/overview."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+import duckdb
+from fastapi import APIRouter, Depends, Query
 
 from aequitas.api.deps import get_db
 from aequitas.api.models.responses import (
@@ -9,7 +10,7 @@ from aequitas.api.models.responses import (
 )
 from aequitas.api.services.warehouse import query_overview
 
-router = APIRouter()
+router = APIRouter(tags=["overview"])
 
 _DIMENSION_META = {
     "equity": ("Equity & Deprivation", "Disparity ratio", "/equity"),
@@ -45,9 +46,9 @@ def _severity(dim_id: str, value: float) -> str:
 def get_overview(
     region: str = Query("all"),
     urban_rural: str = Query("all"),
+    db: duckdb.DuckDBPyConnection | None = Depends(get_db),
 ) -> OverviewResponse:
     """Return headline stats for all 8 dimensions."""
-    db = get_db()
     if db is None:
         return OverviewResponse(dimensions=[
             DimensionOverview(id=dim_id, name=name, headline_stat=HeadlineStat(value=0.0, label=label, severity="low"), summary="", route=route)

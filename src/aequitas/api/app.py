@@ -25,10 +25,20 @@ def create_app() -> FastAPI:
         allow_headers=["Authorization", "Content-Type"],
     )
 
-    # Health
+    # Health — verifies DuckDB connectivity
     @app.get("/api/health")
     def health() -> dict:
-        return {"status": "ok"}
+        from aequitas.api.deps import get_db
+        db = next(get_db())
+        if db is None:
+            return {"status": "degraded", "warehouse": "not found"}
+        try:
+            db.execute("SELECT 1").fetchone()
+            return {"status": "ok", "warehouse": "connected"}
+        except Exception:
+            return {"status": "degraded", "warehouse": "unavailable"}
+        finally:
+            db.close()
 
     # Register routers
     from aequitas.api.routers import overview, sections, lsoa, provenance, chat, conversations, metrics, export

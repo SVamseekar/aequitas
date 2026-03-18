@@ -8,7 +8,7 @@ export function TabBar() {
         {DIMENSIONS.map((d) => (
           <NavLink
             key={d.id}
-            to={d.route}
+            to={d.route.slice(1)}
             className={({ isActive }) =>
               `px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider whitespace-nowrap border-b-2 transition-colors ${
                 isActive

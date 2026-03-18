@@ -48,8 +48,9 @@ export function SectionCard({ section }: Props) {
   const [narrativeOpen, setNarrativeOpen] = useState(false)
   const [provenanceMetric, setProvenanceMetric] = useState<string | null>(null)
 
+  const rawTitle = section.chart_data?.title
   const title = SECTION_TITLES[section.section_id]
-    ?? (section.chart_data?.title as string | undefined)
+    ?? (typeof rawTitle === "string" ? rawTitle : undefined)
     ?? section.section_id.replace(/_/g, " ")
 
   const hasChart = section.chart_data && Object.keys(section.chart_data).length > 0
@@ -78,8 +79,10 @@ export function SectionCard({ section }: Props) {
   )
 
   const hasRanking = rankingStats.length > 0
-  const nationalAvg = section.stats?.national_avg as number | undefined
-  const unit = section.stats?.unit as string | undefined
+  const rawAvg = section.stats?.national_avg
+  const nationalAvg = typeof rawAvg === "number" ? rawAvg : undefined
+  const rawUnit = section.stats?.unit
+  const unit = typeof rawUnit === "string" ? rawUnit : undefined
 
   return (
     <>

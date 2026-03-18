@@ -63,7 +63,7 @@ def run_ingestion(cfg: PipelineConfig | None = None) -> StageReport:
         if naptan_path.exists():
             stops = load_naptan(naptan_path)
             out = cfg.processed_dir / "naptan_stops.parquet"
-            stops.to_parquet(out, index=False)
+            stops.to_parquet(out, index=False, compression="zstd")
             output_files.append(out)
             logger.info(f"NaPTAN: {len(stops):,} stops → {out.name}")
             if len(stops) == 274_719:
@@ -72,6 +72,7 @@ def run_ingestion(cfg: PipelineConfig | None = None) -> StageReport:
             logger.warning(f"NaPTAN file not found: {naptan_path}")
     except Exception as e:
         logger.error(f"NaPTAN ingestion failed: {e}")
+        raise
 
     # BODS routes
     try:
@@ -79,7 +80,7 @@ def run_ingestion(cfg: PipelineConfig | None = None) -> StageReport:
         if bods_zip.exists():
             routes = load_bods_routes(bods_zip)
             out = cfg.processed_dir / "bods_routes.parquet"
-            routes.to_parquet(out, index=False)
+            routes.to_parquet(out, index=False, compression="zstd")
             output_files.append(out)
             logger.info(f"BODS routes: {len(routes):,} → {out.name}")
             checks_passed += 1
@@ -87,18 +88,20 @@ def run_ingestion(cfg: PipelineConfig | None = None) -> StageReport:
             logger.warning(f"BODS zip not found: {bods_zip}")
     except Exception as e:
         logger.error(f"BODS routes ingestion failed: {e}")
+        raise
 
     # Master LSOA table
     try:
         master = build_master_lsoa_table(cfg)
         out = cfg.processed_dir / "master_lsoa_table.parquet"
-        master.to_parquet(out, index=False)
+        master.to_parquet(out, index=False, compression="zstd")
         output_files.append(out)
         logger.info(f"Master LSOA table: {len(master):,} rows → {out.name}")
         if len(master) == 33_755:
             checks_passed += 1
     except Exception as e:
         logger.error(f"Master LSOA table failed: {e}")
+        raise
 
     duration = time.perf_counter() - t0
     report = StageReport("ingest", duration, output_files, checks_passed)
@@ -123,24 +126,26 @@ def run_processing(cfg: PipelineConfig | None = None) -> StageReport:
         from aequitas.processing.route_geometry import compute_route_geometries
         routes_geo = compute_route_geometries(cfg)
         out = cfg.processed_dir / "route_geometries.parquet"
-        routes_geo.to_parquet(out, index=False)
+        routes_geo.to_parquet(out, index=False, compression="zstd")
         output_files.append(out)
         logger.info(f"Route geometries: {len(routes_geo):,} routes → {out.name}")
         checks_passed += 1
     except Exception as e:
         logger.error(f"Route geometry processing failed: {e}")
+        raise
 
     # Service quality
     try:
         from aequitas.processing.service_quality import compute_service_quality
         sqi = compute_service_quality(cfg)
         out = cfg.processed_dir / "lsoa_service_quality.parquet"
-        sqi.to_parquet(out, index=False)
+        sqi.to_parquet(out, index=False, compression="zstd")
         output_files.append(out)
         logger.info(f"Service quality: {len(sqi):,} LSOAs → {out.name}")
         checks_passed += 1
     except Exception as e:
         logger.error(f"Service quality processing failed: {e}")
+        raise
 
     duration = time.perf_counter() - t0
     report = StageReport("process", duration, output_files, checks_passed)

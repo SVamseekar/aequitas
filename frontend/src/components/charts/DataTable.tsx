@@ -7,18 +7,18 @@ export function DataTable({ chartData }: Props) {
   const data = Array.isArray(rawData) ? (rawData as Record<string, unknown>[]) : []
 
   if (data.length === 0) {
-    return <p className="text-gray-400 text-sm">No data available</p>
+    return <p className="text-muted-foreground text-sm">No data available</p>
   }
 
   const columns = Object.keys(data[0])
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full text-sm border border-gray-200">
+      <table className="min-w-full text-sm border border-border">
         <thead>
-          <tr className="bg-gray-50">
+          <tr className="bg-muted">
             {columns.map((col) => (
-              <th key={col} className="px-3 py-2 text-left font-medium text-gray-700 border-b">
+              <th key={col} className="px-3 py-2 text-left font-medium text-foreground border-b border-border">
                 {col}
               </th>
             ))}
@@ -26,9 +26,9 @@ export function DataTable({ chartData }: Props) {
         </thead>
         <tbody>
           {data.slice(0, 100).map((row, i) => (
-            <tr key={i} className="border-b">
+            <tr key={i} className="border-b border-border hover:bg-muted/50 transition-colors">
               {columns.map((col) => (
-                <td key={col} className="px-3 py-2 text-gray-600">
+                <td key={col} className="px-3 py-2 text-muted-foreground">
                   {String(row[col] ?? "")}
                 </td>
               ))}
@@ -37,7 +37,7 @@ export function DataTable({ chartData }: Props) {
         </tbody>
       </table>
       {data.length > 100 && (
-        <p className="text-xs text-gray-400 mt-1">Showing first 100 of {data.length} rows</p>
+        <p className="text-xs text-muted-foreground mt-1">Showing first 100 of {data.length} rows</p>
       )}
     </div>
   )

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { listSavedRegions, deleteSavedRegion, type SavedRegionRow } from "@/lib/db"
 import { Trash2, MapPin } from "lucide-react"
@@ -8,15 +8,15 @@ export function SavedRegions() {
   const [regions, setRegions] = useState<SavedRegionRow[]>([])
   const [loading, setLoading] = useState(true)
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     if (!user) return
     setLoading(true)
     const data = await listSavedRegions(user.id)
     setRegions(data)
     setLoading(false)
-  }
+  }, [user])
 
-  useEffect(() => { void refresh() }, [user])
+  useEffect(() => { void refresh() }, [refresh])
 
   const handleDelete = async (id: string) => {
     await deleteSavedRegion(id)

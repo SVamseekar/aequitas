@@ -49,15 +49,15 @@ export default function App() {
         <BrowserRouter>
           <Suspense fallback={fallback}>
             <Routes>
-              {/* Public — marketing + info pages */}
-              <Route path="/landing" element={<LandingPage />} />
+              {/* Public */}
+              <Route index element={<LandingPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/disclaimer" element={<DisclaimerPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/auth" element={<AuthPage />} />
 
               {/* Protected — main app shell */}
-              <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+              <Route path="/dashboard" element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
                 <Route index element={<HomePage />} />
                 <Route path=":dimensionSlug" element={<DimensionPage />} />
               </Route>

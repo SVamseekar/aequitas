@@ -182,7 +182,8 @@ def query_lsoa(
         sql += " WHERE region_code = ?"
         params.append(region)
     if limit:
-        sql += f" LIMIT {int(limit)}"
+        sql += " LIMIT ?"
+        params.append(int(limit))
 
     rows = db.execute(sql, params).fetchdf().to_dict(orient="records")
     return rows, total

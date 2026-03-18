@@ -1,13 +1,14 @@
 """LSOA router — GET /api/lsoa/{table}."""
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+import duckdb
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from aequitas.api.deps import get_db
 from aequitas.api.models.responses import LsoaResponse
 from aequitas.api.services.warehouse import ALLOWED_TABLES, query_lsoa
 
-router = APIRouter()
+router = APIRouter(tags=["lsoa"])
 
 
 @router.get("/lsoa/{table}", response_model=LsoaResponse)
@@ -16,11 +17,11 @@ def get_lsoa(
     region: str | None = Query(None),
     fields: str | None = Query(None, description="Comma-separated field names"),
     limit: int | None = Query(None, ge=1, le=50000),
+    db: duckdb.DuckDBPyConnection | None = Depends(get_db),
 ) -> LsoaResponse:
     """Return LSOA-level analytics data from a named table."""
     if table not in ALLOWED_TABLES:
         raise HTTPException(400, f"Table '{table}' not allowed. Choose from: {sorted(ALLOWED_TABLES)}")
-    db = get_db()
     if db is None:
         return LsoaResponse(rows=[], total=0)
     field_list = [f.strip() for f in fields.split(",")] if fields else None
