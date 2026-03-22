@@ -1,5 +1,6 @@
 # InsightEngine Expansion — Implementation Plan
 
+
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Expand InsightEngine from 7 templates / ~60 narratives to 27 templates / 51 chart+narrative pairs with populated chart_data payloads, covering all analytical questions from the Blueprint + Phase 0 additions.

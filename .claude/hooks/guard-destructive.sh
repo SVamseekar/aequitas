@@ -7,14 +7,14 @@ COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // ""')
 
 # Block patterns: dropping DuckDB warehouse, deleting processed data, force-resetting git
 BLOCKED_PATTERNS=(
-    'rm.*aequitas\.duckdb'
-    'rm.*data/processed'
-    'rm.*data/raw'
-    'rm -rf \.'
-    'git reset --hard'
-    'git clean -f'
-    'DROP TABLE'
-    'DROP DATABASE'
+    '(^|;|&&|\|\|)\s*rm\b.*aequitas\.duckdb'
+    '(^|;|&&|\|\|)\s*rm\b.*data/processed'
+    '(^|;|&&|\|\|)\s*rm\b.*data/raw'
+    '(^|;|&&|\|\|)\s*rm\s+-rf\s+\.'
+    'git\s+reset\s+--hard'
+    'git\s+clean\s+-f'
+    '\bDROP\s+TABLE\b'
+    '\bDROP\s+DATABASE\b'
 )
 
 for pattern in "${BLOCKED_PATTERNS[@]}"; do
