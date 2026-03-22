@@ -1,0 +1,31 @@
+{% if groups -%}
+## Key Finding
+
+Bus service access varies significantly across demographic groups, with disparities that have direct implications for the public sector equality duty under the Equality Act 2010.
+
+## Group-by-Group Analysis
+
+{% for group in groups -%}
+LSOAs in the **{{ group.label }}** category have **{{ group.value|round(2) }} {{ unit }}**, **{{ group.vs_national_pct|round(1) }}% {{ "above" if group.vs_national_pct >= 0 else "below" }}** the national average. {% if group.vs_national_pct < -20 %}This substantial below-average provision raises equality concerns: if this demographic group systematically receives lower service, LTAs face legal obligations under the Equality Act 2010 to investigate and address the disparity.{% elif group.vs_national_pct < -10 %}This moderate shortfall relative to the national average is worth monitoring as part of the LTA's annual equity review.{% elif group.vs_national_pct > 20 %}This above-average provision may reflect the commercial attractiveness of this demographic group or active policy targeting — both worth understanding for lessons applicable to underserved groups.{% endif %}
+
+{% endfor %}
+
+## Equality Act 2010 Implications
+
+The Public Sector Equality Duty (PSED) under the Equality Act 2010 requires LTAs to:
+1. **Advance equality of opportunity** — actively remove barriers to transport access for protected characteristic groups
+2. **Foster good relations** — ensure transport provision does not concentrate disadvantage on particular groups
+3. **Have due regard** — demonstrate that equality impacts have been assessed before making route or service decisions
+
+Where this analysis shows systematic underservice of a protected characteristic group, the LTA must assess whether that underservice is justified by legitimate policy objectives and whether less discriminatory alternatives exist. Route withdrawal decisions that disproportionately affect elderly, disabled, or low-income residents attract heightened PSED scrutiny.
+
+## Intersectionality Note
+
+The groups shown here represent single-variable breakdowns. In practice, disadvantage is often intersectional — elderly, low-income, disabled residents living in rural areas face compounded barriers that no single metric captures. Intersectional analysis (Section D7 — Heatmap) provides a more complete picture of compounded disadvantage.
+
+## Policy Implications
+
+Demographic breakdown analysis is a required component of Enhanced Partnership Plans and franchising assessments under the Bus Services Act 2025. LTAs must demonstrate that service allocation decisions are informed by equality impact assessment evidence of this type. The findings here should feed directly into the LTA's equality impact assessment for any bus service changes.
+
+*Methodology: LSOAs grouped by dominant characteristic (e.g., age quartile, deprivation decile, ethnicity classification) using Census 2021 data. Service metric averaged within each group. National average is population-weighted mean across all LSOAs. IMD 2025 used for deprivation classification.*
+{%- endif %}

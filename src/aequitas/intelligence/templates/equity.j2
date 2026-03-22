@@ -1,7 +1,26 @@
-{% if gini is not none -%}
-The Gini coefficient for bus service distribution is **{{ gini|round(4) }}**, {{ "exceeding" if gini > 0.36 else "below" }} the UK income Gini of 0.36 — indicating {% if gini > 0.36 %}greater inequality in service access than in incomes{% else %}relatively equitable distribution{% endif %}.
-The Palma ratio of **{{ palma|round(2) }}** means the top 10% of LSOAs receive {{ palma|round(1) }}× more service than the bottom 40%.
-{%- if concentration_index is not none %}
-The Concentration Index of **{{ "%+.4f"|format(concentration_index) }}** indicates service is concentrated in {{ "more affluent" if concentration_index > 0 else "more deprived" }} areas.
+{% if gini is defined and gini is not none -%}
+## Key Finding
+
+The Gini coefficient for bus service distribution is **{{ gini|round(4) }}**, {{ "significantly exceeding" if gini > 0.5 else "exceeding" if gini > 0.36 else "below" }} the UK income Gini of approximately 0.36. This indicates {% if gini > 0.36 %}bus service access is distributed more unequally than household incomes across England{% else %}a relatively equitable distribution of bus services{% endif %}.
+
+## Distribution Analysis
+
+The Palma ratio of **{{ palma|round(2) }}** reveals that the top 10% of LSOAs by service level receive {{ palma|round(1) }}× more bus trips per capita than the bottom 40%. {% if palma > 4 %}This level of concentration represents a significant structural inequity in public transport provision — the most well-served areas receive disproportionately more investment relative to population need.{% elif palma > 2 %}This gap indicates moderate service inequality, with higher-frequency corridors clustered in commercially attractive areas.{% else %}While a gap exists, the concentration is within the range expected from natural variation in settlement density.{% endif %}
+
+{%- if concentration_index is defined and concentration_index is not none %}
+
+The Concentration Index of **{{ "%+.4f"|format(concentration_index) }}** confirms that bus services are concentrated in {{ "more affluent" if concentration_index > 0 else "more deprived" }} areas. {% if concentration_index > 0 %}Despite policy intentions, bus services disproportionately serve wealthier communities — a pattern driven by commercially viable routes clustering in high-density, higher-income corridors. This pro-rich bias directly contradicts the Bus Services Act 2025's objectives of equitable connectivity.{% else %}Services show a pro-equity distribution, serving more deprived communities proportionally more — consistent with cross-subsidy mechanisms in the contracted route network.{% endif %}
 {%- endif %}
+
+## Policy Implications
+
+{% if gini > 0.5 -%}
+The high Gini ({{ gini|round(3) }}) combined with a {{ "pro-rich" if concentration_index is defined and concentration_index is not none and concentration_index > 0 else "pro-poor" }} Concentration Index suggests intervention is needed to redistribute service provision. Under the Bus Services Act 2025, Local Transport Authorities gaining franchising powers should prioritise route planning that addresses these distributional inequities — specifically by mandating minimum service levels in underserved LSOAs rather than allowing purely commercial routing decisions.
+{%- elif gini > 0.36 -%}
+The moderate Gini ({{ gini|round(3) }}) exceeds income inequality benchmarks, suggesting bus service provision is not tracking population need. LTAs should review whether contracted route subsidies are targeted at deprived areas or are simply maintaining legacy commercial routes. The Levelling Up agenda provides a policy mandate for rebalancing.
+{%- else -%}
+The relatively equitable distribution (Gini {{ gini|round(3) }}) suggests current service structures are broadly accessible. Ongoing monitoring through the equity framework ensures service changes, especially operator withdrawals, do not erode this balance. The Bus Services Act 2025 provides new tools for LTAs to maintain equitable coverage.
+{%- endif %}
+
+*Methodology: Gini and Palma calculated from per-capita bus trips across {{ n_lsoas|default(33755)|int|format_thousands }} LSOAs, population-weighted using Census 2021 data. Concentration Index uses IMD 2025 deprivation ranking. National Gini benchmark 0.36 sourced from ONS income inequality statistics 2023.*
 {%- endif %}

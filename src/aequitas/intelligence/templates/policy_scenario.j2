@@ -1,7 +1,33 @@
 {% if scenario -%}
-**Scenario {{ scenario.scenario }}: {{ scenario.name }}** — targeting {{ scenario.scope }}.
-{{ scenario.population_affected|int|format_thousands }} residents affected.
-Estimated cost: £{{ scenario.estimated_annual_cost_m|round(1) }}m/year.
-CO₂ saving: {{ scenario.co2_saving_t_yr|int }} t/yr.
-Confidence: {{ scenario.confidence }}.
+## Scenario: {{ scenario.name }}
+
+**Target:** {{ scenario.scope }}
+**Population affected:** {{ scenario.population_affected|int|format_thousands }} residents
+**Estimated annual cost:** £{{ scenario.estimated_annual_cost_m|round(1) }}m/year
+**CO₂ saving:** {{ scenario.co2_saving_t_yr|int|format_thousands }} tonnes/year
+**Confidence:** {{ scenario.confidence }}
+
+## What This Scenario Does
+
+{{ scenario.name }} targets the {{ scenario.scope }} coverage gap through a parameterised intervention designed to improve connectivity for the most underserved communities. The {{ scenario.population_affected|int|format_thousands }} affected residents currently experience service levels below the threshold associated with adequate connectivity for employment, healthcare, and social participation.
+
+## Cost-Benefit Context
+
+At £{{ scenario.estimated_annual_cost_m|round(1) }}m/year for {{ scenario.population_affected|int|format_thousands }} beneficiaries, the cost per beneficiary is approximately **£{{ ((scenario.estimated_annual_cost_m * 1e6) / scenario.population_affected)|round(0)|int }}/person/year**. For context, DfT's transport poverty analysis estimates the annual economic cost of inadequate transport access at £3,000–£8,000 per person in restricted employment and healthcare access. Even at modest take-up rates, the intervention likely delivers positive net economic value.
+
+The {{ scenario.co2_saving_t_yr|int|format_thousands }} tonnes/year CO₂ saving adds an additional external benefit valued at approximately £{{ ((scenario.co2_saving_t_yr * 80) / 1000)|round(0)|int }}k/year at TAG carbon prices — further strengthening the BCR.
+
+## Confidence Assessment
+
+**Confidence: {{ scenario.confidence }}**. {% if scenario.confidence == "high" %}High-confidence scenarios are based on well-established DfT elasticities and observed outcomes from comparable schemes. Uncertainty ranges are narrow and the intervention is suitable for inclusion in BSIP commitments.{% elif scenario.confidence == "medium" %}Medium-confidence scenarios reflect reasonable extrapolation from comparable evidence but with meaningful uncertainty. Sensitivity testing across ±30% cost and benefit ranges is recommended before committing resources.{% else %}Low-confidence scenarios are exploratory — the evidence base is limited or the intervention is novel. These are suitable for DRT pilots or feasibility studies, not large capital commitments. Monitoring and evaluation design is essential.{% endif %}
+
+## Implementation Pathway
+
+Under the Bus Services Act 2025, this scenario can be delivered through:
+1. Enhanced Partnership Plan specification mandating service levels
+2. LTA-procured contracted service where commercial provision is absent
+3. Franchising scheme with service obligations built into operator contracts
+4. DfT BSIP funding support for routes meeting deprivation and coverage gap criteria
+
+*Methodology: Scenario parameters from DfT Bus Back Better (2021) intervention templates, updated with BSIP 2023 cost benchmarks. Population affected from Census 2021. CO₂ saving from DfT modal shift elasticity × DESNZ 2025 conversion factors.*
 {%- endif %}

@@ -1,4 +1,19 @@
 {% if best and worst -%}
-**{{ best.name }}** leads England with **{{ best.value|round(2) }} {{ unit }}**, {{ best.pct_above|round(1) }}% above the national average of {{ national_avg|round(2) }} {{ unit }}.
-{{ worst.name }} has the lowest at {{ worst.value|round(2) }} {{ unit }} ({{ worst.pct_below|round(1) }}% below average).
+## Key Finding
+
+**{{ best.name }}** leads England with **{{ best.value|round(2) }} {{ unit }}**, {{ best.pct_above|round(1) }}% above the national average of {{ national_avg|round(2) }} {{ unit }}. At the other end, **{{ worst.name }}** records the lowest at **{{ worst.value|round(2) }} {{ unit }}** — {{ worst.pct_below|round(1) }}% below the national average.
+
+## Regional Spread
+
+The gap between best and worst regions is **{{ (best.value - worst.value)|round(2) }} {{ unit }}** ({{ ((best.value - worst.value) / national_avg * 100)|round(1) }}% of the national average). {% if ((best.value - worst.value) / national_avg) > 0.5 %}This wide spread indicates significant geographical inequality in service provision — transport outcomes are heavily dependent on where people live rather than their individual circumstances.{% elif ((best.value - worst.value) / national_avg) > 0.25 %}This moderate spread reflects the uneven distribution of commercial route density, with some regions benefiting from urban agglomeration effects.{% else %}The relatively narrow spread suggests broadly consistent service levels across England, with regional variation within normal bounds.{% endif %}
+
+Regions above the national average benefit from a combination of higher urban density, greater operator competition, and more active LTA investment in contracted services. Regions below the average typically face structural challenges including rural settlement patterns, demographic ageing, and reduced commercial viability.
+
+## Policy Implications
+
+Regional benchmarking of this kind is central to the DfT's Bus Service Improvement Plan evaluation framework. The gap between **{{ best.name }}** and **{{ worst.name }}** represents a concrete policy target: closing even half this gap in the lowest-performing regions would materially improve connectivity for hundreds of thousands of residents.
+
+Under the Bus Services Act 2025, LTAs in lower-performing regions have stronger grounds to invoke franchising powers — the performance gap relative to national benchmarks provides the evidence base required by the Act's proportionality test. BSIP funding rounds specifically reward LTAs that demonstrate how proposed investments close identified gaps.
+
+*Methodology: Regional averages computed from LSOA-level data, population-weighted using Census 2021. National average is the unweighted mean across all regions. Data sourced from BODS GTFS feeds (1,752,443 trips) cross-referenced with NaPTAN stop locations.*
 {%- endif %}

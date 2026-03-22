@@ -1,0 +1,27 @@
+{% if n_desert_lsoas is defined and n_desert_lsoas > 0 -%}
+## Key Finding
+
+**{{ n_desert_lsoas|int|format_thousands }}** LSOAs have no bus stops within their boundaries, affecting approximately **{{ pop_affected|int|format_thousands }}** people. {% if largest_region %}The largest concentration of transport deserts is in **{{ largest_region }}** ({{ largest_region_count|int }} LSOAs), reflecting the structural challenge of serving dispersed rural settlements.{% endif %}
+
+These are not areas with infrequent service — they are areas with **zero** bus infrastructure. Residents face a complete absence of public transport, making car ownership a functional necessity regardless of individual income or mobility status.
+
+## Who Lives in Transport Deserts
+
+{% if mean_imd_score is defined and mean_imd_score is not none -%}
+Desert LSOAs have a mean IMD score of **{{ mean_imd_score|round(1) }}**, {{ "above" if mean_imd_score > national_mean_imd else "below" }} the national average of {{ national_mean_imd|round(1) }}. {% if mean_imd_score > national_mean_imd %}The higher-than-average deprivation in service deserts is a critical policy finding: the most deprived communities most in need of affordable transport are the least likely to have it. This amplifies the structural link between transport poverty and socio-economic disadvantage.{% else %}The below-average deprivation of desert LSOAs suggests that many are in relatively affluent rural areas where car ownership is high and transport need, while real, is less acute than in deprived urban areas.{% endif %}
+{%- endif %}
+
+Transport desert residents are disproportionately affected by: restricted employment access (no way to reach out-of-area jobs without a car), NHS access challenges (unable to attend hospital appointments without private transport or expensive taxi travel), social isolation risk (especially for elderly residents who can no longer drive), and educational disadvantage for young people unable to reach sixth forms or FE colleges.
+
+## DRT as Intervention
+
+Demand-responsive transport (DRT) is increasingly the intervention of choice for isolated rural LSOAs where fixed-route services cannot be financially justified. DRT schemes connecting residents to nearby town centre hubs or rail stations can restore basic connectivity at lower cost than conventional routes.
+
+The Bus Services Act 2025 provides new regulatory frameworks for DRT integration, and the DfT's Rural Mobility Fund has funded DRT pilots across England. See Scenario PS3 (DRT Rural) for cost-benefit analysis of a targeted DRT rollout to the worst-affected transport desert LSOAs.
+
+## Policy Implications
+
+Eliminating transport deserts entirely — bringing every LSOA to at least minimal bus connectivity — is a stated objective of multiple DfT strategies. The {{ n_desert_lsoas|int|format_thousands }} zero-service LSOAs identified here provide the evidence base for that programme, enabling LTAs to prioritise investment by deprivation level, population, and geographic clustering.
+
+*Methodology: Transport deserts defined as LSOAs with zero NaPTAN stops (BCT/BCS/BCE types, Status=active) within LSOA polygon boundaries, using 2021 Census LSOA geography. Total England active stops: 274,719. IMD 2025 deprivation scores applied for demographic profiling.*
+{%- endif %}

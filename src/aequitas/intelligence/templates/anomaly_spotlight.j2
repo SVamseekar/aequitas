@@ -1,0 +1,27 @@
+{% if n_anomalies is defined and n_anomalies is not none -%}
+## Key Finding
+
+**{{ n_anomalies|int|format_thousands }}** LSOAs ({{ pct_anomalies|round(1) }}%) are flagged as anomalous by the Isolation Forest + Local Outlier Factor ensemble — areas where the combination of demographic characteristics and service levels is statistically unusual relative to the rest of England. Anomalies are not errors; they are signal: LSOAs that deviate from expected patterns represent either policy successes or policy failures worth understanding.
+
+## Anomaly Types
+
+- **{{ n_positive|int|format_thousands }} "deprived but well-served"** LSOAs — areas where service levels significantly exceed what demographics would predict. These are potential **policy successes**: targeted subsidy, active LTA intervention, or community transport investment may be responsible. Studying these areas can identify transferable policy models.
+
+- **{{ n_inefficiency|int|format_thousands }} "affluent but poorly served"** LSOAs — areas where affluent demographics and relatively high car ownership coincide with low bus service. These may represent **inefficiency cases** where commercial operators have withdrawn from routes with declining ridership, or geographic barriers (e.g., river crossings, motorway barriers) that make routing difficult.
+
+- **{{ n_policy_failure|int|format_thousands }} "elderly with no service"** LSOAs — the most serious category. Areas with high elderly population and zero or minimal bus service represent a direct **equity gap**: the demographic group most reliant on public transport for healthcare access, social participation, and independence is the least served. These are the highest-priority intervention targets.
+
+## Investigation Recommendations
+
+Anomalous LSOAs should be investigated at the individual level before committing resources:
+1. Cross-reference with deprivation decile — deprived anomalies have higher urgency
+2. Check for data quality issues (BODS coverage gaps, NaPTAN errors) before assuming service absence
+3. Contact relevant LTA to understand local context — some anomalies have known explanations
+4. Map clusters of anomalous LSOAs — adjacent anomalies may indicate systematic patterns rather than individual quirks
+
+## Policy Implications
+
+The {{ n_policy_failure|int|format_thousands }} "elderly-no-service" anomalies represent the clearest intervention target for BSIP funding under the DfT's social inclusion objectives. Each is a documented case where a vulnerable demographic group lacks the service they need. LTAs can use anomaly lists as a ready-made priority pipeline for route investigation and potential new service commissioning.
+
+*Methodology: Anomaly detection using ensemble of Isolation Forest (contamination=5%) and Local Outlier Factor. Features: {{ n_anomalies|default(0)|int }} demographic and service variables per LSOA. Anomaly type classification based on feature values relative to cluster centroids. Source: IMD 2025, Census 2021, BODS GTFS.*
+{%- endif %}

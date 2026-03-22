@@ -2,7 +2,7 @@
 
 import pytest
 from pydantic import ValidationError
-from aequitas.core.models import BusStop, Route, LSOARecord, RegionSummary
+from aequitas.core.models import BusStop, Route, LSOARecord, RegionSummary, SectionResult
 
 
 class TestBusStop:
@@ -94,3 +94,17 @@ class TestRegionSummary:
             routes_per_100k=18.9,
         )
         assert s.population == 2_647_000
+
+
+def test_section_result_narrative_is_str():
+    """Narrative field must accept a markdown string, not require a dict."""
+    result = SectionResult(
+        region="all",
+        urban_rural="all",
+        section_id="f1_gini",
+        stats={"gini": 0.5741},
+        chart_data={"type": "lorenz_curve"},
+        narrative="**Bus service Gini is 0.574** — more unequal than income.",
+    )
+    assert isinstance(result.narrative, str)
+    assert "0.574" in result.narrative

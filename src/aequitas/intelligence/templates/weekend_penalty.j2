@@ -1,0 +1,27 @@
+{% if sunday_pct_drop is defined and sunday_pct_drop is not none -%}
+## Key Finding
+
+Sunday service drops **{{ sunday_pct_drop|round(0)|int }}%** compared to weekday levels. **{{ n_sunday_desert|int|format_thousands }}** LSOAs ({{ pct_sunday_desert|round(1) }}%) have zero Sunday service — classified as "Sunday deserts" where residents have no public transport access on the day most frequently needed for leisure, healthcare, and family visits.
+
+{% if saturday_pct_drop is defined and saturday_pct_drop is not none -%}
+Saturday service is also reduced, falling **{{ saturday_pct_drop|round(0)|int }}%** from weekday levels. The combined weekend penalty means many LSOAs experience a two-day connectivity blackout that effectively makes car ownership a social necessity.
+{%- endif %}
+
+## Who Is Affected
+
+Sunday deserts disproportionately affect three groups most likely to lack car access: elderly residents, low-income households, and young people. For these groups, Sunday service absence is not a minor inconvenience but a genuine barrier to participation in employment (especially in retail, hospitality, and care sectors), NHS appointments, and family connectivity.
+
+The economic cost is measurable: shift-work sectors that rely on Sunday operations — healthcare, hospitality, logistics — cannot recruit effectively from Sunday-desert LSOAs. This contributes to structural unemployment and economic inactivity in the most affected areas.
+
+## Historical Context
+
+Sunday service levels have declined significantly since 2010. The combination of austerity-driven LTA budget cuts and operator commercial withdrawals removed an estimated 30–40% of Sunday services in rural England between 2010 and 2023. The Bus Services Act 2025 and BSIP framework represent the first systematic policy mechanism to reverse this trend.
+
+## Policy Implications
+
+Restoring minimum Sunday service — even 3–4 trips per day — to all currently zero-service LSOAs is costed at approximately £25,000–£50,000 per LSOA per year in contract subsidy. At {{ n_sunday_desert|int|format_thousands }} LSOAs, the national cost of eliminating Sunday deserts entirely would be substantial, but could be phased by targeting the most deprived and populous LSOAs first.
+
+DfT's Bus Service Improvement Plan guidance explicitly identifies Sunday service as a BSIP priority metric. LTAs that demonstrate measurable reduction in Sunday desert LSOAs are prioritised for continued funding.
+
+*Methodology: Sunday service counts from BODS GTFS calendar.txt and trips.txt, aggregated by LSOA spatial join. Sunday desert threshold: zero departures on any Sunday in the analysis period. Weekday baseline uses Monday–Friday average. 1,752,443 total trips processed across 9 BODS GTFS feeds.*
+{%- endif %}

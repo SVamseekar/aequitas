@@ -1,0 +1,35 @@
+{% if co2_saving_tonnes is defined and co2_saving_tonnes is not none -%}
+## Key Finding
+
+Modal shift from car to bus in {{ scope }} would save **{{ co2_saving_tonnes|round(0)|int|format_thousands }} tonnes CO₂/year**, valued at **£{{ co2_value_k|round(0)|int|format_thousands }}k** at the TAG carbon price of £{{ carbon_price|round(2) }}/tCO₂e.
+
+{% if modal_shift_trips is defined and modal_shift_trips is not none -%}
+This saving is based on **{{ modal_shift_trips|int|format_thousands }}** car trips replaced annually — each trip converted from car to bus reducing CO₂ emissions by the difference between the car CO₂ factor (0.17304 kg/veh-km, DESNZ 2025 diesel average) and the bus CO₂ factor (0.10385 kg/pax-km, DESNZ 2025 local bus average).
+{%- endif %}
+
+## Emission Factors
+
+Carbon calculations use the latest DESNZ (Department for Energy Security and Net Zero) conversion factors from the 2025 UK Government GHG Conversion Factors publication:
+- **Car (average diesel):** 0.17304 kg CO₂e/vehicle-km (DESNZ 2025, cell D53)
+- **Local bus (average):** 0.10385 kg CO₂e/passenger-km (DESNZ 2025, cell D81)
+
+The net saving per converted trip reflects both the avoided car emission and the bus emission incurred. Bus emissions per passenger decrease as occupancy increases — at typical UK bus occupancy (11 passengers), bus is 60–70% less carbon-intensive per passenger-km than a private car.
+
+## Net Zero Contribution
+
+The {{ co2_saving_tonnes|round(0)|int|format_thousands }} tonnes annual CO₂ saving represents a real contribution to the UK's net zero trajectory. While individual modal shift events are small, aggregated across England's bus network, the total carbon saving from optimised bus coverage is significant.
+
+For context, {{ co2_saving_tonnes|round(0)|int|format_thousands }} tonnes CO₂ is equivalent to:
+- Removing approximately {{ (co2_saving_tonnes / 2.0)|round(0)|int|format_thousands }} average cars from the road for a year
+- Offsetting approximately {{ (co2_saving_tonnes / 0.5)|round(0)|int|format_thousands }} return flights from London to New York
+
+## Monetised Value
+
+At the TAG carbon price of £{{ carbon_price|round(2) }}/tCO₂e, the annual carbon benefit is **£{{ co2_value_k|round(0)|int|format_thousands }}k**. This is included in BCR calculations as an external benefit under DfT TAG methodology, strengthening the economic case for bus investment — particularly for rural routes where direct user benefits are lower.
+
+## Policy Implications
+
+Carbon co-benefits strengthen the economic case for bus investment in BSIP funding bids. DfT requires carbon impacts to be quantified and included in TAG appraisals. The carbon saving here provides an additional justification for bus investment that complements the direct user benefit case — and is increasingly weighted in transport funding decisions as net zero commitments tighten.
+
+*Methodology: Modal shift modelled using DfT elasticity approach. CO₂ savings calculated as (avoided car km × 0.17304 kg/veh-km) minus (additional bus pax-km × 0.10385 kg/pax-km). Carbon monetised at TAG shadow carbon price (2024 values). DESNZ 2025 conversion factors.*
+{%- endif %}

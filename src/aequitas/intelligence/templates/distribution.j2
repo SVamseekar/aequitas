@@ -1,0 +1,23 @@
+{% if median is defined and median is not none -%}
+## Key Finding
+
+The median {{ metric_name }} is **{{ median|round(2) }} {{ unit }}**, with the 10th–90th percentile range spanning **{{ p10|round(2) }}–{{ p90|round(2) }} {{ unit }}**. The distribution is **{{ skew_label }}**, with **{{ n_outliers|int }}** outliers beyond 3× IQR — each representing an LSOA or route with unusually extreme characteristics worth investigating individually.
+
+## Spread and Consistency
+
+{% if cv is defined and cv is not none -%}
+The coefficient of variation is **{{ (cv * 100)|round(1) }}%** — classified as **{{ "high heterogeneity" if cv > 0.5 else "moderate variation" if cv > 0.25 else "relatively uniform" }}**. {% if cv > 0.5 %}High heterogeneity indicates that the average is not representative of typical experience — some areas receive dramatically more service than others, and aggregate statistics mask significant local variation. Policy targeting by LSOA or LAD is more appropriate than regional-level interventions.{% elif cv > 0.25 %}Moderate variation is consistent with a mixed urban-rural network where settlement patterns drive natural differences in service density. Some targeted intervention may still be warranted for LSOAs in the lowest quartile.{% else %}Low variation suggests broadly consistent service levels — the network is relatively uniform, and systemic redistribution is unlikely to be the most impactful intervention.{% endif %}
+{%- endif %}
+
+The {{ skew_label }} distribution {% if "right" in skew_label or "positive" in skew_label %}suggests a long tail of high-value outliers (e.g., dense urban corridors) pulling the mean above the typical experience{% elif "left" in skew_label or "negative" in skew_label %}suggests a long tail of low-value outliers (e.g., very rural LSOAs) pulling the mean below the typical experience{% else %}suggests symmetry around the median, without strong skew from extreme values{% endif %}.
+
+## Outlier Significance
+
+The {{ n_outliers|int }} extreme outliers (beyond 3× IQR) represent genuine structural anomalies — areas where {{ metric_name }} is dramatically different from the rest of England. These warrant direct investigation: they may represent data quality issues, unique local contexts, or policy-relevant extremes that need addressing.
+
+## Policy Implications
+
+Distribution analysis reveals whether headline averages mask structural inequality. A {{ "high" if cv is defined and cv is not none and cv > 0.5 else "moderate" }} spread in {{ metric_name }} means that policy interventions calibrated to the national average will systematically under-serve the most deprived areas. BSIP funding allocations should account for this variation by using distributional metrics (e.g., 25th percentile performance) as targets rather than mean performance.
+
+*Methodology: Distribution statistics computed across all qualifying LSOAs/routes with non-null {{ metric_name }} values. Outlier threshold: values beyond Q3 + 3×IQR or below Q1 − 3×IQR. Coefficient of variation = standard deviation / mean.*
+{%- endif %}

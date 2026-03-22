@@ -1,0 +1,26 @@
+{% if n_clusters is defined and n_clusters is not none -%}
+## Key Finding
+
+Unsupervised clustering reveals **{{ n_clusters|int }}** distinct {{ entity_type }} archetypes across England. Rather than treating the network as homogeneous, this analysis identifies structurally similar groups that respond differently to interventions — a prerequisite for targeted rather than one-size-fits-all policy design.
+
+## Cluster Profiles
+
+{% for cluster in clusters -%}
+**Cluster {{ cluster.id }}** ({{ cluster.n|int|format_thousands }} {{ entity_type }}, {{ cluster.pct|round(1) }}% of total): {{ cluster.description }}. {% if cluster.pct > 30 %}This is the dominant archetype — the majority experience — making it the most policy-relevant group for national-level interventions.{% elif cluster.pct < 10 %}Though a minority archetype, this cluster may represent the most extreme cases (highest or lowest service levels) and therefore the most urgent intervention targets.{% endif %}
+
+{% endfor %}
+## Archetype Implications for Intervention Design
+
+Different clusters require different policy responses:
+- High-density, high-frequency clusters benefit most from **frequency enhancement and network integration** — marginal improvements on already-good infrastructure
+- Low-density, isolated clusters require **structural interventions** — new routes, DRT schemes, or community transport — since frequency enhancement is meaningless where no service exists
+- Mixed-deprivation clusters with adequate physical access but poor service quality benefit from **operating hours extension and weekend service restoration**
+
+One-size-fits-all interventions (e.g., blanket frequency targets) will systematically under-serve the clusters that most need tailored solutions.
+
+## Targeting Recommendations
+
+Cluster membership provides a targeting variable for BSIP funding allocation. LTAs can use the cluster an LSOA belongs to as a first-pass filter for intervention type, then apply deprivation and population weighting to prioritise within clusters.
+
+*Methodology: {{ entity_type }} clustered using HDBSCAN algorithm (density-based, no assumption of spherical clusters). Features normalised before clustering. Cluster descriptions generated from mean feature values per cluster. Source data: BODS GTFS, IMD 2025, Census 2021.*
+{%- endif %}
