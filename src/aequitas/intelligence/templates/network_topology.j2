@@ -1,0 +1,25 @@
+{% if n_cross_la is defined and n_cross_la is not none -%}
+## Key Finding
+
+**{{ n_cross_la|int|format_thousands }}** routes ({{ pct_cross_la|round(1) }}%) cross local authority boundaries, reflecting the functional travel patterns of residents whose employment, healthcare, and education destinations span administrative boundaries. {% if densest_corridor %}The densest cross-LA corridor is **{{ densest_corridor }}** with {{ densest_count|int }} routes — likely serving a major urban-fringe commuter flow or connecting to a regional employment centre.{% endif %}
+
+The mean route length is **{{ mean_length|round(1) }} km** (median {{ median_length|round(1) }} km). The gap between mean and median {% if mean_length > median_length * 1.3 %}suggests a right-skewed distribution with some very long routes pulling the mean upward — likely strategic inter-urban routes that inflate the average while most routes serve shorter local corridors{% else %}indicates a relatively symmetric length distribution, consistent with a balanced mix of local and strategic routes{% endif %}.
+
+## Network Connectivity
+
+Cross-boundary routes ({{ pct_cross_la|round(1) }}%) are critical for regional connectivity but create governance fragmentation: no single LTA has full authority over route planning, subsidy decisions, or performance monitoring. This fragmentation is a structural weakness of the post-deregulation framework.
+
+The Bus Services Act 2025 partially addresses this through Combined Authority powers and the potential for multi-LTA Enhanced Partnerships. However, for LTAs without combined authority status, cross-boundary routes remain dependent on bilateral agreements that are vulnerable to budget pressures on either side.
+
+## Dead-End vs Through Routes
+
+Routes that terminate within a single LTA boundary typically serve local access functions — connecting residential areas to town centres, employment sites, and transport interchanges. Cross-boundary routes serve strategic functions — connecting LSOAs to regional labour markets and services that are absent locally.
+
+Policy interventions targeting connectivity gaps should distinguish between these two functions: local access gaps require different interventions (DRT, community transport) than strategic connectivity gaps (frequency enhancement on cross-boundary routes, integration with rail interchange).
+
+## Policy Implications
+
+The {{ pct_cross_la|round(1) }}% cross-boundary route share provides a measure of how "joined up" the network is. Higher cross-boundary share correlates with better access to regional opportunities but also greater governance complexity. LTAs pursuing Bus Service Improvement Plans should explicitly map cross-boundary dependencies and include co-funding agreements with neighbouring authorities where relevant.
+
+*Methodology: Route geometry from BODS GTFS shapes.txt (7,241 routes with geometry, 53.1% of total). Cross-LA classification via spatial intersection with ONS LAD boundaries. Mean length computed from Haversine distances between stops where shape_dist_traveled was null (100% of cases).*
+{%- endif %}

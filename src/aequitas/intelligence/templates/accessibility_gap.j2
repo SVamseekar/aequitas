@@ -1,0 +1,31 @@
+{% if n_beyond_threshold is defined and n_beyond_threshold is not none -%}
+## Key Finding
+
+**{{ n_beyond_threshold|int|format_thousands }}** {{ poi_type }} ({{ pct_beyond|round(1) }}%) are beyond **{{ threshold_m|int }}m** of a bus stop. {% if affected_population %}This affects an estimated **{{ affected_population|int|format_thousands }}** people who cannot reach these services by public transport within a reasonable walking distance.{% endif %}
+
+## Accessibility Gap by Facility Type
+
+The {{ threshold_m|int }}m threshold reflects DfT guidance on acceptable walking distance to public transport. Beyond this distance, the cognitive and physical burden of the journey to the stop becomes a significant barrier — particularly for elderly residents, those with mobility impairments, and carers with young children.
+
+{% if poi_type and "hospital" in poi_type|lower -%}
+NHS hospital access by public transport is a critical equity issue. Patients attending outpatient appointments, those receiving regular treatment (dialysis, chemotherapy), and emergency caregivers face the highest burden when hospitals are inaccessible by bus. The {{ n_beyond_threshold|int|format_thousands }} hospitals beyond {{ threshold_m|int }}m of a stop represent a direct gap between the NHS's expectation of equitable access and transport reality.
+{%- elif poi_type and "school" in poi_type|lower -%}
+Secondary school access by public transport is a statutory responsibility for LTAs (Education Act 1996, Section 508B). The {{ n_beyond_threshold|int|format_thousands }} schools beyond {{ threshold_m|int }}m represent a legal compliance risk as well as an educational disadvantage for students unable to access school without private car transport.
+{%- elif poi_type and "gp" in poi_type|lower or poi_type and "practice" in poi_type|lower -%}
+GP surgery accessibility by public transport affects the ability of car-free residents to attend appointments for preventive care, chronic condition management, and urgent consultation. The {{ n_beyond_threshold|int|format_thousands }} practices beyond {{ threshold_m|int }}m contribute to health inequality: lower-income, car-free residents are least able to travel to their GP and most likely to need to.
+{%- else -%}
+Access to {{ poi_type }} by public transport directly affects residents' ability to participate in employment, education, healthcare, and community life without car ownership.
+{%- endif %}
+
+## 2SFCA Methodology Note
+
+Accessibility scores use the Two-Step Floating Catchment Area (2SFCA) method, which measures both the supply of access points (stops within catchment) and the demand for them (population competing for access). This provides a more nuanced picture than simple distance buffers: a stop 300m away that serves 10,000 residents is less accessible in functional terms than one 400m away serving 500 residents.
+
+The 400m (or {{ threshold_m|int }}m) catchment threshold is the primary parameter. For vulnerable populations (elderly, mobility-impaired), effective catchment may be 50–60% of this threshold, meaning the true accessibility gap is larger than headline figures suggest.
+
+## Policy Implications
+
+LTAs are expected under the Bus Services Act 2025 and NHS England's Core20PLUS5 health inequality framework to prioritise transport connectivity to essential health facilities. The {{ n_beyond_threshold|int|format_thousands }} {{ poi_type }} beyond the {{ threshold_m|int }}m threshold provide a specific, targetable list of access gaps that LTAs can address through route planning, stop placement, and DRT commissioning.
+
+*Methodology: 2SFCA accessibility score with {{ threshold_m|int }}m Euclidean catchment from 274,719 NaPTAN active stops. POI geocoding: NHS ODS API (hospitals, GPs), GIAS (schools). Accessibility gap: POIs with zero or near-zero 2SFCA score. Population affected from Census 2021 LSOA-level data.*
+{%- endif %}

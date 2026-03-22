@@ -56,7 +56,7 @@ CORE_TABLES: dict[str, str] = {
             section_id VARCHAR,
             stats JSON,
             chart_data JSON,
-            narrative JSON,
+            narrative VARCHAR,
             PRIMARY KEY (region, urban_rural, section_id)
         )
     """,
@@ -81,6 +81,15 @@ ANALYTICS_PARQUET_SOURCES: dict[str, str] = {
     "lsoa_policy": "data/processed/lsoa_policy_synthesis.parquet",
     "route_details": "data/processed/route_geometries.parquet",
     "lta_readiness": "data/processed/lta_franchising_readiness.parquet",
+    # New tables for expanded sections (all in data/audit/ — Phase 0 outputs)
+    "stop_headways": "data/audit/stop_headways.parquet",
+    "coverage_prediction": "data/audit/coverage_prediction.parquet",
+    "shap_importance": "data/audit/shap_importance.parquet",
+    "route_clusters": "data/audit/route_clusters.parquet",
+    "lsoa_clusters": "data/audit/lsoa_clusters_hdbscan.parquet",
+    "anomalies": "data/audit/anomalies.parquet",
+    "modal_shift_scenarios": "data/audit/modal_shift_scenarios.parquet",
+    "policy_scenarios": "data/audit/policy_scenarios.parquet",
 }
 
 # Combined: all table names in the warehouse

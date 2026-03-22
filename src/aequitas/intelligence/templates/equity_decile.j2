@@ -1,0 +1,21 @@
+{% if most_deprived_value is defined and most_deprived_value is not none -%}
+## Key Finding
+
+The most deprived decile receives **{{ most_deprived_value|round(1) }} {{ unit }}** compared to **{{ least_deprived_value|round(1) }} {{ unit }}** for the least deprived — a disparity ratio of **{{ ratio|round(1) }}:1**. {% if ratio > 3 %}This stark gap indicates that deprivation and poor bus service are strongly co-located, compounding disadvantage for the most vulnerable communities.{% elif ratio > 2 %}This significant gap suggests service allocation is not proportional to need — commercially viable routes dominate the network at the expense of deprived-area connectivity.{% else %}While a gap exists, the disparity is within the range that could reflect rural settlement patterns rather than systematic inequity.{% endif %}
+
+## Decile-by-Decile Pattern
+
+{% if bottom_20_pct is defined and bottom_20_pct is not none -%}
+The bottom 20% of LSOAs by deprivation receive only **{{ bottom_20_pct|round(1) }}%** of all bus trips despite accounting for approximately 20% of the population. {% if bottom_20_pct < 15 %}This underrepresentation of over 5 percentage points constitutes a measurable service gap that directly affects transport poverty risk for low-income households.{% elif bottom_20_pct < 18 %}This modest shortfall relative to population share warrants monitoring, particularly as operator commercial pressures continue to reshape the network.{% endif %}
+{%- endif %}
+
+The pattern across all 10 deprivation deciles reveals {% if ratio > 3 %}a steep gradient, with service dropping sharply as deprivation rises — consistent with market failure in commercially unattractive corridors{% else %}a moderate gradient, suggesting partial but incomplete equalisation through contracted service subsidies{% endif %}.
+
+## Policy Implications
+
+This decile analysis provides direct evidence for targeting transport investment. Under the DfT's Bus Back Better strategy and the Bus Services Act 2025, LTAs are expected to demonstrate how Enhanced Partnership Plans or franchising schemes will address service gaps in deprived areas. A disparity ratio above {{ ratio|round(1) }} would typically justify prioritising new or enhanced routes in the bottom 3–4 deprivation deciles.
+
+Where LTAs apply for Bus Service Improvement Plan (BSIP) funding, this disparity evidence can strengthen the case for subsidy to commercially marginal but socially necessary routes.
+
+*Methodology: LSOAs ranked by IMD 2025 composite score, divided into 10 equal-population deciles. Service measure is {{ unit }} per LSOA, averaged within each decile. Census 2021 population denominators applied throughout.*
+{%- endif %}

@@ -1,0 +1,25 @@
+{% if r2 is defined and r2 is not none -%}
+## Key Finding
+
+A Random Forest model trained on socio-economic features explains **{{ (r2 * 100)|round(1) }}%** of variation in bus coverage across England's LSOAs (R² = {{ r2|round(3) }}). This means {% if r2 > 0.4 %}a substantial majority of the geographic variation in bus service levels can be predicted from demographics and deprivation indicators alone — confirming that service distribution is not random but structurally driven by measurable factors.{% else %}a meaningful but minority share of service variation is demographically explained — other factors including historical investment decisions, operator commercial judgements, and planning constraints account for the remainder.{% endif %}
+
+## Feature Importance (SHAP)
+
+{%- if top_feature is defined and top_feature -%}
+The strongest predictor is **{{ top_feature }}** (SHAP importance: {{ top_importance|round(3) }}). {% if top_feature == "nocar_pct" %}Car ownership rate is the dominant predictor of bus coverage — areas with high car-free households receive more bus service. This reflects commercial logic: operators route services where captive passengers exist. However, it also reveals a circularity: low car ownership attracts service, but service absence forces car ownership. Communities newly falling into transport poverty may lose services precisely when they most need them.{% elif top_feature == "imd_score" %}IMD deprivation score is the top predictor — a concerning finding if it indicates services cluster in less deprived areas, or a positive finding if deprived areas are better served due to targeted subsidy.{% elif top_feature == "population_density" %}Population density is the primary driver, consistent with commercial route economics favouring high-demand corridors.{% else %}{{ top_feature }} emerges as the primary driver of service distribution, warranting further investigation into the mechanism driving this association.{% endif %}
+{%- endif %}
+
+{%- if n_features is defined and n_features -%}
+The model uses **{{ n_features|int }} socio-economic features**. The unexplained variance — **{{ ((1 - r2) * 100)|round(0)|int }}%** — represents service variation that cannot be predicted from demographics. This "residual" variance is policy-driven: it reflects the accumulated effect of historical investment decisions, operator commercial strategies, planning permissions, and subsidy choices that do not follow demographic logic. This is a critical finding: **53–72% of the bus coverage pattern across England is not demographically determined — it is the result of policy choices that could, in principle, be changed.**
+{%- endif %}
+
+## Model Limitations
+
+The Random Forest model captures correlations, not causation. High R² means demographics are good predictors of service, not that demographics cause service levels. The model cannot distinguish between communities that have poor service because of their demographics and communities whose demographics have been shaped by decades of poor service (reverse causation). Policy evaluation should use this model as a diagnostic tool, not as a causal framework.
+
+## Policy Implications
+
+The {{ (r2 * 100)|round(1) }}% explanatory power{% if top_feature is defined and top_feature %} — with {{ top_feature }} as the dominant feature{% endif %} — provides LTAs with a data-driven targeting tool. LSOAs where predicted coverage (from demographics) significantly exceeds actual coverage are the clearest candidates for intervention: the model says they "should" have more service based on who lives there, but they don't. These over-under areas represent the most tractable policy targets under BSIP frameworks.
+
+*Methodology: Random Forest regressor trained on 33,755 LSOAs{% if n_features is defined and n_features %} with {{ n_features|int }} socio-economic features{% endif %} from IMD 2025 and Census 2021. Target variable: BODS trips per capita (log1p-transformed). SHAP values computed for all features. R² = {{ r2|round(3) }} on held-out test set.*
+{%- endif %}

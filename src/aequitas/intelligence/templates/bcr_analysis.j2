@@ -1,0 +1,33 @@
+{% if bcr is defined and bcr is not none -%}
+## Key Finding
+
+Closing coverage gaps in **{{ area_name }}** has a Benefit-Cost Ratio of **{{ bcr|round(2) }}** — classified as **{{ vfm_band }} value for money** under DfT TAG appraisal methodology (v2.03fc). The required investment is **£{{ investment_m|round(1) }}m** over {{ appraisal_years|int }} years.
+
+{% if bcr < 1.0 -%}
+**This intervention does not meet the minimum value-for-money threshold (BCR < 1.0).** However, a sub-unity BCR should not automatically disqualify socially necessary services. DfT TAG permits inclusion of non-monetised benefits — social inclusion, NHS cost avoidance, and educational access — that can significantly strengthen the case for investment. Many rural routes with BCR < 1.0 remain socially justified under the Equality Act 2010's public sector equality duty.
+{%- elif bcr >= 4.0 -%}
+**BCR ≥ 4.0 indicates Very High value for money.** This is an exceptionally strong business case by any appraisal standard. LTAs should prioritise this intervention and include it in the core BSIP programme — DfT funding allocation weights heavily towards high-BCR bids.
+{%- elif bcr >= 2.0 -%}
+**BCR ≥ 2.0 indicates High value for money.** This represents a strong business case meeting DfT's "good value for money" threshold. Investment here is firmly justified and should be included in the LTA's BSIP programme.
+{%- elif bcr >= 1.5 -%}
+**BCR between 1.5 and 2.0 indicates Medium value for money.** The intervention is justified but should be compared against alternative uses of the same budget. Consider whether targeted sub-interventions could improve the BCR by concentrating resources on the highest-impact routes or LSOAs.
+{%- else -%}
+**BCR between 1.0 and 1.5 indicates Low value for money.** The intervention marginally passes the value-for-money test. Additional evidence — non-monetised social benefits, wider economic impacts — should be gathered to strengthen the case before commitment.
+{%- endif %}
+
+## Methodology Note
+
+BCR is calculated using DfT TAG methodology (WebTAG v2.03fc):
+- **Benefits:** Transport user time savings, fare savings, and agglomeration effects
+- **Costs:** Annual subsidy contract value, operator setup costs, administration
+- **Appraisal period:** {{ appraisal_years|int }} years (DfT standard for local transport schemes)
+- **Discount rate:** 3.5% (HM Treasury Green Book real rate)
+
+**Known limitation:** BCR methodology can produce degenerate results for sparse rural interventions where the beneficiary population is small. A £200k/year route serving 200 rural residents with limited alternative transport will always show a low BCR despite being socially critical. LTAs should supplement BCR with cost-per-beneficiary metrics for rural cases.
+
+## Policy Implications
+
+BCR analysis underpins BSIP funding bids. DfT requires all interventions above £2m to include a WebTAG-compliant BCR. A BCR of {{ bcr|round(2) }} for {{ area_name }} {{ "strongly supports" if bcr >= 2.0 else "supports" if bcr >= 1.5 else "marginally supports" if bcr >= 1.0 else "does not automatically support" }} inclusion in the LTA's priority investment pipeline.
+
+*Methodology: TAG v2.03fc BCR framework. Benefits include direct user benefits (value of time × trips), external benefits (CO₂ reduction, decongestion). Costs include contract subsidy and capital costs. All values in 2024 prices. Appraisal period: {{ appraisal_years|int }} years.*
+{%- endif %}
