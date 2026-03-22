@@ -198,6 +198,9 @@ def run_intelligence(cfg: PipelineConfig | None = None) -> StageReport:
     results = precompute_all_sections(cfg)
     logger.info(f"Generated {len(results)} section results")
 
+    # Stash results so run_warehouse can insert them
+    cfg._section_results = results  # type: ignore[attr-defined]
+
     duration = time.perf_counter() - t0
     report = StageReport("intelligence", duration, [], len(results), 0)
     report.log()

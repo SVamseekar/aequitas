@@ -37,6 +37,8 @@ def load_core_tables(conn: duckdb.DuckDBPyConnection, cfg: PipelineConfig) -> No
 
     parquet_map: dict[str, str] = {
         "lsoa_demographics": "master_lsoa_table.parquet",
+        "lsoa_service_quality": "lsoa_service_quality.parquet",
+        "lsoa_equity_metrics": "lsoa_equity_metrics.parquet",
     }
     for table_name, filename in parquet_map.items():
         path = _p(filename)
@@ -60,9 +62,8 @@ def build_warehouse(
     Steps:
     1. Create/open DuckDB file at cfg.warehouse_path
     2. Create all core table schemas
-    3. Load LSOA reference tables from Phase 0 parquets (lsoa_demographics)
-    4. Insert precomputed section_results (if provided)
-    5. Load analytics Parquet files as DuckDB tables
+    3. Insert precomputed section_results (if provided)
+    4. Load analytics Parquet files as DuckDB tables
 
     Args:
         cfg: Pipeline configuration with warehouse_path and processed_dir.
@@ -108,44 +109,6 @@ def build_warehouse(
                 ],
             )
             logger.info(f"Inserted {len(section_results)} section results")
-
-            # Step 2b: Build provenance from equity section stats (all/all combo)
-            equity_row = next(
-                (r for r in section_results
-                 if r["section_id"] in ("f1_gini", "a4_coverage_equity")
-                 and r["region"] == "all" and r["urban_rural"] == "all"
-                 and r.get("stats")),
-                None,
-            )
-            if equity_row:
-                from aequitas.warehouse.provenance import build_equity_provenance
-                stats = equity_row["stats"] if isinstance(equity_row["stats"], dict) else _json.loads(equity_row["stats"])
-                gini = stats.get("gini", 0.0)
-                palma = stats.get("palma", 0.0)
-                ci = stats.get("concentration_index", 0.0)
-                provenance_entries = build_equity_provenance(gini, palma, ci)
-                # Also insert with the "gini_national" alias expected by the API
-                from aequitas.warehouse.provenance import ProvenanceEntry
-                provenance_entries.append(ProvenanceEntry(
-                    metric_id="gini_national",
-                    value=gini,
-                    formula="1 - 2 * trapezoid(cum_service, cum_pop)",
-                    inputs={"gini": gini},
-                    source_files=["lsoa_policy_synthesis.parquet"],
-                ))
-                conn.execute("DELETE FROM provenance")
-                conn.executemany(
-                    "INSERT INTO provenance (metric_id, value, formula, inputs, source_files) "
-                    "VALUES (?, ?, ?, ?, ?)",
-                    [
-                        (
-                            e.metric_id, e.value, e.formula,
-                            _json.dumps(e.inputs), _json.dumps(e.source_files),
-                        )
-                        for e in provenance_entries
-                    ],
-                )
-                logger.info(f"Inserted {len(provenance_entries)} provenance entries")
 
         # Step 3: Load analytics Parquet tables
         for table_name, parquet_rel_path in ANALYTICS_PARQUET_SOURCES.items():
