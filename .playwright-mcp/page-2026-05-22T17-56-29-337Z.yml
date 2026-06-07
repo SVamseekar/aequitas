@@ -1,0 +1,219 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - generic [ref=e8]: Aequitas Intelligence — Systems Online
+    - generic [ref=e9]: 22 May 2026 · NaPTAN · BODS · ONS · IMD · DfT TAG
+  - banner [ref=e10]:
+    - generic [ref=e11]:
+      - link "AEQUITAS" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - combobox [ref=e15]:
+            - generic [ref=e16]: All England
+            - img: ▼
+          - textbox [ref=e17]: all
+          - combobox [ref=e18]:
+            - generic [ref=e19]: All Areas
+            - img: ▼
+          - textbox [ref=e20]: all
+        - button "User menu" [ref=e22]:
+          - img [ref=e24]
+          - generic [ref=e27]: martisoura
+  - generic [ref=e29]:
+    - generic [ref=e30]:
+      - generic [ref=e31]: Gini Coefficient
+      - generic [ref=e32]: "0.5741"
+      - generic [ref=e33]: bus service inequality
+      - generic [ref=e34]: ·
+    - generic [ref=e35]:
+      - generic [ref=e36]: Palma Ratio
+      - generic [ref=e37]: 5.702×
+      - generic [ref=e38]: top 10% vs bottom 40%
+      - generic [ref=e39]: ·
+    - generic [ref=e40]:
+      - generic [ref=e41]: Concentration Index
+      - generic [ref=e42]: "+0.1358"
+      - generic [ref=e43]: pro-rich bias
+      - generic [ref=e44]: ·
+    - generic [ref=e45]:
+      - generic [ref=e46]: Evening Isolated
+      - generic [ref=e47]: 15.4%
+      - generic [ref=e48]: 5,189 LSOAs
+      - generic [ref=e49]: ·
+    - generic [ref=e50]:
+      - generic [ref=e51]: Sunday Deserts
+      - generic [ref=e52]: 20.0%
+      - generic [ref=e53]: 6,745 LSOAs
+      - generic [ref=e54]: ·
+    - generic [ref=e55]:
+      - generic [ref=e56]: Mean SQI
+      - generic [ref=e57]: "65.4"
+      - generic [ref=e58]: out of 100
+      - generic [ref=e59]: ·
+    - generic [ref=e60]:
+      - generic [ref=e61]: Gini Coefficient
+      - generic [ref=e62]: "0.5741"
+      - generic [ref=e63]: bus service inequality
+      - generic [ref=e64]: ·
+    - generic [ref=e65]:
+      - generic [ref=e66]: Palma Ratio
+      - generic [ref=e67]: 5.702×
+      - generic [ref=e68]: top 10% vs bottom 40%
+      - generic [ref=e69]: ·
+    - generic [ref=e70]:
+      - generic [ref=e71]: Concentration Index
+      - generic [ref=e72]: "+0.1358"
+      - generic [ref=e73]: pro-rich bias
+      - generic [ref=e74]: ·
+    - generic [ref=e75]:
+      - generic [ref=e76]: Evening Isolated
+      - generic [ref=e77]: 15.4%
+      - generic [ref=e78]: 5,189 LSOAs
+      - generic [ref=e79]: ·
+    - generic [ref=e80]:
+      - generic [ref=e81]: Sunday Deserts
+      - generic [ref=e82]: 20.0%
+      - generic [ref=e83]: 6,745 LSOAs
+      - generic [ref=e84]: ·
+    - generic [ref=e85]:
+      - generic [ref=e86]: Mean SQI
+      - generic [ref=e87]: "65.4"
+      - generic [ref=e88]: out of 100
+      - generic [ref=e89]: ·
+  - navigation [ref=e90]:
+    - generic [ref=e91]:
+      - link "Equity & Deprivation" [ref=e92] [cursor=pointer]:
+        - /url: /dashboard/equity
+      - link "Accessibility" [ref=e93] [cursor=pointer]:
+        - /url: /dashboard/accessibility
+      - link "Service Quality" [ref=e94] [cursor=pointer]:
+        - /url: /dashboard/service-quality
+      - link "Route Network" [ref=e95] [cursor=pointer]:
+        - /url: /dashboard/route-network
+      - link "Socio-Economic & ML" [ref=e96] [cursor=pointer]:
+        - /url: /dashboard/correlations
+      - link "Economic Appraisal" [ref=e97] [cursor=pointer]:
+        - /url: /dashboard/economic
+      - link "Bus Services Act 2025" [ref=e98] [cursor=pointer]:
+        - /url: /dashboard/bus-services-act
+      - link "Policy Scenarios" [ref=e99] [cursor=pointer]:
+        - /url: /dashboard/scenarios
+      - link "Compare" [ref=e100] [cursor=pointer]:
+        - /url: /compare
+  - main [ref=e101]:
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - heading "Equity & Deprivation" [level=2] [ref=e105]
+          - paragraph [ref=e106]: Gini/Lorenz/Palma, vulnerability index, triple deprivation
+          - paragraph [ref=e107]: 6 sections · 6 charts · 1 narratives · All England · All Areas
+        - link "Export PDF" [ref=e108] [cursor=pointer]:
+          - /url: /api/export/equity?region=all&urban_rural=all
+          - img [ref=e109]
+          - text: Export PDF
+      - article [ref=e112]:
+        - generic [ref=e113]:
+          - heading "Gini coefficient" [level=3] [ref=e114]
+          - button "Show data provenance" [ref=e115]:
+            - img [ref=e116]
+        - generic [ref=e122]:
+          - generic [ref=e123]:
+            - paragraph [ref=e124]: gini
+            - paragraph [ref=e125]: "0.5741"
+          - generic [ref=e126]:
+            - paragraph [ref=e127]: palma
+            - paragraph [ref=e128]: "5.702"
+          - generic [ref=e129]:
+            - paragraph [ref=e130]: concentration index
+            - paragraph [ref=e131]: "0.1358"
+          - generic [ref=e132]:
+            - paragraph [ref=e133]: triple deprived lsoas
+            - paragraph [ref=e134]: "612"
+          - generic [ref=e135]:
+            - paragraph [ref=e136]: triple deprived PCT
+            - paragraph [ref=e137]: 1.8%
+        - button "Read analysis" [ref=e139]
+      - article [ref=e140]:
+        - generic [ref=e141]:
+          - heading "Disparity by IMD decile" [level=3] [ref=e142]
+          - button "Show data provenance" [ref=e143]:
+            - img [ref=e144]
+        - generic [ref=e150]:
+          - generic [ref=e151]:
+            - paragraph [ref=e152]: p90
+            - paragraph [ref=e153]: "0.5756"
+          - generic [ref=e154]:
+            - paragraph [ref=e155]: p10
+            - paragraph [ref=e156]: "0.0171"
+          - generic [ref=e157]:
+            - paragraph [ref=e158]: disparity ratio
+            - paragraph [ref=e159]: "33.64"
+      - article [ref=e160]:
+        - generic [ref=e161]:
+          - heading "Bus access by ethnicity" [level=3] [ref=e162]
+          - button "Show data provenance" [ref=e163]:
+            - img [ref=e164]
+        - generic [ref=e170]:
+          - generic [ref=e171]:
+            - paragraph [ref=e172]: r
+            - paragraph [ref=e173]: "0.2493"
+          - generic [ref=e174]:
+            - paragraph [ref=e175]: p
+            - paragraph [ref=e176]: "0"
+      - article [ref=e177]:
+        - generic [ref=e178]:
+          - heading "Gender-adjusted accessibility" [level=3] [ref=e179]
+          - button "Show data provenance" [ref=e180]:
+            - img [ref=e181]
+        - generic [ref=e187]:
+          - generic [ref=e188]:
+            - paragraph [ref=e189]: high elderly avg
+            - paragraph [ref=e190]: "0.1873"
+          - generic [ref=e191]:
+            - paragraph [ref=e192]: low elderly avg
+            - paragraph [ref=e193]: "0.316"
+      - article [ref=e194]:
+        - generic [ref=e195]:
+          - heading "Rural accessibility penalty" [level=3] [ref=e196]
+          - button "Show data provenance" [ref=e197]:
+            - img [ref=e198]
+        - generic [ref=e204]:
+          - generic [ref=e205]:
+            - paragraph [ref=e206]: urban avg
+            - paragraph [ref=e207]: "0.2773"
+          - generic [ref=e208]:
+            - paragraph [ref=e209]: rural avg
+            - paragraph [ref=e210]: "0.124"
+          - generic [ref=e211]:
+            - paragraph [ref=e212]: rural penalty
+            - paragraph [ref=e213]: "0.1533"
+          - generic [ref=e214]:
+            - paragraph [ref=e215]: rural penalty PCT
+            - paragraph [ref=e216]: 55.3%
+      - article [ref=e217]:
+        - generic [ref=e218]:
+          - heading "Most equitable regions" [level=3] [ref=e219]
+          - button "Show data provenance" [ref=e220]:
+            - img [ref=e221]
+        - generic [ref=e227]:
+          - generic [ref=e228]:
+            - paragraph [ref=e229]: best region
+            - paragraph [ref=e230]: London
+          - generic [ref=e231]:
+            - paragraph [ref=e232]: worst region
+            - paragraph [ref=e233]: East of England
+          - generic [ref=e234]:
+            - paragraph [ref=e235]: national avg
+            - paragraph [ref=e236]: "0.2465"
+          - generic [ref=e237]:
+            - paragraph [ref=e238]: range
+            - paragraph [ref=e239]: "0.4066"
+  - contentinfo [ref=e240]:
+    - generic [ref=e241]:
+      - generic [ref=e242]: POLICY ANALYSIS TOOL — NOT OFFICIAL DfT GUIDANCE
+      - generic [ref=e243]:
+        - button "About" [ref=e244]
+        - button "Disclaimer" [ref=e245]
+        - button "Contact" [ref=e246]
+  - button "Open AI chat" [ref=e247]:
+    - img [ref=e248]

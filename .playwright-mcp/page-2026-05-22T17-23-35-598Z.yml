@@ -1,0 +1,84 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - generic [ref=e8]: Aequitas Intelligence — Systems Online
+    - generic [ref=e9]: NaPTAN · BODS · ONS · IMD · DfT TAG
+  - navigation [ref=e10]:
+    - generic [ref=e11]:
+      - generic [ref=e12]: AEQUITAS
+      - generic [ref=e13]:
+        - link "ABOUT" [ref=e14] [cursor=pointer]:
+          - /url: /about
+        - button "Get Started" [ref=e15]:
+          - text: Get Started
+          - img [ref=e16]
+  - generic [ref=e19]:
+    - text: Policy Intelligence Platform
+    - heading "Evidence-Based Policy for UK Bus Transport" [level=1] [ref=e21]:
+      - text: Evidence-Based Policy
+      - text: for UK Bus Transport
+    - paragraph [ref=e22]: Pre-computed analytics across 8 policy dimensions, 33,755 LSOAs, and 13,099 routes. Ask questions in plain English — grounded in NaPTAN, BODS, ONS, IMD, and DfT data.
+    - button "Start Exploring" [ref=e23]:
+      - text: Start Exploring
+      - img [ref=e24]
+  - generic [ref=e28]:
+    - generic [ref=e29]:
+      - paragraph [ref=e30]: Gini Coefficient
+      - paragraph [ref=e31]: "0.5741"
+      - paragraph [ref=e32]: Bus service inequality
+    - generic [ref=e33]:
+      - paragraph [ref=e34]: Palma Ratio
+      - paragraph [ref=e35]: 5.702×
+      - paragraph [ref=e36]: Top 10% vs bottom 40%
+    - generic [ref=e37]:
+      - paragraph [ref=e38]: Evening Isolated
+      - paragraph [ref=e39]: 15.4%
+      - paragraph [ref=e40]: of LSOAs
+    - generic [ref=e41]:
+      - paragraph [ref=e42]: Sunday Deserts
+      - paragraph [ref=e43]: 20.0%
+      - paragraph [ref=e44]: of LSOAs
+  - generic [ref=e45]:
+    - generic [ref=e46]: 8 Policy Dimensions
+    - generic [ref=e47]:
+      - button "Equity & Deprivation Gini, Lorenz, Palma ratio — measuring service inequality across 33,755 LSOAs." [ref=e48]:
+        - img [ref=e49]
+        - paragraph [ref=e53]: Equity & Deprivation
+        - paragraph [ref=e54]: Gini, Lorenz, Palma ratio — measuring service inequality across 33,755 LSOAs.
+      - button "Accessibility 2SFCA 400m catchment — gaps to jobs, healthcare, and secondary schools." [ref=e55]:
+        - img [ref=e56]
+        - paragraph [ref=e59]: Accessibility
+        - paragraph [ref=e60]: 2SFCA 400m catchment — gaps to jobs, healthcare, and secondary schools.
+      - button "Service Quality Headway, evening isolation, Sunday deserts, peak ratios — mean SQI 65.4/100." [ref=e61]:
+        - img [ref=e62]
+        - paragraph [ref=e66]: Service Quality
+        - paragraph [ref=e67]: Headway, evening isolation, Sunday deserts, peak ratios — mean SQI 65.4/100.
+      - button "Route Network 13,099 routes, 37.7% cross-LA, operator HHI concentration analysis." [ref=e68]:
+        - img [ref=e69]
+        - paragraph [ref=e74]: Route Network
+        - paragraph [ref=e75]: 13,099 routes, 37.7% cross-LA, operator HHI concentration analysis.
+      - button "Modal Shift & Carbon DfT elasticities, DESNZ 2025 factors — CO₂ savings from modal shift." [ref=e76]:
+        - img [ref=e77]
+        - paragraph [ref=e80]: Modal Shift & Carbon
+        - paragraph [ref=e81]: DfT elasticities, DESNZ 2025 factors — CO₂ savings from modal shift.
+      - button "Economic Appraisal BCR via TAG v2.03fc, Green Book methodology, GDP multipliers." [ref=e82]:
+        - img [ref=e83]
+        - paragraph [ref=e85]: Economic Appraisal
+        - paragraph [ref=e86]: BCR via TAG v2.03fc, Green Book methodology, GDP multipliers.
+      - button "Bus Services Act 2025 LTA franchising readiness tiers, operator concentration, compliance gaps." [ref=e87]:
+        - img [ref=e88]
+        - paragraph [ref=e91]: Bus Services Act 2025
+        - paragraph [ref=e92]: LTA franchising readiness tiers, operator concentration, compliance gaps.
+      - button "Policy Scenarios Parameterised modelling — frequency restoration, last bus, DRT coverage." [ref=e93]:
+        - img [ref=e94]
+        - paragraph [ref=e95]: Policy Scenarios
+        - paragraph [ref=e96]: Parameterised modelling — frequency restoration, last bus, DRT coverage.
+  - contentinfo [ref=e97]:
+    - generic [ref=e98]:
+      - generic [ref=e99]: POLICY ANALYSIS TOOL — NOT OFFICIAL DfT GUIDANCE
+      - generic [ref=e100]:
+        - link "About" [ref=e101] [cursor=pointer]:
+          - /url: /about
+        - link "Disclaimer" [ref=e102] [cursor=pointer]:
+          - /url: /disclaimer
+        - link "Contact" [ref=e103] [cursor=pointer]:
+          - /url: /contact

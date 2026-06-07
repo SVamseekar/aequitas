@@ -47,6 +47,20 @@ views because it requires `len(by_region) > 1` (§2.4/§8.1).
   lands (`aequitas run --stage rag_index`), not part of this design.
 - Frontend changes (§4.1 dropdown graying, §9.x). Out of scope.
 
+## Additional Bug Found During Investigation (not in ISSUES.md)
+
+**Region filter never matches.** `precompute.py`'s `region_mask` compares
+`policy_df["region"]` (which holds full ONS region names like `"North East"`)
+against `region` (an ONS region **code** like `"E12000001"`, from `RegionCode`/
+`_REGIONS`). This comparison never matches — `filtered` is empty for every
+region-specific combo, silently degrading to national-only results. This must
+be fixed alongside the rewrite via a `REGION_NAMES: dict[str, str]` mapping
+(`RegionCode` value → full name, e.g. `{"E12000001": "North East", ...}`)
+applied when constructing the region mask. Confirmed exact name strings present
+in `lsoa_policy_synthesis.region`: `East Midlands`, `East of England`, `London`,
+`North East`, `North West`, `South East`, `South West`, `West Midlands`,
+`Yorkshire and The Humber`.
+
 ## Architecture
 
 ### 1. Stats builder modules (new package: `warehouse/stats_builders/`)
