@@ -1,0 +1,304 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - generic [ref=e8]: Aequitas Intelligence — Systems Online
+    - generic [ref=e9]: 22 May 2026 · NaPTAN · BODS · ONS · IMD · DfT TAG
+  - banner [ref=e10]:
+    - generic [ref=e11]:
+      - link "AEQUITAS" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - combobox [ref=e15]:
+            - generic [ref=e16]: All England
+            - img: ▼
+          - textbox [ref=e17]: all
+          - combobox [ref=e18]:
+            - generic [ref=e19]: All Areas
+            - img: ▼
+          - textbox [ref=e20]: all
+        - button "User menu" [ref=e22]:
+          - img [ref=e24]
+          - generic [ref=e27]: martisoura
+  - generic [ref=e29]:
+    - generic [ref=e30]:
+      - generic [ref=e31]: Gini Coefficient
+      - generic [ref=e32]: "0.5741"
+      - generic [ref=e33]: bus service inequality
+      - generic [ref=e34]: ·
+    - generic [ref=e35]:
+      - generic [ref=e36]: Palma Ratio
+      - generic [ref=e37]: 5.702×
+      - generic [ref=e38]: top 10% vs bottom 40%
+      - generic [ref=e39]: ·
+    - generic [ref=e40]:
+      - generic [ref=e41]: Concentration Index
+      - generic [ref=e42]: "+0.1358"
+      - generic [ref=e43]: pro-rich bias
+      - generic [ref=e44]: ·
+    - generic [ref=e45]:
+      - generic [ref=e46]: Evening Isolated
+      - generic [ref=e47]: 15.4%
+      - generic [ref=e48]: 5,189 LSOAs
+      - generic [ref=e49]: ·
+    - generic [ref=e50]:
+      - generic [ref=e51]: Sunday Deserts
+      - generic [ref=e52]: 20.0%
+      - generic [ref=e53]: 6,745 LSOAs
+      - generic [ref=e54]: ·
+    - generic [ref=e55]:
+      - generic [ref=e56]: Mean SQI
+      - generic [ref=e57]: "65.4"
+      - generic [ref=e58]: out of 100
+      - generic [ref=e59]: ·
+    - generic [ref=e60]:
+      - generic [ref=e61]: Gini Coefficient
+      - generic [ref=e62]: "0.5741"
+      - generic [ref=e63]: bus service inequality
+      - generic [ref=e64]: ·
+    - generic [ref=e65]:
+      - generic [ref=e66]: Palma Ratio
+      - generic [ref=e67]: 5.702×
+      - generic [ref=e68]: top 10% vs bottom 40%
+      - generic [ref=e69]: ·
+    - generic [ref=e70]:
+      - generic [ref=e71]: Concentration Index
+      - generic [ref=e72]: "+0.1358"
+      - generic [ref=e73]: pro-rich bias
+      - generic [ref=e74]: ·
+    - generic [ref=e75]:
+      - generic [ref=e76]: Evening Isolated
+      - generic [ref=e77]: 15.4%
+      - generic [ref=e78]: 5,189 LSOAs
+      - generic [ref=e79]: ·
+    - generic [ref=e80]:
+      - generic [ref=e81]: Sunday Deserts
+      - generic [ref=e82]: 20.0%
+      - generic [ref=e83]: 6,745 LSOAs
+      - generic [ref=e84]: ·
+    - generic [ref=e85]:
+      - generic [ref=e86]: Mean SQI
+      - generic [ref=e87]: "65.4"
+      - generic [ref=e88]: out of 100
+      - generic [ref=e89]: ·
+  - navigation [ref=e90]:
+    - generic [ref=e91]:
+      - link "Equity & Deprivation" [ref=e92] [cursor=pointer]:
+        - /url: /dashboard/equity
+      - link "Accessibility" [ref=e93] [cursor=pointer]:
+        - /url: /dashboard/accessibility
+      - link "Service Quality" [ref=e94] [cursor=pointer]:
+        - /url: /dashboard/service-quality
+      - link "Route Network" [ref=e95] [cursor=pointer]:
+        - /url: /dashboard/route-network
+      - link "Socio-Economic & ML" [ref=e96] [cursor=pointer]:
+        - /url: /dashboard/correlations
+      - link "Economic Appraisal" [ref=e97] [cursor=pointer]:
+        - /url: /dashboard/economic
+      - link "Bus Services Act 2025" [ref=e98] [cursor=pointer]:
+        - /url: /dashboard/bus-services-act
+      - link "Policy Scenarios" [ref=e99] [cursor=pointer]:
+        - /url: /dashboard/scenarios
+      - link "Compare" [ref=e100] [cursor=pointer]:
+        - /url: /compare
+  - main [ref=e101]:
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - heading "Socio-Economic & ML" [level=2] [ref=e105]
+          - paragraph [ref=e106]: Deprivation correlations, SHAP, clustering, anomalies
+          - paragraph [ref=e107]: 13 sections · 12 charts · 2 narratives · All England · All Areas
+        - link "Export PDF" [ref=e108] [cursor=pointer]:
+          - /url: /api/export/correlations?region=all&urban_rural=all
+          - img [ref=e109]
+          - text: Export PDF
+      - article [ref=e112]:
+        - generic [ref=e113]:
+          - heading "Coverage vs deprivation" [level=3] [ref=e114]
+          - button "Show data provenance" [ref=e115]:
+            - img [ref=e116]
+        - generic [ref=e122]:
+          - generic [ref=e123]:
+            - paragraph [ref=e124]: r
+            - paragraph [ref=e125]: "0.141"
+          - generic [ref=e126]:
+            - paragraph [ref=e127]: p
+            - paragraph [ref=e128]: "0"
+          - generic [ref=e129]:
+            - paragraph [ref=e130]: "N"
+            - paragraph [ref=e131]: 33,755
+      - article [ref=e132]:
+        - generic [ref=e133]:
+          - heading "Coverage vs unemployment" [level=3] [ref=e134]
+          - button "Show data provenance" [ref=e135]:
+            - img [ref=e136]
+        - generic [ref=e142]:
+          - generic [ref=e143]:
+            - paragraph [ref=e144]: r
+            - paragraph [ref=e145]: "0.207"
+          - generic [ref=e146]:
+            - paragraph [ref=e147]: p
+            - paragraph [ref=e148]: "0"
+          - generic [ref=e149]:
+            - paragraph [ref=e150]: "N"
+            - paragraph [ref=e151]: 33,755
+      - article [ref=e152]:
+        - generic [ref=e153]:
+          - heading "Coverage vs car ownership" [level=3] [ref=e154]
+          - button "Show data provenance" [ref=e155]:
+            - img [ref=e156]
+        - generic [ref=e162]:
+          - generic [ref=e163]:
+            - paragraph [ref=e164]: r
+            - paragraph [ref=e165]: "0.4029"
+          - generic [ref=e166]:
+            - paragraph [ref=e167]: p
+            - paragraph [ref=e168]: "0"
+          - generic [ref=e169]:
+            - paragraph [ref=e170]: "N"
+            - paragraph [ref=e171]: 33,755
+      - article [ref=e172]:
+        - generic [ref=e173]:
+          - heading "Coverage vs elderly population" [level=3] [ref=e174]
+          - button "Show data provenance" [ref=e175]:
+            - img [ref=e176]
+        - generic [ref=e182]:
+          - generic [ref=e183]:
+            - paragraph [ref=e184]: r
+            - paragraph [ref=e185]: "-0.1931"
+          - generic [ref=e186]:
+            - paragraph [ref=e187]: p
+            - paragraph [ref=e188]: "0"
+          - generic [ref=e189]:
+            - paragraph [ref=e190]: "N"
+            - paragraph [ref=e191]: 33,755
+      - article [ref=e192]:
+        - generic [ref=e193]:
+          - heading "Coverage vs income" [level=3] [ref=e194]
+          - button "Show data provenance" [ref=e195]:
+            - img [ref=e196]
+        - generic [ref=e202]:
+          - generic [ref=e203]:
+            - paragraph [ref=e204]: r
+            - paragraph [ref=e205]: "0.1263"
+          - generic [ref=e206]:
+            - paragraph [ref=e207]: p
+            - paragraph [ref=e208]: "0"
+          - generic [ref=e209]:
+            - paragraph [ref=e210]: "N"
+            - paragraph [ref=e211]: 33,755
+      - article [ref=e212]:
+        - generic [ref=e213]:
+          - heading "Transport poverty clusters" [level=3] [ref=e214]
+          - button "Show data provenance" [ref=e215]:
+            - img [ref=e216]
+        - generic [ref=e219]:
+          - generic [ref=e220]:
+            - paragraph [ref=e221]: N lsoas
+            - paragraph [ref=e222]: 33,755
+          - generic [ref=e223]:
+            - paragraph [ref=e224]: N clusters
+            - paragraph [ref=e225]: "3"
+        - button "Read analysis" [ref=e227]
+      - article [ref=e228]:
+        - generic [ref=e229]:
+          - heading "Deprivation x urban/rural" [level=3] [ref=e230]
+          - button "Show data provenance" [ref=e231]:
+            - img [ref=e232]
+        - generic [ref=e238]:
+          - generic [ref=e239]:
+            - paragraph [ref=e240]: N lsoas
+            - paragraph [ref=e241]: 33,755
+          - generic [ref=e242]:
+            - paragraph [ref=e243]: urban rural gap
+            - paragraph [ref=e244]: "0.1532"
+      - article [ref=e245]:
+        - generic [ref=e246]:
+          - heading "Feature importance" [level=3] [ref=e247]
+          - button "Show data provenance" [ref=e248]:
+            - img [ref=e249]
+        - generic [ref=e255]:
+          - generic [ref=e256]:
+            - paragraph [ref=e257]: R2
+            - paragraph [ref=e258]: "0.472"
+          - generic [ref=e259]:
+            - paragraph [ref=e260]: top feature
+            - paragraph [ref=e261]: nocar_pct
+      - article [ref=e262]:
+        - generic [ref=e263]:
+          - heading "Route clustering" [level=3] [ref=e264]
+          - button "Show data provenance" [ref=e265]:
+            - img [ref=e266]
+        - generic [ref=e272]:
+          - generic [ref=e273]:
+            - paragraph [ref=e274]: N clusters
+            - paragraph [ref=e275]: "8"
+          - generic [ref=e276]:
+            - paragraph [ref=e277]: N routes
+            - paragraph [ref=e278]: 5,480
+          - generic [ref=e279]:
+            - paragraph [ref=e280]: largest cluster
+            - paragraph [ref=e281]: "1"
+          - generic [ref=e282]:
+            - paragraph [ref=e283]: largest cluster size
+            - paragraph [ref=e284]: 1,788
+        - button "Read analysis" [ref=e286]
+      - article [ref=e287]:
+        - generic [ref=e288]:
+          - heading "Anomaly detection" [level=3] [ref=e289]
+          - button "Show data provenance" [ref=e290]:
+            - img [ref=e291]
+        - generic [ref=e297]:
+          - generic [ref=e298]:
+            - paragraph [ref=e299]: N anomalies
+            - paragraph [ref=e300]: 33,755
+          - generic [ref=e301]:
+            - paragraph [ref=e302]: anomaly rate PCT
+            - paragraph [ref=e303]: 5.0%
+      - article [ref=e304]:
+        - generic [ref=e305]:
+          - heading "Coverage prediction" [level=3] [ref=e306]
+          - button "Show data provenance" [ref=e307]:
+            - img [ref=e308]
+        - generic [ref=e314]:
+          - generic [ref=e315]:
+            - paragraph [ref=e316]: R2
+            - paragraph [ref=e317]: "0.472"
+          - generic [ref=e318]:
+            - paragraph [ref=e319]: top feature
+            - paragraph [ref=e320]: nocar_pct
+      - article [ref=e321]:
+        - generic [ref=e322]:
+          - heading "Feature importance (SHAP)" [level=3] [ref=e323]
+          - button "Show data provenance" [ref=e324]:
+            - img [ref=e325]
+        - generic [ref=e331]:
+          - generic [ref=e332]:
+            - paragraph [ref=e333]: R2
+            - paragraph [ref=e334]: "0.472"
+          - generic [ref=e335]:
+            - paragraph [ref=e336]: top feature
+            - paragraph [ref=e337]: nocar_pct
+      - article [ref=e338]:
+        - generic [ref=e339]:
+          - heading "Scenario modelling" [level=3] [ref=e340]
+          - button "Show data provenance" [ref=e341]:
+            - img [ref=e342]
+        - generic [ref=e348]:
+          - generic [ref=e349]:
+            - paragraph [ref=e350]: baseline avg
+            - paragraph [ref=e351]: "0.252"
+          - generic [ref=e352]:
+            - paragraph [ref=e353]: model
+            - paragraph [ref=e354]: random_forest
+          - generic [ref=e355]:
+            - paragraph [ref=e356]: R2
+            - paragraph [ref=e357]: "0.472"
+  - contentinfo [ref=e358]:
+    - generic [ref=e359]:
+      - generic [ref=e360]: POLICY ANALYSIS TOOL — NOT OFFICIAL DfT GUIDANCE
+      - generic [ref=e361]:
+        - button "About" [ref=e362]
+        - button "Disclaimer" [ref=e363]
+        - button "Contact" [ref=e364]
+  - button "Open AI chat" [ref=e365]:
+    - img [ref=e366]

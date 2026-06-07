@@ -1,0 +1,294 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - generic [ref=e8]: Aequitas Intelligence — Systems Online
+    - generic [ref=e9]: 22 May 2026 · NaPTAN · BODS · ONS · IMD · DfT TAG
+  - banner [ref=e10]:
+    - generic [ref=e11]:
+      - link "AEQUITAS" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - combobox [ref=e15]:
+            - generic [ref=e16]: All England
+            - img: ▼
+          - textbox [ref=e17]: all
+          - combobox [ref=e18]:
+            - generic [ref=e19]: All Areas
+            - img: ▼
+          - textbox [ref=e20]: all
+        - button "User menu" [ref=e22]:
+          - img [ref=e24]
+          - generic [ref=e27]: martisoura
+  - generic [ref=e29]:
+    - generic [ref=e30]:
+      - generic [ref=e31]: Gini Coefficient
+      - generic [ref=e32]: "0.5741"
+      - generic [ref=e33]: bus service inequality
+      - generic [ref=e34]: ·
+    - generic [ref=e35]:
+      - generic [ref=e36]: Palma Ratio
+      - generic [ref=e37]: 5.702×
+      - generic [ref=e38]: top 10% vs bottom 40%
+      - generic [ref=e39]: ·
+    - generic [ref=e40]:
+      - generic [ref=e41]: Concentration Index
+      - generic [ref=e42]: "+0.1358"
+      - generic [ref=e43]: pro-rich bias
+      - generic [ref=e44]: ·
+    - generic [ref=e45]:
+      - generic [ref=e46]: Evening Isolated
+      - generic [ref=e47]: 15.4%
+      - generic [ref=e48]: 5,189 LSOAs
+      - generic [ref=e49]: ·
+    - generic [ref=e50]:
+      - generic [ref=e51]: Sunday Deserts
+      - generic [ref=e52]: 20.0%
+      - generic [ref=e53]: 6,745 LSOAs
+      - generic [ref=e54]: ·
+    - generic [ref=e55]:
+      - generic [ref=e56]: Mean SQI
+      - generic [ref=e57]: "65.4"
+      - generic [ref=e58]: out of 100
+      - generic [ref=e59]: ·
+    - generic [ref=e60]:
+      - generic [ref=e61]: Gini Coefficient
+      - generic [ref=e62]: "0.5741"
+      - generic [ref=e63]: bus service inequality
+      - generic [ref=e64]: ·
+    - generic [ref=e65]:
+      - generic [ref=e66]: Palma Ratio
+      - generic [ref=e67]: 5.702×
+      - generic [ref=e68]: top 10% vs bottom 40%
+      - generic [ref=e69]: ·
+    - generic [ref=e70]:
+      - generic [ref=e71]: Concentration Index
+      - generic [ref=e72]: "+0.1358"
+      - generic [ref=e73]: pro-rich bias
+      - generic [ref=e74]: ·
+    - generic [ref=e75]:
+      - generic [ref=e76]: Evening Isolated
+      - generic [ref=e77]: 15.4%
+      - generic [ref=e78]: 5,189 LSOAs
+      - generic [ref=e79]: ·
+    - generic [ref=e80]:
+      - generic [ref=e81]: Sunday Deserts
+      - generic [ref=e82]: 20.0%
+      - generic [ref=e83]: 6,745 LSOAs
+      - generic [ref=e84]: ·
+    - generic [ref=e85]:
+      - generic [ref=e86]: Mean SQI
+      - generic [ref=e87]: "65.4"
+      - generic [ref=e88]: out of 100
+      - generic [ref=e89]: ·
+  - navigation [ref=e90]:
+    - generic [ref=e91]:
+      - link "Equity & Deprivation" [ref=e92] [cursor=pointer]:
+        - /url: /dashboard/equity
+      - link "Accessibility" [ref=e93] [cursor=pointer]:
+        - /url: /dashboard/accessibility
+      - link "Service Quality" [ref=e94] [cursor=pointer]:
+        - /url: /dashboard/service-quality
+      - link "Route Network" [ref=e95] [cursor=pointer]:
+        - /url: /dashboard/route-network
+      - link "Socio-Economic & ML" [ref=e96] [cursor=pointer]:
+        - /url: /dashboard/correlations
+      - link "Economic Appraisal" [ref=e97] [cursor=pointer]:
+        - /url: /dashboard/economic
+      - link "Bus Services Act 2025" [ref=e98] [cursor=pointer]:
+        - /url: /dashboard/bus-services-act
+      - link "Policy Scenarios" [ref=e99] [cursor=pointer]:
+        - /url: /dashboard/scenarios
+      - link "Compare" [ref=e100] [cursor=pointer]:
+        - /url: /compare
+  - main [ref=e101]:
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - heading "Accessibility" [level=2] [ref=e105]
+          - paragraph [ref=e106]: 2SFCA, 400m coverage, service deserts, job/healthcare gaps
+          - paragraph [ref=e107]: 8 sections · 8 charts · 4 narratives · All England · All Areas
+        - link "Export PDF" [ref=e108] [cursor=pointer]:
+          - /url: /api/export/accessibility?region=all&urban_rural=all
+          - img [ref=e109]
+          - text: Export PDF
+      - article [ref=e112]:
+        - generic [ref=e113]:
+          - heading "Route density by region" [level=3] [ref=e114]
+          - button "Show data provenance" [ref=e115]:
+            - img [ref=e116]
+        - generic [ref=e122]:
+          - generic [ref=e123]:
+            - paragraph [ref=e124]: name
+            - paragraph [ref=e125]: London
+          - generic [ref=e126]:
+            - paragraph [ref=e127]: value
+            - paragraph [ref=e128]: "0.53"
+          - generic [ref=e129]:
+            - paragraph [ref=e130]: PCT above
+            - paragraph [ref=e131]: 115.7%
+          - generic [ref=e132]:
+            - paragraph [ref=e133]: name
+            - paragraph [ref=e134]: East of England
+          - generic [ref=e135]:
+            - paragraph [ref=e136]: value
+            - paragraph [ref=e137]: "0.13"
+          - generic [ref=e138]:
+            - paragraph [ref=e139]: PCT below
+            - paragraph [ref=e140]: 49.2%
+          - generic [ref=e141]:
+            - paragraph [ref=e142]: national avg
+            - paragraph [ref=e143]: "0.2465"
+        - button "Read analysis" [ref=e145]
+      - article [ref=e146]:
+        - generic [ref=e147]:
+          - heading "Stop density by region" [level=3] [ref=e148]
+          - button "Show data provenance" [ref=e149]:
+            - img [ref=e150]
+        - generic [ref=e156]:
+          - generic [ref=e157]:
+            - paragraph [ref=e158]: name
+            - paragraph [ref=e159]: South West
+          - generic [ref=e160]:
+            - paragraph [ref=e161]: value
+            - paragraph [ref=e162]: "7.45"
+          - generic [ref=e163]:
+            - paragraph [ref=e164]: PCT above
+            - paragraph [ref=e165]: 43.2%
+          - generic [ref=e166]:
+            - paragraph [ref=e167]: name
+            - paragraph [ref=e168]: London
+          - generic [ref=e169]:
+            - paragraph [ref=e170]: value
+            - paragraph [ref=e171]: "2.28"
+          - generic [ref=e172]:
+            - paragraph [ref=e173]: PCT below
+            - paragraph [ref=e174]: 56.2%
+          - generic [ref=e175]:
+            - paragraph [ref=e176]: national avg
+            - paragraph [ref=e177]: "5.206"
+        - button "Read analysis" [ref=e179]
+      - article [ref=e180]:
+        - generic [ref=e181]:
+          - heading "Population within 400m of a stop" [level=3] [ref=e182]
+          - button "Show data provenance" [ref=e183]:
+            - img [ref=e184]
+        - generic [ref=e190]:
+          - generic [ref=e191]:
+            - paragraph [ref=e192]: PCT covered
+            - paragraph [ref=e193]: 79.9%
+          - generic [ref=e194]:
+            - paragraph [ref=e195]: N zero access
+            - paragraph [ref=e196]: 6,776
+          - generic [ref=e197]:
+            - paragraph [ref=e198]: PCT zero access
+            - paragraph [ref=e199]: 20.1%
+          - generic [ref=e200]:
+            - paragraph [ref=e201]: pop zero access
+            - paragraph [ref=e202]: 11,507,494
+        - button "Read analysis" [ref=e204]
+      - article [ref=e205]:
+        - generic [ref=e206]:
+          - heading "Equity of coverage within regions" [level=3] [ref=e207]
+          - button "Show data provenance" [ref=e208]:
+            - img [ref=e209]
+        - generic [ref=e215]:
+          - generic [ref=e216]:
+            - paragraph [ref=e217]: gini
+            - paragraph [ref=e218]: "0.5741"
+          - generic [ref=e219]:
+            - paragraph [ref=e220]: palma
+            - paragraph [ref=e221]: "5.702"
+          - generic [ref=e222]:
+            - paragraph [ref=e223]: concentration index
+            - paragraph [ref=e224]: "0.1358"
+          - generic [ref=e225]:
+            - paragraph [ref=e226]: triple deprived lsoas
+            - paragraph [ref=e227]: "612"
+          - generic [ref=e228]:
+            - paragraph [ref=e229]: triple deprived PCT
+            - paragraph [ref=e230]: 1.8%
+        - button "Read analysis" [ref=e232]
+      - article [ref=e233]:
+        - generic [ref=e234]:
+          - heading "Service deserts" [level=3] [ref=e235]
+          - button "Show data provenance" [ref=e236]:
+            - img [ref=e237]
+        - generic [ref=e243]:
+          - generic [ref=e244]:
+            - paragraph [ref=e245]: evening isolated
+            - paragraph [ref=e246]: 5,189
+          - generic [ref=e247]:
+            - paragraph [ref=e248]: evening isolated PCT
+            - paragraph [ref=e249]: 15.4%
+          - generic [ref=e250]:
+            - paragraph [ref=e251]: sunday desert
+            - paragraph [ref=e252]: 6,745
+          - generic [ref=e253]:
+            - paragraph [ref=e254]: sunday desert PCT
+            - paragraph [ref=e255]: 20.0%
+          - generic [ref=e256]:
+            - paragraph [ref=e257]: no service
+            - paragraph [ref=e258]: 1,793
+          - generic [ref=e259]:
+            - paragraph [ref=e260]: no service PCT
+            - paragraph [ref=e261]: 5.3%
+      - article [ref=e262]:
+        - generic [ref=e263]:
+          - heading "Urban vs rural coverage gap" [level=3] [ref=e264]
+          - button "Show data provenance" [ref=e265]:
+            - img [ref=e266]
+        - generic [ref=e272]:
+          - generic [ref=e273]:
+            - paragraph [ref=e274]: urban avg
+            - paragraph [ref=e275]: "0.2773"
+          - generic [ref=e276]:
+            - paragraph [ref=e277]: rural avg
+            - paragraph [ref=e278]: "0.124"
+          - generic [ref=e279]:
+            - paragraph [ref=e280]: gap
+            - paragraph [ref=e281]: "0.1533"
+          - generic [ref=e282]:
+            - paragraph [ref=e283]: gap PCT
+            - paragraph [ref=e284]: 123.6%
+      - article [ref=e285]:
+        - generic [ref=e286]:
+          - heading "Investment to reach national average" [level=3] [ref=e287]
+          - button "Show data provenance" [ref=e288]:
+            - img [ref=e289]
+        - generic [ref=e295]:
+          - generic [ref=e296]:
+            - paragraph [ref=e297]: N below
+            - paragraph [ref=e298]: 16,877
+          - generic [ref=e299]:
+            - paragraph [ref=e300]: PCT below
+            - paragraph [ref=e301]: 50.0%
+          - generic [ref=e302]:
+            - paragraph [ref=e303]: target
+            - paragraph [ref=e304]: "0.1462"
+          - generic [ref=e305]:
+            - paragraph [ref=e306]: total annual cost m
+            - paragraph [ref=e307]: £8.4m
+      - article [ref=e308]:
+        - generic [ref=e309]:
+          - heading "Coverage prediction from demographics" [level=3] [ref=e310]
+          - button "Show data provenance" [ref=e311]:
+            - img [ref=e312]
+        - generic [ref=e318]:
+          - generic [ref=e319]:
+            - paragraph [ref=e320]: R2
+            - paragraph [ref=e321]: "0.472"
+          - generic [ref=e322]:
+            - paragraph [ref=e323]: top feature
+            - paragraph [ref=e324]: nocar_pct
+          - generic [ref=e325]:
+            - paragraph [ref=e326]: N features
+            - paragraph [ref=e327]: "9"
+  - contentinfo [ref=e328]:
+    - generic [ref=e329]:
+      - generic [ref=e330]: POLICY ANALYSIS TOOL — NOT OFFICIAL DfT GUIDANCE
+      - generic [ref=e331]:
+        - button "About" [ref=e332]
+        - button "Disclaimer" [ref=e333]
+        - button "Contact" [ref=e334]
+  - button "Open AI chat" [ref=e335]:
+    - img [ref=e336]
