@@ -78,3 +78,44 @@ def test_engine_single_region_scope():
     )
     assert result["scope"] == "single_region"
     assert "Yorkshire" in result["narrative"]
+
+
+def test_single_region_shape_renders_single_region_template():
+    """When stats look like single_region shape, engine must use single_region.j2,
+    not ranking.j2 — even though a1_route_density maps to ranking.j2 in the registry."""
+    from aequitas.intelligence.engine import InsightEngine
+
+    engine = InsightEngine()
+    stats = {
+        "region_name": "North East",
+        "value": 1.23,
+        "national_avg": 1.50,
+        "vs_national_pct": -18.0,
+        "unit": "trips/capita",
+    }
+    result = engine.generate(
+        section_id="a1_route_density", region="E12000001", urban_rural="all", stats=stats
+    )
+    assert not result["suppressed"]
+    assert "North East" in result["narrative"]
+    assert "1.23" in result["narrative"]
+    # ranking.j2's distinctive heading must NOT appear — confirms single_region.j2 was used
+    assert "Regional Spread" not in result["narrative"]
+
+
+def test_ranking_shape_still_renders_ranking_template():
+    """Stats with best/worst must still render via ranking.j2 (regression guard)."""
+    from aequitas.intelligence.engine import InsightEngine
+
+    engine = InsightEngine()
+    stats = {
+        "best": {"name": "London", "value": 3.0, "pct_above": 50.0},
+        "worst": {"name": "North East", "value": 1.0, "pct_below": 50.0},
+        "national_avg": 2.0,
+        "unit": "trips/capita",
+    }
+    result = engine.generate(
+        section_id="a1_route_density", region="all", urban_rural="all", stats=stats
+    )
+    assert not result["suppressed"]
+    assert "Regional Spread" in result["narrative"]
