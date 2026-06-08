@@ -11,9 +11,8 @@ def test_headline_section_ids_exist_in_registry():
         assert section_id in SECTION_REGISTRY, f"{dim_id} references unknown section_id {section_id!r}"
 
 
-def test_overview_returns_non_zero_values_for_national_scope(tmp_path):
-    db_path = tmp_path / "warehouse.duckdb"
-    db = duckdb.connect(str(db_path))
+def test_overview_returns_non_zero_values_for_national_scope():
+    db = duckdb.connect(":memory:")
     db.execute("""
         CREATE TABLE section_results (
             region VARCHAR, urban_rural VARCHAR, section_id VARCHAR,
@@ -47,3 +46,5 @@ def test_overview_returns_non_zero_values_for_national_scope(tmp_path):
     assert nonzero_count == len(HEADLINE_SECTIONS), (
         f"expected all {len(HEADLINE_SECTIONS)} headline dimensions non-zero, got {nonzero_count}: {overview}"
     )
+
+    db.close()
