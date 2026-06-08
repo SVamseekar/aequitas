@@ -69,11 +69,6 @@ _MISC_SECTIONS = {"a3_walking_distance", "a5_service_deserts", "b2_operating_hou
 # below) rather than its own module, since it is the only section using this contract.
 _NETWORK_TOPOLOGY_SECTIONS = {"c7_network_topology"}
 
-# Confirmed R² figure for the national Random Forest coverage-prediction model
-# (see docs/figures-registry.md ST-007 / ground truth table — RF R² = 0.472).
-# The model is fit once nationally; this constant is identical across all combos.
-_RF_COVERAGE_R2 = 0.4719
-
 # Sections with no viable data source (ISSUES.md §8.2-§8.4) — stubbed pending
 # future analytics-stage joins. Documented per-section in their builder module.
 _STUB_SECTIONS = {"f3_ethnic_access", "f4_gender_accessibility", "c4_urban_rural_routes"}
@@ -119,6 +114,7 @@ class _Sources:
     national_median_trips_per_capita: float
     ranking_df: pd.DataFrame
     correlation_df: pd.DataFrame
+    rf_r2: float | None
 
 
 def _read_parquet_or_empty(path) -> pd.DataFrame:
@@ -220,6 +216,17 @@ def _load_sources(cfg: PipelineConfig) -> _Sources | None:
     if summary_path.exists():
         equity_summary = json.loads(summary_path.read_text())
 
+    rf_r2: float | None = None
+    ground_truth_path = audit / "ground_truth.json"
+    if ground_truth_path.exists():
+        try:
+            ground_truth = json.loads(ground_truth_path.read_text())
+            rf_r2 = float(ground_truth["analytics"]["rf_r2_test"])
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.warning(f"Could not read rf_r2_test from ground_truth.json: {exc}")
+    else:
+        logger.warning(f"ground_truth.json not found at {ground_truth_path}")
+
     shap_path = audit / "shap_summary.csv"
     shap_df = pd.read_csv(shap_path) if shap_path.exists() else pd.DataFrame()
 
@@ -253,6 +260,7 @@ def _load_sources(cfg: PipelineConfig) -> _Sources | None:
         national_median_trips_per_capita=float(policy_df["trips_per_capita"].median()),
         ranking_df=_build_ranking_df(policy_df, route_geometries_df, service_levels_df, lta_df),
         correlation_df=_build_correlation_df(policy_df, audit / "master_lsoa_table.parquet"),
+        rf_r2=rf_r2,
     )
 
 
@@ -367,7 +375,7 @@ def _dispatch(
         return build_ml_clusters_stats(section_id, df=cluster_df)
 
     if section_id in _ML_PREDICTION_SECTIONS:
-        return build_ml_prediction_stats(section_id, shap_df=sources.shap_df, r2=_RF_COVERAGE_R2)
+        return build_ml_prediction_stats(section_id, shap_df=sources.shap_df, r2=sources.rf_r2)
 
     if section_id in _MARKET_CONCENTRATION_SECTIONS:
         routes = sources.route_geometries_df
