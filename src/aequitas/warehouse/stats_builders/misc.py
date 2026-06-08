@@ -11,7 +11,6 @@ import pandas as pd
 from aequitas.intelligence.calculators import describe_distribution
 
 
-
 def _skew_label(mean: float, median: float, std: float) -> str:
     if std == 0:
         return "approximately symmetric"
