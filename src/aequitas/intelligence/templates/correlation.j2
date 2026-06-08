@@ -1,7 +1,8 @@
 {% if r is defined and r is not none -%}
+{% set sig_threshold = 0.001 if n_observations > 10000 else 0.05 %}
 ## Key Finding
 
-Analysis of **{{ n|int|format_thousands }} LSOAs** shows a **{{ strength }} {{ direction }} correlation** between {{ x_label }} and {{ y_label }} (r = {{ r|round(3) }}, p = {{ p_value|round(4) }}). {% if p_value < 0.001 %}This result is statistically robust (p < 0.001) — the association is unlikely to be a chance finding.{% elif p_value < 0.05 %}This result is statistically significant (p < 0.05), though effect size should be considered alongside statistical significance.{% else %}This result does not meet conventional significance thresholds (p ≥ 0.05), suggesting the apparent pattern may be driven by chance or confounding variables.{% endif %}
+Analysis of **{{ n|int|format_thousands }} LSOAs** shows a **{{ strength }} {{ direction }} correlation** between {{ x_label }} and {{ y_label }} (r = {{ r|round(3) }}, p = {{ p_value|round(4) }}). {% if p_value < 0.001 %}This result is statistically robust (p < 0.001) — the association is unlikely to be a chance finding.{% elif p_value < sig_threshold %}This result is statistically significant (p < {{ sig_threshold }}), though effect size should be considered alongside statistical significance.{% else %}This result does not meet conventional significance thresholds (p ≥ {{ sig_threshold }}), suggesting the apparent pattern may be driven by chance or confounding variables.{% endif %}
 
 ## Interpretation
 
@@ -15,7 +16,7 @@ LSOAs with higher {{ x_label }} tend to have lower {{ y_label }}. {% if strength
 
 ## Policy Implications
 
-{% if strength in ["strong", "moderate"] and p_value < 0.05 -%}
+{% if strength in ["strong", "moderate"] and p_value < sig_threshold -%}
 The {{ strength }} association between {{ x_label }} and {{ y_label }} provides a quantitative basis for targeted policy intervention. LTAs designing route networks or subsidy programmes can use this correlation to identify areas where changing one variable (e.g., increasing service frequency) is likely to have measurable effects on the other. This type of evidence is particularly relevant for BSIP funding bids, where DfT expects demonstration of data-driven prioritisation.
 {%- else -%}
 The weak or uncertain association between {{ x_label }} and {{ y_label }} suggests these variables are largely independent in this dataset. Policy design should not assume that improving one will automatically improve the other — targeted analysis of specific LSOAs or LADs is recommended before committing resources.
