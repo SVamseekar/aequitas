@@ -10,7 +10,6 @@ import pandas as pd
 
 from aequitas.intelligence.calculators import describe_distribution
 
-_DESERT_REGION_MIN_ROWS = 1
 
 
 def _skew_label(mean: float, median: float, std: float) -> str:
@@ -113,13 +112,13 @@ def _build_weekend_penalty(service_levels_df: pd.DataFrame | None) -> dict:
     }
 
 
-def _build_distribution_section(route_geometries_df: pd.DataFrame | None, region: str, column: str, metric_name: str, unit: str) -> dict:
+def _build_distribution_section(route_geometries_df: pd.DataFrame | None, region: str, region_name: str, column: str, metric_name: str, unit: str) -> dict:
     if route_geometries_df is None or route_geometries_df.empty or column not in route_geometries_df.columns:
         return {}
 
     df = route_geometries_df
     if region != "all" and "primary_region" in df.columns:
-        df = df[df["primary_region"] == region]
+        df = df[df["primary_region"] == region_name]
     if df.empty:
         return {}
 
@@ -195,6 +194,7 @@ def _build_tier_distribution(lta_df: pd.DataFrame | None) -> dict:
 def build_misc_stats(
     section_id: str,
     region: str,
+    region_name: str,
     urban_rural: str,
     policy_df: pd.DataFrame,
     service_levels_df: pd.DataFrame | None,
@@ -211,6 +211,11 @@ def build_misc_stats(
             decide whether to surface "worst region"/"largest region" keys
             (only meaningful at national scope) and to filter route_geometries
             by primary_region for c1/c2.
+        region_name: Human-readable region name resolved via REGION_NAMES
+            (e.g. "London" for code "E12000007"), or "all". Used to filter
+            route_geometries_df.primary_region, which stores full region
+            names rather than ONS codes — analogous to how precompute.py
+            resolves region_name before filtering policy_df.
         urban_rural: Active area-type filter — unused for value computation,
             kept for signature symmetry with other builders.
         policy_df: lsoa_policy_synthesis rows for the active filter scope.
@@ -247,9 +252,9 @@ def build_misc_stats(
     if section_id == "b3_weekend_penalty":
         return _build_weekend_penalty(service_levels_df)
     if section_id == "c1_route_length":
-        return _build_distribution_section(route_geometries_df, region, "length_km", "route length", "km")
+        return _build_distribution_section(route_geometries_df, region, region_name, "length_km", "route length", "km")
     if section_id == "c2_stops_per_route":
-        return _build_distribution_section(route_geometries_df, region, "stop_count", "stops per route", "stops")
+        return _build_distribution_section(route_geometries_df, region, region_name, "stop_count", "stops per route", "stops")
     if section_id == "d7_deprivation_urban_rural":
         return _build_deprivation_heatmap(policy_df)
     if section_id == "g2_anomalies":
