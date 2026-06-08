@@ -103,11 +103,6 @@ def precompute_all_sections(cfg: PipelineConfig) -> list[dict]:
 
     for region in _REGIONS:
         for urban_rural in _AREA_TYPES:
-            # Skip redundant single-region + urban/rural combos for speed
-            # (these are low-value subsets; all_regions × all produces the key insights)
-            if region != "all" and urban_rural != "all":
-                continue
-
             # Filter data
             region_mask = pd.Series(True, index=policy_df.index)
             if region != "all":
