@@ -43,3 +43,27 @@ def test_build_equity_provenance():
     assert "gini_coefficient" in metric_ids
     assert "palma_ratio" in metric_ids
     assert "concentration_index" in metric_ids
+
+
+def test_region_filter_matches_full_names():
+    """REGION_NAMES must map ONS codes to the full names present in the data."""
+    from aequitas.warehouse.precompute import REGION_NAMES
+    from aequitas.core.types import RegionCode
+
+    assert REGION_NAMES[RegionCode.NORTH_EAST.value] == "North East"
+    assert REGION_NAMES[RegionCode.LONDON.value] == "London"
+    assert REGION_NAMES[RegionCode.YORKSHIRE.value] == "Yorkshire and The Humber"
+    assert len(REGION_NAMES) == 9
+
+
+@pytest.mark.slow
+def test_region_filter_produces_nonempty_subset():
+    """Filtering lsoa_policy_synthesis by ONS code (via REGION_NAMES) must match rows."""
+    import pandas as pd
+    from aequitas.core.config import PipelineConfig
+    from aequitas.warehouse.precompute import REGION_NAMES
+
+    cfg = PipelineConfig()
+    df = pd.read_parquet(cfg.audit_dir / "lsoa_policy_synthesis.parquet")
+    mask = df["region"] == REGION_NAMES["E12000001"]
+    assert mask.sum() > 0, "North East region filter must match rows in the data"
