@@ -91,23 +91,33 @@ def _build_operating_hours(service_quality_df: pd.DataFrame | None) -> dict:
     }
 
 
-def _build_weekend_penalty(service_levels_df: pd.DataFrame | None) -> dict:
-    if service_levels_df is None or service_levels_df.empty:
+def _build_weekend_penalty(service_quality_df: pd.DataFrame | None) -> dict:
+    """Build sunday/weekend penalty stats from lsoa_service_quality.
+
+    NOTE: lsoa_service_levels.total_weekday_trips/total_saturday_trips/
+    total_sunday_trips are zero-filled (see MEMORY.md Critical Data Traps),
+    so this builder uses lsoa_service_quality's total_weekday_departures /
+    total_sunday_departures and sunday_desert flag instead. No Saturday
+    departure figure exists in any audit table — saturday_pct_drop is
+    therefore omitted (the template treats it as optional).
+    """
+    if service_quality_df is None or service_quality_df.empty:
+        return {}
+    required = {"total_weekday_departures", "total_sunday_departures", "sunday_desert"}
+    if not required.issubset(service_quality_df.columns):
         return {}
 
-    weekday = float(service_levels_df["total_weekday_trips"].sum())
+    weekday = float(service_quality_df["total_weekday_departures"].sum())
     if weekday == 0:
         return {}
 
-    saturday = float(service_levels_df["total_saturday_trips"].sum())
-    sunday = float(service_levels_df["total_sunday_trips"].sum())
-    sunday_deserts = service_levels_df[service_levels_df["total_sunday_trips"] == 0]
+    sunday = float(service_quality_df["total_sunday_departures"].sum())
+    sunday_deserts = service_quality_df[service_quality_df["sunday_desert"]]
 
     return {
         "sunday_pct_drop": (1 - sunday / weekday) * 100,
-        "saturday_pct_drop": (1 - saturday / weekday) * 100,
         "n_sunday_desert": int(len(sunday_deserts)),
-        "pct_sunday_desert": round(len(sunday_deserts) / len(service_levels_df) * 100, 1),
+        "pct_sunday_desert": round(len(sunday_deserts) / len(service_quality_df) * 100, 1),
     }
 
 
@@ -249,7 +259,7 @@ def build_misc_stats(
     if section_id == "b2_operating_hours":
         return _build_operating_hours(service_quality_df)
     if section_id == "b3_weekend_penalty":
-        return _build_weekend_penalty(service_levels_df)
+        return _build_weekend_penalty(service_quality_df)
     if section_id == "c1_route_length":
         return _build_distribution_section(route_geometries_df, region, region_name, "length_km", "route length", "km")
     if section_id == "c2_stops_per_route":

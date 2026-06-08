@@ -34,6 +34,9 @@ def _service_quality_df():
         "first_service_min": [360, 390, 400, 420, 350, 380],
         "last_service_min": [1140, 1080, 1100, 1020, 1200, 1150],
         "evening_isolated": [True, False, True, False, False, False],
+        "total_weekday_departures": [0, 100, 0, 150, 300, 250],
+        "total_sunday_departures": [0, 0, 0, 30, 100, 90],
+        "sunday_desert": [True, True, True, False, False, False],
     })
 
 
@@ -109,16 +112,20 @@ def test_b2_operating_hours_formats_hhmm_strings():
 
 
 def test_b3_weekend_penalty_computes_pct_drops():
+    # NOTE: lsoa_service_levels.total_weekday_trips/total_sunday_trips are
+    # zero-filled in production (see MEMORY.md Critical Data Traps), so this
+    # builder reads from lsoa_service_quality (total_weekday_departures /
+    # total_sunday_departures / sunday_desert) instead — no Saturday figure
+    # exists in any audit table, so saturday_pct_drop is omitted.
     stats = build_misc_stats(
         "b3_weekend_penalty", region="all", region_name="all", urban_rural="all",
-        policy_df=_policy_df(), service_levels_df=_service_levels_df(),
-        service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None,
+        policy_df=_policy_df(), service_levels_df=None,
+        service_quality_df=_service_quality_df(), route_geometries_df=None, anomalies_df=None, lta_df=None,
     )
     weekday = 800.0
     sunday = 220.0
-    saturday = 570.0
     assert stats["sunday_pct_drop"] == pytest.approx((1 - sunday / weekday) * 100)
-    assert stats["saturday_pct_drop"] == pytest.approx((1 - saturday / weekday) * 100)
+    assert "saturday_pct_drop" not in stats
     assert stats["n_sunday_desert"] == 3
 
 
