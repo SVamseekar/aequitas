@@ -62,6 +62,8 @@ def _concentration_index(df: pd.DataFrame, value_col: str) -> float:
     ranked = df.sort_values("imd_decile")
     cum_pop = ranked["population"].cumsum()
     total_pop = float(cum_pop.iloc[-1])
+    if total_pop == 0:
+        return 0.0
     fractional_rank = (cum_pop - ranked["population"] / 2) / total_pop
 
     mean_value = float((ranked[value_col] * ranked["population"]).sum() / total_pop)

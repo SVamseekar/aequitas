@@ -1,4 +1,6 @@
 """Tests for equity.py — covers f1, a4, f2."""
+import math
+
 import pandas as pd
 import pytest
 
@@ -49,3 +51,13 @@ def test_empty_df_returns_empty():
     empty = pd.DataFrame()
     assert build_equity_stats("f1_gini", equity_df=empty) == {}
     assert build_equity_stats("f2_disparity_ratio", equity_df=empty) == {}
+
+
+def test_zero_population_does_not_produce_nan():
+    df = _equity_df()
+    df["population"] = 0
+    stats = build_equity_stats("f1_gini", equity_df=df)
+    assert stats["concentration_index"] == 0.0
+    assert stats["gini"] == 0.0
+    assert stats["palma"] == 0.0
+    assert not any(isinstance(v, float) and math.isnan(v) for v in stats.values())
