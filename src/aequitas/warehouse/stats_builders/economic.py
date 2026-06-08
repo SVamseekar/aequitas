@@ -25,19 +25,17 @@ _APPRAISAL_YEARS = 60
 def _vfm_band(bcr: float) -> str:
     """Value-for-money band shown in the bcr_analysis.j2 header.
 
-    Note: thresholds here intentionally differ from the inline narrative
-    checks in the template body (which use DfT TAG's BCR>=4.0 "Very High"
-    convention) — the header band uses a coarser scale calibrated against
-    the typical BCR range observed in lsoa_economic_appraisal so that a
-    "Very High" header isn't unreachable for realistic LTA-scale schemes.
+    Thresholds match the inline narrative checks encoded in the template
+    body (DfT TAG's BCR convention) so the header band label never
+    contradicts the rendered prose.
     """
-    if bcr >= 2.0:
+    if bcr >= 4.0:
         return "Very High"
-    if bcr >= 1.5:
+    if bcr >= 2.0:
         return "High"
-    if bcr >= 1.0:
+    if bcr >= 1.5:
         return "Medium"
-    if bcr >= 0.5:
+    if bcr >= 1.0:
         return "Low"
     return "Poor"
 
@@ -60,7 +58,7 @@ def _build_bcr(appraisal_df: pd.DataFrame, region_name: str) -> dict:
     bcr = pv_benefits / pv_costs
 
     return {
-        "bcr": bcr,
+        "bcr": round(bcr, 2),
         "vfm_band": _vfm_band(bcr),
         "area_name": region_name,
         "investment_m": round(pv_costs / 1e6, 1),
@@ -74,6 +72,10 @@ def _build_carbon(appraisal_df: pd.DataFrame, region_name: str) -> dict:
 
     return {
         "co2_saving_tonnes": round(co2_saving_tonnes, 1),
+        # Left unrounded: rounding to 1dp shifts the value outside
+        # pytest.approx's default tolerance against the raw-product
+        # expectation in test_j3_carbon_uses_tag_2025_carbon_price
+        # (31.2 vs 31.1844 ± 3.1e-05).
         "co2_value_k": co2_saving_tonnes * carbon_price / 1000,
         "scope": region_name,
         "carbon_price": carbon_price,
