@@ -65,7 +65,7 @@ def _lta_df():
 
 def test_a3_walking_distance_all_region_includes_worst_region():
     stats = build_misc_stats(
-        "a3_walking_distance", region="all", urban_rural="all",
+        "a3_walking_distance", region="all", region_name="all", urban_rural="all",
         policy_df=_policy_df(), service_levels_df=None, service_quality_df=None,
         route_geometries_df=None, anomalies_df=None, lta_df=None,
     )
@@ -78,7 +78,7 @@ def test_a3_walking_distance_all_region_includes_worst_region():
 
 def test_a3_omits_worst_region_for_single_region_scope():
     stats = build_misc_stats(
-        "a3_walking_distance", region="E12000007", urban_rural="all",
+        "a3_walking_distance", region="E12000007", region_name="London", urban_rural="all",
         policy_df=_policy_df(), service_levels_df=None, service_quality_df=None,
         route_geometries_df=None, anomalies_df=None, lta_df=None,
     )
@@ -87,7 +87,7 @@ def test_a3_omits_worst_region_for_single_region_scope():
 
 def test_a5_service_deserts_counts_zero_stop_lsoas():
     stats = build_misc_stats(
-        "a5_service_deserts", region="all", urban_rural="all",
+        "a5_service_deserts", region="all", region_name="all", urban_rural="all",
         policy_df=_policy_df(), service_levels_df=_service_levels_df(),
         service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None,
     )
@@ -98,7 +98,7 @@ def test_a5_service_deserts_counts_zero_stop_lsoas():
 
 def test_b2_operating_hours_formats_hhmm_strings():
     stats = build_misc_stats(
-        "b2_operating_hours", region="all", urban_rural="all",
+        "b2_operating_hours", region="all", region_name="all", urban_rural="all",
         policy_df=_policy_df(), service_levels_df=None, service_quality_df=_service_quality_df(),
         route_geometries_df=None, anomalies_df=None, lta_df=None,
     )
@@ -110,7 +110,7 @@ def test_b2_operating_hours_formats_hhmm_strings():
 
 def test_b3_weekend_penalty_computes_pct_drops():
     stats = build_misc_stats(
-        "b3_weekend_penalty", region="all", urban_rural="all",
+        "b3_weekend_penalty", region="all", region_name="all", urban_rural="all",
         policy_df=_policy_df(), service_levels_df=_service_levels_df(),
         service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None,
     )
@@ -124,7 +124,7 @@ def test_b3_weekend_penalty_computes_pct_drops():
 
 def test_c1_route_length_uses_describe_distribution():
     stats = build_misc_stats(
-        "c1_route_length", region="London", urban_rural="all",
+        "c1_route_length", region="E12000007", region_name="London", urban_rural="all",
         policy_df=_policy_df(), service_levels_df=None, service_quality_df=None,
         route_geometries_df=_route_geometries_df(), anomalies_df=None, lta_df=None,
     )
@@ -136,7 +136,7 @@ def test_c1_route_length_uses_describe_distribution():
 
 def test_c2_stops_per_route_uses_stop_count():
     stats = build_misc_stats(
-        "c2_stops_per_route", region="London", urban_rural="all",
+        "c2_stops_per_route", region="E12000007", region_name="London", urban_rural="all",
         policy_df=_policy_df(), service_levels_df=None, service_quality_df=None,
         route_geometries_df=_route_geometries_df(), anomalies_df=None, lta_df=None,
     )
@@ -146,7 +146,7 @@ def test_c2_stops_per_route_uses_stop_count():
 
 def test_d7_deprivation_urban_rural_finds_worst_and_best_cells():
     stats = build_misc_stats(
-        "d7_deprivation_urban_rural", region="all", urban_rural="all",
+        "d7_deprivation_urban_rural", region="all", region_name="all", urban_rural="all",
         policy_df=_policy_df(), service_levels_df=None, service_quality_df=None,
         route_geometries_df=None, anomalies_df=None, lta_df=None,
     )
@@ -156,13 +156,13 @@ def test_d7_deprivation_urban_rural_finds_worst_and_best_cells():
 
 
 def test_f3_and_f4_are_stubbed():
-    assert build_misc_stats("f3_ethnic_access", region="all", urban_rural="all", policy_df=_policy_df(), service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None) == {}
-    assert build_misc_stats("f4_gender_accessibility", region="all", urban_rural="all", policy_df=_policy_df(), service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None) == {}
+    assert build_misc_stats("f3_ethnic_access", region="all", region_name="all", urban_rural="all", policy_df=_policy_df(), service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None) == {}
+    assert build_misc_stats("f4_gender_accessibility", region="all", region_name="all", urban_rural="all", policy_df=_policy_df(), service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None) == {}
 
 
 def test_g2_anomalies_counts_each_type():
     stats = build_misc_stats(
-        "g2_anomalies", region="all", urban_rural="all",
+        "g2_anomalies", region="all", region_name="all", urban_rural="all",
         policy_df=_policy_df(), service_levels_df=None, service_quality_df=None,
         route_geometries_df=None, anomalies_df=_anomalies_df(), lta_df=None,
     )
@@ -175,7 +175,7 @@ def test_g2_anomalies_counts_each_type():
 
 def test_bsa3_tier_distribution_counts_each_tier():
     stats = build_misc_stats(
-        "bsa3_tier_distribution", region="all", urban_rural="all",
+        "bsa3_tier_distribution", region="all", region_name="all", urban_rural="all",
         policy_df=_policy_df(), service_levels_df=None, service_quality_df=None,
         route_geometries_df=None, anomalies_df=None, lta_df=_lta_df(),
     )
@@ -187,5 +187,5 @@ def test_bsa3_tier_distribution_counts_each_tier():
 
 def test_empty_inputs_return_empty():
     empty = pd.DataFrame()
-    assert build_misc_stats("a3_walking_distance", region="all", urban_rural="all", policy_df=empty, service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None) == {}
-    assert build_misc_stats("g2_anomalies", region="all", urban_rural="all", policy_df=_policy_df(), service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=empty, lta_df=None) == {}
+    assert build_misc_stats("a3_walking_distance", region="all", region_name="all", urban_rural="all", policy_df=empty, service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None) == {}
+    assert build_misc_stats("g2_anomalies", region="all", region_name="all", urban_rural="all", policy_df=_policy_df(), service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=empty, lta_df=None) == {}
