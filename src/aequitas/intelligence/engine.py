@@ -143,6 +143,22 @@ class InsightEngine:
         has_ranking = ranking_rule.should_fire(ctx, n_groups)
 
         template_name = _SECTION_TEMPLATES.get(section_id)
+
+        # Shape-based override: a ranking-family section viewed for a single
+        # region gets single_region stats (region_name/value/national_avg,
+        # no best/worst) rather than a best/worst ranking — render with
+        # single_region.j2 instead. See ISSUES.md §2.4/§8.1.
+        if (
+            template_name == "ranking.j2"
+            and stats
+            and "region_name" in stats
+            and "value" in stats
+            and "national_avg" in stats
+            and "best" not in stats
+            and "worst" not in stats
+        ):
+            template_name = "single_region.j2"
+
         narrative = ""
         suppressed = False
 
