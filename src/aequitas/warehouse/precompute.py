@@ -31,6 +31,21 @@ _REGIONS = ["all"] + [rc.value for rc in RegionCode]
 # Area types
 _AREA_TYPES = ["all", "urban", "rural"]
 
+# Maps ONS region codes (used in filter params and RegionCode) to the full
+# region names stored in lsoa_policy_synthesis.region. The two do not match
+# directly — this mapping is required for the region filter to work at all.
+REGION_NAMES: dict[str, str] = {
+    "E12000001": "North East",
+    "E12000002": "North West",
+    "E12000003": "Yorkshire and The Humber",
+    "E12000004": "East Midlands",
+    "E12000005": "West Midlands",
+    "E12000006": "East of England",
+    "E12000007": "London",
+    "E12000008": "South East",
+    "E12000009": "South West",
+}
+
 
 @dataclass
 class SectionResult:
@@ -98,7 +113,8 @@ def precompute_all_sections(cfg: PipelineConfig) -> list[dict]:
             if region != "all":
                 region_col = "region" if "region" in policy_df.columns else None
                 if region_col:
-                    region_mask = policy_df[region_col] == region
+                    region_name = REGION_NAMES.get(region, region)
+                    region_mask = policy_df[region_col] == region_name
 
             ur_mask = pd.Series(True, index=policy_df.index)
             if urban_rural != "all":
