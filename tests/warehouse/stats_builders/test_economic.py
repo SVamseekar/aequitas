@@ -10,7 +10,7 @@ def _appraisal_df():
         "lsoa_cd": ["E01000001", "E01000002"],
         "annual_time_benefit": [100_000.0, 200_000.0],
         "annual_additional_trips": [5_000.0, 7_000.0],
-        "pv_benefits": [3_000_000.0, 5_000_000.0],
+        "pv_benefits": [6_000_000.0, 6_000_000.0],
         "pv_costs": [2_000_000.0, 1_000_000.0],
         "modal_shift_co2_net_saving_kg": [50_000.0, 70_000.0],
         "modal_shift_car_trips_replaced": [1_000.0, 1_500.0],
@@ -27,7 +27,7 @@ def test_j1_economic_value_uses_blended_vot_constant():
 
 def test_j2_bcr_uses_pv_ratio_and_60_year_appraisal():
     stats = build_economic_stats("j2_bcr", appraisal_df=_appraisal_df(), region_name="London")
-    assert stats["bcr"] == pytest.approx(8_000_000.0 / 3_000_000.0)
+    assert stats["bcr"] == pytest.approx(4.0)
     assert stats["vfm_band"] == "Very High"
     assert stats["area_name"] == "London"
     assert stats["investment_m"] == pytest.approx(3.0)
