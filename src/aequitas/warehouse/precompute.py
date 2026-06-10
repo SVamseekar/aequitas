@@ -290,6 +290,8 @@ def precompute_all_sections(cfg: PipelineConfig) -> list[dict]:
         List of dicts, each with keys: region, urban_rural, section_id,
         stats, chart_data, narrative. Length is 30 x len(SECTION_REGISTRY).
     """
+    from aequitas.warehouse.chart_dispatch import build_chart_data
+
     sources = _load_sources(cfg)
     if sources is None:
         return []
@@ -327,10 +329,21 @@ def precompute_all_sections(cfg: PipelineConfig) -> list[dict]:
                     lsoa_cds=lsoa_cds,
                 )
                 result = engine.generate(section_id=section_id, region=region, urban_rural=urban_rural, stats=stats)
+                chart_data = build_chart_data(
+                    section_id=section_id,
+                    stats=stats,
+                    region=region,
+                    region_name=region_name,
+                    urban_rural=urban_rural,
+                    filtered=filtered,
+                    region_df=region_df,
+                    sources=sources,
+                    lsoa_cds=lsoa_cds,
+                )
                 results.append(
                     SectionResult(
                         region=region, urban_rural=urban_rural, section_id=section_id,
-                        stats=stats, chart_data={}, narrative=result["narrative"],
+                        stats=stats, chart_data=chart_data, narrative=result["narrative"],
                     ).to_dict()
                 )
 
