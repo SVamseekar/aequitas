@@ -7,7 +7,7 @@ import pytest
 
 from aequitas.core.config import PipelineConfig
 from aequitas.warehouse.chart_dispatch import build_chart_data
-from aequitas.warehouse.precompute import _dispatch, _load_sources, _Sources
+from aequitas.warehouse.precompute import REGION_NAMES, _dispatch, _load_sources, _Sources
 
 
 @pytest.fixture(scope="module")
@@ -23,10 +23,11 @@ def sources(cfg: PipelineConfig) -> _Sources:
 
 
 def _build_for(
-    section_id: str, region: str, urban_rural: str, sources: _Sources, cfg: PipelineConfig
+    section_id: str, region: str, urban_rural: str, sources: _Sources
 ) -> tuple[dict, dict]:
     policy_df = sources.policy_df
-    region_value = "all" if region == "all" else region
+    region_name = "England" if region == "all" else REGION_NAMES[region]
+    region_value = "all" if region == "all" else region_name
     region_mask = pd.Series(True, index=policy_df.index)
     if region_value != "all":
         region_mask = policy_df["region"] == region_value
@@ -43,7 +44,7 @@ def _build_for(
         section_id=section_id,
         region=region,
         urban_rural=urban_rural,
-        region_name="England" if region == "all" else region,
+        region_name=region_name,
         filtered=filtered,
         region_df=region_df,
         sources=sources,
@@ -53,7 +54,7 @@ def _build_for(
         section_id=section_id,
         stats=stats,
         region=region,
-        region_name="England" if region == "all" else region,
+        region_name=region_name,
         urban_rural=urban_rural,
         filtered=filtered,
         region_df=region_df,
@@ -63,27 +64,29 @@ def _build_for(
     return stats, chart_data
 
 
-def test_f1_gini_chart_matches_stats(sources: _Sources, cfg: PipelineConfig) -> None:
-    stats, chart_data = _build_for("f1_gini", "all", "all", sources, cfg)
+def test_f1_gini_chart_matches_stats(sources: _Sources) -> None:
+    """The f1_gini section's lorenz_curve chart gini value matches the computed stats."""
+    stats, chart_data = _build_for("f1_gini", "all", "all", sources)
     assert chart_data
     assert chart_data["type"] == "lorenz_curve"
     assert math.isclose(chart_data["gini"], stats["gini"], abs_tol=1e-3)
 
 
-def test_a1_route_density_chart_is_horizontal_bar(sources: _Sources, cfg: PipelineConfig) -> None:
-    _, chart_data = _build_for("a1_route_density", "all", "all", sources, cfg)
+def test_a1_route_density_chart_is_horizontal_bar(sources: _Sources) -> None:
+    """The a1_route_density section produces a horizontal_bar chart."""
+    _, chart_data = _build_for("a1_route_density", "all", "all", sources)
     assert chart_data
     assert chart_data["type"] == "horizontal_bar"
 
 
-def test_chart_type_variety_across_sample(sources: _Sources, cfg: PipelineConfig) -> None:
+def test_chart_type_variety_across_sample(sources: _Sources) -> None:
     """At least 6 distinct chart types appear across a sample of sections/regions."""
     from aequitas.intelligence.section_registry import SECTION_REGISTRY
 
     types_seen: set[str] = set()
     for section_id in SECTION_REGISTRY:
         for region in ("all", "E12000001"):
-            _, chart_data = _build_for(section_id, region, "all", sources, cfg)
+            _, chart_data = _build_for(section_id, region, "all", sources)
             if chart_data:
                 types_seen.add(chart_data["type"])
 
