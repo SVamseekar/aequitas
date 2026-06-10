@@ -16,6 +16,7 @@ from aequitas.intelligence import chart_data_builder
 from aequitas.intelligence.section_registry import SECTION_REGISTRY
 from aequitas.warehouse.precompute import _filter_by_lsoa, _Sources
 from aequitas.warehouse.stats_builders.correlation import CORRELATION_CONFIG
+from aequitas.warehouse.stats_builders.equity import _MIN_DISTINCT_DECILES
 
 _CORRELATION_SECTIONS = {
     "b5_frequency_deprivation", "d1_coverage_deprivation", "d2_coverage_unemployment",
@@ -34,8 +35,6 @@ _SCATTER_CLUSTER_SECTIONS = _ROUTE_CLUSTER_SECTIONS | {"d6_transport_poverty"}
 
 _BOX_VIOLIN_SECTIONS = {"c1_route_length", "c2_stops_per_route"}
 
-_MIN_DISTINCT_DECILES = 2
-
 
 def build_chart_data(
     section_id: str,
@@ -48,7 +47,11 @@ def build_chart_data(
     sources: _Sources,
     lsoa_cds: pd.Series,
 ) -> dict:
-    """Return chart_data dict for section_id, or {} if not chartable."""
+    """Return chart_data dict for section_id, or {} if not chartable.
+
+    `urban_rural` and `filtered` are accepted for signature parity with
+    `precompute.py`'s `_dispatch` and may be used by future section families.
+    """
     if section_id in _SCATTER_REGRESSION_SECTIONS:
         return _build_scatter_regression(section_id, stats, region, region_name, sources, lsoa_cds)
 
@@ -78,6 +81,7 @@ def _build_scatter_regression(
     sources: _Sources,
     lsoa_cds: pd.Series,
 ) -> dict:
+    """Scatter+regression chart for b5/d1-d5/c5_length_vs_frequency/g2_anomalies; {} on guard."""
     title = SECTION_REGISTRY[section_id].title
 
     if section_id == "c5_length_vs_frequency":
@@ -122,6 +126,7 @@ def _build_scatter_regression(
 def _build_lorenz_curve(
     section_id: str, stats: dict, sources: _Sources, lsoa_cds: pd.Series,
 ) -> dict:
+    """Lorenz curve chart for f1_gini/a4_coverage_equity; {} if stats empty or <2 deciles."""
     if not stats:
         return {}
     equity_df = _filter_by_lsoa(sources.equity_df, lsoa_cds)
@@ -134,6 +139,7 @@ def _build_lorenz_curve(
 
 
 def _build_shap_bar(section_id: str, stats: dict, sources: _Sources) -> dict:
+    """SHAP feature-importance bar chart for a8/d8/g4_shap; {} if stats empty."""
     if not stats:
         return {}
     title = SECTION_REGISTRY[section_id].title
@@ -151,6 +157,7 @@ def _build_scatter_clusters(
     sources: _Sources,
     lsoa_cds: pd.Series,
 ) -> dict:
+    """Scatter-clusters chart for c6/g1_route_clusters/d6_transport_poverty; {} on guard."""
     if not stats:
         return {}
     title = SECTION_REGISTRY[section_id].title
@@ -209,6 +216,7 @@ def _build_scatter_clusters(
 def _build_box_violin(
     section_id: str, stats: dict, region: str, region_name: str, sources: _Sources,
 ) -> dict:
+    """Box/violin distribution chart for c1_route_length/c2_stops_per_route; {} if no data."""
     routes = sources.route_geometries_df
     if region != "all" and "primary_region" in routes.columns:
         routes = routes[routes["primary_region"] == region_name]
@@ -235,10 +243,11 @@ def _build_box_violin(
 
 
 def _build_heatmap(section_id: str, stats: dict, region_df: pd.DataFrame) -> dict:
+    """Heatmap chart for d7_deprivation_urban_rural (SQI by decile/urban-rural); {} on guard."""
     if not stats:
         return {}
 
-    required = {"urban_rural", "imd_decile", "trips_per_capita"}
+    required = {"urban_rural", "imd_decile", "service_quality_index"}
     if region_df.empty or not required.issubset(region_df.columns):
         return {}
 
@@ -247,7 +256,7 @@ def _build_heatmap(section_id: str, stats: dict, region_df: pd.DataFrame) -> dic
         return {}
 
     pivot = (
-        clean.groupby(["urban_rural", "imd_decile"])["trips_per_capita"]
+        clean.groupby(["urban_rural", "imd_decile"])["service_quality_index"]
         .mean()
         .unstack(fill_value=0)
     )

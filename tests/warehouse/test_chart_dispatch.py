@@ -462,6 +462,14 @@ def test_d7_heatmap() -> None:
     assert "values" in chart
     assert set(chart["y_labels"]) == {"Urban", "Rural"}
 
+    # values must be derived from service_quality_index (70/60/50/40 Urban,
+    # 50/40/30/20 Rural), not trips_per_capita (10/8/6/4 and 5/4/3/2) — the two
+    # metrics produce visibly different pivot tables.
+    flat_values = [v for row in chart["values"] for v in row]
+    assert set(flat_values) == {70.0, 60.0, 50.0, 40.0, 30.0, 20.0}
+    assert 10.0 not in flat_values
+    assert 8.0 not in flat_values
+
 
 def test_d7_heatmap_empty_stats_returns_empty() -> None:
     sources = _empty_sources()
