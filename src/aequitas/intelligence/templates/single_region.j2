@@ -1,3 +1,9 @@
 {% if region_name and value is not none -%}
 **{{ region_name }}** records **{{ value|round(2) }} {{ unit }}**, {{ vs_national_pct|round(1) }}% {{ "above" if vs_national_pct >= 0 else "below" }} the national average of {{ national_avg|round(2) }} {{ unit }}.
+
+{% if vs_national_pct >= 0 -%}
+This places {{ region_name }} ahead of the national benchmark, suggesting the region's existing service model — operator coverage, route density, or LTA investment — is performing relatively well on this measure. Maintaining this position should be a policy priority as funding decisions are made under the Bus Services Act 2025.
+{%- else -%}
+This places {{ region_name }} behind the national benchmark, indicating a gap that LTA investment, BSIP funding, or franchising powers under the Bus Services Act 2025 could help close. Closing even part of this gap would be a concrete policy implication for regional transport planning.
+{%- endif %}
 {%- endif %}
