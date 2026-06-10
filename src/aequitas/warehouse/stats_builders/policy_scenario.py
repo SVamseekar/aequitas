@@ -37,6 +37,10 @@ def _row_to_scenario(row: pd.Series) -> dict:
     scenario["estimated_annual_cost_m"] = _coalesce(scenario["estimated_annual_cost_m"])
     scenario["co2_saving_t_yr"] = _coalesce(scenario["co2_saving_t_yr"])
     scenario["population_affected"] = int(scenario["population_affected"])
+    scenario["annual_additional_trips"] = int(scenario["annual_additional_trips"])
+    scenario["name"] = str(scenario["name"])
+    scenario["scope"] = str(scenario["scope"])
+    scenario["confidence"] = str(scenario["confidence"])
     return scenario
 
 
@@ -58,7 +62,7 @@ def _build_comparison(scenarios_df: pd.DataFrame) -> dict:
         cost_m = _coalesce(row["estimated_annual_cost_m"])
         population = int(row["population_affected"])
         scenarios.append({
-            "name": row["name"],
+            "name": str(row["name"]),
             "population": population,
             "cost_m": cost_m,
             "co2_t": _coalesce(row["co2_saving_t_yr"]),
