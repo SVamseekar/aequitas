@@ -145,6 +145,7 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | COST-001 | Bus stop construction cost (standard) | £15,000 | ❌ Unverified | DfT WebTAG unit costs or current DfT cost database | Find current DfT source before building investment appraisal |
 | COST-002 | Route annual operating cost (urban) | £250,000/yr | ❌ Unverified | DfT WebTAG unit costs or CPT operator benchmarks | Same |
 | COST-003 | Route annual operating cost (rural) | £180,000/yr | ❌ Unverified | DfT WebTAG unit costs or CPT operator benchmarks | Same |
+| COST-004 | Investment gap cost proxy (per LSOA, per service-level unit gap, per year) | £500/LSOA/unit gap/yr | ❌ Unverified | DfT WebTAG unit costs or CPT operator benchmarks | Used in `gap_to_target.j2` (a7_investment_gap) as a placeholder proxy for route contract cost per LSOA. Replace with a sourced per-unit cost before this figure is used for actual investment decisions. |
 
 ---
 
