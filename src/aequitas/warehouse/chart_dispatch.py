@@ -15,7 +15,7 @@ import pandas as pd
 
 from aequitas.intelligence import chart_data_builder
 from aequitas.intelligence.section_registry import SECTION_REGISTRY
-from aequitas.warehouse.precompute import _filter_by_lsoa, _Sources
+from aequitas.warehouse.precompute import _filter_by_lsoa, _filter_routes_by_urban_rural, _Sources
 from aequitas.warehouse.stats_builders.correlation import CORRELATION_CONFIG
 from aequitas.warehouse.stats_builders.equity import _MIN_DISTINCT_DECILES
 from aequitas.warehouse.stats_builders.ranking import RANKING_CONFIG
@@ -87,7 +87,7 @@ def build_chart_data(
         return _build_scatter_clusters(section_id, stats, region, region_name, sources, lsoa_cds)
 
     if section_id in _BOX_VIOLIN_SECTIONS:
-        return _build_box_violin(section_id, stats, region, region_name, sources)
+        return _build_box_violin(section_id, stats, region, region_name, urban_rural, sources)
 
     if section_id == "d7_deprivation_urban_rural":
         return _build_heatmap(section_id, stats, region_df)
@@ -332,12 +332,14 @@ def _build_box_violin(
     stats: dict,
     region: str,
     region_name: str,
+    urban_rural: str,
     sources: _Sources,
 ) -> dict:
     """Box/violin distribution chart for c1_route_length/c2_stops_per_route; {} if no data."""
     routes = sources.route_geometries_df
     if region != "all" and "primary_region" in routes.columns:
         routes = routes[routes["primary_region"] == region_name]
+    routes = _filter_routes_by_urban_rural(routes, sources.route_urban_rural_df, urban_rural)
     if routes.empty:
         return {}
 

@@ -283,6 +283,32 @@ def _filter_by_region_col(df: pd.DataFrame, column: str, value: str) -> pd.DataF
     return df[df[column] == value]
 
 
+def _filter_routes_by_urban_rural(
+    routes_df: pd.DataFrame, route_urban_rural_df: pd.DataFrame, urban_rural: str
+) -> pd.DataFrame:
+    """Restrict routes to those classified urban/rural, excluding "mixed".
+
+    Args:
+        routes_df: route_geometries rows (must include route_id).
+        route_urban_rural_df: route_urban_rural rows with route_id and
+            urban_rural_classification ("urban"/"rural"/"mixed").
+        urban_rural: Active area-type filter ("all", "urban", or "rural").
+            "mixed" routes are excluded from urban/rural-specific views and
+            only included when urban_rural == "all".
+
+    Returns:
+        routes_df unchanged if urban_rural == "all" or route_urban_rural_df
+        is empty/missing route_id; otherwise routes_df filtered to routes
+        classified as urban_rural.
+    """
+    if urban_rural == "all" or route_urban_rural_df.empty or "route_id" not in routes_df.columns:
+        return routes_df
+    classified = route_urban_rural_df[
+        route_urban_rural_df["urban_rural_classification"] == urban_rural
+    ]["route_id"]
+    return routes_df[routes_df["route_id"].isin(classified)]
+
+
 def precompute_all_sections(cfg: PipelineConfig) -> list[dict]:
     """Precompute all 51 section results for the 30 filter combinations.
 
@@ -407,12 +433,7 @@ def _dispatch(
         routes = sources.route_geometries_df
         if region != "all" and "primary_region" in routes.columns:
             routes = routes[routes["primary_region"] == region_name]
-        route_urban_rural = sources.route_urban_rural_df
-        if urban_rural != "all" and not route_urban_rural.empty:
-            classified = route_urban_rural[
-                route_urban_rural["urban_rural_classification"] == urban_rural
-            ]["route_id"]
-            routes = routes[routes["route_id"].isin(classified)]
+        routes = _filter_routes_by_urban_rural(routes, sources.route_urban_rural_df, urban_rural)
         return build_market_concentration_stats(section_id, routes_df=routes, region_name=region_name)
 
     if section_id == "b4_route_frequency":
@@ -448,6 +469,12 @@ def _dispatch(
         return build_equity_stats(section_id, equity_df=_filter_by_lsoa(sources.equity_df, lsoa_cds))
 
     if section_id in _MISC_SECTIONS:
+        # c1_route_length/c2_stops_per_route consume route_geometries_df via
+        # _build_distribution_section; pre-filter by urban/rural here (same
+        # convention as _MARKET_CONCENTRATION_SECTIONS) so build_misc_stats
+        # doesn't need its own urban/rural-filtering logic. No other section
+        # in _MISC_SECTIONS reads route_geometries_df.
+        routes = _filter_routes_by_urban_rural(sources.route_geometries_df, sources.route_urban_rural_df, urban_rural)
         return build_misc_stats(
             section_id,
             region=region,
@@ -456,7 +483,7 @@ def _dispatch(
             policy_df=filtered,
             service_levels_df=_filter_by_lsoa(sources.service_levels_df, lsoa_cds),
             service_quality_df=_filter_by_lsoa(sources.service_quality_df, lsoa_cds),
-            route_geometries_df=sources.route_geometries_df,
+            route_geometries_df=routes,
             anomalies_df=_filter_by_lsoa(sources.anomalies_df, lsoa_cds),
             lta_df=_filter_by_region_col(sources.lta_df, "region", region_name) if region != "all" else sources.lta_df,
         )
