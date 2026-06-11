@@ -35,6 +35,50 @@ def test_all_sections_produce_non_empty_stats_at_national_scope(cfg):
     assert empty == [], f"unexpectedly empty at national scope: {empty}"
 
 
+_POLICY_SCENARIO_NARRATIVE_SECTIONS = {
+    "ps1_freq_restoration",
+    "ps2_evening_extension",
+    "ps3_drt_rural",
+    "ps4_franchise",
+    "ps5_scenario_comparison",
+    "g5_scenario_model",
+}
+
+
+def test_policy_scenario_sections_render_non_empty_narratives(cfg):
+    """A19 regression: ps1-ps5/g5 must always render a narrative.
+
+    policy_scenarios.parquet is England-wide (not region/area-type scoped),
+    so every one of the 30 region/urban_rural combos must produce a
+    non-empty narrative for these sections — never silently suppressed.
+    """
+    results = precompute_all_sections(cfg)
+    scenario_results = [r for r in results if r["section_id"] in _POLICY_SCENARIO_NARRATIVE_SECTIONS]
+    assert len(scenario_results) == 30 * len(_POLICY_SCENARIO_NARRATIVE_SECTIONS)
+    empty = [
+        (r["section_id"], r["region"], r["urban_rural"])
+        for r in scenario_results
+        if not r["narrative"]
+    ]
+    assert empty == [], f"empty narrative for policy scenario sections: {empty}"
+
+
+def test_f5_rural_penalty_renders_narrative_for_every_combo(cfg):
+    """f5_rural_penalty must render a narrative for all 30 combos.
+
+    Regions with zero LSOAs of one settlement type (e.g. London has 0
+    Rural LSOAs) hit the insufficient_data sentinel from
+    build_urban_rural_gap_stats, but urban_rural_gap.j2 still renders an
+    explicit "insufficient data" narrative for that case (suppress >
+    mislead, never silently empty).
+    """
+    results = precompute_all_sections(cfg)
+    f5_results = [r for r in results if r["section_id"] == "f5_rural_penalty"]
+    assert len(f5_results) == 30
+    empty = [(r["region"], r["urban_rural"]) for r in f5_results if not r["narrative"]]
+    assert empty == [], f"empty narrative for f5_rural_penalty: {empty}"
+
+
 def test_gap_to_target_uses_fixed_national_median_across_regions(cfg):
     results = precompute_all_sections(cfg)
     a7_results = [
