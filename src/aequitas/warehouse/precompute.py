@@ -401,10 +401,13 @@ def _dispatch(
         routes = sources.route_geometries_df
         if region != "all" and "primary_region" in routes.columns:
             routes = routes[routes["primary_region"] == region_name]
-        lta = sources.lta_df
-        if region != "all" and "region" in lta.columns:
-            lta = lta[lta["region"] == region_name]
-        return build_market_concentration_stats(section_id, routes_df=routes, lta_df=lta, region_name=region_name)
+        route_urban_rural = sources.route_urban_rural_df
+        if urban_rural != "all" and not route_urban_rural.empty:
+            classified = route_urban_rural[
+                route_urban_rural["urban_rural_classification"] == urban_rural
+            ]["route_id"]
+            routes = routes[routes["route_id"].isin(classified)]
+        return build_market_concentration_stats(section_id, routes_df=routes, lta_df=None, region_name=region_name)
 
     if section_id == "b4_route_frequency":
         return build_route_frequency_stats(

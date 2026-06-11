@@ -1,9 +1,11 @@
 """Stats builder for market_concentration.j2 — Herfindahl-Hirschman Index.
 
-Covers: c3_operator_hhi (computed from route-level operator market share),
-bsa2_operator_concentration (uses the pre-computed region_hhi from
-lta_franchising_readiness — the BSA franchising-readiness composite already
-includes an HHI sub-score, so we reuse it rather than recomputing).
+Covers: c3_operator_hhi (computed from route-level operator market share)
+and bsa2_operator_concentration (BSA 2025 framing over the same route-level
+HHI). Both sections share the same underlying computation so that region
+and urban/rural filters apply identically — see precompute.py's dispatch
+for the route filtering (region via primary_region, area type via
+route_urban_rural.urban_rural_classification).
 """
 
 import pandas as pd
@@ -36,22 +38,6 @@ def _build_from_routes(routes_df: pd.DataFrame, region_name: str) -> dict:
     }
 
 
-def _build_from_lta(lta_df: pd.DataFrame, region_name: str) -> dict:
-    if lta_df.empty or "region_hhi" not in lta_df.columns:
-        return {}
-
-    mean_hhi = float(lta_df["region_hhi"].mean())
-    if pd.isna(mean_hhi):
-        return {}
-
-    # No top_operator available from this source — market_concentration.j2
-    # gates the operator-detail paragraph behind `{% if top_operator %}`.
-    return {
-        "hhi": round(mean_hhi, 1),
-        "region_name": region_name,
-    }
-
-
 def build_market_concentration_stats(
     section_id: str,
     routes_df: pd.DataFrame | None,
@@ -60,23 +46,22 @@ def build_market_concentration_stats(
 ) -> dict:
     """Build stats for c3_operator_hhi or bsa2_operator_concentration.
 
+    Both sections use the same route-level HHI computation so that region
+    and urban/rural filters apply consistently.
+
     Args:
         section_id: "c3_operator_hhi" or "bsa2_operator_concentration".
         routes_df: route_geometries rows for the active filter scope (region-
-            filtered by primary_region, or all routes when region == "all").
-            Required for c3, ignored for bsa2.
-        lta_df: lta_franchising_readiness rows for the active filter scope
-            (region-filtered, or all LADs when region == "all"). Required for
-            bsa2, ignored for c3.
-        region_name: Human-readable region/scope label for the template header
-            (e.g. "London" or "England" when region == "all").
+            and area-type-filtered, or all routes when scope == "all").
+        lta_df: Unused — retained for call-site compatibility.
+        region_name: Human-readable region/scope label for the template
+            header (e.g. "London" or "England" when region == "all").
 
     Returns:
         Dict matching market_concentration.j2's contract, or {} if the
         relevant source data is empty/missing.
     """
-    if section_id == "c3_operator_hhi":
+    del lta_df  # Unused: both sections now derive HHI from routes_df.
+    if section_id in {"c3_operator_hhi", "bsa2_operator_concentration"}:
         return _build_from_routes(routes_df if routes_df is not None else pd.DataFrame(), region_name)
-    if section_id == "bsa2_operator_concentration":
-        return _build_from_lta(lta_df if lta_df is not None else pd.DataFrame(), region_name)
     return {}
