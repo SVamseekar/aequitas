@@ -374,7 +374,13 @@ def _dispatch(
 
     if section_id in _RANKING_SECTIONS:
         ranking_filtered = _filter_by_lsoa(sources.ranking_df, filtered["lsoa_cd"])
-        return build_ranking_stats(section_id, filtered=ranking_filtered, national_df=sources.ranking_df, region=region, region_name=region_name)
+        ranking_stats = build_ranking_stats(section_id, filtered=ranking_filtered, national_df=sources.ranking_df, region=region, region_name=region_name)
+        if section_id == "bsa1_franchising_readiness" and ranking_stats:
+            # lta_franchising_readiness is LAD-grain with no urban/rural
+            # classification — the result is identical regardless of
+            # urban_rural, so flag it for the template's caveat note.
+            ranking_stats["is_lad_level_unfiltered"] = urban_rural != "all"
+        return ranking_stats
 
     if section_id in _CORRELATION_SECTIONS:
         if section_id == "c5_length_vs_frequency":

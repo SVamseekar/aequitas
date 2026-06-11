@@ -6,4 +6,8 @@ This places {{ region_name }} ahead of the national benchmark, suggesting the re
 {%- else -%}
 This places {{ region_name }} behind the national benchmark, indicating a gap that LTA investment, BSIP funding, or franchising powers under the Bus Services Act 2025 could help close. Closing even part of this gap would be a concrete policy implication for regional transport planning.
 {%- endif %}
+
+{% if is_lad_level_unfiltered -%}
+*Note: this is a Local Authority District (LAD)-level metric and cannot be subdivided by urban/rural area type — LADs typically contain a mix of urban and rural LSOAs. The figures shown are for the full {{ region_name }} region regardless of the urban/rural filter.*
+{%- endif %}
 {%- endif %}

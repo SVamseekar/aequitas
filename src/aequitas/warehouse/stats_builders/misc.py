@@ -187,7 +187,20 @@ def _build_anomalies(anomalies_df: pd.DataFrame | None) -> dict:
     }
 
 
-def _build_tier_distribution(lta_df: pd.DataFrame | None) -> dict:
+def _build_tier_distribution(lta_df: pd.DataFrame | None, urban_rural: str) -> dict:
+    """Build the bsa3_tier_distribution stats dict.
+
+    Args:
+        lta_df: lta_franchising_readiness rows for the active region scope.
+        urban_rural: Active area-type filter. lta_franchising_readiness is
+            LAD-grain with no urban/rural classification, so the result is
+            identical regardless of this value — `is_lad_level_unfiltered`
+            tells the template whether to surface that caveat.
+
+    Returns:
+        Dict matching tier_distribution.j2's contract, or {} if lta_df is
+        missing/empty.
+    """
     if lta_df is None or lta_df.empty:
         return {}
 
@@ -197,6 +210,7 @@ def _build_tier_distribution(lta_df: pd.DataFrame | None) -> dict:
         "n_tier1": int(tier_counts.get("Tier 1 — High", 0)),
         "n_tier2": int(tier_counts.get("Tier 2 — Medium", 0)),
         "n_tier3": int(tier_counts.get("Tier 3 — Low", 0)),
+        "is_lad_level_unfiltered": urban_rural != "all",
     }
 
 
@@ -225,8 +239,9 @@ def build_misc_stats(
             route_geometries_df.primary_region, which stores full region
             names rather than ONS codes — analogous to how precompute.py
             resolves region_name before filtering policy_df.
-        urban_rural: Active area-type filter — unused for value computation,
-            kept for signature symmetry with other builders.
+        urban_rural: Active area-type filter — unused for value computation
+            (kept for signature symmetry with other builders), except for
+            bsa3 where it flags an LAD-level "not subdivided" caveat.
         policy_df: lsoa_policy_synthesis rows for the active filter scope.
         service_levels_df: lsoa_service_levels rows for the active scope
             (joined to policy_df via lsoa_cd where needed). Required for
@@ -269,5 +284,5 @@ def build_misc_stats(
     if section_id == "g2_anomalies":
         return _build_anomalies(anomalies_df)
     if section_id == "bsa3_tier_distribution":
-        return _build_tier_distribution(lta_df)
+        return _build_tier_distribution(lta_df, urban_rural)
     return {}
