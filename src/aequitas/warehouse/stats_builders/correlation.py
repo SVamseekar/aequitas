@@ -2,7 +2,7 @@
 
 Covers: d1_coverage_deprivation, d2_coverage_unemployment, d3_coverage_car,
 d4_coverage_elderly, d5_coverage_income, b5_frequency_deprivation,
-c5_length_vs_frequency.
+c5_length_vs_frequency, f3_ethnic_access.
 
 Reuses aequitas.intelligence.calculators.calculate_correlation — the Pearson
 r/p-value/strength/direction logic already exists and is tested there.
@@ -39,6 +39,14 @@ CORRELATION_CONFIG: dict[str, dict] = {
     "b5_frequency_deprivation": {
         "x_col": "imd_score", "y_col": "service_quality_index",
         "x_label": "IMD Score", "y_label": "Service Quality Index",
+    },
+    "f3_ethnic_access": {
+        # nonwhite_pct is derived in precompute.py::_build_correlation_df from
+        # master_lsoa_table's ts021-sourced eth_white/eth_total columns
+        # (1 - eth_white / eth_total) * 100. stops_per_1k matches d1's access
+        # metric (bus stop density) for cross-section consistency.
+        "x_col": "nonwhite_pct", "y_col": "stops_per_1k",
+        "x_label": "Non-White Population %", "y_label": "Bus Stops per 1,000 Population",
     },
     "c5_length_vs_frequency": {
         # stop_count is used as a frequency proxy here: no per-route

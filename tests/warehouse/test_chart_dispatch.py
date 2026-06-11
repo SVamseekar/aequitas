@@ -49,6 +49,7 @@ _CORR_DF = pd.DataFrame(
         "nocar_pct": [10, 15, 20, 25, 30, 35, 40, 45],
         "elderly_pct": [12, 14, 16, 18, 20, 22, 24, 26],
         "income_score": [1, 2, 3, 4, 5, 6, 7, 8],
+        "nonwhite_pct": [5, 10, 15, 20, 25, 30, 35, 40],
     }
 )
 
@@ -62,6 +63,7 @@ _CORR_DF = pd.DataFrame(
         "d3_coverage_car",
         "d4_coverage_elderly",
         "d5_coverage_income",
+        "f3_ethnic_access",
     ],
 )
 def test_correlation_scatter_sections(section_id: str) -> None:

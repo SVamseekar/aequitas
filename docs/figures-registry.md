@@ -94,6 +94,7 @@ Unacceptable sources: old project docs, blog posts, remembered numbers, "approxi
 | ST-033 | Healthcare deserts (hospital >10km + poor SQI) | 2,293 LSOAs any (hospital or GP) | ✅ Confirmed | 04f_policy_synthesis.ipynb | SQI threshold = Q1 (bottom 25%); hospital >10km OR GP >3km + poor SQI; 1,368 education deserts (school >5km + poor SQI) |
 | ST-034 | LTA Franchising Readiness — top LAD | North Yorkshire | ✅ Confirmed | 04f_policy_synthesis.ipynb | 5-component composite index; HHI 20%, trip gap 25%, deprivation 25%, SQI 20%, evening 10%. ⚠️ HHI component is REGION-LEVEL — all LADs in same region share identical HHI value (e.g. all 64 South East LADs = HHI 422). Not a LAD-level operator metric. |
 | ST-035 | Busiest bus route in England (n_trips_per_day) | A1, First Bristol Bath & the West, 3,832 trips/day | ✅ Confirmed | route_trip_frequency.parquet (b4_route_frequency) | Computed from BODS GTFS trips.txt grouped by route_id, restricted to GTFS route_type==3 (bus); 13,099 routes total matches GT BODS unique routes count |
+| ST-036 | Pearson correlation: non-white population % vs bus stops per 1,000 population | r = -0.3127 | ✅ Confirmed | master_lsoa_table.parquet (ts021 eth_* cols) / lsoa_service_levels.parquet (f3_ethnic_access) | n=33,755 LSOAs; nonwhite_pct = (1 - eth_white/eth_total) * 100, both 100% non-null. Moderate negative correlation: higher non-white population share is associated with lower bus stop density. |
 
 ---
 

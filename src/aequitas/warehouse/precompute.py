@@ -53,7 +53,7 @@ _RANKING_SECTIONS = {"a1_route_density", "a2_stop_density", "b1_frequency",
                      "f6_equitable_regions", "j4_investment_priority", "bsa1_franchising_readiness"}
 _CORRELATION_SECTIONS = {"b5_frequency_deprivation", "c5_length_vs_frequency", "d1_coverage_deprivation",
                          "d2_coverage_unemployment", "d3_coverage_car", "d4_coverage_elderly",
-                         "d5_coverage_income"}
+                         "d5_coverage_income", "f3_ethnic_access"}
 _ML_CLUSTER_SECTIONS = {"c6_route_archetypes", "d6_transport_poverty", "g1_route_clusters"}
 _ML_PREDICTION_SECTIONS = {"a8_coverage_prediction", "d8_feature_importance", "g3_coverage_model", "g4_shap"}
 _MARKET_CONCENTRATION_SECTIONS = {"c3_operator_hhi", "bsa2_operator_concentration"}
@@ -63,7 +63,7 @@ _POLICY_SCENARIO_SECTIONS = {"ps1_freq_restoration", "ps2_evening_extension", "p
 _ECONOMIC_SECTIONS = {"j1_economic_value", "j2_bcr", "j3_carbon"}
 _EQUITY_SECTIONS = {"f1_gini", "a4_coverage_equity", "f2_disparity_ratio"}
 _MISC_SECTIONS = {"a3_walking_distance", "a5_service_deserts", "b2_operating_hours", "b3_weekend_penalty",
-                  "c1_route_length", "c2_stops_per_route", "d7_deprivation_urban_rural", "f3_ethnic_access",
+                  "c1_route_length", "c2_stops_per_route", "d7_deprivation_urban_rural",
                   "f4_gender_accessibility", "g2_anomalies", "bsa3_tier_distribution"}
 # c7_network_topology has its own template (network_topology.j2) shared with no
 # other section — it gets a small one-off builder inline in _dispatch (Step 3b
@@ -72,7 +72,10 @@ _NETWORK_TOPOLOGY_SECTIONS = {"c7_network_topology"}
 
 # Sections with no viable data source (ISSUES.md §8.2-§8.4) — stubbed pending
 # future analytics-stage joins. Documented per-section in their builder module.
-_STUB_SECTIONS = {"f3_ethnic_access", "f4_gender_accessibility"}
+# f3_ethnic_access was removed from this set in A16 — master_lsoa_table's
+# ts021-derived eth_*/nonwhite_pct columns make it buildable as a correlation
+# section (see _CORRELATION_SECTIONS).
+_STUB_SECTIONS = {"f4_gender_accessibility"}
 
 
 @dataclass
@@ -199,10 +202,13 @@ def _build_correlation_df(policy_df: pd.DataFrame, master_lsoa_path, service_lev
     d1_coverage_deprivation needs stops_per_1k (stop density) to match the
     locked ground-truth IMD-stop correlation (ST-001, -0.0644) — it lives in
     lsoa_service_levels, joined here on lsoa_cd.
+
+    f3_ethnic_access needs nonwhite_pct, a precomputed ts021-derived column
+    already present in master_lsoa_table (see ingestion/census.py).
     """
     df = policy_df
     if master_lsoa_path.exists():
-        extra_cols = ["lsoa_cd", "unemployment_rate", "nocar_pct", "elderly_pct", "income_score"]
+        extra_cols = ["lsoa_cd", "unemployment_rate", "nocar_pct", "elderly_pct", "income_score", "nonwhite_pct"]
         master_df = pd.read_parquet(master_lsoa_path, columns=extra_cols)
         df = df.merge(master_df, on="lsoa_cd", how="left", suffixes=("", "_master"))
 
