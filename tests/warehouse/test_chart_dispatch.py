@@ -569,6 +569,53 @@ def test_box_violin_region_filtered() -> None:
     assert labels == {"London"}
 
 
+def test_box_violin_filtered_by_urban_rural() -> None:
+    """c1/c2 box_violin groups should reflect the urban/rural filter (mirrors A6 stats test)."""
+    route_ur = pd.DataFrame(
+        {
+            "route_id": ["R0", "R1", "R2", "R3", "R4", "R5"],
+            "urban_rural_classification": [
+                "urban",
+                "urban",
+                "rural",
+                "rural",
+                "mixed",
+                "mixed",
+            ],
+        }
+    )
+    sources = _empty_sources(route_geometries_df=_ROUTES_DF, route_urban_rural_df=route_ur)
+    stats = _distribution_stats("km")
+
+    def _ranges(urban_rural: str) -> set[tuple[float, float]]:
+        chart = build_chart_data(
+            section_id="c1_route_length",
+            stats=stats,
+            region="all",
+            region_name="England",
+            urban_rural=urban_rural,
+            filtered=pd.DataFrame(),
+            region_df=pd.DataFrame(),
+            sources=sources,
+            lsoa_cds=pd.Series(dtype=str),
+        )
+        return {(g["min"], g["max"]) for g in chart["groups"]}
+
+    ranges_all = _ranges("all")
+    ranges_urban = _ranges("urban")
+    ranges_rural = _ranges("rural")
+
+    # "all" includes every route's length_km (R0-R5: 5.0-20.0), grouped by region.
+    assert ranges_all == {(10.0, 20.0), (5.0, 12.0)}
+    # "urban" keeps only R0/R1 (10.0, 20.0), both London; "mixed" R4/R5 excluded.
+    assert ranges_urban == {(10.0, 20.0)}
+    # "rural" keeps only R2 (London, 15.0) and R3 (North West, 5.0); R4/R5 excluded.
+    assert ranges_rural == {(15.0, 15.0), (5.0, 5.0)}
+    assert ranges_urban != ranges_all
+    assert ranges_rural != ranges_all
+    assert ranges_urban != ranges_rural
+
+
 def test_box_violin_empty_routes_returns_empty() -> None:
     sources = _empty_sources(route_geometries_df=pd.DataFrame())
     stats = _distribution_stats("km")

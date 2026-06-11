@@ -15,7 +15,11 @@ import pandas as pd
 
 from aequitas.intelligence import chart_data_builder
 from aequitas.intelligence.section_registry import SECTION_REGISTRY
-from aequitas.warehouse.precompute import _filter_by_lsoa, _filter_routes_by_urban_rural, _Sources
+from aequitas.warehouse.precompute import (
+    _filter_by_lsoa,
+    _filter_routes_by_urban_rural,
+    _Sources,
+)
 from aequitas.warehouse.stats_builders.correlation import CORRELATION_CONFIG
 from aequitas.warehouse.stats_builders.equity import _MIN_DISTINCT_DECILES
 from aequitas.warehouse.stats_builders.ranking import RANKING_CONFIG
