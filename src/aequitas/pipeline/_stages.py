@@ -147,6 +147,19 @@ def run_processing(cfg: PipelineConfig | None = None) -> StageReport:
         logger.error(f"Service quality processing failed: {e}")
         raise
 
+    # Route urban/rural classification
+    try:
+        from aequitas.processing.route_urban_rural import compute_route_urban_rural
+        route_ur = compute_route_urban_rural(cfg)
+        out = cfg.processed_dir / "route_urban_rural.parquet"
+        route_ur.to_parquet(out, index=False, compression="zstd")
+        output_files.append(out)
+        logger.info(f"Route urban/rural: {len(route_ur):,} routes → {out.name}")
+        checks_passed += 1
+    except Exception as e:
+        logger.error(f"Route urban/rural processing failed: {e}")
+        raise
+
     duration = time.perf_counter() - t0
     report = StageReport("process", duration, output_files, checks_passed)
     report.log()

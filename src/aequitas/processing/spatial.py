@@ -40,6 +40,9 @@ def assign_stops_to_lsoa(
     joined = gpd.sjoin(
         stops_gdf, lsoa_27700[["LSOA21CD", "geometry"]], how="left", predicate="within"
     )
+    # A point on a shared boundary can match multiple polygons — keep the
+    # first match per stop to preserve a 1:1 row alignment with stops_gdf.
+    joined = joined[~joined.index.duplicated(keep="first")]
     matched_mask = joined["LSOA21CD"].notna()
     logger.info("Pass 1 matched: {}/{}", matched_mask.sum(), len(joined))
 
@@ -54,7 +57,10 @@ def assign_stops_to_lsoa(
             how="left",
             max_distance=max_nearest_distance_m,
         )
-        joined.loc[unmatched_idx, "LSOA21CD"] = nearest["LSOA21CD"].values
+        # Ties at equal distance can yield multiple matches per point —
+        # keep the first to preserve a 1:1 alignment with unmatched_idx.
+        nearest = nearest[~nearest.index.duplicated(keep="first")]
+        joined.loc[unmatched_idx, "LSOA21CD"] = nearest["LSOA21CD"].reindex(unmatched_idx).values
 
     result = stops_df.copy()
     result["lsoa_code"] = joined["LSOA21CD"].values
