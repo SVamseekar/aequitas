@@ -1,6 +1,6 @@
 """Section registry — maps every section_id to its template, chart type, and evidence gate.
 
-Single source of truth for all 51 analytical sections. Used by precompute.py
+Single source of truth for all 50 analytical sections. Used by precompute.py
 to iterate over sections and by the frontend to know what chart to render.
 """
 
@@ -61,7 +61,6 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     "f1_gini": SectionDef("equity.j2", "lorenz_curve", "F", "Gini coefficient"),
     "f2_disparity_ratio": SectionDef("equity_decile.j2", "horizontal_bar", "F", "Disparity by IMD decile"),
     "f3_ethnic_access": SectionDef("correlation.j2", "scatter_regression", "F", "Bus access by ethnicity"),
-    "f4_gender_accessibility": SectionDef("accessibility_gap.j2", "horizontal_bar", "F", "Gender-adjusted accessibility"),
     "f5_rural_penalty": SectionDef("urban_rural_gap.j2", "grouped_bar", "F", "Rural accessibility penalty"),
     "f6_equitable_regions": SectionDef("ranking.j2", "horizontal_bar", "F", "Most equitable regions"),
     # Category G: ML Insights

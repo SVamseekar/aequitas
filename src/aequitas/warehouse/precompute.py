@@ -1,7 +1,7 @@
 """Pre-computation of section_results for the DuckDB warehouse.
 
 For each of the 30 filter combinations (10 regions × 3 area types), computes
-all 51 registered analytical sections and stores them as JSON in
+all 50 registered analytical sections and stores them as JSON in
 section_results. This is called once at build time — never at request time.
 """
 
@@ -64,19 +64,11 @@ _ECONOMIC_SECTIONS = {"j1_economic_value", "j2_bcr", "j3_carbon"}
 _EQUITY_SECTIONS = {"f1_gini", "a4_coverage_equity", "f2_disparity_ratio"}
 _MISC_SECTIONS = {"a3_walking_distance", "a5_service_deserts", "b2_operating_hours", "b3_weekend_penalty",
                   "c1_route_length", "c2_stops_per_route", "d7_deprivation_urban_rural",
-                  "f4_gender_accessibility", "g2_anomalies", "bsa3_tier_distribution"}
+                  "g2_anomalies", "bsa3_tier_distribution"}
 # c7_network_topology has its own template (network_topology.j2) shared with no
 # other section — it gets a small one-off builder inline in _dispatch (Step 3b
 # below) rather than its own module, since it is the only section using this contract.
 _NETWORK_TOPOLOGY_SECTIONS = {"c7_network_topology"}
-
-# Sections with no viable data source (ISSUES.md §8.2-§8.4) — stubbed pending
-# future analytics-stage joins. Documented per-section in their builder module.
-# f3_ethnic_access was removed from this set in A16 — master_lsoa_table's
-# ts021-derived eth_*/nonwhite_pct columns make it buildable as a correlation
-# section (see _CORRELATION_SECTIONS).
-_STUB_SECTIONS = {"f4_gender_accessibility"}
-
 
 @dataclass
 class SectionResult:
@@ -324,7 +316,7 @@ def _filter_routes_by_urban_rural(
 
 
 def precompute_all_sections(cfg: PipelineConfig) -> list[dict]:
-    """Precompute all 51 section results for the 30 filter combinations.
+    """Precompute all 50 section results for the 30 filter combinations.
 
     Loads Phase 0 audit Parquets once, applies region/area-type filters per
     combo, dispatches to the appropriate stats builder per section, runs
@@ -409,9 +401,6 @@ def _dispatch(
     lsoa_cds: pd.Series,
 ) -> dict:
     """Route a section_id to its builder module with the data it needs."""
-    if section_id in _STUB_SECTIONS:
-        return {}
-
     if section_id in _RANKING_SECTIONS:
         ranking_filtered = _filter_by_lsoa(sources.ranking_df, filtered["lsoa_cd"])
         ranking_stats = build_ranking_stats(section_id, filtered=ranking_filtered, national_df=sources.ranking_df, region=region, region_name=region_name)

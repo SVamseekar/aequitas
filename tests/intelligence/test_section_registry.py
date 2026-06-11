@@ -1,11 +1,11 @@
-"""Tests for section registry — single source of truth for all 51 sections."""
+"""Tests for section registry — single source of truth for all 50 sections."""
 
 import pytest
 from aequitas.intelligence.section_registry import SECTION_REGISTRY, SectionDef
 
 
-def test_registry_has_51_sections():
-    assert len(SECTION_REGISTRY) == 51
+def test_registry_has_50_sections():
+    assert len(SECTION_REGISTRY) == 50
 
 
 def test_all_section_ids_are_strings():

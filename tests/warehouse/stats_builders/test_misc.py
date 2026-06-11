@@ -162,10 +162,6 @@ def test_d7_deprivation_urban_rural_finds_worst_and_best_cells():
     assert "Decile" in stats["worst_cell"]["label"]
 
 
-def test_f4_is_stubbed():
-    assert build_misc_stats("f4_gender_accessibility", region="all", region_name="all", urban_rural="all", policy_df=_policy_df(), service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None) == {}
-
-
 def test_g2_anomalies_counts_each_type():
     stats = build_misc_stats(
         "g2_anomalies", region="all", region_name="all", urban_rural="all",

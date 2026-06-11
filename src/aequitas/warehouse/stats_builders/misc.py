@@ -1,9 +1,8 @@
-"""Stats builders for the 11 single/dual-section template contracts.
+"""Stats builders for the 9 single/dual-section template contracts.
 
 Covers: a3_walking_distance, a5_service_deserts, b2_operating_hours,
 b3_weekend_penalty, c1_route_length, c2_stops_per_route,
-d7_deprivation_urban_rural, f4_gender_accessibility (stub), g2_anomalies,
-bsa3_tier_distribution.
+d7_deprivation_urban_rural, g2_anomalies, bsa3_tier_distribution.
 """
 
 import pandas as pd
@@ -226,10 +225,10 @@ def build_misc_stats(
     anomalies_df: pd.DataFrame | None,
     lta_df: pd.DataFrame | None,
 ) -> dict:
-    """Build stats for one of the 11 misc-module sections.
+    """Build stats for one of the 9 misc-module sections.
 
     Args:
-        section_id: One of the 11 covered section IDs.
+        section_id: One of the 9 covered section IDs.
         region: Active region filter ("all" or an ONS region code) — used to
             decide whether to surface "worst region"/"largest region" keys
             (only meaningful at national scope) and to filter route_geometries
@@ -257,14 +256,8 @@ def build_misc_stats(
 
     Returns:
         Dict matching the relevant template's contract, or {} when required
-        source data is missing/empty or the section is stubbed (f4).
+        source data is missing/empty.
     """
-    if section_id == "f4_gender_accessibility":
-        # STUB (ISSUES.md §8.3): f4 requires gender-disaggregated travel data
-        # that does not exist in any government open dataset at LSOA
-        # granularity. Awaits a future analytics-stage data engineering pass.
-        return {}
-
     if section_id == "a3_walking_distance":
         return _build_walking_distance(policy_df, region)
     if section_id == "a5_service_deserts":
