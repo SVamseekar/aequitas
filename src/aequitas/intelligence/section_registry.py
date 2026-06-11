@@ -38,7 +38,7 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     "b1_frequency": SectionDef("ranking.j2", "horizontal_bar", "B", "Average frequency by region"),
     "b2_operating_hours": SectionDef("service_hours.j2", "grouped_bar", "B", "Operating hours"),
     "b3_weekend_penalty": SectionDef("weekend_penalty.j2", "grouped_bar", "B", "Weekend service penalty"),
-    "b4_route_frequency": SectionDef("ranking.j2", "horizontal_bar", "B", "Most/least frequent routes"),
+    "b4_route_frequency": SectionDef("route_frequency_ranking.j2", "horizontal_bar", "B", "Most/least frequent routes"),
     "b5_frequency_deprivation": SectionDef("correlation.j2", "scatter_regression", "B", "Frequency vs deprivation"),
     # Category C: Route Characteristics
     "c1_route_length": SectionDef("distribution.j2", "box_violin", "C", "Route length distribution"),

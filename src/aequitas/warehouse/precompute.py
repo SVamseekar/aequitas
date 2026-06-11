@@ -25,6 +25,7 @@ from aequitas.warehouse.stats_builders.ml_clusters import build_ml_clusters_stat
 from aequitas.warehouse.stats_builders.ml_prediction import build_ml_prediction_stats
 from aequitas.warehouse.stats_builders.policy_scenario import build_policy_scenario_stats
 from aequitas.warehouse.stats_builders.ranking import build_ranking_stats
+from aequitas.warehouse.stats_builders.route_frequency import build_route_frequency_stats
 from aequitas.warehouse.stats_builders.urban_rural_gap import build_urban_rural_gap_stats
 
 # Investigation fix: lsoa_policy_synthesis.region holds full ONS region names,
@@ -49,7 +50,7 @@ _AREA_TYPES = ["all", "urban", "rural"]
 # (verified via direct inspection — the registry's real IDs differ from the
 # illustrative names used earlier in this plan's module-grouping table).
 _RANKING_SECTIONS = {"a1_route_density", "a2_stop_density", "b1_frequency",
-                     "b4_route_frequency", "f6_equitable_regions", "j4_investment_priority", "bsa1_franchising_readiness"}
+                     "f6_equitable_regions", "j4_investment_priority", "bsa1_franchising_readiness"}
 _CORRELATION_SECTIONS = {"b5_frequency_deprivation", "c5_length_vs_frequency", "d1_coverage_deprivation",
                          "d2_coverage_unemployment", "d3_coverage_car", "d4_coverage_elderly",
                          "d5_coverage_income"}
@@ -103,6 +104,7 @@ class _Sources:
     equity_summary: dict
     route_geometries_df: pd.DataFrame
     route_urban_rural_df: pd.DataFrame
+    route_trip_frequency_df: pd.DataFrame
     route_clusters_df: pd.DataFrame
     lsoa_clusters_df: pd.DataFrame
     shap_df: pd.DataFrame
@@ -242,6 +244,7 @@ def _load_sources(cfg: PipelineConfig) -> _Sources | None:
 
     route_geometries_df = _read_parquet_or_empty(audit / "route_geometries.parquet")
     route_urban_rural_df = _read_parquet_or_empty(audit / "route_urban_rural.parquet")
+    route_trip_frequency_df = _read_parquet_or_empty(audit / "route_trip_frequency.parquet")
     lta_df = _read_parquet_or_empty(audit / "lta_franchising_readiness.parquet")
     service_levels_df = _read_parquet_or_empty(audit / "lsoa_service_levels.parquet")
 
@@ -251,6 +254,7 @@ def _load_sources(cfg: PipelineConfig) -> _Sources | None:
         equity_summary=equity_summary,
         route_geometries_df=route_geometries_df,
         route_urban_rural_df=route_urban_rural_df,
+        route_trip_frequency_df=route_trip_frequency_df,
         route_clusters_df=_read_parquet_or_empty(audit / "route_clusters.parquet"),
         lsoa_clusters_df=_read_parquet_or_empty(audit / "lsoa_clusters_hdbscan.parquet"),
         shap_df=shap_df,
@@ -401,6 +405,15 @@ def _dispatch(
         if region != "all" and "region" in lta.columns:
             lta = lta[lta["region"] == region_name]
         return build_market_concentration_stats(section_id, routes_df=routes, lta_df=lta, region_name=region_name)
+
+    if section_id == "b4_route_frequency":
+        return build_route_frequency_stats(
+            route_trip_frequency_df=sources.route_trip_frequency_df,
+            route_urban_rural_df=sources.route_urban_rural_df,
+            region=region,
+            region_name=region_name,
+            urban_rural=urban_rural,
+        )
 
     if section_id == "c4_urban_rural_routes":
         return build_urban_rural_gap_stats(

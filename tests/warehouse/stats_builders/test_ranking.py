@@ -1,4 +1,4 @@
-"""Tests for ranking.py — covers a1, a2, b1, b4, f6, j4, bsa1."""
+"""Tests for ranking.py — covers a1, a2, b1, f6, j4, bsa1."""
 import pandas as pd
 import pytest
 
@@ -81,12 +81,11 @@ def test_empty_dataframe_returns_empty_stats():
     assert stats == {}
 
 
-def test_ranking_config_covers_all_seven_sections():
+def test_ranking_config_covers_all_six_sections():
     expected = {
         "a1_route_density",
         "a2_stop_density",
         "b1_frequency",
-        "b4_route_frequency",
         "f6_equitable_regions",
         "j4_investment_priority",
         "bsa1_franchising_readiness",

@@ -45,7 +45,6 @@ _RANKING_HORIZONTAL_BAR_SECTIONS = {
     "a1_route_density",
     "a2_stop_density",
     "b1_frequency",
-    "b4_route_frequency",
     "f6_equitable_regions",
     "j4_investment_priority",
     "bsa1_franchising_readiness",
@@ -92,6 +91,9 @@ def build_chart_data(
 
     if section_id == "d7_deprivation_urban_rural":
         return _build_heatmap(section_id, stats, region_df)
+
+    if section_id == "b4_route_frequency":
+        return _build_route_frequency_chart(stats)
 
     if section_id in _RANKING_HORIZONTAL_BAR_SECTIONS:
         if region != "all":
@@ -389,6 +391,38 @@ def _build_heatmap(section_id: str, stats: dict, region_df: pd.DataFrame) -> dic
         y_labels=y_labels,
         values=values,
         title=title,
+    )
+
+
+def _build_route_frequency_chart(stats: dict) -> dict:
+    """Horizontal bar of top/bottom routes by n_trips_per_day; {} on guard.
+
+    Combines top_routes and bottom_routes from build_route_frequency_stats
+    into a single horizontal bar, labeled "route_short_name (agency_name)".
+    """
+    if not stats or "top_routes" not in stats or "bottom_routes" not in stats:
+        return {}
+
+    top = stats["top_routes"]
+    bottom = stats["bottom_routes"]
+    seen_labels: set[str] = set()
+    rows = []
+    for route in top + bottom:
+        label = f"{route['route_short_name']} ({route['agency_name']})"
+        if label in seen_labels:
+            continue
+        seen_labels.add(label)
+        rows.append({"label": label, "value": route["n_trips_per_day"]})
+
+    if not rows:
+        return {}
+
+    data = pd.DataFrame(rows)
+    return chart_data_builder.build_horizontal_bar(
+        data=data,
+        title=SECTION_REGISTRY["b4_route_frequency"].title,
+        x_label=stats.get("unit", "trips/day"),
+        y_label="Route",
     )
 
 

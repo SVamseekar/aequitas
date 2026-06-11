@@ -1,11 +1,15 @@
 """Stats builder for ranking.j2 — best/worst region comparisons.
 
-Covers: a1_route_density, a2_stop_density, b1_frequency, b4_route_frequency,
+Covers: a1_route_density, a2_stop_density, b1_frequency,
 f6_equitable_regions, j4_investment_priority, bsa1_franchising_readiness.
 
-All seven sections share the same template contract — they differ only in
+All six sections share the same template contract — they differ only in
 which metric (and source table) is ranked. RANKING_CONFIG is the single
 source of truth for that mapping; build_ranking_stats is generic over it.
+
+b4_route_frequency was moved out to its own builder
+(stats_builders/route_frequency.py) — it ranks individual ROUTES by daily
+trip frequency, not regions, and uses a different template/contract.
 """
 
 import pandas as pd
@@ -29,15 +33,6 @@ RANKING_CONFIG: dict[str, dict] = {
         "metric": "service_quality_index",
         "group_col": "region",
         "unit": "SQI points",
-        "higher_is_better": True,
-    },
-    # b4_route_frequency: there is no per-route frequency join in the warehouse,
-    # so this section uses trips_per_capita as a regional service-frequency proxy
-    # (more trips per head of population ≈ more frequent service overall).
-    "b4_route_frequency": {
-        "metric": "trips_per_capita",
-        "group_col": "region",
-        "unit": "trips/capita",
         "higher_is_better": True,
     },
     "f6_equitable_regions": {
