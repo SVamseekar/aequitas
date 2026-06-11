@@ -75,6 +75,9 @@ def _build_c4_stats(
         "n_mixed": n_mixed,
         "pct_mixed": round(n_mixed / n_total * 100, 1),
         "unit": "% of routes",
+        # n_urban/n_rural here count ROUTES, not LSOAs — urban_rural_gap.j2
+        # uses entity_label to render the correct noun in the Key Finding.
+        "entity_label": "routes",
     }
 
     # n_cross_la / pct_cross_la from route_geometries, matching

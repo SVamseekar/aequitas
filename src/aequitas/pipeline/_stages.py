@@ -154,7 +154,14 @@ def run_processing(cfg: PipelineConfig | None = None) -> StageReport:
         out = cfg.processed_dir / "route_urban_rural.parquet"
         route_ur.to_parquet(out, index=False, compression="zstd")
         output_files.append(out)
-        logger.info(f"Route urban/rural: {len(route_ur):,} routes → {out.name}")
+        # _load_sources (warehouse/precompute.py) reads route-level
+        # intermediates from audit_dir, mirroring route_geometries.parquet
+        # and lsoa_service_quality.parquet — write a copy there so the
+        # warehouse precompute step can discover it after a real pipeline run.
+        cfg.audit_dir.mkdir(parents=True, exist_ok=True)
+        audit_out = cfg.audit_dir / "route_urban_rural.parquet"
+        route_ur.to_parquet(audit_out, index=False, compression="zstd")
+        logger.info(f"Route urban/rural: {len(route_ur):,} routes → {out.name} (+ audit copy)")
         checks_passed += 1
     except Exception as e:
         logger.error(f"Route urban/rural processing failed: {e}")
