@@ -131,15 +131,16 @@ eq = pd.read_parquet(DATA_AUDIT / "lsoa_equity_metrics.parquet")
 master = pd.read_parquet(DATA_AUDIT / "master_lsoa_table.parquet")
 top500 = pd.read_csv(DATA_AUDIT / "top_500_transport_deserts.csv")
 routes = pd.read_parquet(DATA_AUDIT / "route_geometries.parquet")
+synthesis = pd.read_parquet(DATA_AUDIT / "lsoa_policy_synthesis.parquet")
 
 logger.info(f"Service quality: {sq.shape}, equity: {eq.shape}, master: {master.shape}")
-logger.info(f"Top 500 deserts: {top500.shape}, routes: {routes.shape}")
+logger.info(f"Top 500 deserts: {top500.shape}, routes: {routes.shape}, synthesis: {synthesis.shape}")
 
 # %%
 # Build working dataset — merge service quality, equity, and master
 base = (
     master[["lsoa_cd", "lsoa_nm", "lad_cd", "lad_nm", "imd_score", "imd_decile",
-            "population", "urban_rural", "region", "nocar_pct", "elderly_pct",
+            "population", "urban_rural", "nocar_pct", "elderly_pct",
             "unemployment_rate", "disability_pct"]]
     .merge(
         eq[["lsoa_cd", "trips_per_capita", "vulnerability_index",
@@ -151,7 +152,14 @@ base = (
             "evening_isolated", "sunday_desert"]],
         on="lsoa_cd", how="left"
     )
+    # master.region is "Unknown" for all rows — use lsoa_policy_synthesis for real
+    # ONS region names (RGN22NM), so BCR can vary meaningfully by region.
+    .merge(
+        synthesis[["lsoa_cd", "region"]],
+        on="lsoa_cd", how="left"
+    )
 )
+base["region"] = base["region"].fillna("Unknown")
 
 # trips_per_capita nulls → 0 (no service)
 base["trips_per_capita"] = base["trips_per_capita"].fillna(0.0)
@@ -173,6 +181,20 @@ print(f"CHECK PASS: mean route length {mean_route_length_km:.1f} km ✅")
 # Average trip distance: passengers typically travel 40–60% of route length (DfT NTS 2023)
 AVG_TRIP_DISTANCE_KM = median_route_length_km * 0.50  # conservative 50% of median route
 logger.info(f"Average trip distance assumed: {AVG_TRIP_DISTANCE_KM:.1f} km")
+
+# Region-level trip distance — same 50% factor applied to each region's median route
+# length (04a route_geometries.parquet, primary_region). Regions with no geometry
+# coverage (e.g. London — all routes have_geometry=False) fall back to the national
+# median above. This is the only driver that varies pv_benefits and pv_costs by a
+# different factor (time benefit is distance-independent, carbon benefit and operating
+# cost both scale with trip distance), so BCR no longer collapses to two constants.
+region_median_length_km = (
+    routes.loc[routes["has_geometry"], ["primary_region", "length_km"]]
+    .groupby("primary_region")["length_km"]
+    .median()
+)
+region_trip_distance_km = (region_median_length_km * 0.50).to_dict()
+logger.info(f"Region trip distances (km): {region_trip_distance_km}")
 
 # %% [markdown]
 # ## 3. Investment Gap Analysis
@@ -609,12 +631,15 @@ print("Fig 04e-03: Tornado chart saved")
 
 # %%
 # Compute BCR for all LSOAs with a positive gap (not just top 500)
-# NOTE: BCR degeneracy — both benefits and costs are proportional to annual_additional_trips,
-# so the annuity factor cancels and BCR reduces to (benefit_rate / cost_rate).
-# With fixed VoT, carbon price, and urban/rural cost bands, this yields exactly 2 unique BCR
-# values: ~1.118 (urban) and ~1.324 (rural). The bcr column is NOT a per-LSOA discriminator.
-# Use trips_gap or investment_gap_annual_cost for LSOA-level prioritisation instead.
-# A meaningful per-LSOA BCR would require fixed infrastructure costs or trip-purpose variation.
+# NOTE: previously, both benefits and costs were proportional to annual_additional_trips
+# with a single national AVG_TRIP_DISTANCE_KM, so the annuity factor cancelled and BCR
+# reduced to exactly 2 constants (~1.118 urban, ~1.324 rural) with no region/LSOA
+# variation. Fix: use each LSOA's region-specific trip distance (region_trip_distance_km,
+# derived from 04a route_geometries.parquet primary_region medians) for the
+# distance-dependent terms (carbon benefit, operating cost). annual_time_benefit is
+# distance-independent, so the benefit/cost ratio now varies by region as well as by
+# urban/rural — BCR = A/(C×distance) + B/C where A=time benefit rate, B=carbon benefit
+# rate, C=cost rate, distance=region_trip_distance_km.
 econ = base.copy()
 econ["trips_gap"]               = (national_median_trips - econ["trips_per_capita"]).clip(lower=0)
 # × 250 weekdays — all trip counts are WEEKDAY-EQUIVALENT ANNUAL (not calendar-year).
@@ -622,13 +647,21 @@ econ["trips_gap"]               = (national_median_trips - econ["trips_per_capit
 # BODS weekday GTFS). Calendar-year figures would be ~29% higher (÷ 250 × 365).
 econ["annual_additional_trips"] = econ["trips_gap"] * econ["population"] * 250  # weekday-equivalent
 econ["is_urban"]                = econ["urban_rural"].str.contains("Urban", na=False)
-econ["cost_per_trip"]           = np.where(econ["is_urban"], trip_cost_urban, trip_cost_rural)
-econ["annual_operating_cost"]   = econ["annual_additional_trips"] * econ["cost_per_trip"]
+
+# Per-LSOA trip distance: region median route length × 0.50, falling back to the
+# national AVG_TRIP_DISTANCE_KM for regions with no geometry coverage (e.g. London).
+econ["trip_distance_km"] = (
+    econ["region"].map(region_trip_distance_km).fillna(AVG_TRIP_DISTANCE_KM)
+)
+
+cost_per_veh_km = np.where(econ["is_urban"], COST_PER_VEH_KM_URBAN, COST_PER_VEH_KM_RURAL)
+econ["cost_per_trip"]         = cost_per_veh_km / AVG_TRIPS_PER_VEH_KM * econ["trip_distance_km"]
+econ["annual_operating_cost"] = econ["annual_additional_trips"] * econ["cost_per_trip"]
 
 econ["annual_time_benefit"]   = econ["annual_additional_trips"] * TIME_SAVING_PER_TRIP_HR * VOT_BUS_BLENDED
 econ["annual_carbon_benefit"] = (
     econ["annual_additional_trips"] * MODAL_SHIFT_FRACTION  # only modal-shifted trips
-    * AVG_TRIP_DISTANCE_KM
+    * econ["trip_distance_km"]
     * (CAR_CO2_KG_PAX_KM - BUS_CO2_KG_PAX_KM)  # net saving = 0.00779 kg/pax-km
     / 1000 * CARBON_PRICE_2025
 )
@@ -657,8 +690,11 @@ econ["modal_shift_additional_trips"] = (
     FREQ_ELASTICITY_CENTRAL * FREQ_INCREASE * econ["trips_per_capita"] * econ["population"] * 250
 )
 econ["modal_shift_car_trips_replaced"] = econ["modal_shift_additional_trips"] * MODAL_SHIFT_FRACTION
+# Uses per-region trip_distance_km (see annual_carbon_benefit above) so the standalone CO2
+# chart (j3_carbon) traces to the same distance assumption as the BCR carbon term for the
+# same LSOA.
 econ["modal_shift_co2_net_saving_kg"]  = (
-    econ["modal_shift_car_trips_replaced"] * AVG_TRIP_DISTANCE_KM
+    econ["modal_shift_car_trips_replaced"] * econ["trip_distance_km"]
     * (CAR_CO2_KG_PAX_KM - BUS_CO2_KG_PAX_KM)  # = MODAL_SHIFT_SAVING = 0.00779 kg/pax-km
 )
 
