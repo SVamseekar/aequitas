@@ -47,7 +47,7 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     "c4_urban_rural_routes": SectionDef("urban_rural_gap.j2", "stacked_bar", "C", "Urban vs rural routes"),
     "c5_length_vs_frequency": SectionDef("correlation.j2", "scatter_regression", "C", "Route length vs frequency"),
     "c6_route_archetypes": SectionDef("ml_clusters.j2", "scatter_clusters", "C", "Route archetypes"),
-    "c7_network_topology": SectionDef("network_topology.j2", "choropleth", "C", "Network topology"),
+    "c7_network_topology": SectionDef("network_topology.j2", "horizontal_bar", "C", "Network topology"),
     # Category D: Socio-Economic Correlations
     "d1_coverage_deprivation": SectionDef("correlation.j2", "scatter_regression", "D", "Coverage vs deprivation"),
     "d2_coverage_unemployment": SectionDef("correlation.j2", "scatter_regression", "D", "Coverage vs unemployment"),
