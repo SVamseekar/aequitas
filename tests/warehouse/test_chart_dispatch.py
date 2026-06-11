@@ -1632,3 +1632,60 @@ def test_c7_network_topology_no_cross_la_routes_returns_empty() -> None:
         lsoa_cds=pd.Series(dtype=str),
     )
     assert chart == {}
+
+
+# ---------------------------------------------------------------------------
+# A17: insufficient_data sentinel guards for a5/a6/a7/f5
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("section_id", ["a6_urban_rural_gap", "f5_rural_penalty"])
+def test_urban_rural_gap_chart_insufficient_data_returns_empty(section_id: str) -> None:
+    """A17: insufficient_data stats (e.g. London has 0 Rural LSOAs) suppress the chart."""
+    sources = _empty_sources()
+    chart = build_chart_data(
+        section_id=section_id,
+        stats={"insufficient_data": True, "n_lsoas": 4969, "n_urban": 4969, "n_rural": 0},
+        region="E12000007",
+        region_name="London",
+        urban_rural="rural",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart == {}
+
+
+def test_investment_gap_chart_insufficient_data_returns_empty() -> None:
+    """A17: insufficient_data stats suppress the a7 investment-gap chart."""
+    sources = _empty_sources()
+    chart = build_chart_data(
+        section_id="a7_investment_gap",
+        stats={"insufficient_data": True, "n_lsoas": 0},
+        region="E12000007",
+        region_name="London",
+        urban_rural="rural",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart == {}
+
+
+def test_service_deserts_choropleth_insufficient_data_returns_empty() -> None:
+    """A17: insufficient_data stats suppress the a5 service-deserts choropleth."""
+    sources = _empty_sources()
+    chart = build_chart_data(
+        section_id="a5_service_deserts",
+        stats={"insufficient_data": True, "n_lsoas": 0},
+        region="E12000007",
+        region_name="London",
+        urban_rural="rural",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart == {}

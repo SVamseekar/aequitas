@@ -1,4 +1,8 @@
-{% if urban_value is defined and urban_value is not none and rural_value is defined and rural_value is not none -%}
+{% if insufficient_data -%}
+## Key Finding
+
+Insufficient data for this filter ({{ n_lsoas }} LSOA{{ "s" if n_lsoas != 1 }}{% if n_urban is defined %}; {{ n_urban }} urban / {{ n_rural }} rural{% endif %}). The urban-vs-rural comparison requires at least one LSOA of each settlement type — this section is suppressed for this region/area-type combination. Refer to the national or regional (all-area-type) figures instead.
+{%- elif urban_value is defined and urban_value is not none and rural_value is defined and rural_value is not none -%}
 ## Key Finding
 
 **Urban** areas receive **{{ urban_value|round(2) }} {{ unit }}** compared to **{{ rural_value|round(2) }} {{ unit }}** in rural areas — an urban premium of **{{ gap_pct|round(1) }}%**. {% if gap_pct > 100 %}Urban areas receive more than twice the service of rural areas, reflecting the profound structural divide between commercially viable urban corridors and the rural transport deficit.{% elif gap_pct > 50 %}The 50%+ urban premium represents a substantial connectivity gap — rural residents face systematically poorer transport access than their urban counterparts at equivalent distances from services.{% elif gap_pct > 20 %}The 20–50% urban premium is broadly consistent with expected settlement-density effects, but still represents a real disadvantage for rural residents dependent on public transport.{% else %}The modest urban-rural gap suggests service provision is relatively equitable across settlement types in this area — likely reflecting active LTA subsidisation of rural routes.{% endif %}

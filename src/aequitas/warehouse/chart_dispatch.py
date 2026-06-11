@@ -109,6 +109,8 @@ def build_chart_data(
         return _chart_scenario_horizontal_bar(section_id, stats)
 
     if section_id == "a7_investment_gap":
+        if stats.get("insufficient_data"):
+            return {}
         return _build_investment_gap(section_id, region, sources)
 
     if section_id == "c3_operator_hhi":
@@ -130,9 +132,13 @@ def build_chart_data(
         return _build_operator_concentration(section_id, region, sources)
 
     if section_id == "a6_urban_rural_gap":
+        if stats.get("insufficient_data"):
+            return {}
         return _build_urban_rural_gap_chart(section_id, region_df)
 
     if section_id == "f5_rural_penalty":
+        if stats.get("insufficient_data"):
+            return {}
         return _build_urban_rural_gap_chart(section_id, region_df)
 
     if section_id == "c4_urban_rural_routes":
@@ -151,6 +157,8 @@ def build_chart_data(
         return _build_tier_distribution_chart(section_id, region, region_name, sources)
 
     if section_id == "a5_service_deserts":
+        if stats.get("insufficient_data"):
+            return {}
         return _build_service_deserts_choropleth(section_id, region, region_name, sources)
 
     if section_id == "c7_network_topology":

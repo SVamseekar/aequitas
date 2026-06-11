@@ -1,4 +1,8 @@
-{% if n_desert_lsoas is defined and n_desert_lsoas > 0 -%}
+{% if insufficient_data -%}
+## Key Finding
+
+Insufficient data for this filter ({{ n_lsoas }} LSOA{{ "s" if n_lsoas != 1 }}). The service-desert analysis requires a larger sample to produce a meaningful figure — this section is suppressed for this region/area-type combination. Refer to the national or regional (all-area-type) figures instead.
+{%- elif n_desert_lsoas is defined and n_desert_lsoas > 0 -%}
 ## Key Finding
 
 **{{ n_desert_lsoas|int|format_thousands }}** LSOAs have no bus stops within their boundaries, affecting approximately **{{ pop_affected|int|format_thousands }}** people. {% if largest_region %}The largest concentration of transport deserts is in **{{ largest_region }}** ({{ largest_region_count|int }} LSOAs), reflecting the structural challenge of serving dispersed rural settlements.{% endif %}

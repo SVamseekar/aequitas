@@ -1,4 +1,8 @@
-{% if pct_covered is defined and pct_covered is not none -%}
+{% if insufficient_data -%}
+## Key Finding
+
+Insufficient data for this filter ({{ n_lsoas }} LSOA{{ "s" if n_lsoas != 1 }}). The 400m walking-distance accessibility analysis requires a larger sample to produce a meaningful coverage figure — this section is suppressed for this region/area-type combination. Refer to the national or regional (all-area-type) figures instead.
+{%- elif pct_covered is defined and pct_covered is not none -%}
 ## Key Finding
 
 **{{ pct_covered|round(1) }}%** of England's population lives within 400m of a bus stop, using the 2SFCA (two-step floating catchment area) accessibility measure. **{{ n_zero_access|int|format_thousands }}** LSOAs ({{ pct_zero_access|round(1) }}%) have zero accessibility, affecting an estimated **{{ pop_zero_access|int|format_thousands }}** residents who face a complete absence of bus connectivity.

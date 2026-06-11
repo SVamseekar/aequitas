@@ -1,4 +1,8 @@
-{% if n_below > 0 -%}
+{% if insufficient_data -%}
+## Key Finding
+
+Insufficient data for this filter ({{ n_lsoas }} LSOA{{ "s" if n_lsoas != 1 }}). The gap-to-target investment analysis requires a larger sample to produce a meaningful figure — this section is suppressed for this region/area-type combination. Refer to the national or regional (all-area-type) figures instead.
+{%- elif n_below > 0 -%}
 ## Key Finding
 
 **{{ n_below|int|format_thousands }} areas** ({{ pct_below|round(1) }}% of the total) fall below the median service target of **{{ target|round(2) }} {{ unit }}**. The average gap is **{{ mean_gap|round(2) }} {{ unit }}** per LSOA, requiring an estimated investment of **£{{ total_annual_cost_m|round(1) }}m per year** to close entirely.

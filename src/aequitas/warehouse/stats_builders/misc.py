@@ -9,6 +9,10 @@ import pandas as pd
 
 from aequitas.intelligence.calculators import describe_distribution
 
+# LSOA-level statistics (coverage %, desert counts) become unstable/misleading
+# below this sample size — mirrors equity.py's _MIN_LSOAS_FOR_GINI threshold.
+_MIN_LSOAS_FOR_COVERAGE_STATS = 30
+
 
 def _skew_label(mean: float, median: float, std: float) -> str:
     if std == 0:
@@ -28,7 +32,11 @@ def _minutes_to_hhmm(minutes: float) -> str:
 
 def _build_walking_distance(policy_df: pd.DataFrame, region: str) -> dict:
     if policy_df.empty or "sfca_score_norm" not in policy_df.columns:
-        return {}
+        return {"insufficient_data": True, "n_lsoas": 0}
+
+    n_lsoas = len(policy_df)
+    if n_lsoas < _MIN_LSOAS_FOR_COVERAGE_STATS:
+        return {"insufficient_data": True, "n_lsoas": n_lsoas}
 
     zero_access = policy_df[policy_df["sfca_score_norm"] == 0]
     n_total = len(policy_df)
@@ -50,7 +58,11 @@ def _build_walking_distance(policy_df: pd.DataFrame, region: str) -> dict:
 
 def _build_service_deserts(policy_df: pd.DataFrame, service_levels_df: pd.DataFrame | None, region: str) -> dict:
     if policy_df.empty or service_levels_df is None or service_levels_df.empty:
-        return {}
+        return {"insufficient_data": True, "n_lsoas": len(policy_df)}
+
+    n_lsoas = len(policy_df)
+    if n_lsoas < _MIN_LSOAS_FOR_COVERAGE_STATS:
+        return {"insufficient_data": True, "n_lsoas": n_lsoas}
 
     joined = policy_df.merge(service_levels_df[["lsoa_cd", "stop_count"]], on="lsoa_cd", how="inner")
     deserts = joined[joined["stop_count"] == 0]
