@@ -56,7 +56,7 @@ _CORRELATION_SECTIONS = {"b5_frequency_deprivation", "c5_length_vs_frequency", "
 _ML_CLUSTER_SECTIONS = {"c6_route_archetypes", "d6_transport_poverty", "g1_route_clusters"}
 _ML_PREDICTION_SECTIONS = {"a8_coverage_prediction", "d8_feature_importance", "g3_coverage_model", "g4_shap"}
 _MARKET_CONCENTRATION_SECTIONS = {"c3_operator_hhi", "bsa2_operator_concentration"}
-_URBAN_RURAL_GAP_SECTIONS = {"a6_urban_rural_gap", "c4_urban_rural_routes", "f5_rural_penalty"}
+_URBAN_RURAL_GAP_SECTIONS = {"a6_urban_rural_gap", "f5_rural_penalty"}
 _POLICY_SCENARIO_SECTIONS = {"ps1_freq_restoration", "ps2_evening_extension", "ps3_drt_rural",
                              "ps4_franchise", "g5_scenario_model", "ps5_scenario_comparison"}
 _ECONOMIC_SECTIONS = {"j1_economic_value", "j2_bcr", "j3_carbon"}
@@ -71,7 +71,7 @@ _NETWORK_TOPOLOGY_SECTIONS = {"c7_network_topology"}
 
 # Sections with no viable data source (ISSUES.md §8.2-§8.4) — stubbed pending
 # future analytics-stage joins. Documented per-section in their builder module.
-_STUB_SECTIONS = {"f3_ethnic_access", "f4_gender_accessibility", "c4_urban_rural_routes"}
+_STUB_SECTIONS = {"f3_ethnic_access", "f4_gender_accessibility"}
 
 
 @dataclass
@@ -102,6 +102,7 @@ class _Sources:
     equity_df: pd.DataFrame
     equity_summary: dict
     route_geometries_df: pd.DataFrame
+    route_urban_rural_df: pd.DataFrame
     route_clusters_df: pd.DataFrame
     lsoa_clusters_df: pd.DataFrame
     shap_df: pd.DataFrame
@@ -240,6 +241,7 @@ def _load_sources(cfg: PipelineConfig) -> _Sources | None:
         )
 
     route_geometries_df = _read_parquet_or_empty(audit / "route_geometries.parquet")
+    route_urban_rural_df = _read_parquet_or_empty(audit / "route_urban_rural.parquet")
     lta_df = _read_parquet_or_empty(audit / "lta_franchising_readiness.parquet")
     service_levels_df = _read_parquet_or_empty(audit / "lsoa_service_levels.parquet")
 
@@ -248,6 +250,7 @@ def _load_sources(cfg: PipelineConfig) -> _Sources | None:
         equity_df=pd.read_parquet(equity_path),
         equity_summary=equity_summary,
         route_geometries_df=route_geometries_df,
+        route_urban_rural_df=route_urban_rural_df,
         route_clusters_df=_read_parquet_or_empty(audit / "route_clusters.parquet"),
         lsoa_clusters_df=_read_parquet_or_empty(audit / "lsoa_clusters_hdbscan.parquet"),
         shap_df=shap_df,
@@ -398,6 +401,17 @@ def _dispatch(
         if region != "all" and "region" in lta.columns:
             lta = lta[lta["region"] == region_name]
         return build_market_concentration_stats(section_id, routes_df=routes, lta_df=lta, region_name=region_name)
+
+    if section_id == "c4_urban_rural_routes":
+        return build_urban_rural_gap_stats(
+            section_id,
+            region_df=region_df,
+            urban_rural=urban_rural,
+            route_urban_rural_df=sources.route_urban_rural_df,
+            route_geometries_df=sources.route_geometries_df,
+            region_name=region_name,
+            region=region,
+        )
 
     if section_id in _URBAN_RURAL_GAP_SECTIONS:
         return build_urban_rural_gap_stats(section_id, region_df=region_df, urban_rural=urban_rural)

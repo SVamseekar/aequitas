@@ -128,6 +128,9 @@ def build_chart_data(
     if section_id == "f5_rural_penalty":
         return _build_urban_rural_gap_chart(section_id, region_df)
 
+    if section_id == "c4_urban_rural_routes":
+        return _build_route_urban_rural_chart(sources)
+
     if section_id == "ps5_scenario_comparison":
         return _build_scenario_comparison(section_id, stats)
 
@@ -623,6 +626,37 @@ def _build_operator_concentration(section_id: str, region: str, sources: _Source
         title=SECTION_REGISTRY[section_id].title,
         x_label="HHI",
         y_label="Region",
+    )
+
+
+def _build_route_urban_rural_chart(sources: "_Sources") -> dict:
+    """Stacked bar of urban/rural/mixed route share (%) per region (c4); {} on guard.
+
+    Sourced from route_urban_rural.parquet (route_id -> classification,
+    primary_region) — see processing/route_urban_rural.py.
+    """
+    routes = sources.route_urban_rural_df
+    required = {"urban_rural_classification", "primary_region"}
+    if routes.empty or not required.issubset(routes.columns):
+        return {}
+
+    routes = routes.dropna(subset=["primary_region"])
+    if routes.empty:
+        return {}
+
+    counts = routes.groupby(["primary_region", "urban_rural_classification"]).size().unstack(fill_value=0)
+    shares = counts.div(counts.sum(axis=1), axis=0) * 100
+
+    categories = shares.index.tolist()
+    series = [
+        {"name": label, "values": shares[col].round(1).tolist()}
+        for col, label in (("urban", "Urban"), ("rural", "Rural"), ("mixed", "Mixed"))
+        if col in shares.columns
+    ]
+    return chart_data_builder.build_stacked_bar(
+        categories=categories,
+        series=series,
+        title=SECTION_REGISTRY["c4_urban_rural_routes"].title,
     )
 
 

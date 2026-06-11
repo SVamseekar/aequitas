@@ -1,4 +1,4 @@
-"""Tests for urban_rural_gap.py — covers a6, c4 (stub), f5."""
+"""Tests for urban_rural_gap.py — covers a6, c4, f5."""
 import pandas as pd
 import pytest
 
@@ -36,8 +36,93 @@ def test_f5_uses_service_quality_index():
     assert stats["unit"] == "service quality index"
 
 
-def test_c4_is_stubbed():
-    assert build_urban_rural_gap_stats("c4_urban_rural_routes", region_df=_region_df(), urban_rural="all") == {}
+def _route_urban_rural_df():
+    return pd.DataFrame({
+        "route_id": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "urban_rural_classification": [
+            "urban", "urban", "urban", "urban", "urban",
+            "urban", "urban", "rural", "rural", "mixed",
+        ],
+        "primary_region": ["North West"] * 10,
+    })
+
+
+def _route_geometries_df():
+    return pd.DataFrame({
+        "route_id": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "primary_region": ["North West"] * 10,
+        "cross_la": [True, False, False, False, True, False, False, True, False, False],
+    })
+
+
+def test_c4_computes_urban_rural_mixed_split_for_region():
+    stats = build_urban_rural_gap_stats(
+        "c4_urban_rural_routes",
+        region_df=_region_df(),
+        urban_rural="all",
+        route_urban_rural_df=_route_urban_rural_df(),
+        route_geometries_df=_route_geometries_df(),
+        region_name="North West",
+        region="E12000002",
+    )
+    assert stats["urban_value"] == pytest.approx(70.0)
+    assert stats["rural_value"] == pytest.approx(20.0)
+    assert stats["n_urban"] == 7
+    assert stats["n_rural"] == 2
+    assert stats["n_mixed"] == 1
+    assert stats["unit"] == "% of routes"
+    assert stats["gap_pct"] == pytest.approx((70.0 - 20.0) / 70.0 * 100)
+    # cross_la: 3 of 10 routes
+    assert stats["n_cross_la"] == 3
+    assert stats["pct_cross_la"] == pytest.approx(30.0)
+
+
+def test_c4_filters_to_classification_when_urban_rural_active():
+    stats = build_urban_rural_gap_stats(
+        "c4_urban_rural_routes",
+        region_df=_region_df(),
+        urban_rural="rural",
+        route_urban_rural_df=_route_urban_rural_df(),
+        route_geometries_df=_route_geometries_df(),
+        region_name="North West",
+        region="E12000002",
+    )
+    # n_cross_la restricted to the 2 rural routes (8, 9) -> route 8 is cross_la
+    assert stats["n_cross_la"] == 1
+    assert stats["pct_cross_la"] == pytest.approx(50.0)
+
+
+def test_c4_empty_route_urban_rural_returns_empty():
+    assert build_urban_rural_gap_stats(
+        "c4_urban_rural_routes",
+        region_df=_region_df(),
+        urban_rural="all",
+        route_urban_rural_df=pd.DataFrame(),
+        route_geometries_df=pd.DataFrame(),
+        region_name="England",
+        region="all",
+    ) == {}
+
+
+def test_c4_filters_by_region():
+    df = pd.concat([
+        _route_urban_rural_df(),
+        pd.DataFrame({
+            "route_id": [11, 12],
+            "urban_rural_classification": ["rural", "rural"],
+            "primary_region": ["London", "London"],
+        }),
+    ], ignore_index=True)
+    stats = build_urban_rural_gap_stats(
+        "c4_urban_rural_routes",
+        region_df=_region_df(),
+        urban_rural="all",
+        route_urban_rural_df=df,
+        route_geometries_df=_route_geometries_df(),
+        region_name="London",
+        region="E12000007",
+    )
+    assert stats == {}  # urban_value would be 0 for London-only rural routes
 
 
 def test_empty_region_df_returns_empty():

@@ -44,7 +44,7 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     "c1_route_length": SectionDef("distribution.j2", "box_violin", "C", "Route length distribution"),
     "c2_stops_per_route": SectionDef("distribution.j2", "box_violin", "C", "Stops per route"),
     "c3_operator_hhi": SectionDef("market_concentration.j2", "horizontal_bar", "C", "Operator landscape (HHI)"),
-    "c4_urban_rural_routes": SectionDef("urban_rural_gap.j2", "grouped_bar", "C", "Urban vs rural routes"),
+    "c4_urban_rural_routes": SectionDef("urban_rural_gap.j2", "stacked_bar", "C", "Urban vs rural routes"),
     "c5_length_vs_frequency": SectionDef("correlation.j2", "scatter_regression", "C", "Route length vs frequency"),
     "c6_route_archetypes": SectionDef("ml_clusters.j2", "scatter_clusters", "C", "Route archetypes"),
     "c7_network_topology": SectionDef("network_topology.j2", "choropleth", "C", "Network topology"),
