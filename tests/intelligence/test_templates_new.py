@@ -61,3 +61,25 @@ def test_template_renders(engine, template_name, stats):
     assert not result["suppressed"], f"{template_name} was suppressed"
     assert len(result["narrative"]) > 0, f"{template_name} produced empty narrative"
     assert "None" not in result["narrative"], f"{template_name} has unresolved None"
+
+
+# A17: insufficient_data sentinel cases — templates for sections affected by
+# near-empty region/urban_rural filters (e.g. London/rural) must render a
+# suppression narrative rather than being omitted from the page.
+INSUFFICIENT_DATA_TEST_CASES = [
+    ("coverage_gap", "a3_walking_distance", {"insufficient_data": True, "n_lsoas": 0}),
+    ("desert_spotlight", "a5_service_deserts", {"insufficient_data": True, "n_lsoas": 0}),
+    ("urban_rural_gap", "a6_urban_rural_gap", {"insufficient_data": True, "n_lsoas": 4969, "n_urban": 4969, "n_rural": 0}),
+    ("gap_to_target", "a7_investment_gap", {"insufficient_data": True, "n_lsoas": 0}),
+]
+
+
+@pytest.mark.parametrize(
+    "template_name,section_id,stats", INSUFFICIENT_DATA_TEST_CASES, ids=[t[0] for t in INSUFFICIENT_DATA_TEST_CASES]
+)
+def test_template_renders_insufficient_data_sentinel(engine, template_name, section_id, stats):
+    """Insufficient-data sentinel renders a suppression narrative, not an empty section."""
+    result = engine.generate(section_id=section_id, region="E12000007", urban_rural="rural", stats=stats)
+    assert not result["suppressed"], f"{template_name} was suppressed for insufficient_data"
+    assert "Insufficient data for this filter" in result["narrative"]
+    assert "None" not in result["narrative"], f"{template_name} has unresolved None"

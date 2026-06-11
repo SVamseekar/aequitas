@@ -28,6 +28,23 @@ def _service_levels_df():
     })
 
 
+def _policy_df_large():
+    """30-row variant of _policy_df() (5x repeats), for builders gated by
+    _MIN_LSOAS_FOR_COVERAGE_STATS (a3, a5)."""
+    base = _policy_df()
+    repeated = pd.concat([base] * 5, ignore_index=True)
+    repeated["lsoa_cd"] = [f"E01{i:06d}" for i in range(len(repeated))]
+    return repeated
+
+
+def _service_levels_df_large():
+    """30-row variant of _service_levels_df() matching _policy_df_large()."""
+    base = _service_levels_df()
+    repeated = pd.concat([base] * 5, ignore_index=True)
+    repeated["lsoa_cd"] = [f"E01{i:06d}" for i in range(len(repeated))]
+    return repeated
+
+
 def _service_quality_df():
     return pd.DataFrame({
         "lsoa_cd": [f"E0100000{i}" for i in range(1, 7)],
@@ -69,34 +86,54 @@ def _lta_df():
 def test_a3_walking_distance_all_region_includes_worst_region():
     stats = build_misc_stats(
         "a3_walking_distance", region="all", region_name="all", urban_rural="all",
-        policy_df=_policy_df(), service_levels_df=None, service_quality_df=None,
+        policy_df=_policy_df_large(), service_levels_df=None, service_quality_df=None,
         route_geometries_df=None, anomalies_df=None, lta_df=None,
     )
-    assert stats["n_zero_access"] == 2
-    assert stats["pop_zero_access"] == pytest.approx(2000.0)
-    assert stats["pct_zero_access"] == pytest.approx(2 / 6 * 100)
-    assert stats["pct_covered"] == pytest.approx((1 - 2 / 6) * 100)
+    assert stats["n_zero_access"] == 10
+    assert stats["pop_zero_access"] == pytest.approx(10_000.0)
+    assert stats["pct_zero_access"] == pytest.approx(10 / 30 * 100)
+    assert stats["pct_covered"] == pytest.approx((1 - 10 / 30) * 100)
     assert "worst_region" in stats
 
 
 def test_a3_omits_worst_region_for_single_region_scope():
     stats = build_misc_stats(
         "a3_walking_distance", region="E12000007", region_name="London", urban_rural="all",
-        policy_df=_policy_df(), service_levels_df=None, service_quality_df=None,
+        policy_df=_policy_df_large(), service_levels_df=None, service_quality_df=None,
         route_geometries_df=None, anomalies_df=None, lta_df=None,
     )
     assert "worst_region" not in stats
 
 
+def test_a3_walking_distance_insufficient_data_below_minimum_lsoa_count():
+    """A17: a near-empty filtered slice (e.g. London/rural) returns a sentinel, not {}."""
+    stats = build_misc_stats(
+        "a3_walking_distance", region="E12000007", region_name="London", urban_rural="rural",
+        policy_df=_policy_df(), service_levels_df=None, service_quality_df=None,
+        route_geometries_df=None, anomalies_df=None, lta_df=None,
+    )
+    assert stats == {"insufficient_data": True, "n_lsoas": 6}
+
+
 def test_a5_service_deserts_counts_zero_stop_lsoas():
     stats = build_misc_stats(
         "a5_service_deserts", region="all", region_name="all", urban_rural="all",
+        policy_df=_policy_df_large(), service_levels_df=_service_levels_df_large(),
+        service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None,
+    )
+    assert stats["n_desert_lsoas"] == 10
+    assert stats["pop_affected"] == pytest.approx(10_000.0)
+    assert stats["mean_imd_score"] == pytest.approx((35.0 + 20.0) / 2)
+
+
+def test_a5_service_deserts_insufficient_data_below_minimum_lsoa_count():
+    """A17: a near-empty filtered slice (e.g. London/rural) returns a sentinel, not {}."""
+    stats = build_misc_stats(
+        "a5_service_deserts", region="E12000007", region_name="London", urban_rural="rural",
         policy_df=_policy_df(), service_levels_df=_service_levels_df(),
         service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None,
     )
-    assert stats["n_desert_lsoas"] == 2
-    assert stats["pop_affected"] == pytest.approx(2000.0)
-    assert stats["mean_imd_score"] == pytest.approx((35.0 + 20.0) / 2)
+    assert stats == {"insufficient_data": True, "n_lsoas": 6}
 
 
 def test_b2_operating_hours_formats_hhmm_strings():
@@ -205,5 +242,6 @@ def test_bsa3_tier_distribution_flags_lad_level_when_area_filtered(urban_rural: 
 
 def test_empty_inputs_return_empty():
     empty = pd.DataFrame()
-    assert build_misc_stats("a3_walking_distance", region="all", region_name="all", urban_rural="all", policy_df=empty, service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None) == {}
+    # a3 returns the insufficient_data sentinel (A17), not {}, for an empty filtered slice.
+    assert build_misc_stats("a3_walking_distance", region="all", region_name="all", urban_rural="all", policy_df=empty, service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=None, lta_df=None) == {"insufficient_data": True, "n_lsoas": 0}
     assert build_misc_stats("g2_anomalies", region="all", region_name="all", urban_rural="all", policy_df=_policy_df(), service_levels_df=None, service_quality_df=None, route_geometries_df=None, anomalies_df=empty, lta_df=None) == {}

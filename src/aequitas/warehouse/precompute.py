@@ -18,6 +18,7 @@ from aequitas.intelligence.engine import InsightEngine
 from aequitas.intelligence.section_registry import SECTION_REGISTRY
 from aequitas.warehouse.stats_builders.correlation import build_correlation_stats
 from aequitas.warehouse.stats_builders.economic import build_economic_stats
+from aequitas.warehouse.stats_builders import equity
 from aequitas.warehouse.stats_builders.equity import build_equity_stats
 from aequitas.warehouse.stats_builders.market_concentration import build_market_concentration_stats
 from aequitas.warehouse.stats_builders.misc import build_misc_stats
@@ -540,8 +541,12 @@ def _build_gap_to_target(filtered: pd.DataFrame, national_median: float) -> dict
     converge to ~50% by construction, since each region was judged against
     its own moving median rather than a comparable national benchmark.
     """
-    if filtered.empty or "trips_per_capita" not in filtered.columns:
-        return {}
+    if "trips_per_capita" not in filtered.columns:
+        return {"insufficient_data": True, "n_lsoas": 0}
+
+    n_lsoas = len(filtered)
+    if n_lsoas < equity._MIN_LSOAS_FOR_GINI:
+        return {"insufficient_data": True, "n_lsoas": n_lsoas}
 
     below = filtered[filtered["trips_per_capita"] < national_median]
     n_below = len(below)

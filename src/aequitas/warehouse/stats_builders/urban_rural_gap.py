@@ -141,13 +141,21 @@ def build_urban_rural_gap_stats(
 
     metric = _METRIC_BY_SECTION.get(section_id)
     if metric is None or region_df.empty or "urban_rural" not in region_df.columns:
-        return {}
+        return {"insufficient_data": True, "n_lsoas": len(region_df)}
 
     column, unit = metric
     urban = region_df[region_df["urban_rural"] == "Urban"]
     rural = region_df[region_df["urban_rural"] == "Rural"]
+    # A region/area-type combo with zero LSOAs of either settlement type
+    # cannot support an urban-vs-rural comparison (e.g. London has 0 Rural
+    # LSOAs) — surface a sentinel rather than a misleading {}.
     if urban.empty or rural.empty:
-        return {}
+        return {
+            "insufficient_data": True,
+            "n_lsoas": len(region_df),
+            "n_urban": int(len(urban)),
+            "n_rural": int(len(rural)),
+        }
 
     urban_value = float(urban[column].mean())
     rural_value = float(rural[column].mean())

@@ -37,11 +37,15 @@ def test_all_sections_produce_non_empty_stats_at_national_scope(cfg):
 
 def test_gap_to_target_uses_fixed_national_median_across_regions(cfg):
     results = precompute_all_sections(cfg)
+    a7_results = [
+        r for r in results
+        if r["section_id"] == "a7_investment_gap" and r["stats"] and not r["stats"].get("insufficient_data")
+    ]
     targets = {
         r["region"]: r["stats"].get("target")
-        for r in results
-        if r["section_id"] == "a7_investment_gap" and r["urban_rural"] == "all" and r["stats"]
+        for r in a7_results
+        if r["urban_rural"] == "all"
     }
     # All regions must be judged against the SAME national yardstick (§2.5 fix)
     assert len(set(targets.values())) == 1
-    assert all(r["stats"].get("target_description") == "national median" for r in results if r["section_id"] == "a7_investment_gap" and r["stats"])
+    assert all(r["stats"].get("target_description") == "national median" for r in a7_results)
