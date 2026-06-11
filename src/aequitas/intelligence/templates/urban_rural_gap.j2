@@ -4,7 +4,16 @@
 **Urban** areas receive **{{ urban_value|round(2) }} {{ unit }}** compared to **{{ rural_value|round(2) }} {{ unit }}** in rural areas — an urban premium of **{{ gap_pct|round(1) }}%**. {% if gap_pct > 100 %}Urban areas receive more than twice the service of rural areas, reflecting the profound structural divide between commercially viable urban corridors and the rural transport deficit.{% elif gap_pct > 50 %}The 50%+ urban premium represents a substantial connectivity gap — rural residents face systematically poorer transport access than their urban counterparts at equivalent distances from services.{% elif gap_pct > 20 %}The 20–50% urban premium is broadly consistent with expected settlement-density effects, but still represents a real disadvantage for rural residents dependent on public transport.{% else %}The modest urban-rural gap suggests service provision is relatively equitable across settlement types in this area — likely reflecting active LTA subsidisation of rural routes.{% endif %}
 
 {% if n_urban and n_rural -%}
-This analysis is based on **{{ n_urban|int|format_thousands }}** urban and **{{ n_rural|int|format_thousands }}** rural LSOAs, representing the full spectrum of settlement types from dense metropolitan areas to dispersed rural villages.
+This analysis is based on **{{ n_urban|int|format_thousands }}** urban and **{{ n_rural|int|format_thousands }}** rural {{ entity_label|default("LSOAs") }}, representing the full spectrum of settlement types from dense metropolitan areas to dispersed rural villages.
+{%- endif %}
+
+{% if entity_label == "routes" -%}
+{% if n_mixed is defined -%}
+A further **{{ n_mixed|int|format_thousands }}** routes (**{{ pct_mixed|round(1) }}%** of the total) operate across both urban and rural areas, reflecting the connective role these services play in linking settlements of different densities.
+{%- endif %}
+{% if n_cross_la is defined and pct_cross_la is defined -%}
+**{{ n_cross_la|int|format_thousands }}** routes (**{{ pct_cross_la|round(1) }}%**) cross local authority boundaries, underscoring the need for cross-boundary coordination — a key consideration for LTAs pursuing franchising powers under the Bus Services Act 2025.
+{%- endif %}
 {%- endif %}
 
 ## Structural Drivers
