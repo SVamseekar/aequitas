@@ -13,7 +13,7 @@ def _correlated_df(n=200, seed=0):
     rng = np.random.default_rng(seed)
     x = rng.normal(50, 10, n)
     y = -0.8 * x + rng.normal(0, 5, n) + 100  # strong negative correlation
-    return pd.DataFrame({"imd_score": x, "trips_per_capita": y})
+    return pd.DataFrame({"imd_score": x, "stops_per_1k": y})
 
 
 def test_correlation_stats_shape():
@@ -26,11 +26,11 @@ def test_correlation_stats_shape():
     assert stats["n"] == 200
     assert stats["n_observations"] == 200
     assert stats["x_label"] == "IMD Decile" or "IMD" in stats["x_label"]
-    assert "trips" in stats["y_label"].lower()
+    assert "stops" in stats["y_label"].lower()
 
 
 def test_correlation_too_few_rows_returns_empty():
-    df = pd.DataFrame({"imd_score": [1.0], "trips_per_capita": [2.0]})
+    df = pd.DataFrame({"imd_score": [1.0], "stops_per_1k": [2.0]})
     stats = build_correlation_stats("d1_coverage_deprivation", df)
     assert stats == {}
 

@@ -188,20 +188,28 @@ def _build_ranking_df(
     return df
 
 
-def _build_correlation_df(policy_df: pd.DataFrame, master_lsoa_path) -> pd.DataFrame:
+def _build_correlation_df(policy_df: pd.DataFrame, master_lsoa_path, service_levels_df: pd.DataFrame) -> pd.DataFrame:
     """Merge socio-economic factors needed by CORRELATION_CONFIG onto policy_df.
 
     d2-d5 correlation sections need unemployment_rate, nocar_pct, elderly_pct,
     and income_score — none of which exist in lsoa_policy_synthesis. They live
     in master_lsoa_table (Phase 0's per-LSOA socio-economic factor table),
     joined here on lsoa_cd.
-    """
-    if not master_lsoa_path.exists():
-        return policy_df
 
-    extra_cols = ["lsoa_cd", "unemployment_rate", "nocar_pct", "elderly_pct", "income_score"]
-    master_df = pd.read_parquet(master_lsoa_path, columns=extra_cols)
-    return policy_df.merge(master_df, on="lsoa_cd", how="left", suffixes=("", "_master"))
+    d1_coverage_deprivation needs stops_per_1k (stop density) to match the
+    locked ground-truth IMD-stop correlation (ST-001, -0.0644) — it lives in
+    lsoa_service_levels, joined here on lsoa_cd.
+    """
+    df = policy_df
+    if master_lsoa_path.exists():
+        extra_cols = ["lsoa_cd", "unemployment_rate", "nocar_pct", "elderly_pct", "income_score"]
+        master_df = pd.read_parquet(master_lsoa_path, columns=extra_cols)
+        df = df.merge(master_df, on="lsoa_cd", how="left", suffixes=("", "_master"))
+
+    if not service_levels_df.empty and "stops_per_1k" in service_levels_df.columns:
+        df = df.merge(service_levels_df[["lsoa_cd", "stops_per_1k"]], on="lsoa_cd", how="left", suffixes=("", "_svc"))
+
+    return df
 
 
 def _load_sources(cfg: PipelineConfig) -> _Sources | None:
@@ -266,7 +274,7 @@ def _load_sources(cfg: PipelineConfig) -> _Sources | None:
         appraisal_df=appraisal_df,
         national_median_trips_per_capita=float(policy_df["trips_per_capita"].median()),
         ranking_df=_build_ranking_df(policy_df, route_geometries_df, service_levels_df, lta_df),
-        correlation_df=_build_correlation_df(policy_df, audit / "master_lsoa_table.parquet"),
+        correlation_df=_build_correlation_df(policy_df, audit / "master_lsoa_table.parquet", service_levels_df),
         rf_r2=rf_r2,
     )
 
