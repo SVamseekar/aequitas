@@ -61,7 +61,6 @@ _SECTION_TEMPLATES: dict[str, str] = {
     "f1_gini": "equity.j2",
     "f2_disparity_ratio": "equity_decile.j2",
     "f3_ethnic_access": "correlation.j2",
-    "f4_gender_accessibility": "accessibility_gap.j2",
     "f5_rural_penalty": "urban_rural_gap.j2",
     "f6_equitable_regions": "ranking.j2",
     # Category G: ML Insights

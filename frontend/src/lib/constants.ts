@@ -70,7 +70,6 @@ export const SECTION_TITLES: Record<string, string> = {
   f1_gini: "Gini coefficient",
   f2_disparity_ratio: "Disparity by IMD decile",
   f3_ethnic_access: "Bus access by ethnicity",
-  f4_gender_accessibility: "Gender-adjusted accessibility",
   f5_rural_penalty: "Rural accessibility penalty",
   f6_equitable_regions: "Most equitable regions",
   g1_route_clusters: "Route clustering",

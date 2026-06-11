@@ -8,7 +8,7 @@ from typing import Any
 import duckdb
 from loguru import logger
 
-# Dimension → section_id prefixes. The 51 section IDs follow a naming convention:
+# Dimension → section_id prefixes. The 50 section IDs follow a naming convention:
 # a1_*, a2_*, ..., b1_*, ..., bsa1_*, ps1_*, etc.
 # Each dimension maps to one or more prefix groups.
 DIMENSION_PREFIXES: dict[str, list[str]] = {
