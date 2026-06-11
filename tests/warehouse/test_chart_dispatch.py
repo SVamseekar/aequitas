@@ -1471,21 +1471,14 @@ def test_bsa3_tier_distribution_missing_columns_returns_empty() -> None:
 
 
 # ---------------------------------------------------------------------------
-# a5_service_deserts, c7_network_topology (choropleth)
+# a5_service_deserts (choropleth)
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "section_id,metric",
-    [
-        ("a5_service_deserts", "pct_sunday_desert"),
-        ("c7_network_topology", "mean_trips_per_capita"),
-    ],
-)
-def test_choropleth_sections(section_id: str, metric: str) -> None:
+def test_choropleth_section_a5() -> None:
     sources = _empty_sources(lta_df=_LTA_DF_BSA2)
     chart = build_chart_data(
-        section_id=section_id,
+        section_id="a5_service_deserts",
         stats={"some": "stats"},
         region="all",
         region_name="England",
@@ -1495,15 +1488,14 @@ def test_choropleth_sections(section_id: str, metric: str) -> None:
         sources=sources,
         lsoa_cds=pd.Series(dtype=str),
     )
-    assert chart["type"] == "choropleth" == SECTION_REGISTRY[section_id].chart_type
-    assert chart["title"] == SECTION_REGISTRY[section_id].title
+    assert chart["type"] == "choropleth" == SECTION_REGISTRY["a5_service_deserts"].chart_type
+    assert chart["title"] == SECTION_REGISTRY["a5_service_deserts"].title
 
 
-@pytest.mark.parametrize("section_id", ["a5_service_deserts", "c7_network_topology"])
-def test_choropleth_sections_region_filtered(section_id: str) -> None:
+def test_choropleth_section_a5_region_filtered() -> None:
     sources = _empty_sources(lta_df=_LTA_DF_BSA2)
     chart = build_chart_data(
-        section_id=section_id,
+        section_id="a5_service_deserts",
         stats={"some": "stats"},
         region="E12000007",
         region_name="London",
@@ -1516,11 +1508,100 @@ def test_choropleth_sections_region_filtered(section_id: str) -> None:
     assert chart["type"] == "choropleth"
 
 
-@pytest.mark.parametrize("section_id", ["a5_service_deserts", "c7_network_topology"])
-def test_choropleth_sections_missing_columns_returns_empty(section_id: str) -> None:
+def test_choropleth_section_a5_missing_columns_returns_empty() -> None:
     sources = _empty_sources(lta_df=pd.DataFrame({"region": ["London"]}))
     chart = build_chart_data(
-        section_id=section_id,
+        section_id="a5_service_deserts",
+        stats={},
+        region="all",
+        region_name="England",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart == {}
+
+
+# ---------------------------------------------------------------------------
+# c7_network_topology (horizontal bar of regions by cross-LA route count)
+# ---------------------------------------------------------------------------
+
+_NETWORK_TOPOLOGY_ROUTES_DF = pd.DataFrame(
+    {
+        "route_id": [f"R{i}" for i in range(8)],
+        "primary_region": (
+            ["South East"] * 3 + ["London"] * 2 + ["North West"] * 2 + ["South East"]
+        ),
+        "length_km": [10.0, 20.0, 15.0, 5.0, 8.0, 12.0, 30.0, 25.0],
+        "cross_la": [True, True, True, True, False, True, False, True],
+    }
+)
+
+
+def test_c7_network_topology_horizontal_bar_all_region() -> None:
+    sources = _empty_sources(route_geometries_df=_NETWORK_TOPOLOGY_ROUTES_DF)
+    chart = build_chart_data(
+        section_id="c7_network_topology",
+        stats={"some": "stats"},
+        region="all",
+        region_name="England",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart["type"] == "horizontal_bar" == SECTION_REGISTRY["c7_network_topology"].chart_type
+    assert chart["title"] == SECTION_REGISTRY["c7_network_topology"].title
+    # South East: R0,R1,R2,R7 all cross_la=True -> 4; London: only R3 -> 1; NW: only R5 -> 1
+    labels = {row["label"]: row["value"] for row in chart["data"]}
+    assert labels["South East"] == 4.0
+    assert labels["London"] == 1.0
+    assert labels["North West"] == 1.0
+    assert chart["data"][0]["rank"] == 1
+    assert "national_avg" in chart
+
+
+def test_c7_network_topology_region_filtered_returns_empty() -> None:
+    sources = _empty_sources(route_geometries_df=_NETWORK_TOPOLOGY_ROUTES_DF)
+    chart = build_chart_data(
+        section_id="c7_network_topology",
+        stats={"some": "stats"},
+        region="E12000007",
+        region_name="London",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart == {}
+
+
+def test_c7_network_topology_missing_columns_returns_empty() -> None:
+    sources = _empty_sources(route_geometries_df=pd.DataFrame({"route_id": ["R0"]}))
+    chart = build_chart_data(
+        section_id="c7_network_topology",
+        stats={},
+        region="all",
+        region_name="England",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart == {}
+
+
+def test_c7_network_topology_no_cross_la_routes_returns_empty() -> None:
+    df = _NETWORK_TOPOLOGY_ROUTES_DF.copy()
+    df["cross_la"] = False
+    sources = _empty_sources(route_geometries_df=df)
+    chart = build_chart_data(
+        section_id="c7_network_topology",
         stats={},
         region="all",
         region_name="England",

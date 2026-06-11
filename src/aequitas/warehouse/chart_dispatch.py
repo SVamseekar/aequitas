@@ -153,7 +153,7 @@ def build_chart_data(
         return _build_service_deserts_choropleth(section_id, region, region_name, sources)
 
     if section_id == "c7_network_topology":
-        return _build_network_topology_choropleth(section_id, region, region_name, sources)
+        return _build_network_topology_corridors(section_id, region, sources)
 
     return {}
 
@@ -882,31 +882,39 @@ def _build_service_deserts_choropleth(
     )
 
 
-def _build_network_topology_choropleth(
-    section_id: str, region: str, region_name: str, sources: _Sources
-) -> dict:
-    """Choropleth of mean trips per capita by LAD (c7); {} on guard."""
-    lta = sources.lta_df
-    required = {"lad_cd", "lad_nm", "mean_trips_per_cap", "region"}
-    if lta.empty or not required.issubset(lta.columns):
+def _build_network_topology_corridors(section_id: str, region: str, sources: _Sources) -> dict:
+    """Horizontal bar of regions ranked by cross-LA route count (c7); {} on guard.
+
+    Pairs with `_build_network_topology`'s `densest_corridor`/`densest_count`
+    stats, which identify the ONS region with the most cross-LA routes. There
+    is no LAD-to-LAD origin/destination column in `route_geometries.parquet`
+    or `route_stop_sequences.parquet`, so a true place<->place corridor chart
+    is not derivable; instead this shows the regional breakdown of cross-LA
+    route counts that produces `densest_corridor`. National-level only,
+    matching the single-region-fallback convention of
+    `_RANKING_HORIZONTAL_BAR_SECTIONS`.
+    """
+    if region != "all":
         return {}
 
-    if region != "all":
-        lta = lta[lta["region"] == region_name]
-        if lta.empty:
-            return {}
+    routes = sources.route_geometries_df
+    required = {"cross_la", "primary_region"}
+    if routes.empty or not required.issubset(routes.columns):
+        return {}
 
-    data = pd.DataFrame(
-        {
-            "area_code": lta["lad_cd"],
-            "area_name": lta["lad_nm"],
-            "value": lta["mean_trips_per_cap"].round(1),
-        }
-    )
-    return chart_data_builder.build_choropleth(
+    cross_la = routes[routes["cross_la"]]
+    if cross_la.empty:
+        return {}
+
+    by_region = cross_la.groupby("primary_region").size().dropna()
+    if by_region.empty or len(by_region) < 2:
+        return {}
+
+    data = pd.DataFrame({"label": by_region.index, "value": by_region.values})
+    return chart_data_builder.build_horizontal_bar(
         data=data,
-        geography="lad",
-        metric="mean_trips_per_capita",
         title=SECTION_REGISTRY[section_id].title,
-        colour_scale="RdYlGn",
+        x_label="Cross-LA routes",
+        y_label="Region",
+        national_avg=float(by_region.mean()),
     )
