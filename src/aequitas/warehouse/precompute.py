@@ -469,12 +469,12 @@ def _dispatch(
         return build_equity_stats(section_id, equity_df=_filter_by_lsoa(sources.equity_df, lsoa_cds))
 
     if section_id in _MISC_SECTIONS:
-        # c1_route_length/c2_stops_per_route consume route_geometries_df via
-        # _build_distribution_section; pre-filter by urban/rural here (same
-        # convention as _MARKET_CONCENTRATION_SECTIONS) so build_misc_stats
-        # doesn't need its own urban/rural-filtering logic. No other section
-        # in _MISC_SECTIONS reads route_geometries_df.
-        routes = _filter_routes_by_urban_rural(sources.route_geometries_df, sources.route_urban_rural_df, urban_rural)
+        # Pre-filter routes for c1_route_length/c2_stops_per_route. No other
+        # _MISC_SECTIONS builder currently consumes route_geometries_df
+        # unfiltered, but future additions should be aware of this pre-filter.
+        routes = _filter_routes_by_urban_rural(
+            sources.route_geometries_df, sources.route_urban_rural_df, urban_rural
+        )
         return build_misc_stats(
             section_id,
             region=region,
