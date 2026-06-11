@@ -79,6 +79,37 @@ def test_a1_route_density_chart_is_horizontal_bar(sources: _Sources) -> None:
     assert chart_data["type"] == "horizontal_bar"
 
 
+@pytest.mark.parametrize("region", ["all", "E12000007"])
+def test_bsa3_tier_distribution_lad_level_flag(region: str, sources: _Sources) -> None:
+    """bsa3 stats are identical across urban_rural but flag the LAD-level caveat."""
+    stats_all, _ = _build_for("bsa3_tier_distribution", region, "all", sources)
+    stats_urban, _ = _build_for("bsa3_tier_distribution", region, "urban", sources)
+    stats_rural, _ = _build_for("bsa3_tier_distribution", region, "rural", sources)
+
+    assert stats_all["is_lad_level_unfiltered"] is False
+    assert stats_urban["is_lad_level_unfiltered"] is True
+    assert stats_rural["is_lad_level_unfiltered"] is True
+
+    for key in ("n_total", "n_tier1", "n_tier2", "n_tier3"):
+        assert stats_all[key] == stats_urban[key] == stats_rural[key]
+
+
+@pytest.mark.parametrize("region", ["all", "E12000007"])
+def test_bsa1_franchising_readiness_lad_level_flag(region: str, sources: _Sources) -> None:
+    """bsa1 stats are identical across urban_rural but flag the LAD-level caveat."""
+    stats_all, _ = _build_for("bsa1_franchising_readiness", region, "all", sources)
+    stats_urban, _ = _build_for("bsa1_franchising_readiness", region, "urban", sources)
+    stats_rural, _ = _build_for("bsa1_franchising_readiness", region, "rural", sources)
+
+    assert stats_all["is_lad_level_unfiltered"] is False
+    assert stats_urban["is_lad_level_unfiltered"] is True
+    assert stats_rural["is_lad_level_unfiltered"] is True
+
+    value_keys = ("value", "national_avg") if region != "all" else ("national_avg",)
+    for key in value_keys:
+        assert stats_all[key] == stats_urban[key] == stats_rural[key]
+
+
 def test_chart_type_variety_across_sample(sources: _Sources) -> None:
     """At least 6 distinct chart types appear across a sample of sections/regions."""
     from aequitas.intelligence.section_registry import SECTION_REGISTRY

@@ -190,6 +190,22 @@ def test_bsa3_tier_distribution_counts_each_tier():
     assert stats["n_tier1"] == 1
     assert stats["n_tier2"] == 2
     assert stats["n_tier3"] == 1
+    assert stats["is_lad_level_unfiltered"] is False
+
+
+@pytest.mark.parametrize("urban_rural", ["urban", "rural"])
+def test_bsa3_tier_distribution_flags_lad_level_when_area_filtered(urban_rural: str):
+    stats = build_misc_stats(
+        "bsa3_tier_distribution", region="all", region_name="all", urban_rural=urban_rural,
+        policy_df=_policy_df(), service_levels_df=None, service_quality_df=None,
+        route_geometries_df=None, anomalies_df=None, lta_df=_lta_df(),
+    )
+    # LAD-grain data can't be subdivided — counts identical to "all".
+    assert stats["n_total"] == 4
+    assert stats["n_tier1"] == 1
+    assert stats["n_tier2"] == 2
+    assert stats["n_tier3"] == 1
+    assert stats["is_lad_level_unfiltered"] is True
 
 
 def test_empty_inputs_return_empty():

@@ -16,4 +16,8 @@ Regional benchmarking of this kind is central to the DfT's Bus Service Improveme
 Under the Bus Services Act 2025, LTAs in lower-performing regions have stronger grounds to invoke franchising powers — the performance gap relative to national benchmarks provides the evidence base required by the Act's proportionality test. BSIP funding rounds specifically reward LTAs that demonstrate how proposed investments close identified gaps.
 
 *Methodology: Regional averages computed from LSOA-level data, population-weighted using Census 2021. National average is the unweighted mean across all regions. Data sourced from BODS GTFS feeds (1,752,443 trips) cross-referenced with NaPTAN stop locations.*
+
+{% if is_lad_level_unfiltered -%}
+*Note: this is a Local Authority District (LAD)-level metric and cannot be subdivided by urban/rural area type — LADs typically contain a mix of urban and rural LSOAs. The figures shown are for the full region (or England) regardless of the urban/rural filter.*
+{%- endif %}
 {%- endif %}
