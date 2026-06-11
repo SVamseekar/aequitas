@@ -407,7 +407,7 @@ def _dispatch(
                 route_urban_rural["urban_rural_classification"] == urban_rural
             ]["route_id"]
             routes = routes[routes["route_id"].isin(classified)]
-        return build_market_concentration_stats(section_id, routes_df=routes, lta_df=None, region_name=region_name)
+        return build_market_concentration_stats(section_id, routes_df=routes, region_name=region_name)
 
     if section_id == "b4_route_frequency":
         return build_route_frequency_stats(

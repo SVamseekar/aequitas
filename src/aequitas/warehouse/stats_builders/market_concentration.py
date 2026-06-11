@@ -41,7 +41,6 @@ def _build_from_routes(routes_df: pd.DataFrame, region_name: str) -> dict:
 def build_market_concentration_stats(
     section_id: str,
     routes_df: pd.DataFrame | None,
-    lta_df: pd.DataFrame | None,
     region_name: str,
 ) -> dict:
     """Build stats for c3_operator_hhi or bsa2_operator_concentration.
@@ -53,7 +52,6 @@ def build_market_concentration_stats(
         section_id: "c3_operator_hhi" or "bsa2_operator_concentration".
         routes_df: route_geometries rows for the active filter scope (region-
             and area-type-filtered, or all routes when scope == "all").
-        lta_df: Unused — retained for call-site compatibility.
         region_name: Human-readable region/scope label for the template
             header (e.g. "London" or "England" when region == "all").
 
@@ -61,7 +59,6 @@ def build_market_concentration_stats(
         Dict matching market_concentration.j2's contract, or {} if the
         relevant source data is empty/missing.
     """
-    del lta_df  # Unused: both sections now derive HHI from routes_df.
     if section_id in {"c3_operator_hhi", "bsa2_operator_concentration"}:
         return _build_from_routes(routes_df if routes_df is not None else pd.DataFrame(), region_name)
     return {}

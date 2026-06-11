@@ -17,7 +17,7 @@ def _routes_df():
 
 def test_c3_computes_hhi_and_top_operator_from_routes():
     stats = build_market_concentration_stats(
-        "c3_operator_hhi", routes_df=_routes_df(), lta_df=None,
+        "c3_operator_hhi", routes_df=_routes_df(),
         region_name="London",
     )
     assert stats["hhi"] == pytest.approx(4600.0, abs=0.1)
@@ -28,7 +28,7 @@ def test_c3_computes_hhi_and_top_operator_from_routes():
 
 def test_bsa2_uses_same_route_based_hhi_as_c3():
     stats = build_market_concentration_stats(
-        "bsa2_operator_concentration", routes_df=_routes_df(), lta_df=None,
+        "bsa2_operator_concentration", routes_df=_routes_df(),
         region_name="London",
     )
     assert stats["hhi"] == pytest.approx(4600.0, abs=0.1)
@@ -38,5 +38,5 @@ def test_bsa2_uses_same_route_based_hhi_as_c3():
 
 
 def test_empty_inputs_return_empty():
-    assert build_market_concentration_stats("c3_operator_hhi", routes_df=pd.DataFrame(), lta_df=None, region_name="London") == {}
-    assert build_market_concentration_stats("bsa2_operator_concentration", routes_df=pd.DataFrame(), lta_df=None, region_name="London") == {}
+    assert build_market_concentration_stats("c3_operator_hhi", routes_df=pd.DataFrame(), region_name="London") == {}
+    assert build_market_concentration_stats("bsa2_operator_concentration", routes_df=pd.DataFrame(), region_name="London") == {}
