@@ -41,13 +41,28 @@ def test_missing_columns_returns_empty():
     assert stats == {}
 
 
-def test_correlation_config_covers_all_seven_sections():
+def test_correlation_config_covers_all_eight_sections():
     expected = {
         "d1_coverage_deprivation", "d2_coverage_unemployment", "d3_coverage_car",
         "d4_coverage_elderly", "d5_coverage_income", "b5_frequency_deprivation",
-        "c5_length_vs_frequency",
+        "c5_length_vs_frequency", "f3_ethnic_access",
     }
     assert set(CORRELATION_CONFIG.keys()) == expected
     for sid, cfg in CORRELATION_CONFIG.items():
         assert "x_col" in cfg and "y_col" in cfg
         assert "x_label" in cfg and "y_label" in cfg
+
+
+def test_f3_ethnic_access_stats_shape():
+    df = pd.DataFrame({
+        "nonwhite_pct": [5.0, 10.0, 50.0, 80.0, 95.0],
+        "stops_per_1k": [6.0, 5.0, 4.0, 2.0, 1.0],
+    })
+    stats = build_correlation_stats("f3_ethnic_access", df)
+    assert set(stats.keys()) >= {
+        "r", "p_value", "n", "n_observations", "x_label", "y_label", "strength", "direction"
+    }
+    assert stats["n"] == 5
+    assert stats["direction"] == "negative"
+    assert "non-white" in stats["x_label"].lower()
+    assert "stops" in stats["y_label"].lower()

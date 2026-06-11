@@ -31,6 +31,7 @@ _CORRELATION_SECTIONS = {
     "d3_coverage_car",
     "d4_coverage_elderly",
     "d5_coverage_income",
+    "f3_ethnic_access",
 }
 
 _SCATTER_REGRESSION_SECTIONS = _CORRELATION_SECTIONS | {"c5_length_vs_frequency", "g2_anomalies"}

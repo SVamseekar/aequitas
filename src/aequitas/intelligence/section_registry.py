@@ -60,7 +60,7 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     # Category F: Equity & Social Inclusion
     "f1_gini": SectionDef("equity.j2", "lorenz_curve", "F", "Gini coefficient"),
     "f2_disparity_ratio": SectionDef("equity_decile.j2", "horizontal_bar", "F", "Disparity by IMD decile"),
-    "f3_ethnic_access": SectionDef("demographic_breakdown.j2", "grouped_bar", "F", "Bus access by ethnicity"),
+    "f3_ethnic_access": SectionDef("correlation.j2", "scatter_regression", "F", "Bus access by ethnicity"),
     "f4_gender_accessibility": SectionDef("accessibility_gap.j2", "horizontal_bar", "F", "Gender-adjusted accessibility"),
     "f5_rural_penalty": SectionDef("urban_rural_gap.j2", "grouped_bar", "F", "Rural accessibility penalty"),
     "f6_equitable_regions": SectionDef("ranking.j2", "horizontal_bar", "F", "Most equitable regions"),

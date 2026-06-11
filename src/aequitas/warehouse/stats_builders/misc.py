@@ -2,8 +2,8 @@
 
 Covers: a3_walking_distance, a5_service_deserts, b2_operating_hours,
 b3_weekend_penalty, c1_route_length, c2_stops_per_route,
-d7_deprivation_urban_rural, f3_ethnic_access (stub), f4_gender_accessibility
-(stub), g2_anomalies, bsa3_tier_distribution.
+d7_deprivation_urban_rural, f4_gender_accessibility (stub), g2_anomalies,
+bsa3_tier_distribution.
 """
 
 import pandas as pd
@@ -257,14 +257,12 @@ def build_misc_stats(
 
     Returns:
         Dict matching the relevant template's contract, or {} when required
-        source data is missing/empty or the section is stubbed (f3, f4).
+        source data is missing/empty or the section is stubbed (f4).
     """
-    if section_id in ("f3_ethnic_access", "f4_gender_accessibility"):
-        # STUBS (ISSUES.md §8.2/§8.3): f3 requires a ts021 ethnicity-by-LSOA
-        # join that the analytics stage does not produce; f4 requires
-        # gender-disaggregated travel data that does not exist in any
-        # government open dataset at LSOA granularity. Both await a future
-        # analytics-stage data engineering pass.
+    if section_id == "f4_gender_accessibility":
+        # STUB (ISSUES.md §8.3): f4 requires gender-disaggregated travel data
+        # that does not exist in any government open dataset at LSOA
+        # granularity. Awaits a future analytics-stage data engineering pass.
         return {}
 
     if section_id == "a3_walking_distance":
