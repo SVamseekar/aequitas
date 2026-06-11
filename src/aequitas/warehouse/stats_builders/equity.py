@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 
 _MIN_DISTINCT_DECILES = 2
+_MIN_LSOAS_FOR_GINI = 30
 
 
 def _population_weighted_gini(values: pd.Series, weights: pd.Series) -> float:
@@ -80,11 +81,15 @@ def _build_distribution(equity_df: pd.DataFrame) -> dict:
     if equity_df.empty or equity_df["imd_decile"].nunique() < _MIN_DISTINCT_DECILES:
         return {}
 
+    n_lsoas = int(len(equity_df))
+    if n_lsoas < _MIN_LSOAS_FOR_GINI:
+        return {"insufficient_data": True, "n_lsoas": n_lsoas}
+
     return {
         "gini": round(_population_weighted_gini(equity_df["trips_per_capita"], equity_df["population"]), 4),
         "palma": round(_palma_ratio(equity_df, "trips_per_capita"), 2),
         "concentration_index": round(_concentration_index(equity_df, "trips_per_capita"), 4),
-        "n_lsoas": int(len(equity_df)),
+        "n_lsoas": n_lsoas,
     }
 
 
@@ -95,18 +100,24 @@ def _build_disparity_ratio(equity_df: pd.DataFrame) -> dict:
     by_decile = equity_df.groupby("imd_decile")["trips_per_capita"].mean()
     most_deprived_value = float(by_decile.loc[by_decile.index.min()])
     least_deprived_value = float(by_decile.loc[by_decile.index.max()])
-    if most_deprived_value == 0:
-        return {}
 
     bottom_20 = equity_df[equity_df["imd_decile"] <= 2]
     total_trips = float((equity_df["trips_per_capita"] * equity_df["population"]).sum())
     bottom_20_trips = float((bottom_20["trips_per_capita"] * bottom_20["population"]).sum())
     bottom_20_pct = (bottom_20_trips / total_trips * 100) if total_trips > 0 else 0.0
 
+    # If the most-deprived decile has zero baseline service, the ratio is
+    # mathematically undefined (division by zero) — surface a sentinel
+    # rather than a misleading 0 or raising.
+    ratio: float | None = (
+        round(least_deprived_value / most_deprived_value, 2) if most_deprived_value > 0 else None
+    )
+
     return {
         "most_deprived_value": round(most_deprived_value, 2),
         "least_deprived_value": round(least_deprived_value, 2),
-        "ratio": round(least_deprived_value / most_deprived_value, 2),
+        "ratio": ratio,
+        "ratio_undefined": ratio is None,
         "bottom_20_pct": round(bottom_20_pct, 1),
         "unit": "trips per capita",
     }
@@ -125,6 +136,15 @@ def build_equity_stats(section_id: str, equity_df: pd.DataFrame) -> dict:
         Dict matching equity.j2's contract (f1/a4) or equity_decile.j2's
         contract (f2), or {} when the filtered slice is empty or spans fewer
         than 2 distinct IMD deciles (distribution statistics undefined).
+
+        f1/a4 dicts include "insufficient_data": True (with only "n_lsoas")
+        instead of gini/palma/concentration_index when the slice has fewer
+        than _MIN_LSOAS_FOR_GINI LSOAs — small samples produce out-of-[0,1]
+        Gini artifacts.
+
+        f2 dicts include "ratio": None and "ratio_undefined": True when the
+        most-deprived decile's mean trips-per-capita is zero (division by
+        zero would otherwise be masked as a misleading 0).
     """
     if section_id in ("f1_gini", "a4_coverage_equity"):
         return _build_distribution(equity_df)

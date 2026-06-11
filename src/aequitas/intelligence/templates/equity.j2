@@ -1,4 +1,8 @@
-{% if gini is defined and gini is not none -%}
+{% if insufficient_data -%}
+## Key Finding
+
+Insufficient data for this filter ({{ n_lsoas }} LSOA{{ "s" if n_lsoas != 1 }}). Gini, Palma, and Concentration Index require a larger sample to produce a statistically meaningful distribution — the Lorenz curve is suppressed for this region/area-type combination. Refer to the national or regional (all-area-type) figures instead.
+{%- elif gini is defined and gini is not none -%}
 ## Key Finding
 
 The Gini coefficient for bus service distribution is **{{ gini|round(4) }}**, {{ "significantly exceeding" if gini > 0.5 else "exceeding" if gini > 0.36 else "below" }} the UK income Gini of approximately 0.36. This indicates {% if gini > 0.36 %}bus service access is distributed more unequally than household incomes across England{% else %}a relatively equitable distribution of bus services{% endif %}.
