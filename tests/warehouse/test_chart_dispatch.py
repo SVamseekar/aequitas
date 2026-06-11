@@ -297,6 +297,23 @@ def test_lorenz_curve_empty_stats_returns_empty() -> None:
     assert chart == {}
 
 
+@pytest.mark.parametrize("section_id", ["f1_gini", "a4_coverage_equity"])
+def test_lorenz_curve_insufficient_data_stats_returns_empty(section_id: str) -> None:
+    sources = _empty_sources(equity_df=_EQUITY_DF)
+    chart = build_chart_data(
+        section_id=section_id,
+        stats={"insufficient_data": True, "n_lsoas": 5},
+        region="all",
+        region_name="England",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=_EQUITY_DF["lsoa_cd"],
+    )
+    assert chart == {}
+
+
 # ---------------------------------------------------------------------------
 # shap_bar — a8_coverage_prediction, d8_feature_importance, g4_shap
 # ---------------------------------------------------------------------------

@@ -229,8 +229,8 @@ def _build_lorenz_curve(
     sources: _Sources,
     lsoa_cds: pd.Series,
 ) -> dict:
-    """Lorenz curve chart for f1_gini/a4_coverage_equity; {} if stats empty or <2 deciles."""
-    if not stats:
+    """Lorenz curve chart for f1_gini/a4_coverage_equity; {} if stats empty, insufficient, or <2 deciles."""
+    if not stats or stats.get("insufficient_data"):
         return {}
     equity_df = _filter_by_lsoa(sources.equity_df, lsoa_cds)
     if equity_df.empty or equity_df["imd_decile"].nunique() < _MIN_DISTINCT_DECILES:
