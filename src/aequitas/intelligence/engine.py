@@ -38,7 +38,7 @@ _SECTION_TEMPLATES: dict[str, str] = {
     "b1_frequency": "ranking.j2",
     "b2_operating_hours": "service_hours.j2",
     "b3_weekend_penalty": "weekend_penalty.j2",
-    "b4_route_frequency": "ranking.j2",
+    "b4_route_frequency": "route_frequency_ranking.j2",
     "b5_frequency_deprivation": "correlation.j2",
     # Category C: Route Characteristics
     "c1_route_length": "distribution.j2",

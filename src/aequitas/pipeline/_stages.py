@@ -167,6 +167,26 @@ def run_processing(cfg: PipelineConfig | None = None) -> StageReport:
         logger.error(f"Route urban/rural processing failed: {e}")
         raise
 
+    # Route trip frequency
+    try:
+        from aequitas.processing.route_trip_frequency import compute_route_trip_frequency
+        route_freq = compute_route_trip_frequency(cfg)
+        out = cfg.processed_dir / "route_trip_frequency.parquet"
+        route_freq.to_parquet(out, index=False, compression="zstd")
+        output_files.append(out)
+        # _load_sources (warehouse/precompute.py) reads route-level
+        # intermediates from audit_dir, mirroring route_geometries.parquet
+        # and route_urban_rural.parquet — write a copy there so the
+        # warehouse precompute step can discover it after a real pipeline run.
+        cfg.audit_dir.mkdir(parents=True, exist_ok=True)
+        audit_out = cfg.audit_dir / "route_trip_frequency.parquet"
+        route_freq.to_parquet(audit_out, index=False, compression="zstd")
+        logger.info(f"Route trip frequency: {len(route_freq):,} routes → {out.name} (+ audit copy)")
+        checks_passed += 1
+    except Exception as e:
+        logger.error(f"Route trip frequency processing failed: {e}")
+        raise
+
     duration = time.perf_counter() - t0
     report = StageReport("process", duration, output_files, checks_passed)
     report.log()

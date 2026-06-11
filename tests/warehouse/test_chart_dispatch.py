@@ -14,6 +14,8 @@ def _empty_sources(**overrides: object) -> _Sources:
         equity_df=pd.DataFrame(),
         equity_summary={},
         route_geometries_df=pd.DataFrame(),
+        route_urban_rural_df=pd.DataFrame(),
+        route_trip_frequency_df=pd.DataFrame(),
         route_clusters_df=pd.DataFrame(),
         lsoa_clusters_df=pd.DataFrame(),
         shap_df=pd.DataFrame(),
@@ -711,7 +713,7 @@ def test_g5_scenario_model_returns_empty() -> None:
 
 
 # ---------------------------------------------------------------------------
-# horizontal_bar — ranking-derived (a1, a2, b1, b4, f6, j4, bsa1)
+# horizontal_bar — ranking-derived (a1, a2, b1, f6, j4, bsa1)
 # ---------------------------------------------------------------------------
 
 _RANKING_DF = pd.DataFrame(
@@ -742,7 +744,6 @@ _RANKING_DF = pd.DataFrame(
         "a1_route_density",
         "a2_stop_density",
         "b1_frequency",
-        "b4_route_frequency",
         "f6_equitable_regions",
         "j4_investment_priority",
         "bsa1_franchising_readiness",
@@ -785,6 +786,58 @@ def test_ranking_horizontal_bar_region_not_all_returns_empty(section_id: str) ->
         filtered=pd.DataFrame(),
         region_df=pd.DataFrame(),
         sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart == {}
+
+
+# ---------------------------------------------------------------------------
+# horizontal_bar — b4_route_frequency (own builder, route-grain)
+# ---------------------------------------------------------------------------
+
+
+def test_b4_route_frequency_chart_combines_top_and_bottom() -> None:
+    stats = {
+        "top_routes": [
+            {"route_short_name": "A1", "agency_name": "First Bristol", "n_trips_per_day": 100, "primary_region": "South West"},
+            {"route_short_name": "2", "agency_name": "First Portsmouth", "n_trips_per_day": 80, "primary_region": "South East"},
+        ],
+        "bottom_routes": [
+            {"route_short_name": "Z9", "agency_name": "Tiny Bus Co", "n_trips_per_day": 1, "primary_region": "North East"},
+            {"route_short_name": "Y8", "agency_name": "Tiny Bus Co", "n_trips_per_day": 2, "primary_region": "North East"},
+        ],
+        "n_routes": 100,
+        "scope_label": "England",
+        "unit": "trips/day",
+    }
+    chart = build_chart_data(
+        section_id="b4_route_frequency",
+        stats=stats,
+        region="all",
+        region_name="England",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=_empty_sources(),
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart["type"] == "horizontal_bar" == SECTION_REGISTRY["b4_route_frequency"].chart_type
+    assert chart["title"] == SECTION_REGISTRY["b4_route_frequency"].title
+    assert len(chart["data"]) == 4
+    assert chart["data"][0]["label"] == "A1 (First Bristol)"
+    assert chart["data"][0]["value"] == 100
+
+
+def test_b4_route_frequency_chart_empty_stats_returns_empty() -> None:
+    chart = build_chart_data(
+        section_id="b4_route_frequency",
+        stats={},
+        region="all",
+        region_name="England",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=_empty_sources(),
         lsoa_cds=pd.Series(dtype=str),
     )
     assert chart == {}

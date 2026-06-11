@@ -1,0 +1,27 @@
+{% if top_routes and bottom_routes -%}
+## Key Finding
+
+The most frequent route in {{ scope_label }} is **{{ top_routes[0].route_short_name }}** (operated by {{ top_routes[0].agency_name }}), running **{{ top_routes[0].n_trips_per_day|format_thousands }}** {{ "trip" if top_routes[0].n_trips_per_day == 1 else "trips" }} per day. The least frequent is **{{ bottom_routes[0].route_short_name }}** (operated by {{ bottom_routes[0].agency_name }}), at just **{{ bottom_routes[0].n_trips_per_day|format_thousands }}** {{ "trip" if bottom_routes[0].n_trips_per_day == 1 else "trips" }} per day — a ratio of **{{ (top_routes[0].n_trips_per_day / bottom_routes[0].n_trips_per_day)|round(1) }}x** between the busiest and quietest routes analysed.
+
+## Highest-Frequency Routes
+
+{% for route in top_routes -%}
+{{ loop.index }}. **{{ route.route_short_name }}** ({{ route.agency_name }}, {{ route.primary_region }}) — {{ route.n_trips_per_day|format_thousands }} {{ unit }}
+{% endfor %}
+
+## Lowest-Frequency Routes
+
+{% for route in bottom_routes -%}
+{{ loop.index }}. **{{ route.route_short_name }}** ({{ route.agency_name }}, {{ route.primary_region }}) — {{ route.n_trips_per_day|format_thousands }} {{ unit }}
+{% endfor %}
+
+## Policy Implications
+
+High-frequency routes such as **{{ top_routes[0].route_short_name }}** demonstrate strong commercial viability and dense, turn-up-and-go service patterns typical of major urban corridors. Such routes are prime candidates for scrutiny under the Bus Services Act 2025's franchising provisions (cross-reference bsa1/bsa2): where a single operator controls a high-frequency, high-revenue corridor, LTAs may assess whether franchising would deliver better value or service integration than the status quo.
+
+Low-frequency routes such as **{{ bottom_routes[0].route_short_name }}**, by contrast, often indicate marginal or lifeline services running only a handful of journeys per day. These routes warrant cross-referencing against evening-isolation and Sunday-desert findings (b2/b3) — a route running fewer than 10 trips per day is unlikely to provide meaningful evening or weekend coverage, and may be a candidate for frequency restoration under the policy scenarios modelled in this report (ps1).
+
+This analysis covers **{{ n_routes|format_thousands }}** routes in {{ scope_label }}, ranked by daily scheduled trip count from BODS GTFS.
+
+*Methodology: n_trips_per_day is the count of scheduled trips per route_id (GTFS route_type=3, bus only) in BODS GTFS trips.txt. route_short_name and agency_name are sourced from route_geometries.parquet (BODS routes.txt/agency.txt).*
+{%- endif %}
