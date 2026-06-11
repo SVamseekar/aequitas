@@ -14,8 +14,11 @@ from aequitas.intelligence.calculators import calculate_correlation
 
 CORRELATION_CONFIG: dict[str, dict] = {
     "d1_coverage_deprivation": {
-        "x_col": "imd_score", "y_col": "trips_per_capita",
-        "x_label": "IMD Score", "y_label": "Trips per Capita",
+        # stops_per_1k (stop density) matches the locked ground-truth
+        # IMD-stop Pearson correlation (ST-001, -0.0644 — see
+        # docs/figures-registry.md), not trips_per_capita.
+        "x_col": "imd_score", "y_col": "stops_per_1k",
+        "x_label": "IMD Score", "y_label": "Bus Stops per 1,000 Population",
     },
     "d2_coverage_unemployment": {
         "x_col": "unemployment_rate", "y_col": "trips_per_capita",

@@ -42,6 +42,7 @@ _CORR_DF = pd.DataFrame(
     {
         "lsoa_cd": [f"E0100000{i}" for i in range(8)],
         "imd_score": [10, 20, 30, 40, 50, 60, 70, 80],
+        "stops_per_1k": [5.0, 4.0, 6.0, 3.0, 7.0, 2.0, 8.0, 1.0],
         "trips_per_capita": [5, 4, 6, 3, 7, 2, 8, 1],
         "service_quality_index": [60, 55, 65, 50, 70, 45, 75, 40],
         "unemployment_rate": [3, 4, 5, 6, 7, 8, 9, 10],
