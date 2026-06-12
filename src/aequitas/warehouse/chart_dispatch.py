@@ -103,7 +103,7 @@ def build_chart_data(
 
     if section_id in _RANKING_HORIZONTAL_BAR_SECTIONS:
         if region != "all":
-            return {}
+            return _chart_kpi_tiles_from_single_region(section_id, stats)
         return _chart_horizontal_bar_from_ranking(section_id, sources, region)
 
     if section_id in _SCENARIO_KPI_TILE_SECTIONS:
@@ -115,18 +115,24 @@ def build_chart_data(
         return _build_investment_gap(section_id, region, sources)
 
     if section_id == "c3_operator_hhi":
+        if region != "all":
+            return _chart_operator_hhi_kpi_tiles(section_id, stats)
         return _build_operator_hhi(section_id, region, sources)
 
     if section_id == "f2_disparity_ratio":
         return _build_disparity_ratio(section_id, stats, sources, lsoa_cds)
 
     if section_id == "j1_economic_value":
+        if region != "all":
+            return _chart_economic_value_kpi_tiles(section_id, stats)
         return _build_economic_value(section_id, region, sources, lsoa_cds)
 
     if section_id == "j2_bcr":
         return _build_bcr(section_id, region, sources, lsoa_cds)
 
     if section_id == "j3_carbon":
+        if region != "all":
+            return _chart_carbon_kpi_tiles(section_id, stats)
         return _build_carbon(section_id, region, sources, lsoa_cds)
 
     if section_id == "bsa2_operator_concentration":
@@ -463,6 +469,28 @@ def _chart_horizontal_bar_from_ranking(section_id: str, sources: _Sources, regio
     )
 
 
+def _chart_kpi_tiles_from_single_region(section_id: str, stats: dict) -> dict:
+    """KPI tiles for a single-region fallback on ranking sections (E1); {} on guard.
+
+    `stats` is the `build_single_region_stats` shape: region_name, value,
+    national_avg, vs_national_pct, unit.
+    """
+    required = {"region_name", "value", "national_avg", "vs_national_pct", "unit"}
+    if not stats or not required.issubset(stats):
+        return {}
+
+    unit = stats["unit"]
+    tiles = [
+        {"label": f"{stats['region_name']}", "value": stats["value"], "unit": unit},
+        {"label": "National average", "value": stats["national_avg"], "unit": unit},
+        {"label": "vs National", "value": stats["vs_national_pct"], "unit": "%"},
+    ]
+    return chart_data_builder.build_kpi_tiles(
+        tiles=tiles,
+        title=SECTION_REGISTRY[section_id].title,
+    )
+
+
 def _chart_scenario_kpi_tiles(section_id: str, stats: dict) -> dict:
     """KPI tiles (population/cost/CO2, independent units) for ps1-ps4/g5; {} if stats empty."""
     if not stats or "scenario" not in stats:
@@ -523,6 +551,27 @@ def _build_investment_gap(section_id: str, region: str, sources: _Sources) -> di
         title=SECTION_REGISTRY[section_id].title,
         x_label="Investment gap (£m/yr)",
         y_label="Region",
+    )
+
+
+def _chart_operator_hhi_kpi_tiles(section_id: str, stats: dict) -> dict:
+    """KPI tiles for c3_operator_hhi single-region fallback (E1); {} on guard.
+
+    `stats` is the `_build_from_routes` shape: hhi, region_name,
+    top_operator, top_operator_share.
+    """
+    required = {"hhi", "region_name", "top_operator", "top_operator_share"}
+    if not stats or not required.issubset(stats):
+        return {}
+
+    tiles = [
+        {"label": "Operator HHI", "value": stats["hhi"], "unit": "index"},
+        {"label": "Top operator", "value": stats["top_operator"], "unit": ""},
+        {"label": "Top operator share", "value": stats["top_operator_share"], "unit": "%"},
+    ]
+    return chart_data_builder.build_kpi_tiles(
+        tiles=tiles,
+        title=SECTION_REGISTRY[section_id].title,
     )
 
 
@@ -587,6 +636,39 @@ def _build_disparity_ratio(
     )
 
 
+def _chart_economic_value_kpi_tiles(section_id: str, stats: dict) -> dict:
+    """KPI tiles for j1_economic_value single-region fallback (E1); {} on guard.
+
+    `stats` is the `_build_economic_value` shape: region_name,
+    annual_benefit (£), n_trips, vot (£/hr).
+    """
+    required = {"region_name", "annual_benefit", "n_trips", "vot"}
+    if not stats or not required.issubset(stats):
+        return {}
+
+    tiles = [
+        {
+            "label": "Annual time benefit",
+            "value": round(stats["annual_benefit"] / 1e6, 2),
+            "unit": "£m/yr",
+        },
+        {
+            "label": "Additional trips",
+            "value": round(stats["n_trips"], 0),
+            "unit": "trips/yr",
+        },
+        {
+            "label": "Value of time",
+            "value": round(stats["vot"], 2),
+            "unit": "£/hr",
+        },
+    ]
+    return chart_data_builder.build_kpi_tiles(
+        tiles=tiles,
+        title=SECTION_REGISTRY[section_id].title,
+    )
+
+
 def _build_economic_value(
     section_id: str, region: str, sources: _Sources, lsoa_cds: pd.Series
 ) -> dict:
@@ -635,6 +717,31 @@ def _build_bcr(section_id: str, region: str, sources: _Sources, lsoa_cds: pd.Ser
         title=SECTION_REGISTRY[section_id].title,
         x_label="BCR",
         y_label="Region",
+    )
+
+
+def _chart_carbon_kpi_tiles(section_id: str, stats: dict) -> dict:
+    """KPI tiles for j3_carbon single-region fallback (E1); {} on guard.
+
+    `stats` is the `_build_carbon` shape: co2_saving_tonnes, co2_value_k,
+    scope, carbon_price, modal_shift_trips.
+    """
+    required = {"co2_saving_tonnes", "co2_value_k", "modal_shift_trips"}
+    if not stats or not required.issubset(stats):
+        return {}
+
+    tiles = [
+        {"label": "CO₂ saved", "value": round(stats["co2_saving_tonnes"], 1), "unit": "t/yr"},
+        {"label": "Carbon value", "value": round(stats["co2_value_k"], 1), "unit": "£k/yr"},
+        {
+            "label": "Modal shift trips",
+            "value": round(stats["modal_shift_trips"], 0),
+            "unit": "trips/yr",
+        },
+    ]
+    return chart_data_builder.build_kpi_tiles(
+        tiles=tiles,
+        title=SECTION_REGISTRY[section_id].title,
     )
 
 
