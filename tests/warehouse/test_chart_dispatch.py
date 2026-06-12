@@ -418,6 +418,13 @@ def test_route_cluster_scatter_sections(section_id: str) -> None:
     assert len(chart["data"]) == 6
     cluster_ids = {c["id"] for c in chart["clusters"]}
     assert cluster_ids == {0, 1}
+    # A10 regression guard: legend must carry real descriptions, not
+    # placeholder "undefined" labels, and must not include the -1 noise
+    # cluster.
+    assert -1 not in cluster_ids
+    for c in chart["clusters"]:
+        assert c["label"]
+        assert "undefined" not in c["label"].lower()
 
 
 def test_route_cluster_scatter_empty_stats_returns_empty() -> None:
