@@ -66,3 +66,79 @@ def test_ps5_builds_portfolio_with_best_bcr_by_cost_per_beneficiary():
 def test_empty_scenarios_returns_empty():
     assert build_policy_scenario_stats("ps1_freq_restoration", scenarios_df=pd.DataFrame()) == {}
     assert build_policy_scenario_stats("ps5_scenario_comparison", scenarios_df=pd.DataFrame()) == {}
+
+
+def _elderly_df():
+    """Tiny 6-LSOA stand-in for sources.correlation_df (region-filtered)."""
+    return pd.DataFrame({
+        "lsoa_cd": ["L1", "L2", "L3", "L4", "L5", "L6"],
+        "imd_decile": [1, 1, 5, 10, 1, 3],
+        "evening_isolated": [True, False, True, False, True, False],
+        "urban_rural": ["Rural", "Urban", "Rural", "Rural", "Rural", "Urban"],
+        "elderly_pct": [30.0, 10.0, 26.0, 20.0, 25.0, 5.0],
+        "population": [1000, 2000, 1500, 1200, 900, 800],
+    })
+
+
+def test_ps1_without_elderly_df_falls_back_to_national_constant():
+    stats = build_policy_scenario_stats("ps1_freq_restoration", scenarios_df=_scenarios_df())
+    assert stats["scenario"]["population_affected"] == 5689818
+
+
+def test_ps1_recomputes_population_from_imd_decile_1():
+    stats = build_policy_scenario_stats(
+        "ps1_freq_restoration", scenarios_df=_scenarios_df(), elderly_df=_elderly_df(),
+    )
+    # imd_decile == 1: L1 (1000) + L2 (2000) + L5 (900) = 3900
+    assert stats["scenario"]["population_affected"] == 3900
+    # smaller than the national constant
+    assert stats["scenario"]["population_affected"] < 5689818
+    # trips scaled proportionally
+    expected_trips = round(34583390 * (3900 / 5689818))
+    assert stats["scenario"]["annual_additional_trips"] == expected_trips
+
+
+def test_ps2_recomputes_population_from_evening_isolated():
+    stats = build_policy_scenario_stats(
+        "ps2_evening_extension", scenarios_df=_scenarios_df(), elderly_df=_elderly_df(),
+    )
+    # evening_isolated == True: L1 (1000) + L3 (1500) + L5 (900) = 3400
+    assert stats["scenario"]["population_affected"] == 3400
+    assert stats["scenario"]["population_affected"] < 8392662
+
+
+def test_ps3_recomputes_population_from_rural_and_elderly_threshold():
+    stats = build_policy_scenario_stats(
+        "ps3_drt_rural", scenarios_df=_scenarios_df(), elderly_df=_elderly_df(),
+    )
+    # Rural AND elderly_pct > 24.7: L1 (30.0, 1000) + L3 (26.0, 1500) + L5 (25.0, 900) = 3400
+    # L4 is Rural but elderly_pct=20.0 (below threshold) -> excluded
+    assert stats["scenario"]["population_affected"] == 3400
+    assert stats["scenario"]["population_affected"] < 5243877
+
+
+def test_ps4_stays_at_national_constant_regardless_of_filter():
+    stats = build_policy_scenario_stats(
+        "ps4_franchise", scenarios_df=_scenarios_df(), elderly_df=_elderly_df(),
+    )
+    # ps4 is LAD-level — top-5 LADs doesn't decompose by region
+    assert stats["scenario"]["population_affected"] == 760008
+    assert stats["scenario"]["annual_additional_trips"] == 4862418
+
+
+def test_empty_elderly_df_returns_zero_population():
+    stats = build_policy_scenario_stats(
+        "ps1_freq_restoration", scenarios_df=_scenarios_df(), elderly_df=pd.DataFrame(),
+    )
+    assert stats["scenario"]["population_affected"] == 5689818  # falls back, empty -> national
+
+
+def test_ps5_aggregates_recomputed_per_scenario_figures():
+    stats = build_policy_scenario_stats(
+        "ps5_scenario_comparison", scenarios_df=_scenarios_df(), elderly_df=_elderly_df(),
+    )
+    populations = {s["name"]: s["population"] for s in stats["scenarios"]}
+    assert populations["Frequency restoration — bottom IMD decile"] == 3900
+    assert populations["Last bus extended to 23:00 — evening isolated"] == 3400
+    assert populations["DRT in rural elderly LSOAs"] == 3400
+    assert populations["Bus Services Act — franchise top-5 LADs"] == 760008  # ps4 unchanged

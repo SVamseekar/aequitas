@@ -13,7 +13,11 @@
 
 ## Cost-Benefit Context
 
+{% if scenario.population_affected > 0 -%}
 At £{{ scenario.estimated_annual_cost_m|round(1) }}m/year for {{ scenario.population_affected|int|format_thousands }} beneficiaries, the cost per beneficiary is approximately **£{{ ((scenario.estimated_annual_cost_m * 1e6) / scenario.population_affected)|round(0)|int }}/person/year**. For context, DfT's transport poverty analysis estimates the annual economic cost of inadequate transport access at £3,000–£8,000 per person in restricted employment and healthcare access. Even at modest take-up rates, the intervention likely delivers positive net economic value.
+{%- else -%}
+This scenario's target population in the selected region/area-type filter is 0 — no LSOAs in this scope fall within the current filter, so no beneficiaries or cost-per-beneficiary figure applies here.
+{%- endif %}
 
 The {{ scenario.co2_saving_t_yr|int|format_thousands }} tonnes/year CO₂ saving adds an additional external benefit valued at approximately £{{ ((scenario.co2_saving_t_yr * 80) / 1000)|round(0)|int }}k/year at TAG carbon prices — further strengthening the BCR.
 
