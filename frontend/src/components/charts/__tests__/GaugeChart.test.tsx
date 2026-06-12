@@ -35,6 +35,7 @@ describe("GaugeChart", () => {
     expect(screen.getByText("London")).toBeTruthy()
     expect(screen.getByText("South East")).toBeTruthy()
     expect(screen.getByText("1.6 BCR")).toBeTruthy()
+    expect(screen.getAllByTestId("gauge-reference-line")).toHaveLength(2)
   })
 
   it("renders open-ended HHI bands for bsa2_operator_concentration", () => {
@@ -57,6 +58,7 @@ describe("GaugeChart", () => {
 
     expect(screen.getByText("Moderate")).toBeTruthy()
     expect(screen.getByText("2000 HHI")).toBeTruthy()
+    expect(screen.getAllByTestId("gauge-reference-line")).toHaveLength(2)
   })
 
   it("renders fallback message when markers are empty", () => {

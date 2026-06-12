@@ -713,7 +713,7 @@ def _build_economic_value(
 
 
 def _build_bcr(section_id: str, region: str, sources: _Sources, lsoa_cds: pd.Series) -> dict:
-    """Horizontal bar of regional BCR (j2); {} on guard, region=='all' only."""
+    """Threshold-band gauge of regional BCR (j2); {} on guard, region=='all' only."""
     if region != "all":
         return {}
 
@@ -793,7 +793,7 @@ def _build_carbon(section_id: str, region: str, sources: _Sources, lsoa_cds: pd.
 
 
 def _build_operator_concentration(section_id: str, region: str, sources: _Sources) -> dict:
-    """Horizontal bar of regional operator HHI from LTA data (bsa2); all-regions only, else {}."""
+    """Threshold-band gauge of regional operator HHI from LTA data (bsa2); all-regions only, else {}."""
     if region != "all":
         return {}
 

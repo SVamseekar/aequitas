@@ -25,7 +25,12 @@ const COLOR_MAP: Record<string, string> = {
 /** Open-ended bands (max: null) are drawn out to this multiple of their min. */
 const OPEN_BAND_EXTENT_FACTOR = 1.5
 
-/** Resolve the numeric scale max, expanding open-ended bands and marker values. */
+/**
+ * Resolve the numeric scale max, expanding open-ended bands and marker values.
+ *
+ * Assumes open-ended bands (max: null) have min > 0 — a band with min == 0
+ * would collapse `min * OPEN_BAND_EXTENT_FACTOR` to 0.
+ */
 function resolveScaleMax(bands: GaugeBand[], markers: GaugeMarker[]): number {
   const bandMax = bands.map((b) => b.max ?? b.min * OPEN_BAND_EXTENT_FACTOR)
   const markerMax = markers.map((m) => m.value)
@@ -77,6 +82,7 @@ export default function GaugeChart({ chartData }: Props) {
         {referenceLines.map((ref) => (
           <div
             key={`ref-${ref}`}
+            data-testid="gauge-reference-line"
             className="absolute top-0 h-full w-px bg-foreground/60"
             style={{ left: `${toPercent(ref, scaleMax)}%` }}
           />
