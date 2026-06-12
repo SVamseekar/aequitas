@@ -18,6 +18,7 @@ export default function ShapBarChart({ chartData }: Props) {
     if (!ref.current) return
     const features = (chartData.features ?? []) as FeatureDatum[]
     const r2 = chartData.model_r2 as number | undefined
+    const topFeature = features[0] as FeatureDatum | undefined
 
     const chart = Plot.plot({
       marginLeft: 160,
@@ -30,7 +31,7 @@ export default function ShapBarChart({ chartData }: Props) {
         Plot.barX(features, {
           y: "name",
           x: "importance",
-          fill: CATEGORICAL[1],
+          fill: (d: FeatureDatum) => (d.name === topFeature?.name ? CATEGORICAL[0] : CATEGORICAL[1]),
           sort: { y: "x", reverse: true },
           tip: true,
           title: (d: FeatureDatum) => `${d.name}\nImportance: ${d.importance.toFixed(4)}`,
@@ -50,5 +51,17 @@ export default function ShapBarChart({ chartData }: Props) {
     return () => chart.remove()
   }, [chartData])
 
-  return <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "SHAP importance"} role="img" />
+  const features = (chartData.features ?? []) as FeatureDatum[]
+  const topFeature = features[0] as FeatureDatum | undefined
+
+  return (
+    <div>
+      {topFeature && (
+        <p className="text-sm font-medium text-muted-foreground mb-1">
+          Top driver: <span className="text-foreground">{topFeature.name}</span> — {topFeature.importance.toFixed(3)}
+        </p>
+      )}
+      <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "SHAP importance"} role="img" />
+    </div>
+  )
 }

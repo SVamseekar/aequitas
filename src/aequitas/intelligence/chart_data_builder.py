@@ -328,7 +328,14 @@ def build_shap_bar(
     title: str,
     model_r2: float | None = None,
 ) -> dict[str, Any]:
-    """Build SHAP feature importance bar chart."""
+    """Build SHAP feature importance bar chart.
+
+    Note: ``features`` is sorted by importance (descending) before being
+    returned, so ``result["features"][0]`` is always the top driver. The
+    frontend (ShapBarChart) relies on this ordering to highlight the top
+    bar and render a "Top driver" callout — do not change the sort order
+    without updating that component.
+    """
     sorted_df = features.sort_values("importance", ascending=False)
     items = [
         {"name": str(row["feature"]), "importance": round(float(row["importance"]), 4)}
