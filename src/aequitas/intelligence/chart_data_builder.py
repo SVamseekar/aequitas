@@ -163,6 +163,52 @@ def build_grouped_bar(
     }
 
 
+def build_kpi_tiles(tiles: list[dict[str, Any]], title: str) -> dict[str, Any]:
+    """Build a small grid of headline-figure KPI tiles.
+
+    Each tile is `{"label": str, "value": int | float, "unit": str}`. Tiles
+    have independent units and are NOT plotted on a shared axis — use this
+    for single-scenario summaries (e.g. population affected, annual cost,
+    CO2 saved) where the metrics are not directly comparable.
+
+    Args:
+        tiles: List of tile dicts, each with "label", "value", "unit".
+        title: Section title shown above the tile grid.
+
+    Returns:
+        `{"type": "kpi_tiles", "title": ..., "tiles": [...]}`.
+    """
+    return {
+        "type": "kpi_tiles",
+        "title": title,
+        "tiles": tiles,
+    }
+
+
+def build_table(
+    columns: list[str],
+    rows: list[dict[str, Any]],
+    title: str,
+) -> dict[str, Any]:
+    """Build a generic ranked table chart payload.
+
+    Args:
+        columns: Ordered list of column header labels, matching keys in `rows`.
+        rows: List of row dicts, one per record, keyed by column name.
+        title: Section title shown above the table.
+
+    Returns:
+        `{"type": "table", "title": ..., "columns": [...], "data": [...]}`.
+        `data` is consumed directly by the frontend `DataTable` component.
+    """
+    return {
+        "type": "table",
+        "title": title,
+        "columns": columns,
+        "data": rows,
+    }
+
+
 def build_box_violin(
     groups: dict[str, pd.Series],
     title: str,

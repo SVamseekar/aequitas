@@ -68,7 +68,7 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     "g2_anomalies": SectionDef("anomaly_spotlight.j2", "scatter_regression", "G", "Anomaly detection"),
     "g3_coverage_model": SectionDef("ml_prediction.j2", "scatter_regression", "G", "Coverage prediction"),
     "g4_shap": SectionDef("ml_prediction.j2", "shap_bar", "G", "Feature importance (SHAP)"),
-    "g5_scenario_model": SectionDef("policy_scenario.j2", "grouped_bar", "G", "Scenario modelling"),
+    "g5_scenario_model": SectionDef("policy_scenario.j2", "kpi_tiles", "G", "Scenario modelling"),
     # Category J: Economic Impact & BCR
     "j1_economic_value": SectionDef("economic_value.j2", "horizontal_bar", "J", "Economic value per region"),
     "j2_bcr": SectionDef("bcr_analysis.j2", "horizontal_bar", "J", "BCR for coverage gaps"),
@@ -79,9 +79,9 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     "bsa2_operator_concentration": SectionDef("market_concentration.j2", "horizontal_bar", "BSA", "Operator concentration"),
     "bsa3_tier_distribution": SectionDef("tier_distribution.j2", "stacked_bar", "BSA", "Readiness tier distribution"),
     # Category PS: Policy Scenario Modelling
-    "ps1_freq_restoration": SectionDef("policy_scenario.j2", "horizontal_bar", "PS", "Frequency restoration"),
-    "ps2_evening_extension": SectionDef("policy_scenario.j2", "horizontal_bar", "PS", "Evening extension"),
-    "ps3_drt_rural": SectionDef("policy_scenario.j2", "horizontal_bar", "PS", "DRT for rural areas"),
-    "ps4_franchise": SectionDef("policy_scenario.j2", "horizontal_bar", "PS", "Combined franchise"),
-    "ps5_scenario_comparison": SectionDef("scenario_comparison.j2", "grouped_bar", "PS", "Scenario comparison"),
+    "ps1_freq_restoration": SectionDef("policy_scenario.j2", "kpi_tiles", "PS", "Frequency restoration"),
+    "ps2_evening_extension": SectionDef("policy_scenario.j2", "kpi_tiles", "PS", "Evening extension"),
+    "ps3_drt_rural": SectionDef("policy_scenario.j2", "kpi_tiles", "PS", "DRT for rural areas"),
+    "ps4_franchise": SectionDef("policy_scenario.j2", "kpi_tiles", "PS", "Combined franchise"),
+    "ps5_scenario_comparison": SectionDef("scenario_comparison.j2", "table", "PS", "Scenario comparison"),
 }

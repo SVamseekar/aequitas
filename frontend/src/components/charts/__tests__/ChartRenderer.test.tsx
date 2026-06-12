@@ -39,4 +39,38 @@ describe("ChartRenderer", () => {
     const { container } = render(<ChartRenderer chartData={null} />)
     expect(container.firstChild).toBeNull()
   })
+
+  it("renders KpiTiles for kpi_tiles chart type", async () => {
+    render(
+      <Suspense fallback={<div>loading</div>}>
+        <ChartRenderer
+          chartData={{
+            type: "kpi_tiles",
+            title: "Frequency Restoration",
+            tiles: [
+              { label: "Population affected", value: 5_000_000, unit: "people" },
+              { label: "Annual cost", value: 50, unit: "£m/yr" },
+              { label: "CO₂ saved", value: 1200, unit: "t/yr" },
+            ],
+          }}
+        />
+      </Suspense>,
+    )
+    expect(await screen.findByText("Population affected")).toBeTruthy()
+  })
+
+  it("renders DataTable for table chart type", () => {
+    render(
+      <ChartRenderer
+        chartData={{
+          type: "table",
+          title: "Scenario comparison",
+          columns: ["Scenario", "Population affected"],
+          data: [{ Scenario: "A", "Population affected": 5_000_000 }],
+        }}
+      />,
+    )
+    expect(screen.getByRole("table")).toBeTruthy()
+    expect(screen.getByText("Scenario")).toBeTruthy()
+  })
 })

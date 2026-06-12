@@ -14,6 +14,8 @@ from aequitas.intelligence.chart_data_builder import (
     build_heatmap,
     build_shap_bar,
     build_scatter_clusters,
+    build_kpi_tiles,
+    build_table,
 )
 
 
@@ -93,6 +95,36 @@ def test_grouped_bar():
         title="Urban vs Rural",
     )
     assert result["type"] == "grouped_bar"
+
+
+def test_kpi_tiles():
+    result = build_kpi_tiles(
+        tiles=[
+            {"label": "Population affected", "value": 5_000_000, "unit": "people"},
+            {"label": "Annual cost", "value": 50.0, "unit": "£m/yr"},
+            {"label": "CO₂ saved", "value": 1200.0, "unit": "t/yr"},
+        ],
+        title="Frequency Restoration",
+    )
+    assert result["type"] == "kpi_tiles"
+    assert result["title"] == "Frequency Restoration"
+    assert len(result["tiles"]) == 3
+    assert result["tiles"][0]["unit"] == "people"
+
+
+def test_table():
+    result = build_table(
+        columns=["Scenario", "Population affected"],
+        rows=[
+            {"Scenario": "A", "Population affected": 5_000_000},
+            {"Scenario": "B", "Population affected": 2_000_000},
+        ],
+        title="Scenario comparison",
+    )
+    assert result["type"] == "table"
+    assert result["columns"] == ["Scenario", "Population affected"]
+    assert len(result["data"]) == 2
+    assert result["data"][0]["Scenario"] == "A"
 
 
 def test_box_violin():
