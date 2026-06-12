@@ -1688,8 +1688,10 @@ def test_bsa3_tier_distribution() -> None:
         sources=sources,
         lsoa_cds=pd.Series(dtype=str),
     )
-    assert chart["type"] == "stacked_bar" == SECTION_REGISTRY["bsa3_tier_distribution"].chart_type
-    assert chart["categories"] == ["London", "South East"]
+    assert chart["type"] == "grouped_bar" == SECTION_REGISTRY["bsa3_tier_distribution"].chart_type
+    assert chart["categories"] == ["Tier 1 — High", "Tier 2 — Medium", "Tier 3 — Low"]
+    # E001/E004 = Tier 1, E002 = Tier 2, E003 = Tier 3
+    assert chart["series"] == [{"name": "LADs", "values": [2, 1, 1]}]
 
 
 def test_bsa3_tier_distribution_region_filtered() -> None:
@@ -1705,8 +1707,10 @@ def test_bsa3_tier_distribution_region_filtered() -> None:
         sources=sources,
         lsoa_cds=pd.Series(dtype=str),
     )
-    assert chart["type"] == "stacked_bar"
-    assert chart["categories"] == ["London"]
+    assert chart["type"] == "grouped_bar"
+    # All tiers present even though South East LADs are filtered out (London = E001 Tier 1, E002 Tier 2)
+    assert chart["categories"] == ["Tier 1 — High", "Tier 2 — Medium", "Tier 3 — Low"]
+    assert chart["series"] == [{"name": "LADs", "values": [1, 1, 0]}]
 
 
 def test_bsa3_tier_distribution_missing_columns_returns_empty() -> None:

@@ -990,23 +990,29 @@ def _build_weekend_penalty(
 def _build_tier_distribution_chart(
     section_id: str, region: str, region_name: str, sources: _Sources
 ) -> dict:
-    """Stacked bar of franchising readiness tier counts by region (bsa3); {} on guard."""
+    """LAD count per franchising readiness tier (bsa3): 3 separate bars; {} on guard.
+
+    Each bar represents one readiness tier, with height equal to the number of
+    LADs in that tier (after region filtering). Tiers absent from the filtered
+    data still appear as zero-count bars, so a region dominated by a single
+    tier (e.g. London = 100% Tier 1) doesn't render as a single solid block.
+    """
     lta = sources.lta_df
     if lta.empty or not {"region", "readiness_tier"}.issubset(lta.columns):
         return {}
+
+    all_tiers = sorted(str(tier) for tier in lta["readiness_tier"].dropna().unique())
 
     if region != "all":
         lta = lta[lta["region"] == region_name]
     if lta.empty:
         return {}
 
-    pivot = lta.groupby(["region", "readiness_tier"], observed=True).size().unstack(fill_value=0)
-    if pivot.empty:
-        return {}
-
-    categories = pivot.index.tolist()
-    series = [{"name": str(tier), "values": pivot[tier].tolist()} for tier in pivot.columns]
-    return chart_data_builder.build_stacked_bar(
+    counts = lta["readiness_tier"].astype(str).value_counts()
+    categories = all_tiers
+    values = [int(counts.get(tier, 0)) for tier in categories]
+    series = [{"name": "LADs", "values": values}]
+    return chart_data_builder.build_grouped_bar(
         categories=categories,
         series=series,
         title=SECTION_REGISTRY[section_id].title,
