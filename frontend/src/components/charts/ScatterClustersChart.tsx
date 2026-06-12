@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react"
 import * as Plot from "@observablehq/plot"
 import { CATEGORICAL } from "@/lib/colours"
+import ClusterSizeBar from "./ClusterSizeBar"
 
 interface ClusterPoint {
   x: number
@@ -41,8 +42,8 @@ export default function ScatterClustersChart({ chartData }: Props) {
           x: "x",
           y: "y",
           fill: (d: ClusterPoint) => String(d.cluster),
-          opacity: 0.7,
-          r: 3,
+          opacity: 0.45,
+          r: 2.5,
           tip: true,
           title: (d: ClusterPoint) => {
             const clusterLabel = clusters.find((c) => String(c.label) === String(d.cluster))?.label ?? d.cluster
@@ -59,5 +60,17 @@ export default function ScatterClustersChart({ chartData }: Props) {
     return () => chart.remove()
   }, [chartData])
 
-  return <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "Cluster scatter"} role="img" />
+  const clusterSizes = (chartData.cluster_sizes ?? []) as { label: string; n: number }[]
+
+  return (
+    <div className="flex flex-col gap-4 md:flex-row md:items-start">
+      <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "Cluster scatter"} role="img" />
+      {clusterSizes.length > 0 && (
+        <div>
+          <p className="mb-1 text-sm font-medium text-muted-foreground">Cluster sizes</p>
+          <ClusterSizeBar clusterSizes={clusterSizes} />
+        </div>
+      )}
+    </div>
+  )
 }

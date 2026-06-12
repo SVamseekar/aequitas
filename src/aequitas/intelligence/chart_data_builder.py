@@ -352,21 +352,31 @@ def build_scatter_clusters(
     y_label: str = "PC2",
     max_points: int = 2000,
 ) -> dict[str, Any]:
-    """Build scatter plot coloured by cluster membership."""
+    """Build scatter plot coloured by cluster membership.
+
+    Cluster sizes (`n`) are computed from the full ``data`` frame, before any
+    sampling, so the reported counts reflect true cluster membership even
+    when the plotted points are subsampled for performance.
+    """
     n = len(data)
     if n > max_points:
         sample = data.sample(n=max_points, random_state=42)
     else:
         sample = data
 
+    cluster_counts = data["cluster"].value_counts().to_dict()
+
     clusters = [
         {
             "id": int(cid),
             "label": label,
             "colour": _CLUSTER_COLOURS[int(cid) % len(_CLUSTER_COLOURS)],
+            "n": int(cluster_counts.get(cid, 0)),
         }
         for cid, label in sorted(cluster_labels.items())
     ]
+
+    cluster_sizes = [{"label": c["label"], "n": c["n"]} for c in clusters]
 
     points = [
         {
@@ -384,5 +394,6 @@ def build_scatter_clusters(
         "x_label": x_label,
         "y_label": y_label,
         "clusters": clusters,
+        "cluster_sizes": cluster_sizes,
         "data": points,
     }
