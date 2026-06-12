@@ -375,16 +375,18 @@ def test_shap_bar_empty_stats_returns_empty() -> None:
 
 _ROUTE_CLUSTERS_DF = pd.DataFrame(
     {
-        "route_id": [f"R{i}" for i in range(8)],
-        "agency_id": ["A1"] * 8,
-        "primary_region": ["London"] * 4 + ["North West"] * 4,
-        "cluster": [0, 0, 1, 1, -1, 0, 1, -1],
-        "length_km": [10, 12, 30, 32, 5, 11, 31, 6],
-        "stop_count": [5, 6, 15, 16, 2, 5, 16, 3],
-        "n_las": [1, 1, 2, 2, 1, 1, 2, 1],
-        "n_shapes": [1, 1, 1, 1, 1, 1, 1, 1],
-        "length_cat_enc": [0, 0, 1, 1, 0, 0, 1, 0],
-        "cross_la_int": [0, 0, 1, 1, 0, 0, 1, 0],
+        "route_id": [f"R{i}" for i in range(24)],
+        "agency_id": ["A1"] * 24,
+        # London: R0-R11 (12 rows), North West: R12-R23 (12 rows)
+        "primary_region": ["London"] * 12 + ["North West"] * 12,
+        # Pattern repeated per region: 0, 0, 1, 1, -1, 0 (4 cluster-0, 1 cluster-1, 1 noise per 6)
+        "cluster": ([0, 0, 1, 1, -1, 0] * 4),
+        "length_km": [10, 12, 30, 32, 5, 11] * 4,
+        "stop_count": [5, 6, 15, 16, 2, 5] * 4,
+        "n_las": [1, 1, 2, 2, 1, 1] * 4,
+        "n_shapes": [1] * 24,
+        "length_cat_enc": [0, 0, 1, 1, 0, 0] * 4,
+        "cross_la_int": [0, 0, 1, 1, 0, 0] * 4,
     }
 )
 
@@ -392,8 +394,8 @@ _ROUTE_CLUSTER_STATS = {
     "n_clusters": 2,
     "entity_type": "routes",
     "clusters": [
-        {"id": 0, "n": 4, "pct": 50.0, "description": "Short local routes"},
-        {"id": 1, "n": 3, "pct": 37.5, "description": "Long-distance routes"},
+        {"id": 0, "n": 12, "pct": 50.0, "description": "Short local routes"},
+        {"id": 1, "n": 8, "pct": 33.3, "description": "Long-distance routes"},
     ],
 }
 
@@ -416,7 +418,8 @@ def test_route_cluster_scatter_sections(section_id: str) -> None:
     assert chart["title"] == SECTION_REGISTRY[section_id].title
     # noise rows (cluster == -1) excluded
     assert all(p["cluster"] != -1 for p in chart["data"])
-    assert len(chart["data"]) == 6
+    assert chart["scatter_suppressed"] is False
+    assert len(chart["data"]) == 20
     cluster_ids = {c["id"] for c in chart["clusters"]}
     assert cluster_ids == {0, 1}
     # A10 regression guard: legend must carry real descriptions, not
@@ -455,11 +458,15 @@ def test_c6_route_archetypes_region_filter_returns_subset() -> None:
         lsoa_cds=pd.Series(dtype=str),
     )
 
-    assert len(chart_all["data"]) == 6
-    # Only London rows (non-noise): R0, R1, R2, R3 -> 4 points
-    assert len(chart_london["data"]) == 4
-    assert len(chart_london["data"]) < len(chart_all["data"])
-    assert all(p["id"].startswith("R") and int(p["id"][1:]) < 4 for p in chart_london["data"])
+    assert chart_all["scatter_suppressed"] is False
+    assert len(chart_all["data"]) == 20
+    # London has only 10 non-noise rows -- below the scatter threshold, so
+    # the scatter is suppressed and cluster_sizes carries the subset info.
+    assert chart_london["scatter_suppressed"] is True
+    assert chart_london["data"] == []
+    london_total = sum(c["n"] for c in chart_london["cluster_sizes"])
+    assert london_total == 10
+    assert london_total < len(chart_all["data"])
 
 
 def test_route_cluster_scatter_empty_stats_returns_empty() -> None:
@@ -545,8 +552,14 @@ def test_d6_transport_poverty() -> None:
     expected_type = SECTION_REGISTRY["d6_transport_poverty"].chart_type
     assert chart["type"] == "scatter_clusters" == expected_type
     assert chart["title"] == SECTION_REGISTRY["d6_transport_poverty"].title
-    assert all(p["cluster"] != -1 for p in chart["data"])
-    assert len(chart["data"]) == 8
+    # Only 8 non-noise points — below the scatter threshold, so the scatter
+    # is suppressed in favour of the cluster-size bar chart.
+    assert chart["scatter_suppressed"] is True
+    assert chart["data"] == []
+    assert {c["label"]: c["n"] for c in chart["cluster_sizes"]} == {
+        "Elderly Rural": 4,
+        "Diverse Urban": 4,
+    }
 
 
 def test_d6_transport_poverty_empty_stats_returns_empty() -> None:

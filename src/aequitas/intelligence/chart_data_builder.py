@@ -344,6 +344,9 @@ def build_shap_bar(
     return result
 
 
+_MIN_POINTS_FOR_SCATTER = 20
+
+
 def build_scatter_clusters(
     data: pd.DataFrame,
     cluster_labels: dict[int, str],
@@ -357,6 +360,12 @@ def build_scatter_clusters(
     Cluster sizes (`n`) are computed from the full ``data`` frame, before any
     sampling, so the reported counts reflect true cluster membership even
     when the plotted points are subsampled for performance.
+
+    When the full dataset has fewer than ``_MIN_POINTS_FOR_SCATTER`` rows
+    (e.g. a small rural-region filter), a scatter of a handful of points is
+    visually meaningless. In that case ``data`` is returned empty and
+    ``scatter_suppressed`` is set to ``True`` so the frontend can render only
+    the ``cluster_sizes`` bar chart instead.
     """
     n = len(data)
     if n > max_points:
@@ -378,15 +387,20 @@ def build_scatter_clusters(
 
     cluster_sizes = [{"label": c["label"], "n": c["n"]} for c in clusters]
 
-    points = [
-        {
-            "x": round(float(row["x"]), 4),
-            "y": round(float(row["y"]), 4),
-            "cluster": int(row["cluster"]),
-            "id": str(row["id"]),
-        }
-        for _, row in sample.iterrows()
-    ]
+    scatter_suppressed = n < _MIN_POINTS_FOR_SCATTER
+
+    if scatter_suppressed:
+        points: list[dict[str, Any]] = []
+    else:
+        points = [
+            {
+                "x": round(float(row["x"]), 4),
+                "y": round(float(row["y"]), 4),
+                "cluster": int(row["cluster"]),
+                "id": str(row["id"]),
+            }
+            for _, row in sample.iterrows()
+        ]
 
     return {
         "type": "scatter_clusters",
@@ -396,4 +410,5 @@ def build_scatter_clusters(
         "clusters": clusters,
         "cluster_sizes": cluster_sizes,
         "data": points,
+        "scatter_suppressed": scatter_suppressed,
     }
