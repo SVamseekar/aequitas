@@ -77,7 +77,7 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     # Category BSA: Bus Services Act 2025
     "bsa1_franchising_readiness": SectionDef("ranking.j2", "horizontal_bar", "BSA", "LTA franchising readiness"),
     "bsa2_operator_concentration": SectionDef("market_concentration.j2", "gauge", "BSA", "Operator concentration"),
-    "bsa3_tier_distribution": SectionDef("tier_distribution.j2", "stacked_bar", "BSA", "Readiness tier distribution"),
+    "bsa3_tier_distribution": SectionDef("tier_distribution.j2", "grouped_bar", "BSA", "Readiness tier distribution"),
     # Category PS: Policy Scenario Modelling
     "ps1_freq_restoration": SectionDef("policy_scenario.j2", "kpi_tiles", "PS", "Frequency restoration"),
     "ps2_evening_extension": SectionDef("policy_scenario.j2", "kpi_tiles", "PS", "Evening extension"),
