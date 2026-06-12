@@ -848,10 +848,46 @@ def test_ranking_horizontal_bar_sections(section_id: str) -> None:
     "section_id",
     [
         "a1_route_density",
+        "a2_stop_density",
+        "b1_frequency",
+        "f6_equitable_regions",
+        "j4_investment_priority",
+        "bsa1_franchising_readiness",
+    ],
+)
+def test_ranking_horizontal_bar_region_not_all_returns_kpi_tiles(section_id: str) -> None:
+    sources = _empty_sources(ranking_df=_RANKING_DF)
+    stats = {
+        "region_name": "London",
+        "value": 12.3,
+        "national_avg": 10.0,
+        "vs_national_pct": 23.0,
+        "unit": "routes/km²",
+    }
+    chart = build_chart_data(
+        section_id=section_id,
+        stats=stats,
+        region="E12000007",
+        region_name="London",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart["type"] == "kpi_tiles"
+    assert chart["title"] == SECTION_REGISTRY[section_id].title
+    assert len(chart["tiles"]) == 3
+
+
+@pytest.mark.parametrize(
+    "section_id",
+    [
+        "a1_route_density",
         "j4_investment_priority",
     ],
 )
-def test_ranking_horizontal_bar_region_not_all_returns_empty(section_id: str) -> None:
+def test_ranking_horizontal_bar_region_not_all_empty_stats_returns_empty(section_id: str) -> None:
     sources = _empty_sources(ranking_df=_RANKING_DF)
     chart = build_chart_data(
         section_id=section_id,
@@ -1081,6 +1117,46 @@ def test_c3_operator_hhi() -> None:
     assert len(chart["data"]) == 2
 
 
+def test_c3_operator_hhi_region_not_all_returns_kpi_tiles() -> None:
+    sources = _empty_sources(route_geometries_df=_ROUTES_C3)
+    stats = {
+        "hhi": 2500.0,
+        "region_name": "London",
+        "top_operator": "Op A",
+        "top_operator_share": 50.0,
+    }
+    chart = build_chart_data(
+        section_id="c3_operator_hhi",
+        stats=stats,
+        region="E12000007",
+        region_name="London",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart["type"] == "kpi_tiles"
+    assert chart["title"] == SECTION_REGISTRY["c3_operator_hhi"].title
+    assert len(chart["tiles"]) == 3
+
+
+def test_c3_operator_hhi_region_not_all_empty_stats_returns_empty() -> None:
+    sources = _empty_sources(route_geometries_df=_ROUTES_C3)
+    chart = build_chart_data(
+        section_id="c3_operator_hhi",
+        stats={},
+        region="E12000007",
+        region_name="London",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    assert chart == {}
+
+
 def test_c3_operator_hhi_missing_columns_returns_empty() -> None:
     sources = _empty_sources(route_geometries_df=pd.DataFrame({"route_id": ["R1"]}))
     chart = build_chart_data(
@@ -1186,11 +1262,92 @@ def test_appraisal_horizontal_bar_sections(section_id: str, x_label: str) -> Non
     assert len(chart["data"]) == 3
 
 
-@pytest.mark.parametrize("section_id", ["j1_economic_value", "j2_bcr", "j3_carbon"])
+@pytest.mark.parametrize("section_id", ["j2_bcr"])
 def test_appraisal_horizontal_bar_region_not_all_returns_empty(section_id: str) -> None:
     sources = _empty_sources(appraisal_df=_APPRAISAL_DF)
     chart = build_chart_data(
         section_id=section_id,
+        stats={},
+        region="E12000007",
+        region_name="London",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=_APPRAISAL_DF["lsoa_cd"],
+    )
+    assert chart == {}
+
+
+def test_j1_economic_value_region_not_all_returns_kpi_tiles() -> None:
+    sources = _empty_sources(appraisal_df=_APPRAISAL_DF)
+    stats = {
+        "region_name": "London",
+        "annual_benefit": 3_000_000.0,
+        "n_trips": 50_000.0,
+        "vot": 12.34,
+    }
+    chart = build_chart_data(
+        section_id="j1_economic_value",
+        stats=stats,
+        region="E12000007",
+        region_name="London",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=_APPRAISAL_DF["lsoa_cd"],
+    )
+    assert chart["type"] == "kpi_tiles"
+    assert chart["title"] == SECTION_REGISTRY["j1_economic_value"].title
+    assert len(chart["tiles"]) == 3
+
+
+def test_j1_economic_value_region_not_all_empty_stats_returns_empty() -> None:
+    sources = _empty_sources(appraisal_df=_APPRAISAL_DF)
+    chart = build_chart_data(
+        section_id="j1_economic_value",
+        stats={},
+        region="E12000007",
+        region_name="London",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=_APPRAISAL_DF["lsoa_cd"],
+    )
+    assert chart == {}
+
+
+def test_j3_carbon_region_not_all_returns_kpi_tiles() -> None:
+    sources = _empty_sources(appraisal_df=_APPRAISAL_DF)
+    stats = {
+        "co2_saving_tonnes": 31.2,
+        "co2_value_k": 5.4,
+        "scope": "London",
+        "carbon_price": 0.173,
+        "modal_shift_trips": 1234.0,
+    }
+    chart = build_chart_data(
+        section_id="j3_carbon",
+        stats=stats,
+        region="E12000007",
+        region_name="London",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=_APPRAISAL_DF["lsoa_cd"],
+    )
+    assert chart["type"] == "kpi_tiles"
+    assert chart["title"] == SECTION_REGISTRY["j3_carbon"].title
+    assert len(chart["tiles"]) == 3
+
+
+def test_j3_carbon_region_not_all_empty_stats_returns_empty() -> None:
+    sources = _empty_sources(appraisal_df=_APPRAISAL_DF)
+    chart = build_chart_data(
+        section_id="j3_carbon",
         stats={},
         region="E12000007",
         region_name="London",
