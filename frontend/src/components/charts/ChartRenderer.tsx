@@ -10,6 +10,7 @@ const HeatmapChart = lazy(() => import("./HeatmapChart"))
 const BoxViolinChart = lazy(() => import("./BoxViolinChart"))
 const ScatterClustersChart = lazy(() => import("./ScatterClustersChart"))
 const KpiTiles = lazy(() => import("./KpiTiles"))
+const GaugeChart = lazy(() => import("./GaugeChart"))
 
 class ChartErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false }
@@ -63,6 +64,9 @@ export function ChartRenderer({ chartData }: Props) {
       break
     case "kpi_tiles":
       chart = <KpiTiles chartData={chartData} />
+      break
+    case "gauge":
+      chart = <GaugeChart chartData={chartData} />
       break
     case "table":
       return <DataTable chartData={chartData} />
