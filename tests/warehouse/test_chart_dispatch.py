@@ -1271,7 +1271,6 @@ _APPRAISAL_DF = pd.DataFrame(
     "section_id,x_label",
     [
         ("j1_economic_value", "Annual benefit (£m)"),
-        ("j2_bcr", "BCR"),
         ("j3_carbon", "Net CO₂ saved (t/yr)"),
     ],
 )
@@ -1291,6 +1290,27 @@ def test_appraisal_horizontal_bar_sections(section_id: str, x_label: str) -> Non
     assert chart["type"] == "horizontal_bar" == SECTION_REGISTRY[section_id].chart_type
     assert chart["x_label"] == x_label
     assert len(chart["data"]) == 3
+
+
+def test_j2_bcr_gauge() -> None:
+    sources = _empty_sources(appraisal_df=_APPRAISAL_DF)
+    chart = build_chart_data(
+        section_id="j2_bcr",
+        stats={"some": "stats"},
+        region="all",
+        region_name="England",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=_APPRAISAL_DF["lsoa_cd"],
+    )
+    assert chart["type"] == "gauge" == SECTION_REGISTRY["j2_bcr"].chart_type
+    assert chart["unit"] == "BCR"
+    assert len(chart["markers"]) == 3
+    assert chart["reference_lines"] == [1.0, 2.0]
+    band_labels = {b["label"] for b in chart["bands"]}
+    assert band_labels == {"Poor", "Low", "Medium", "High", "Very High"}
 
 
 @pytest.mark.parametrize("section_id", ["j2_bcr"])
@@ -1426,10 +1446,14 @@ def test_bsa2_operator_concentration() -> None:
     )
     assert (
         chart["type"]
-        == "horizontal_bar"
+        == "gauge"
         == SECTION_REGISTRY["bsa2_operator_concentration"].chart_type
     )
-    assert len(chart["data"]) == 2
+    assert chart["unit"] == "HHI"
+    assert len(chart["markers"]) == 2
+    assert chart["reference_lines"] == [1500.0, 2500.0]
+    band_labels = {b["label"] for b in chart["bands"]}
+    assert band_labels == {"Low", "Moderate", "High"}
 
 
 def test_bsa2_operator_concentration_region_not_all_returns_empty() -> None:

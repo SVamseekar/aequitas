@@ -6,7 +6,7 @@ FRONTEND_CHART_TYPES = {
     "horizontal_bar", "grouped_bar", "stacked_bar",
     "scatter_regression", "lorenz_curve", "shap_bar",
     "choropleth", "heatmap", "box_violin", "scatter_clusters",
-    "kpi_tiles", "table",
+    "kpi_tiles", "table", "gauge",
 }
 
 

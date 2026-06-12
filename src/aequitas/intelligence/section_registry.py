@@ -71,12 +71,12 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     "g5_scenario_model": SectionDef("policy_scenario.j2", "kpi_tiles", "G", "Scenario modelling"),
     # Category J: Economic Impact & BCR
     "j1_economic_value": SectionDef("economic_value.j2", "horizontal_bar", "J", "Economic value per region"),
-    "j2_bcr": SectionDef("bcr_analysis.j2", "horizontal_bar", "J", "BCR for coverage gaps"),
+    "j2_bcr": SectionDef("bcr_analysis.j2", "gauge", "J", "BCR for coverage gaps"),
     "j3_carbon": SectionDef("carbon_reduction.j2", "horizontal_bar", "J", "Carbon reduction from modal shift"),
     "j4_investment_priority": SectionDef("ranking.j2", "horizontal_bar", "J", "Regional investment prioritisation"),
     # Category BSA: Bus Services Act 2025
     "bsa1_franchising_readiness": SectionDef("ranking.j2", "horizontal_bar", "BSA", "LTA franchising readiness"),
-    "bsa2_operator_concentration": SectionDef("market_concentration.j2", "horizontal_bar", "BSA", "Operator concentration"),
+    "bsa2_operator_concentration": SectionDef("market_concentration.j2", "gauge", "BSA", "Operator concentration"),
     "bsa3_tier_distribution": SectionDef("tier_distribution.j2", "stacked_bar", "BSA", "Readiness tier distribution"),
     # Category PS: Policy Scenario Modelling
     "ps1_freq_restoration": SectionDef("policy_scenario.j2", "kpi_tiles", "PS", "Frequency restoration"),

@@ -185,6 +185,45 @@ def build_kpi_tiles(tiles: list[dict[str, Any]], title: str) -> dict[str, Any]:
     }
 
 
+def build_gauge(
+    markers: list[dict[str, Any]],
+    bands: list[dict[str, Any]],
+    title: str,
+    unit: str,
+    reference_lines: list[float] | None = None,
+) -> dict[str, Any]:
+    """Build a banded gauge chart showing one or more values against threshold zones.
+
+    Used for headline "is this good or bad" metrics (e.g. BCR vs HM Treasury
+    Green Book VfM bands, or HHI vs standard market-concentration thresholds)
+    where the value's position relative to standard bands is the policy
+    question, not just the raw number.
+
+    Args:
+        markers: List of `{"label": str, "value": float}` — one per region or
+            scenario, plotted on the same banded scale.
+        bands: Ordered list of `{"label": str, "min": float, "max": float | None,
+            "color_hint": str}` describing threshold zones. `max: None` means
+            the band is open-ended (extends to infinity).
+        title: Section title shown above the gauge.
+        unit: Axis unit label (e.g. "BCR" or "HHI").
+        reference_lines: Optional list of x-values to draw as vertical
+            reference lines (e.g. BCR break-even at 1.0).
+
+    Returns:
+        `{"type": "gauge", "title": ..., "unit": ..., "bands": [...],
+        "markers": [...], "reference_lines": [...]}`.
+    """
+    return {
+        "type": "gauge",
+        "title": title,
+        "unit": unit,
+        "bands": bands,
+        "markers": markers,
+        "reference_lines": reference_lines or [],
+    }
+
+
 def build_table(
     columns: list[str],
     rows: list[dict[str, Any]],

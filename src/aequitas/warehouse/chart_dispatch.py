@@ -24,6 +24,22 @@ from aequitas.warehouse.stats_builders.correlation import CORRELATION_CONFIG
 from aequitas.warehouse.stats_builders.equity import _MIN_DISTINCT_DECILES
 from aequitas.warehouse.stats_builders.ranking import RANKING_CONFIG
 
+# HM Treasury Green Book VfM bands for BCR gauges (j2_bcr).
+_BCR_VFM_BANDS = [
+    {"label": "Poor", "min": 0.0, "max": 1.0, "color_hint": "red"},
+    {"label": "Low", "min": 1.0, "max": 1.5, "color_hint": "orange"},
+    {"label": "Medium", "min": 1.5, "max": 2.0, "color_hint": "yellow"},
+    {"label": "High", "min": 2.0, "max": 4.0, "color_hint": "green"},
+    {"label": "Very High", "min": 4.0, "max": None, "color_hint": "blue"},
+]
+
+# Standard HHI market-concentration bands (0-10000 scale) for bsa2 gauges.
+_HHI_CONCENTRATION_BANDS = [
+    {"label": "Low", "min": 0.0, "max": 1500.0, "color_hint": "green"},
+    {"label": "Moderate", "min": 1500.0, "max": 2500.0, "color_hint": "yellow"},
+    {"label": "High", "min": 2500.0, "max": None, "color_hint": "red"},
+]
+
 _CORRELATION_SECTIONS = {
     "b5_frequency_deprivation",
     "d1_coverage_deprivation",
@@ -714,12 +730,16 @@ def _build_bcr(section_id: str, region: str, sources: _Sources, lsoa_cds: pd.Ser
     if len(by_region) < 2:
         return {}
 
-    data = pd.DataFrame({"label": by_region.index, "value": by_region.round(2).values})
-    return chart_data_builder.build_horizontal_bar(
-        data=data,
+    markers = [
+        {"label": str(label), "value": round(float(value), 2)}
+        for label, value in by_region.items()
+    ]
+    return chart_data_builder.build_gauge(
+        markers=markers,
+        bands=_BCR_VFM_BANDS,
         title=SECTION_REGISTRY[section_id].title,
-        x_label="BCR",
-        y_label="Region",
+        unit="BCR",
+        reference_lines=[1.0, 2.0],
     )
 
 
@@ -785,12 +805,16 @@ def _build_operator_concentration(section_id: str, region: str, sources: _Source
     if len(by_region) < 2:
         return {}
 
-    data = pd.DataFrame({"label": by_region.index, "value": by_region.round(1).values})
-    return chart_data_builder.build_horizontal_bar(
-        data=data,
+    markers = [
+        {"label": str(label), "value": round(float(value), 1)}
+        for label, value in by_region.items()
+    ]
+    return chart_data_builder.build_gauge(
+        markers=markers,
+        bands=_HHI_CONCENTRATION_BANDS,
         title=SECTION_REGISTRY[section_id].title,
-        x_label="HHI",
-        y_label="Region",
+        unit="HHI",
+        reference_lines=[1500.0, 2500.0],
     )
 
 

@@ -14,6 +14,7 @@ from aequitas.intelligence.chart_data_builder import (
     build_heatmap,
     build_shap_bar,
     build_scatter_clusters,
+    build_gauge,
     build_kpi_tiles,
     build_table,
 )
@@ -110,6 +111,37 @@ def test_kpi_tiles():
     assert result["title"] == "Frequency Restoration"
     assert len(result["tiles"]) == 3
     assert result["tiles"][0]["unit"] == "people"
+
+
+def test_build_gauge():
+    bands = [
+        {"label": "Poor", "min": 0.0, "max": 1.0, "color_hint": "red"},
+        {"label": "Low", "min": 1.0, "max": 1.5, "color_hint": "orange"},
+        {"label": "High", "min": 2.0, "max": None, "color_hint": "green"},
+    ]
+    result = build_gauge(
+        markers=[{"label": "London", "value": 1.6}],
+        bands=bands,
+        title="BCR for coverage gaps",
+        unit="BCR",
+        reference_lines=[1.0, 2.0],
+    )
+    assert result["type"] == "gauge"
+    assert result["title"] == "BCR for coverage gaps"
+    assert result["unit"] == "BCR"
+    assert result["bands"] == bands
+    assert result["markers"] == [{"label": "London", "value": 1.6}]
+    assert result["reference_lines"] == [1.0, 2.0]
+
+
+def test_build_gauge_defaults_reference_lines_to_empty_list():
+    result = build_gauge(
+        markers=[{"label": "London", "value": 2000.0}],
+        bands=[{"label": "Low", "min": 0.0, "max": 1500.0, "color_hint": "green"}],
+        title="Operator concentration",
+        unit="HHI",
+    )
+    assert result["reference_lines"] == []
 
 
 def test_table():
