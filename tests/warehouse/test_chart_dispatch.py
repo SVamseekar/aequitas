@@ -764,7 +764,7 @@ def test_a3_walking_distance_returns_empty() -> None:
     assert chart == {}
 
 
-def test_g5_scenario_model_returns_empty() -> None:
+def test_g5_scenario_model_returns_kpi_tiles() -> None:
     sources = _empty_sources()
     chart = build_chart_data(
         section_id="g5_scenario_model",
@@ -783,7 +783,9 @@ def test_g5_scenario_model_returns_empty() -> None:
         sources=sources,
         lsoa_cds=pd.Series(dtype=str),
     )
-    assert chart == {}
+    assert chart["type"] == "kpi_tiles" == SECTION_REGISTRY["g5_scenario_model"].chart_type
+    assert chart["title"] == SECTION_REGISTRY["g5_scenario_model"].title
+    assert len(chart["tiles"]) == 3
 
 
 # ---------------------------------------------------------------------------
@@ -934,7 +936,7 @@ def test_ranking_horizontal_bar_empty_ranking_df_returns_empty() -> None:
 
 
 # ---------------------------------------------------------------------------
-# horizontal_bar — scenario-derived (ps1-ps4)
+# kpi_tiles — scenario-derived (ps1-ps4, g5)
 # ---------------------------------------------------------------------------
 
 _SCENARIO_STATS = {
@@ -957,9 +959,10 @@ _SCENARIO_STATS = {
         "ps2_evening_extension",
         "ps3_drt_rural",
         "ps4_franchise",
+        "g5_scenario_model",
     ],
 )
-def test_scenario_horizontal_bar_sections(section_id: str) -> None:
+def test_scenario_kpi_tile_sections(section_id: str) -> None:
     sources = _empty_sources()
     chart = build_chart_data(
         section_id=section_id,
@@ -972,12 +975,17 @@ def test_scenario_horizontal_bar_sections(section_id: str) -> None:
         sources=sources,
         lsoa_cds=pd.Series(dtype=str),
     )
-    assert chart["type"] == "horizontal_bar" == SECTION_REGISTRY[section_id].chart_type
+    assert chart["type"] == "kpi_tiles" == SECTION_REGISTRY[section_id].chart_type
     assert chart["title"] == SECTION_REGISTRY[section_id].title
-    assert len(chart["data"]) == 3
+    assert len(chart["tiles"]) == 3
+    labels = {tile["label"] for tile in chart["tiles"]}
+    assert labels == {"Population affected", "Annual cost", "CO₂ saved"}
+    population_tile = next(t for t in chart["tiles"] if t["label"] == "Population affected")
+    assert population_tile["value"] == 5_000_000
+    assert population_tile["unit"] == "people"
 
 
-def test_scenario_horizontal_bar_empty_stats_returns_empty() -> None:
+def test_scenario_kpi_tiles_empty_stats_returns_empty() -> None:
     sources = _empty_sources()
     chart = build_chart_data(
         section_id="ps1_freq_restoration",
@@ -1330,9 +1338,17 @@ def test_ps5_scenario_comparison() -> None:
         sources=sources,
         lsoa_cds=pd.Series(dtype=str),
     )
-    assert chart["type"] == "grouped_bar" == SECTION_REGISTRY["ps5_scenario_comparison"].chart_type
-    assert chart["categories"] == ["A", "B"]
-    assert len(chart["series"]) == 3
+    assert chart["type"] == "table" == SECTION_REGISTRY["ps5_scenario_comparison"].chart_type
+    assert chart["columns"] == [
+        "Scenario", "Population affected", "Cost £m/yr", "CO2 t/yr", "Cost/beneficiary (£)",
+    ]
+    # Sorted by population descending: A (5M) before B (2M)
+    assert [row["Scenario"] for row in chart["data"]] == ["A", "B"]
+    row_a = chart["data"][0]
+    assert row_a["Population affected"] == 5_000_000
+    assert row_a["Cost £m/yr"] == 50.0
+    assert row_a["CO2 t/yr"] == 1200.0
+    assert row_a["Cost/beneficiary (£)"] == round(50.0 * 1e6 / 5_000_000, 2)
 
 
 def test_ps5_scenario_comparison_empty_stats_returns_empty() -> None:

@@ -55,11 +55,12 @@ _RANKING_HORIZONTAL_BAR_SECTIONS = {
     "bsa1_franchising_readiness",
 }
 
-_SCENARIO_HORIZONTAL_BAR_SECTIONS = {
+_SCENARIO_KPI_TILE_SECTIONS = {
     "ps1_freq_restoration",
     "ps2_evening_extension",
     "ps3_drt_rural",
     "ps4_franchise",
+    "g5_scenario_model",
 }
 
 
@@ -105,8 +106,8 @@ def build_chart_data(
             return {}
         return _chart_horizontal_bar_from_ranking(section_id, sources, region)
 
-    if section_id in _SCENARIO_HORIZONTAL_BAR_SECTIONS:
-        return _chart_scenario_horizontal_bar(section_id, stats)
+    if section_id in _SCENARIO_KPI_TILE_SECTIONS:
+        return _chart_scenario_kpi_tiles(section_id, stats)
 
     if section_id == "a7_investment_gap":
         if stats.get("insufficient_data"):
@@ -462,27 +463,32 @@ def _chart_horizontal_bar_from_ranking(section_id: str, sources: _Sources, regio
     )
 
 
-def _chart_scenario_horizontal_bar(section_id: str, stats: dict) -> dict:
-    """Horizontal bar of population/cost/CO2 for ps1-ps4; {} if stats empty."""
+def _chart_scenario_kpi_tiles(section_id: str, stats: dict) -> dict:
+    """KPI tiles (population/cost/CO2, independent units) for ps1-ps4/g5; {} if stats empty."""
     if not stats or "scenario" not in stats:
         return {}
 
     scenario = stats["scenario"]
-    data = pd.DataFrame(
+    tiles = [
         {
-            "label": ["Population affected (millions)", "Annual cost (£m)", "CO₂ saved (t/yr)"],
-            "value": [
-                scenario["population_affected"] / 1e6,
-                scenario["estimated_annual_cost_m"],
-                scenario["co2_saving_t_yr"],
-            ],
-        }
-    )
-    return chart_data_builder.build_horizontal_bar(
-        data=data,
+            "label": "Population affected",
+            "value": int(scenario["population_affected"]),
+            "unit": "people",
+        },
+        {
+            "label": "Annual cost",
+            "value": round(float(scenario["estimated_annual_cost_m"]), 2),
+            "unit": "£m/yr",
+        },
+        {
+            "label": "CO₂ saved",
+            "value": round(float(scenario["co2_saving_t_yr"]), 1),
+            "unit": "t/yr",
+        },
+    ]
+    return chart_data_builder.build_kpi_tiles(
+        tiles=tiles,
         title=SECTION_REGISTRY[section_id].title,
-        x_label="Value",
-        y_label="Metric",
     )
 
 
@@ -733,20 +739,32 @@ def _build_urban_rural_gap_chart(section_id: str, region_df: pd.DataFrame) -> di
 
 
 def _build_scenario_comparison(section_id: str, stats: dict) -> dict:
-    """Grouped bar comparing population/cost/CO2 across all 4 scenarios (ps5); {} if stats empty."""
+    """Ranked table comparing all scenarios by population impact (ps5); {} if stats empty.
+
+    Columns: Scenario | Population affected | Cost £m/yr | CO2 t/yr |
+    Cost/beneficiary (£). Rows sorted by population descending, matching the
+    "ranks scenarios by population impact" framing in scenario_comparison.j2.
+    """
     if not stats or "scenarios" not in stats:
         return {}
 
-    scenarios = stats["scenarios"]
-    categories = [s["name"] for s in scenarios]
-    series = [
-        {"name": "Population (millions)", "values": [s["population"] / 1e6 for s in scenarios]},
-        {"name": "Cost (£m/yr)", "values": [s["cost_m"] for s in scenarios]},
-        {"name": "CO₂ saved (t/yr)", "values": [s["co2_t"] for s in scenarios]},
-    ]
-    return chart_data_builder.build_grouped_bar(
-        categories=categories,
-        series=series,
+    scenarios = sorted(stats["scenarios"], key=lambda s: s["population"], reverse=True)
+    rows = []
+    for s in scenarios:
+        population = s["population"]
+        cost_m = s["cost_m"]
+        cost_per_beneficiary = round(cost_m * 1e6 / population, 2) if population else 0.0
+        rows.append({
+            "Scenario": s["name"],
+            "Population affected": population,
+            "Cost £m/yr": round(cost_m, 2),
+            "CO2 t/yr": round(s["co2_t"], 1),
+            "Cost/beneficiary (£)": cost_per_beneficiary,
+        })
+
+    return chart_data_builder.build_table(
+        columns=["Scenario", "Population affected", "Cost £m/yr", "CO2 t/yr", "Cost/beneficiary (£)"],
+        rows=rows,
         title=SECTION_REGISTRY[section_id].title,
     )
 
