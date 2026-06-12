@@ -428,6 +428,40 @@ def test_route_cluster_scatter_sections(section_id: str) -> None:
         assert "undefined" not in c["label"].lower()
 
 
+def test_c6_route_archetypes_region_filter_returns_subset() -> None:
+    """E11: c6 scatter must return fewer points for a region than for 'all'."""
+    sources = _empty_sources(route_clusters_df=_ROUTE_CLUSTERS_DF)
+
+    chart_all = build_chart_data(
+        section_id="c6_route_archetypes",
+        stats=_ROUTE_CLUSTER_STATS,
+        region="all",
+        region_name="England",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+    chart_london = build_chart_data(
+        section_id="c6_route_archetypes",
+        stats=_ROUTE_CLUSTER_STATS,
+        region="london",
+        region_name="London",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=pd.Series(dtype=str),
+    )
+
+    assert len(chart_all["data"]) == 6
+    # Only London rows (non-noise): R0, R1, R2, R3 -> 4 points
+    assert len(chart_london["data"]) == 4
+    assert len(chart_london["data"]) < len(chart_all["data"])
+    assert all(p["id"].startswith("R") and int(p["id"][1:]) < 4 for p in chart_london["data"])
+
+
 def test_route_cluster_scatter_empty_stats_returns_empty() -> None:
     sources = _empty_sources(route_clusters_df=_ROUTE_CLUSTERS_DF)
     chart = build_chart_data(

@@ -227,3 +227,9 @@ def test_scatter_clusters():
     assert result["type"] == "scatter_clusters"
     assert len(result["clusters"]) == 2
     assert len(result["data"]) == 4
+    # cluster sizes computed from full data (n=2 per cluster)
+    assert {c["id"]: c["n"] for c in result["clusters"]} == {0: 2, 1: 2}
+    assert result["cluster_sizes"] == [
+        {"label": "Urban", "n": 2},
+        {"label": "Rural", "n": 2},
+    ]
