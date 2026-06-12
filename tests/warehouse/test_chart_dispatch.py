@@ -1138,7 +1138,13 @@ def test_c3_operator_hhi_region_not_all_returns_kpi_tiles() -> None:
     )
     assert chart["type"] == "kpi_tiles"
     assert chart["title"] == SECTION_REGISTRY["c3_operator_hhi"].title
-    assert len(chart["tiles"]) == 3
+    assert len(chart["tiles"]) == 2
+    for tile in chart["tiles"]:
+        assert isinstance(tile["value"], (int, float))
+    assert chart["tiles"][0]["label"] == "HHI"
+    assert chart["tiles"][0]["value"] == 2500.0
+    assert "Op A" in chart["tiles"][1]["label"]
+    assert chart["tiles"][1]["value"] == 50.0
 
 
 def test_c3_operator_hhi_region_not_all_empty_stats_returns_empty() -> None:

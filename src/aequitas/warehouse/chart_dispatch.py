@@ -565,9 +565,12 @@ def _chart_operator_hhi_kpi_tiles(section_id: str, stats: dict) -> dict:
         return {}
 
     tiles = [
-        {"label": "Operator HHI", "value": stats["hhi"], "unit": "index"},
-        {"label": "Top operator", "value": stats["top_operator"], "unit": ""},
-        {"label": "Top operator share", "value": stats["top_operator_share"], "unit": "%"},
+        {"label": "HHI", "value": stats["hhi"], "unit": ""},
+        {
+            "label": f"Top operator share ({stats['top_operator']})",
+            "value": stats["top_operator_share"],
+            "unit": "%",
+        },
     ]
     return chart_data_builder.build_kpi_tiles(
         tiles=tiles,
