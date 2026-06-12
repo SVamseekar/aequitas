@@ -364,14 +364,14 @@ def build_scatter_clusters(
     else:
         sample = data
 
-    cluster_counts = data["cluster"].value_counts().to_dict()
+    cluster_counts = {int(k): int(v) for k, v in data["cluster"].value_counts().items()}
 
     clusters = [
         {
             "id": int(cid),
             "label": label,
             "colour": _CLUSTER_COLOURS[int(cid) % len(_CLUSTER_COLOURS)],
-            "n": int(cluster_counts.get(cid, 0)),
+            "n": cluster_counts.get(int(cid), 0),
         }
         for cid, label in sorted(cluster_labels.items())
     ]
