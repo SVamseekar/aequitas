@@ -6,6 +6,7 @@ import pytest
 from aequitas.intelligence.section_registry import SECTION_REGISTRY
 from aequitas.warehouse.chart_dispatch import build_chart_data
 from aequitas.warehouse.precompute import _Sources
+from aequitas.warehouse.stats_builders.equity import build_equity_stats
 
 
 def _empty_sources(**overrides: object) -> _Sources:
@@ -1224,6 +1225,30 @@ def test_f2_disparity_ratio_empty_stats_returns_empty() -> None:
         lsoa_cds=_EQUITY_DF_F2["lsoa_cd"],
     )
     assert chart == {}
+
+
+def test_f2_disparity_ratio_single_region_subset_produces_multi_bar_chart() -> None:
+    """E2: a region-filtered LSOA subset spanning several deciles still yields
+    a multi-bar chart, not an empty shell."""
+    sources = _empty_sources(equity_df=_EQUITY_DF_F2)
+    region_lsoa_cds = pd.Series(["E01000000", "E01000001", "E01000004", "E01000005"])
+    region_equity_df = _EQUITY_DF_F2[_EQUITY_DF_F2["lsoa_cd"].isin(region_lsoa_cds)].copy()
+    region_equity_df["population"] = 1000
+    stats = build_equity_stats("f2_disparity_ratio", equity_df=region_equity_df)
+    assert stats != {}
+    chart = build_chart_data(
+        section_id="f2_disparity_ratio",
+        stats=stats,
+        region="E12000007",
+        region_name="London",
+        urban_rural="all",
+        filtered=pd.DataFrame(),
+        region_df=pd.DataFrame(),
+        sources=sources,
+        lsoa_cds=region_lsoa_cds,
+    )
+    assert chart["type"] == "horizontal_bar"
+    assert len(chart["data"]) >= 2
 
 
 # ---------------------------------------------------------------------------
