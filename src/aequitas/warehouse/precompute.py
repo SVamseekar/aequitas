@@ -464,7 +464,8 @@ def _dispatch(
         return build_urban_rural_gap_stats(section_id, region_df=region_df, urban_rural=urban_rural)
 
     if section_id in _POLICY_SCENARIO_SECTIONS:
-        return build_policy_scenario_stats(section_id, scenarios_df=sources.policy_scenarios_df)
+        elderly_df = _filter_by_lsoa(sources.correlation_df, lsoa_cds)
+        return build_policy_scenario_stats(section_id, scenarios_df=sources.policy_scenarios_df, elderly_df=elderly_df)
 
     if section_id in _ECONOMIC_SECTIONS:
         return build_economic_stats(section_id, appraisal_df=_filter_by_lsoa(sources.appraisal_df, lsoa_cds), region_name=region_name)
