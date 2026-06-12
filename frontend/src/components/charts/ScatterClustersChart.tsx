@@ -16,9 +16,13 @@ interface Props {
 
 export default function ScatterClustersChart({ chartData }: Props) {
   const ref = useRef<HTMLDivElement>(null)
+  const clusterSizes = (chartData.cluster_sizes ?? []) as { label: string; n: number }[]
+  const points = (chartData.data ?? []) as ClusterPoint[]
+  const scatterSuppressed =
+    chartData.scatter_suppressed === true || (points.length === 0 && clusterSizes.length > 0)
 
   useEffect(() => {
-    if (!ref.current) return
+    if (!ref.current || scatterSuppressed) return
     const data = (chartData.data ?? []) as ClusterPoint[]
     const clusters = (chartData.clusters ?? []) as { label: string; n: number }[]
 
@@ -58,9 +62,19 @@ export default function ScatterClustersChart({ chartData }: Props) {
 
     ref.current.replaceChildren(chart)
     return () => chart.remove()
-  }, [chartData])
+  }, [chartData, scatterSuppressed])
 
-  const clusterSizes = (chartData.cluster_sizes ?? []) as { label: string; n: number }[]
+  if (scatterSuppressed) {
+    const totalN = clusterSizes.reduce((sum, c) => sum + c.n, 0)
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-muted-foreground">
+          Too few points (N={totalN}) for a meaningful scatter — showing cluster sizes only.
+        </p>
+        <ClusterSizeBar clusterSizes={clusterSizes} />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-start">

@@ -213,11 +213,12 @@ def test_shap_bar():
 
 
 def test_scatter_clusters():
+    n_points = 24
     data = pd.DataFrame({
-        "x": [1.0, 2.0, 3.0, 4.0],
-        "y": [0.5, 1.5, 2.5, 3.5],
-        "cluster": [0, 0, 1, 1],
-        "id": ["E01", "E02", "E03", "E04"],
+        "x": [float(i) for i in range(n_points)],
+        "y": [float(i) * 0.5 for i in range(n_points)],
+        "cluster": [0 if i % 2 == 0 else 1 for i in range(n_points)],
+        "id": [f"E{i:02d}" for i in range(n_points)],
     })
     cluster_labels = {0: "Urban", 1: "Rural"}
     result = build_scatter_clusters(
@@ -226,10 +227,32 @@ def test_scatter_clusters():
     )
     assert result["type"] == "scatter_clusters"
     assert len(result["clusters"]) == 2
-    assert len(result["data"]) == 4
-    # cluster sizes computed from full data (n=2 per cluster)
-    assert {c["id"]: c["n"] for c in result["clusters"]} == {0: 2, 1: 2}
+    assert len(result["data"]) == n_points
+    assert result["scatter_suppressed"] is False
+    # cluster sizes computed from full data (n=12 per cluster)
+    assert {c["id"]: c["n"] for c in result["clusters"]} == {0: 12, 1: 12}
     assert result["cluster_sizes"] == [
-        {"label": "Urban", "n": 2},
-        {"label": "Rural", "n": 2},
+        {"label": "Urban", "n": 12},
+        {"label": "Rural", "n": 12},
+    ]
+
+
+def test_scatter_clusters_small_n_suppresses_scatter():
+    data = pd.DataFrame({
+        "x": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0],
+        "y": [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5],
+        "cluster": [0, 0, 0, 1, 1, 1, 2, 2],
+        "id": [f"E{i:02d}" for i in range(8)],
+    })
+    cluster_labels = {0: "Urban", 1: "Rural", 2: "Suburban"}
+    result = build_scatter_clusters(
+        data=data, cluster_labels=cluster_labels,
+        title="Clusters", x_label="PC1", y_label="PC2", max_points=2000,
+    )
+    assert result["scatter_suppressed"] is True
+    assert result["data"] == []
+    assert result["cluster_sizes"] == [
+        {"label": "Urban", "n": 3},
+        {"label": "Rural", "n": 3},
+        {"label": "Suburban", "n": 2},
     ]
