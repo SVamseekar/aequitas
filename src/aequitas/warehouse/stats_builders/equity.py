@@ -59,8 +59,22 @@ def _palma_ratio(df: pd.DataFrame, value_col: str) -> float:
 
 
 def _concentration_index(df: pd.DataFrame, value_col: str) -> float:
-    """Erreygers-style concentration index: 2/mean * population-weighted covariance(rank, value)."""
-    ranked = df.sort_values("imd_decile")
+    """Erreygers-style concentration index: 2/mean * population-weighted covariance(rank, value).
+
+    ``imd_decile`` follows the IMD convention (1 = most deprived, 10 = least
+    deprived/most affluent). Per notebook 04c, the index is computed on an
+    affluence-increasing rank (``affluence_rank = max_rank + 1 - imd_rank``)
+    so that a positive result means service is concentrated among affluent
+    areas (PRO-RICH) and a negative result means service is concentrated
+    among deprived areas (PRO-POOR). Sorting by ``imd_decile`` ascending
+    orders from most-deprived (1) to least-deprived (10) — i.e. by
+    deprivation, not affluence — so the rank must be inverted to
+    ``11 - imd_decile`` to match the ground-truth sign convention
+    (national concentration_index_trips = +0.1358, figures-registry).
+    """
+    ranked = df.copy()
+    ranked["_affluence_rank"] = 11 - ranked["imd_decile"]
+    ranked = ranked.sort_values("_affluence_rank")
     cum_pop = ranked["population"].cumsum()
     total_pop = float(cum_pop.iloc[-1])
     if total_pop == 0:
