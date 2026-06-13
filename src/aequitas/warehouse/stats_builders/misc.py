@@ -142,7 +142,14 @@ def _build_distribution_section(route_geometries_df: pd.DataFrame | None, region
     if df.empty:
         return {}
 
-    summary = describe_distribution(df[column])
+    values = df[column].dropna()
+    if values.empty:
+        # e.g. London: all 915 routes have has_geometry=False, so length_km
+        # is 100% null — describe_distribution() would produce NaN
+        # mean/median that leak into the narrative as "nan km".
+        return {"insufficient_data": True, "n_routes": int(len(df)), "metric_name": metric_name}
+
+    summary = describe_distribution(values)
     return {
         "mean": summary.mean,
         "median": summary.median,

@@ -35,10 +35,16 @@ def test_correlation_too_few_rows_returns_empty():
     assert stats == {}
 
 
-def test_missing_columns_returns_empty():
+def test_missing_columns_returns_insufficient_data():
     df = pd.DataFrame({"imd_score": [1.0, 2.0, 3.0]})
     stats = build_correlation_stats("d1_coverage_deprivation", df)
-    assert stats == {}
+    assert stats == {"insufficient_data": True, "n_observations": 0}
+
+
+def test_empty_complete_case_pair_returns_insufficient_data():
+    df = pd.DataFrame({"imd_score": [1.0, 2.0, 3.0], "stops_per_1k": [None, None, None]})
+    stats = build_correlation_stats("d1_coverage_deprivation", df)
+    assert stats == {"insufficient_data": True, "n_observations": 0}
 
 
 def test_correlation_config_covers_all_eight_sections():

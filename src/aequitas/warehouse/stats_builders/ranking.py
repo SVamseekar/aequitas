@@ -116,6 +116,7 @@ def build_ranking_stats(
             region_value=float(by_region[region_name]),
             region_name=region_name,
             unit=unit,
+            higher_is_better=higher_is_better,
         )
 
     if len(by_region) < 2:
@@ -140,4 +141,5 @@ def build_ranking_stats(
         },
         "national_avg": round(nat_mean, 2),
         "unit": unit,
+        "higher_is_better": higher_is_better,
     }

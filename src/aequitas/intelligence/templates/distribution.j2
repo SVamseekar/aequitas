@@ -1,4 +1,8 @@
-{% if median is defined and median is not none -%}
+{% if insufficient_data -%}
+## Key Finding
+
+No routes in this region/area-type filter have geometry data available, so {{ metric_name }} cannot be computed ({{ n_routes }} route{{ "s" if n_routes != 1 }} total, 0 with usable geometry). This section is suppressed for this combination — refer to the national ("all") figures instead.
+{%- elif median is defined and median is not none -%}
 ## Key Finding
 
 The median {{ metric_name }} is **{{ median|round(2) }} {{ unit }}**, with the 10th–90th percentile range spanning **{{ p10|round(2) }}–{{ p90|round(2) }} {{ unit }}**. The distribution is **{{ skew_label }}**, with **{{ n_outliers|int }}** outliers beyond 3× IQR — each representing an LSOA or route with unusually extreme characteristics worth investigating individually.
