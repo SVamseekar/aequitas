@@ -55,7 +55,7 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     "d4_coverage_elderly": SectionDef("correlation.j2", "scatter_regression", "D", "Coverage vs elderly population"),
     "d5_coverage_income": SectionDef("correlation.j2", "scatter_regression", "D", "Coverage vs income"),
     "d6_transport_poverty": SectionDef("ml_clusters.j2", "scatter_clusters", "D", "Transport poverty clusters"),
-    "d7_deprivation_urban_rural": SectionDef("heatmap.j2", "heatmap", "D", "Deprivation x urban/rural"),
+    "d7_deprivation_urban_rural": SectionDef("heatmap.j2", "horizontal_bar", "D", "Deprivation x urban/rural"),
     "d8_feature_importance": SectionDef("ml_prediction.j2", "shap_bar", "D", "Feature importance"),
     # Category F: Equity & Social Inclusion
     "f1_gini": SectionDef("equity.j2", "lorenz_curve", "F", "Gini coefficient"),

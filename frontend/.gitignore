@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local Playwright auth state (contains live session tokens)
+scripts/.auth-state.json
+
+# Audit screenshot dumps (large, regenerated on demand)
+screenshots/
+screenshots_old/

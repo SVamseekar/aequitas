@@ -1,4 +1,8 @@
-{% if r is defined and r is not none -%}
+{% if insufficient_data -%}
+## Key Finding
+
+No routes in this region/area-type filter have the geometry data needed for this comparison ({{ n_observations }} complete-case observations). This section is suppressed for this combination — refer to the national ("all") figures instead.
+{%- elif r is defined and r is not none -%}
 {% set sig_threshold = 0.001 if n_observations > 10000 else 0.05 %}
 ## Key Finding
 

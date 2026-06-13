@@ -3,13 +3,17 @@
 
 **Target:** {{ scenario.scope }}
 **Population affected:** {{ scenario.population_affected|int|format_thousands }} residents
-**Estimated annual cost:** £{{ scenario.estimated_annual_cost_m|round(1) }}m/year
-**CO₂ saving:** {{ scenario.co2_saving_t_yr|int|format_thousands }} tonnes/year
+**Estimated annual cost:** £{{ scenario.estimated_annual_cost_m|round(1) }}m/year{% if scenario.population_affected == 0 %} (England-wide baseline — not attributable to this filter){% endif %}
+**CO₂ saving:** {{ scenario.co2_saving_t_yr|int|format_thousands }} tonnes/year{% if scenario.population_affected == 0 %} (England-wide baseline — not attributable to this filter){% endif %}
 **Confidence:** {{ scenario.confidence }}
 
 ## What This Scenario Does
 
+{% if scenario.population_affected > 0 -%}
 {{ scenario.name }} targets the {{ scenario.scope }} coverage gap through a parameterised intervention designed to improve connectivity for the most underserved communities. The {{ scenario.population_affected|int|format_thousands }} affected residents currently experience service levels below the threshold associated with adequate connectivity for employment, healthcare, and social participation.
+{%- else -%}
+{{ scenario.name }} targets the {{ scenario.scope }} coverage gap nationally through a parameterised intervention designed to improve connectivity for the most underserved communities. No LSOAs within the current region/area-type filter fall within this scenario's target scope, so the population-affected figure for this view is 0 — the cost and CO₂ figures above are the England-wide baseline for the scenario, not a per-filter allocation.
+{%- endif %}
 
 ## Cost-Benefit Context
 

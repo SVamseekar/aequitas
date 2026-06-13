@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from "react"
+import { useRef, useEffect, useMemo, useState } from "react"
 import maplibregl, { type StyleSpecification } from "maplibre-gl"
 import "maplibre-gl/dist/maplibre-gl.css"
 
@@ -20,9 +20,11 @@ export default function ChoroplethMap({ chartData }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const chartDataKey = useMemo(() => JSON.stringify(chartData), [chartData])
+  const [mapUnavailable, setMapUnavailable] = useState(false)
 
   useEffect(() => {
     if (!ref.current) return
+    setMapUnavailable(false)
     const data = (chartData.data ?? []) as AreaDatum[]
     const container = ref.current
 
@@ -30,7 +32,10 @@ export default function ChoroplethMap({ chartData }: Props) {
     const maxVal = data.length > 0 ? Math.max(...data.map((d) => d.value)) : 1
 
     fetch("/boundaries/regions.geojson")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to load region boundaries: HTTP ${r.status}`)
+        return r.json()
+      })
       .then((geojson: { features: GeoJsonFeature[] }) => {
         for (const f of geojson.features) {
           const code = (f.properties["RGN22CD"] ?? f.properties["rgn22cd"]) as string | undefined
@@ -120,7 +125,9 @@ export default function ChoroplethMap({ chartData }: Props) {
         mapRef.current = map
       })
       .catch(() => {
-        // GeoJSON not available — map stays blank
+        // Region boundary GeoJSON not available — show a visible fallback
+        // instead of an empty map area.
+        setMapUnavailable(true)
       })
 
     return () => {
@@ -131,11 +138,21 @@ export default function ChoroplethMap({ chartData }: Props) {
   }, [chartDataKey])
 
   return (
-    <div
-      ref={ref}
-      className="h-[500px] rounded-md overflow-hidden"
-      aria-label={(chartData.title as string | undefined) ?? "Choropleth map"}
-      role="img"
-    />
+    <div className="relative h-[500px] rounded-md overflow-hidden">
+      <div
+        ref={ref}
+        className="h-full w-full"
+        aria-label={(chartData.title as string | undefined) ?? "Choropleth map"}
+        role="img"
+      />
+      {mapUnavailable && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 text-center px-4">
+          <p className="text-sm text-muted-foreground">
+            Map data unavailable — region boundary file could not be loaded.
+            Refer to the table or narrative below for this section&apos;s figures.
+          </p>
+        </div>
+      )}
+    </div>
   )
 }

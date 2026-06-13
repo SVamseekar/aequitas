@@ -11,7 +11,8 @@ Insufficient data for this filter ({{ n_lsoas }} LSOA{{ "s" if n_lsoas != 1 }}).
 
 The {{ pct_below|round(1) }}% of areas below target are not uniformly distributed geographically. Below-target LSOAs tend to cluster in rural areas, coastal communities, and post-industrial towns — reflecting the structural patterns of commercial route withdrawal that have characterised the network since deregulation in 1986.
 
-The average gap of {{ mean_gap|round(2) }} {{ unit }} per LSOA translates to a meaningful daily impact on residents: approximately {{ (mean_gap * 2)|round(0)|int }} fewer round trips available per day than in the median-served LSOA. For commuters, carers, and healthcare users, this gap is the difference between manageable and unmanageable transport arrangements.
+{% set daily_round_trip_gap = mean_gap * 2 -%}
+The average gap of {{ mean_gap|round(2) }} {{ unit }} per LSOA translates to a meaningful daily impact on residents: approximately {{ daily_round_trip_gap|round(2) }} fewer round trips available per day, per resident, than in the median-served LSOA{% if daily_round_trip_gap < 1 %} — equivalent to roughly {{ (daily_round_trip_gap * 100)|round(0)|int }} fewer round trips per day per 100 residents{% endif %}. For commuters, carers, and healthcare users, this gap is the difference between manageable and unmanageable transport arrangements.
 
 ## Investment Case
 

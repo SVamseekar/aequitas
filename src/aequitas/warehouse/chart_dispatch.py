@@ -13,6 +13,7 @@ section_ids return `{}`.
 
 import pandas as pd
 
+from aequitas.core.constants import POPULATION_ENGLAND
 from aequitas.intelligence import chart_data_builder
 from aequitas.intelligence.section_registry import SECTION_REGISTRY
 from aequitas.warehouse.precompute import (
@@ -109,6 +110,8 @@ def build_chart_data(
         return _build_scatter_clusters(section_id, stats, region, region_name, sources, lsoa_cds)
 
     if section_id in _BOX_VIOLIN_SECTIONS:
+        if stats.get("insufficient_data"):
+            return {}
         return _build_box_violin(section_id, stats, region, region_name, urban_rural, sources)
 
     if section_id == "d7_deprivation_urban_rural":
@@ -144,6 +147,8 @@ def build_chart_data(
         return _build_economic_value(section_id, region, sources, lsoa_cds)
 
     if section_id == "j2_bcr":
+        if region != "all":
+            return _chart_bcr_gauge_single_region(section_id, stats)
         return _build_bcr(section_id, region, sources, lsoa_cds)
 
     if section_id == "j3_carbon":
@@ -152,6 +157,8 @@ def build_chart_data(
         return _build_carbon(section_id, region, sources, lsoa_cds)
 
     if section_id == "bsa2_operator_concentration":
+        if region != "all":
+            return _chart_hhi_gauge_single_region(section_id, stats)
         return _build_operator_concentration(section_id, region, sources)
 
     if section_id == "a6_urban_rural_gap":
@@ -165,6 +172,8 @@ def build_chart_data(
         return _build_urban_rural_gap_chart(section_id, region_df)
 
     if section_id == "c4_urban_rural_routes":
+        if region != "all":
+            return _build_route_urban_rural_chart_single_region(stats)
         return _build_route_urban_rural_chart(sources)
 
     if section_id == "ps5_scenario_comparison":
@@ -185,6 +194,8 @@ def build_chart_data(
         return _build_service_deserts_choropleth(section_id, region, region_name, sources)
 
     if section_id == "c7_network_topology":
+        if region != "all":
+            return _chart_network_topology_kpi_tiles(section_id, stats)
         return _build_network_topology_corridors(section_id, region, sources)
 
     return {}
@@ -208,6 +219,11 @@ def _build_scatter_regression(
         if routes.empty or "length_km" not in routes.columns or "stop_count" not in routes.columns:
             return {}
         cfg = CORRELATION_CONFIG[section_id]
+        # London: all routes have has_geometry=False -> length_km 100% null.
+        # build_scatter_regression would otherwise return a degenerate
+        # r=0/p=1/n=0/data=[] chart for an empty complete-case pair.
+        if routes[[cfg["x_col"], cfg["y_col"]]].dropna().empty:
+            return {}
         return chart_data_builder.build_scatter_regression(
             df=routes,
             x_col=cfg["x_col"],
@@ -235,8 +251,8 @@ def _build_scatter_regression(
             y_label="Service Quality Index",
         )
 
-    # _CORRELATION_SECTIONS proper (b5, d1-d5)
-    if not stats:
+    # _CORRELATION_SECTIONS proper (b5, d1-d5, f3)
+    if not stats or stats.get("insufficient_data"):
         return {}
     cfg = CORRELATION_CONFIG[section_id]
     corr_df = _filter_by_lsoa(sources.correlation_df, lsoa_cds)
@@ -399,7 +415,18 @@ def _build_box_violin(
 
 
 def _build_heatmap(section_id: str, stats: dict, region_df: pd.DataFrame) -> dict:
-    """Heatmap chart for d7_deprivation_urban_rural (SQI by decile/urban-rural); {} on guard."""
+    """Diverging horizontal bar for d7_deprivation_urban_rural (SQI urban-rural gap by IMD decile); {} on guard.
+
+    Replaces the original 2-row (urban/rural) x decile heatmap (E6/A12b
+    follow-up): a 2-row heatmap degenerates to a single row for urban-only
+    regions (e.g. London), which is an awkward visualisation. Instead, for
+    each IMD decile this shows the urban-minus-rural SQI gap as a single
+    diverging bar — positive values mean urban areas are better-served at
+    that decile, negative values mean rural areas are better-served. For
+    urban-only regions (no Rural rows), falls back to {} — the heatmap.j2
+    narrative (worst_cell/best_cell/gap) is unaffected and still renders
+    from `stats`.
+    """
     if not stats:
         return {}
 
@@ -416,19 +443,20 @@ def _build_heatmap(section_id: str, stats: dict, region_df: pd.DataFrame) -> dic
         .mean()
         .unstack(fill_value=0)
     )
-    if pivot.empty:
+    if pivot.empty or "Urban" not in pivot.index or "Rural" not in pivot.index:
+        return {}
+
+    gap = (pivot.loc["Urban"] - pivot.loc["Rural"]).sort_index()
+    if gap.empty:
         return {}
 
     title = SECTION_REGISTRY[section_id].title
-    x_labels = [str(d) for d in sorted(pivot.columns)]
-    y_labels = list(pivot.index)
-    values = pivot.values.tolist()
-
-    return chart_data_builder.build_heatmap(
-        x_labels=x_labels,
-        y_labels=y_labels,
-        values=values,
-        title=title,
+    data = pd.DataFrame({"label": [f"Decile {d}" for d in gap.index], "value": gap.values})
+    return chart_data_builder.build_horizontal_bar(
+        data=data,
+        title=f"{title} — urban minus rural SQI gap by IMD decile",
+        x_label="Urban − rural SQI gap (positive = urban better-served)",
+        y_label="IMD decile (1 = most deprived)",
     )
 
 
@@ -530,9 +558,34 @@ def _chart_scenario_kpi_tiles(section_id: str, stats: dict) -> dict:
             "unit": "t/yr",
         },
     ]
-    return chart_data_builder.build_kpi_tiles(
+    chart = chart_data_builder.build_kpi_tiles(
         tiles=tiles,
         title=SECTION_REGISTRY[section_id].title,
+    )
+    chart["proportion"] = _scenario_proportion_chart(section_id, stats)
+    return chart
+
+
+def _scenario_proportion_chart(section_id: str, stats: dict) -> dict:
+    """Before/after grouped bar of population affected vs England total (E14).
+
+    Shows the scenario's `population_affected` against the England total
+    population (the fixed denominator per CLAUDE.md, never pipeline-filtered)
+    so readers can gauge the scale of the intervention at a glance. Embedded
+    as a `proportion` field on the kpi_tiles chart_data for ps1-ps4/g5 — a
+    two-category grouped bar: "Population affected" vs "Remaining England
+    population".
+    """
+    population_affected = int(stats["scenario"]["population_affected"])
+    remaining = max(POPULATION_ENGLAND - population_affected, 0)
+
+    return chart_data_builder.build_grouped_bar(
+        categories=["England (56.5m)"],
+        series=[
+            {"name": "Population affected", "data": [population_affected]},
+            {"name": "Remaining population", "data": [remaining]},
+        ],
+        title=f"{SECTION_REGISTRY[section_id].title} — population affected vs England total",
     )
 
 
@@ -712,6 +765,27 @@ def _build_economic_value(
     )
 
 
+def _chart_bcr_gauge_single_region(section_id: str, stats: dict) -> dict:
+    """Single-marker BCR gauge for j2_bcr single-region views (E7 follow-up); {} on guard.
+
+    `stats` is the single-region appraisal shape: bcr, vfm_band, area_name,
+    investment_m, appraisal_years. Reuses the national gauge's VfM bands so
+    the region's BCR is shown against the same HM Treasury thresholds.
+    """
+    required = {"bcr", "area_name"}
+    if not stats or not required.issubset(stats):
+        return {}
+
+    markers = [{"label": str(stats["area_name"]), "value": round(float(stats["bcr"]), 2)}]
+    return chart_data_builder.build_gauge(
+        markers=markers,
+        bands=_BCR_VFM_BANDS,
+        title=SECTION_REGISTRY[section_id].title,
+        unit="BCR",
+        reference_lines=[1.0, 2.0],
+    )
+
+
 def _build_bcr(section_id: str, region: str, sources: _Sources, lsoa_cds: pd.Series) -> dict:
     """Threshold-band gauge of regional BCR (j2); {} on guard, region=='all' only."""
     if region != "all":
@@ -792,6 +866,28 @@ def _build_carbon(section_id: str, region: str, sources: _Sources, lsoa_cds: pd.
     )
 
 
+def _chart_hhi_gauge_single_region(section_id: str, stats: dict) -> dict:
+    """Single-marker HHI gauge for bsa2_operator_concentration single-region views (E7 follow-up); {} on guard.
+
+    `stats` is the single-region operator-concentration shape: hhi,
+    region_name, top_operator, top_operator_share. Reuses the national
+    gauge's HHI concentration bands so the region's HHI is shown against the
+    same standard market-concentration thresholds.
+    """
+    required = {"hhi", "region_name"}
+    if not stats or not required.issubset(stats):
+        return {}
+
+    markers = [{"label": str(stats["region_name"]), "value": round(float(stats["hhi"]), 1)}]
+    return chart_data_builder.build_gauge(
+        markers=markers,
+        bands=_HHI_CONCENTRATION_BANDS,
+        title=SECTION_REGISTRY[section_id].title,
+        unit="HHI",
+        reference_lines=[1500.0, 2500.0],
+    )
+
+
 def _build_operator_concentration(section_id: str, region: str, sources: _Sources) -> dict:
     """Threshold-band gauge of regional operator HHI from LTA data (bsa2); all-regions only, else {}."""
     if region != "all":
@@ -815,6 +911,31 @@ def _build_operator_concentration(section_id: str, region: str, sources: _Source
         title=SECTION_REGISTRY[section_id].title,
         unit="HHI",
         reference_lines=[1500.0, 2500.0],
+    )
+
+
+def _build_route_urban_rural_chart_single_region(stats: dict) -> dict:
+    """Stacked bar of urban/rural/mixed route share (%) for a single region (c4); {} on guard.
+
+    Companion to `_build_route_urban_rural_chart`'s national 9-region table —
+    for single-region views, builds a one-category stacked bar from the
+    region-scoped `build_urban_rural_gap_stats` shape (urban_value,
+    rural_value, pct_mixed) so the chart matches the narrative's per-region
+    figures instead of the global table (A8 follow-up).
+    """
+    required = {"urban_value", "rural_value", "pct_mixed"}
+    if not stats or not required.issubset(stats):
+        return {}
+
+    series = [
+        {"name": "Urban", "values": [round(float(stats["urban_value"]), 1)]},
+        {"name": "Rural", "values": [round(float(stats["rural_value"]), 1)]},
+        {"name": "Mixed", "values": [round(float(stats["pct_mixed"]), 1)]},
+    ]
+    return chart_data_builder.build_stacked_bar(
+        categories=["This region"],
+        series=series,
+        title=SECTION_REGISTRY["c4_urban_rural_routes"].title,
     )
 
 
@@ -1046,6 +1167,32 @@ def _build_service_deserts_choropleth(
         metric="pct_sunday_desert",
         title=SECTION_REGISTRY[section_id].title,
         colour_scale="RdYlGn",
+    )
+
+
+def _chart_network_topology_kpi_tiles(section_id: str, stats: dict) -> dict:
+    """KPI tiles for c7_network_topology single-region views; {} on guard.
+
+    `_build_network_topology_corridors`'s ranked horizontal bar is
+    national-only (no LAD-to-LAD origin/destination data to build a
+    region-specific corridor chart) — for single regions, surface the
+    region's own cross-LA share and route-length stats as KPI tiles instead
+    of leaving chart_data empty (E9/A11 follow-up).
+    """
+    required = {"n_cross_la", "pct_cross_la"}
+    if not stats or not required.issubset(stats):
+        return {}
+
+    tiles = [
+        {"label": "Cross-LA routes", "value": int(stats["n_cross_la"]), "unit": "routes"},
+        {"label": "Cross-LA share", "value": round(float(stats["pct_cross_la"]), 1), "unit": "%"},
+    ]
+    if "mean_length" in stats and "median_length" in stats:
+        tiles.append({"label": "Mean route length", "value": round(float(stats["mean_length"]), 1), "unit": "km"})
+        tiles.append({"label": "Median route length", "value": round(float(stats["median_length"]), 1), "unit": "km"})
+    return chart_data_builder.build_kpi_tiles(
+        tiles=tiles,
+        title=SECTION_REGISTRY[section_id].title,
     )
 
 

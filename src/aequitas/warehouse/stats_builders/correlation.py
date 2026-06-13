@@ -78,18 +78,23 @@ def build_correlation_stats(section_id: str, df: pd.DataFrame) -> dict:
 
     Returns:
         A dict with keys {r, p_value, n, n_observations, x_label, y_label,
-        strength, direction} ready for correlation.j2 rendering, or an
-        empty dict ({}) if either configured column is missing from `df`,
-        or if fewer than 3 complete-case rows (non-null in both columns)
-        remain after dropping missing values.
+        strength, direction} ready for correlation.j2 rendering. Returns
+        `{"insufficient_data": True, "n_observations": 0}` if either
+        configured column is missing from `df`, or if there are zero
+        complete-case rows (non-null in both columns) — e.g. London's
+        route_geometries rows, which are 100% null for length_km. Returns
+        `{}` if there are 1-2 complete-case rows (too few to correlate but
+        not a clean "no data" case).
     """
     cfg = CORRELATION_CONFIG[section_id]
     x_col, y_col = cfg["x_col"], cfg["y_col"]
 
     if x_col not in df.columns or y_col not in df.columns:
-        return {}
+        return {"insufficient_data": True, "n_observations": 0}
 
     pair = df[[x_col, y_col]].dropna()
+    if pair.empty:
+        return {"insufficient_data": True, "n_observations": 0}
     if len(pair) < 3:
         return {}
 

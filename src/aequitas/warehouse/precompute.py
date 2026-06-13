@@ -518,12 +518,19 @@ def _build_network_topology(routes_df: pd.DataFrame, region: str, region_name: s
 
     cross_la = df[df["cross_la"]]
     n_total = len(df)
-    stats = {
+    stats: dict = {
         "n_cross_la": int(len(cross_la)),
         "pct_cross_la": round(len(cross_la) / n_total * 100, 1),
-        "mean_length": round(float(df["length_km"].mean()), 1),
-        "median_length": round(float(df["length_km"].median()), 1),
     }
+
+    # London: all routes have has_geometry=False -> length_km 100% null for
+    # this region. Omit the length stats rather than leaking NaN into
+    # network_topology.j2 ("nan km") — the template guards on
+    # mean_length/median_length being defined.
+    lengths = df["length_km"].dropna()
+    if not lengths.empty:
+        stats["mean_length"] = round(float(lengths.mean()), 1)
+        stats["median_length"] = round(float(lengths.median()), 1)
 
     if region == "all" and not cross_la.empty and "primary_region" in cross_la.columns:
         by_region = cross_la.groupby("primary_region").size()

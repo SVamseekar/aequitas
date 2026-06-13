@@ -723,7 +723,7 @@ _REGION_DF = pd.DataFrame(
 )
 
 
-def test_d7_heatmap() -> None:
+def test_d7_diverging_bar() -> None:
     sources = _empty_sources()
     stats = {
         "x_dimension": "IMD decile",
@@ -743,20 +743,40 @@ def test_d7_heatmap() -> None:
         sources=sources,
         lsoa_cds=_REGION_DF["lsoa_cd"],
     )
-    assert chart["type"] == "heatmap" == SECTION_REGISTRY["d7_deprivation_urban_rural"].chart_type
-    assert chart["title"] == SECTION_REGISTRY["d7_deprivation_urban_rural"].title
-    assert "x_labels" in chart
-    assert "y_labels" in chart
-    assert "values" in chart
-    assert set(chart["y_labels"]) == {"Urban", "Rural"}
+    assert chart["type"] == "horizontal_bar" == SECTION_REGISTRY["d7_deprivation_urban_rural"].chart_type
+    assert "data" in chart
 
-    # values must be derived from service_quality_index (70/60/50/40 Urban,
-    # 50/40/30/20 Rural), not trips_per_capita (10/8/6/4 and 5/4/3/2) — the two
-    # metrics produce visibly different pivot tables.
-    flat_values = [v for row in chart["values"] for v in row]
-    assert set(flat_values) == {70.0, 60.0, 50.0, 40.0, 30.0, 20.0}
-    assert 10.0 not in flat_values
-    assert 8.0 not in flat_values
+    # Urban (70/60/50/40) minus Rural (50/40/30/20) by decile -> gap of 20
+    # for every decile 1-4.
+    values = {item["label"]: item["value"] for item in chart["data"]}
+    assert set(values.keys()) == {"Decile 1", "Decile 2", "Decile 3", "Decile 4"}
+    for v in values.values():
+        assert v == 20.0
+
+
+def test_d7_diverging_bar_urban_only_returns_empty() -> None:
+    """London (urban-only) has no Rural rows — chart_data is {}, narrative still renders from stats."""
+    sources = _empty_sources()
+    stats = {
+        "x_dimension": "IMD decile",
+        "y_dimension": "urban/rural classification",
+        "metric_name": "service quality index",
+        "worst_cell": {"label": "Decile 4, Urban", "value": 40.0},
+        "best_cell": {"label": "Decile 1, Urban", "value": 70.0},
+    }
+    urban_only_df = _REGION_DF[_REGION_DF["urban_rural"] == "Urban"]
+    chart = build_chart_data(
+        section_id="d7_deprivation_urban_rural",
+        stats=stats,
+        region="E12000007",
+        region_name="London",
+        urban_rural="all",
+        filtered=urban_only_df,
+        region_df=urban_only_df,
+        sources=sources,
+        lsoa_cds=urban_only_df["lsoa_cd"],
+    )
+    assert chart == {}
 
 
 def test_d7_heatmap_empty_stats_returns_empty() -> None:

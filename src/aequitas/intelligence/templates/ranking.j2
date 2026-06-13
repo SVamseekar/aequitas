@@ -1,7 +1,8 @@
 {% if best and worst -%}
+{% set hib = higher_is_better|default(true) -%}
 ## Key Finding
 
-**{{ best.name }}** leads England with **{{ best.value|round(2) }} {{ unit }}**, {{ best.pct_above|round(1) }}% above the national average of {{ national_avg|round(2) }} {{ unit }}. At the other end, **{{ worst.name }}** records the lowest at **{{ worst.value|round(2) }} {{ unit }}** — {{ worst.pct_below|round(1) }}% below the national average.
+**{{ best.name }}** leads England with **{{ best.value|round(2) }} {{ unit }}**, {{ best.pct_above|round(1)|abs }}% {{ "above" if hib else "below" }} the national average of {{ national_avg|round(2) }} {{ unit }}. At the other end, **{{ worst.name }}** records the {{ "lowest" if hib else "highest" }} at **{{ worst.value|round(2) }} {{ unit }}** — {{ worst.pct_below|round(1)|abs }}% {{ "below" if hib else "above" }} the national average.
 
 ## Regional Spread
 

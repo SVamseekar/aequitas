@@ -8,6 +8,7 @@ def build_single_region_stats(
     region_value: float,
     region_name: str,
     unit: str,
+    higher_is_better: bool = True,
 ) -> dict:
     """Build the stats shape required by single_region.j2.
 
@@ -22,11 +23,15 @@ def build_single_region_stats(
         region_value: The metric value for the single selected region.
         region_name: Human-readable region name (e.g. "North East").
         unit: Unit label for the metric (e.g. "trips/capita").
+        higher_is_better: Whether a higher metric value is the desirable
+            outcome (e.g. SQI) vs a lower one (e.g. vulnerability index).
+            Propagated to single_region.j2 so the "ahead of/behind the
+            national benchmark" framing matches the metric's direction.
 
     Returns:
-        Dict with keys region_name, value, national_avg, vs_national_pct, unit.
-        Deliberately excludes best/worst so InsightEngine selects single_region.j2
-        instead of ranking.j2.
+        Dict with keys region_name, value, national_avg, vs_national_pct,
+        unit, higher_is_better. Deliberately excludes best/worst so
+        InsightEngine selects single_region.j2 instead of ranking.j2.
     """
     national_avg = float(by_region.mean())
     vs_national_pct = (
@@ -40,4 +45,5 @@ def build_single_region_stats(
         "national_avg": round(national_avg, 2),
         "vs_national_pct": vs_national_pct,
         "unit": unit,
+        "higher_is_better": higher_is_better,
     }
