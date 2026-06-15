@@ -1,6 +1,8 @@
+import HorizontalBarChart from "./HorizontalBarChart"
+
 interface KpiTile {
   label: string
-  value: number
+  value: number | null
   unit: string
 }
 
@@ -8,8 +10,11 @@ interface Props {
   chartData: Record<string, unknown>
 }
 
-/** Format a tile value for display: large counts get thousands separators. */
-function formatValue(value: number): string {
+/** Format a tile value for display: large counts get thousands separators, null becomes "—". */
+function formatValue(value: number | null): string {
+  if (value === null) {
+    return "—"
+  }
   if (Number.isInteger(value)) {
     return value.toLocaleString("en-GB")
   }
@@ -25,6 +30,7 @@ function formatValue(value: number): string {
 export default function KpiTiles({ chartData }: Props) {
   const tiles = (chartData.tiles ?? []) as KpiTile[]
   const title = chartData.title as string | undefined
+  const proportion = chartData.proportion as Record<string, unknown> | undefined
 
   if (tiles.length === 0) {
     return <p className="text-muted-foreground text-sm">No data available</p>
@@ -46,6 +52,11 @@ export default function KpiTiles({ chartData }: Props) {
           </div>
         ))}
       </div>
+      {proportion && (proportion.categories as string[] | undefined)?.length ? (
+        <div className="mt-4">
+          <HorizontalBarChart chartData={{ ...proportion, type: "stacked_bar" }} />
+        </div>
+      ) : null}
     </div>
   )
 }

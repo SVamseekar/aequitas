@@ -540,6 +540,7 @@ scen_a_co2_saving = scen_a["modal_shift_co2_net_saving_kg"].sum() / 1000  # t/yr
 scen_b = base[base["evening_isolated"] == True].copy()
 scen_b_pop = scen_b["population"].sum()
 scen_b_lsoas = len(scen_b)
+scen_b_co2_saving = scen_b["modal_shift_co2_net_saving_kg"].sum() / 1000  # t/yr
 # Cost: assume 2 additional evening trips per stop per evening
 # Average stops per LSOA with service: ~3
 AVG_STOPS_PER_LSOA = 3
@@ -555,6 +556,7 @@ scen_c = base[(base["urban_rural"].str.contains("Rural", na=False)) &
               (base["elderly_pct"] > base["elderly_pct"].quantile(0.75))].copy()
 scen_c_pop = scen_c["population"].sum()
 scen_c_lsoas = len(scen_c)
+scen_c_co2_saving = scen_c["modal_shift_co2_net_saving_kg"].sum() / 1000  # t/yr
 POP_DENSITY_THRESHOLD = 50  # persons/km² — below this, DRT more viable than fixed route
 scen_c_drt_cost_per_trip = 8.0   # £ indicative (DRT vs fixed route ~£4.50)
 scen_c_trips_needed = scen_c_pop * 0.05 * 52  # 5% take bus weekly
@@ -589,7 +591,10 @@ scenarios = pd.DataFrame([
         "population_affected": int(scen_b_pop),
         "annual_additional_trips": scen_b_lsoas * AVG_STOPS_PER_LSOA * EVENING_TRIPS_ADDED * 250,
         "estimated_annual_cost_m": round(scen_b_annual_cost / 1e6, 1),
-        "co2_saving_t_yr": None,
+        # Modal shift CO2 net saving (car-replacement, DESNZ 2025 factors) summed
+        # over evening-isolated LSOAs — same methodology and source column as
+        # scenario A (lsoa_economic_appraisal.modal_shift_co2_net_saving_kg).
+        "co2_saving_t_yr": round(scen_b_co2_saving, 0),
         "confidence": "Indicative (❌ operating cost unverified)",
     },
     {
@@ -599,7 +604,10 @@ scenarios = pd.DataFrame([
         "population_affected": int(scen_c_pop),
         "annual_additional_trips": int(scen_c_trips_needed),
         "estimated_annual_cost_m": round(scen_c_annual_cost / 1e6, 1),
-        "co2_saving_t_yr": None,
+        # Modal shift CO2 net saving (car-replacement, DESNZ 2025 factors) summed
+        # over rural elderly LSOAs — same methodology and source column as
+        # scenario A (lsoa_economic_appraisal.modal_shift_co2_net_saving_kg).
+        "co2_saving_t_yr": round(scen_c_co2_saving, 0),
         "confidence": "Indicative (❌ operating cost unverified)",
     },
     {
@@ -608,7 +616,10 @@ scenarios = pd.DataFrame([
         "scope": f"{scen_d_lads} LADs (highest readiness scores)",
         "population_affected": int(scen_d_pop),
         "annual_additional_trips": int(scen_d_new_trips),
+        # Deliberate None: franchising is modeled as a regulatory transfer (local precept/revenue funded)
+        # with zero direct central government capital/subsidy requirement in the baseline model.
         "estimated_annual_cost_m": None,
+        # Deliberate None: assumes no direct fleet greening/conversion in the regulatory-only baseline.
         "co2_saving_t_yr": None,
         "confidence": "Indicative (17.5% franchise uplift — TfGM evidence)",
     },

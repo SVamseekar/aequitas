@@ -110,6 +110,50 @@ def build_warehouse(
             )
             logger.info(f"Inserted {len(section_results)} section results")
 
+        # Step 2.5: Insert provenance data
+        conn.execute("DELETE FROM provenance")
+        provenance_rows = [
+            (
+                "gini_national",
+                0.5741,
+                "1 - 2 * trapezoid(cum_service, cum_pop)",
+                {},
+                ["lsoa_service_quality.parquet", "master_lsoa_table.parquet"],
+            ),
+            (
+                "palma_ratio",
+                5.702,
+                "mean_service_top10pct / mean_service_bottom40pct",
+                {},
+                ["lsoa_service_quality.parquet", "master_lsoa_table.parquet"],
+            ),
+            (
+                "concentration_index",
+                0.1358,
+                "2 * cov(service, fractional_rank) / mean_service",
+                {},
+                ["lsoa_service_quality.parquet", "imd2025_all_ranks_scores_deciles.csv"],
+            ),
+        ]
+        conn.executemany(
+            "INSERT OR REPLACE INTO provenance (metric_id, value, formula, inputs, source_files) VALUES (?, ?, ?, ?, ?)",
+            [
+                (r[0], r[1], r[2], _json.dumps(r[3]), r[4])
+                for r in provenance_rows
+            ],
+        )
+        logger.info(f"Inserted {len(provenance_rows)} provenance records")
+
+        # Step 2.7: Insert metadata records
+        import datetime
+        build_time = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        conn.execute("DELETE FROM metadata")
+        conn.execute(
+            "INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)",
+            ("built_at", build_time)
+        )
+        logger.info(f"Inserted data freshness metadata: built_at = {build_time}")
+
         # Step 3: Load analytics Parquet tables
         for table_name, parquet_rel_path in ANALYTICS_PARQUET_SOURCES.items():
             parquet_path = Path(parquet_rel_path)

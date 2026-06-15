@@ -29,16 +29,19 @@ def create_app() -> FastAPI:
     @app.get("/api/health")
     def health() -> dict:
         from aequitas.api.deps import get_db
-        db = next(get_db())
+        generator = get_db()
+        db = next(generator)
         if db is None:
             return {"status": "degraded", "warehouse": "not found"}
         try:
             db.execute("SELECT 1").fetchone()
             return {"status": "ok", "warehouse": "connected"}
-        except Exception:
+        except Exception as exc:
+            from loguru import logger
+            logger.exception(f"Health check database error: {exc}")
             return {"status": "degraded", "warehouse": "unavailable"}
         finally:
-            db.close()
+            generator.close()
 
     # Register routers
     from aequitas.api.routers import overview, sections, lsoa, provenance, chat, conversations, metrics, export

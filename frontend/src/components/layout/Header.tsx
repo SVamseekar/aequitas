@@ -1,6 +1,7 @@
 import { Link } from "react-router"
 import { FilterDropdowns } from "./FilterDropdowns"
 import { UserMenu } from "./UserMenu"
+import { AequitasLogo } from "../shared/AequitasLogo"
 
 export function Header() {
   return (
@@ -10,7 +11,8 @@ export function Header() {
           to="/dashboard"
           className="flex items-center gap-2.5 text-sm font-mono font-bold tracking-widest uppercase text-foreground hover:text-indigo-400 transition-colors"
         >
-          AEQUITAS
+          <AequitasLogo className="w-5 h-5 text-slate-300" />
+          AEQUITAS <span className="text-muted-foreground font-normal">· Policy Intelligence</span>
         </Link>
         <div className="flex items-center gap-4">
           <FilterDropdowns />

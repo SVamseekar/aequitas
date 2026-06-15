@@ -1,0 +1,17 @@
+{% if r2 is defined and r2 is not none -%}
+## Model Fit & Accuracy
+
+The predictive model (Random Forest Regressor) achieves an R² score of **{{ (r2 * 100)|round(1) }}%** on the held-out test dataset (R² = {{ r2|round(3) }}). This indicates that nearly half of the geographic variation in local bus service levels (BODS weekly trips per capita) can be successfully predicted using just 9 socio-economic and demographic features.
+
+The accompanying scatter plot compares **Actual weekly trips per capita** (x-axis) against the **Predicted weekly trips per capita** (y-axis). 
+- Dots close to the diagonal line represent communities where the demographic profile predicts service levels accurately.
+- Points far from the diagonal indicate communities with "residual" service anomalies — either significantly better served (over-served) or worse served (underserved) than their demographics would suggest.
+
+## Policy Relevance
+
+This model fit acts as a diagnostic tool for Local Transport Authorities (LTAs):
+1. **Systemic Drivers**: The high predictive power confirms that socio-economic factors (like car ownership and population density) strongly influence where operators run commercial services.
+2. **Targeting Gaps**: The unexplained variance ({{ ((1 - r2) * 100)|round(1) }}%) represents the spatial inequality driven by historical legacy, local funding decisions, or geographic constraints. LTAs can target interventions specifically at the outlier LSOAs where actual service falls furthest below model predictions.
+
+*Methodology: Random Forest Regressor trained on 33,755 LSOAs using 9 demographic features from Census 2021 and IMD 2025. Target: weekly BODS trips per capita (log-transformed).*
+{%- endif %}

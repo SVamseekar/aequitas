@@ -65,7 +65,7 @@ export function SuggestedQuestions({ dimension, onSelect }: Props) {
 
   return (
     <div className="space-y-2">
-      <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 mb-3">
+      <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground mb-3">
         Suggested questions
       </p>
       {questions.map((q) => (

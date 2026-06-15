@@ -49,9 +49,14 @@ _CORRELATION_SECTIONS = {
     "d4_coverage_elderly",
     "d5_coverage_income",
     "f3_ethnic_access",
+    "d9a_health_access",
+    "d9b_employment_access",
+    "d9c_crime_access",
+    "d9d_environment_access",
+    "d9e_barriers_access",
 }
 
-_SCATTER_REGRESSION_SECTIONS = _CORRELATION_SECTIONS | {"c5_length_vs_frequency", "g2_anomalies"}
+_SCATTER_REGRESSION_SECTIONS = _CORRELATION_SECTIONS | {"c5_length_vs_frequency"}
 
 _LORENZ_SECTIONS = {"f1_gini", "a4_coverage_equity"}
 
@@ -59,7 +64,7 @@ _SHAP_SECTIONS = {"a8_coverage_prediction", "d8_feature_importance", "g4_shap"}
 
 _ROUTE_CLUSTER_SECTIONS = {"c6_route_archetypes", "g1_route_clusters"}
 
-_SCATTER_CLUSTER_SECTIONS = _ROUTE_CLUSTER_SECTIONS | {"d6_transport_poverty"}
+_SCATTER_CLUSTER_SECTIONS = _ROUTE_CLUSTER_SECTIONS | {"d6_transport_poverty", "g2_anomalies"}
 
 _BOX_VIOLIN_SECTIONS = {"c1_route_length", "c2_stops_per_route"}
 
@@ -339,6 +344,48 @@ def _build_scatter_clusters(
             y_label="Stop Count",
         )
 
+    if section_id == "g2_anomalies":
+        anomalies_df = _filter_by_lsoa(sources.anomalies_df, lsoa_cds)
+        required_cols = {"imd_score", "service_quality_index", "anomaly_type", "lsoa_cd"}
+        if anomalies_df.empty or not required_cols.issubset(anomalies_df.columns):
+            return {}
+
+        type_mapping = {
+            "normal": 0,
+            "positive_deprived_well_served": 1,
+            "inefficiency_affluent_poor_served": 2,
+            "policy_failure_elderly_no_service": 3,
+            "other_anomaly": 4,
+        }
+        cluster_labels = {
+            0: "Normal LSOA",
+            1: "Deprived, Well-served (Positive)",
+            2: "Affluent, Poorly-served (Inefficient)",
+            3: "Elderly, No Service (Policy Failure)",
+            4: "Other Anomaly",
+        }
+
+        data = anomalies_df.copy()
+        data["cluster"] = data["anomaly_type"].map(type_mapping)
+        data = data.dropna(subset=["cluster"])
+        data["cluster"] = data["cluster"].astype(int)
+
+        rename_map = {
+            "imd_score": "x",
+            "service_quality_index": "y",
+            "lsoa_cd": "id",
+        }
+        data = data.rename(columns=rename_map)
+        data = data[["x", "y", "cluster", "id"]]
+
+        return chart_data_builder.build_scatter_clusters(
+            data=data,
+            cluster_labels=cluster_labels,
+            title=title,
+            x_label="IMD Score",
+            y_label="Service Quality Index",
+        )
+
     # d6_transport_poverty
     cluster_df = _filter_by_lsoa(sources.lsoa_clusters_df, lsoa_cds)
     if cluster_df.empty:
@@ -549,12 +596,14 @@ def _chart_scenario_kpi_tiles(section_id: str, stats: dict) -> dict:
         },
         {
             "label": "Annual cost",
-            "value": round(float(scenario["estimated_annual_cost_m"]), 2),
+            "value": None if scenario["estimated_annual_cost_m"] is None
+            else round(float(scenario["estimated_annual_cost_m"]), 2),
             "unit": "£m/yr",
         },
         {
             "label": "CO₂ saved",
-            "value": round(float(scenario["co2_saving_t_yr"]), 1),
+            "value": None if scenario["co2_saving_t_yr"] is None
+            else round(float(scenario["co2_saving_t_yr"]), 1),
             "unit": "t/yr",
         },
     ]
@@ -582,8 +631,8 @@ def _scenario_proportion_chart(section_id: str, stats: dict) -> dict:
     return chart_data_builder.build_grouped_bar(
         categories=["England (56.5m)"],
         series=[
-            {"name": "Population affected", "data": [population_affected]},
-            {"name": "Remaining population", "data": [remaining]},
+            {"name": "Population affected", "values": [population_affected]},
+            {"name": "Remaining population", "values": [remaining]},
         ],
         title=f"{SECTION_REGISTRY[section_id].title} — population affected vs England total",
     )
@@ -1008,12 +1057,15 @@ def _build_scenario_comparison(section_id: str, stats: dict) -> dict:
     for s in scenarios:
         population = s["population"]
         cost_m = s["cost_m"]
-        cost_per_beneficiary = round(cost_m * 1e6 / population, 2) if population else 0.0
+        co2_t = s["co2_t"]
+        cost_per_beneficiary = (
+            round(cost_m * 1e6 / population, 2) if cost_m is not None and population else None
+        )
         rows.append({
             "Scenario": s["name"],
             "Population affected": population,
-            "Cost £m/yr": round(cost_m, 2),
-            "CO2 t/yr": round(s["co2_t"], 1),
+            "Cost £m/yr": round(cost_m, 2) if cost_m is not None else None,
+            "CO2 t/yr": round(co2_t, 1) if co2_t is not None else None,
             "Cost/beneficiary (£)": cost_per_beneficiary,
         })
 

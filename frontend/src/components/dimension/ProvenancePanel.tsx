@@ -27,7 +27,7 @@ export function ProvenancePanel({ metricId, onClose }: Props) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          <p className="text-[10px] font-mono text-indigo-400/70 uppercase tracking-wider mb-4">{metricId}</p>
+          <p className="text-[11px] font-mono text-indigo-400/70 uppercase tracking-wide mb-4">{metricId}</p>
 
           {isLoading && (
             <div className="space-y-2">
@@ -47,15 +47,15 @@ export function ProvenancePanel({ metricId, onClose }: Props) {
             <div className="space-y-4">
               {data.description && (
                 <section>
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/60 mb-1">Description</p>
+                  <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/60 mb-1">Description</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">{data.description}</p>
                 </section>
               )}
 
               {data.formula && (
                 <section>
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/60 mb-1">Formula</p>
-                  <pre className="text-[10px] font-mono bg-muted rounded p-3 text-foreground overflow-x-auto whitespace-pre-wrap">
+                  <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/60 mb-1">Formula</p>
+                  <pre className="text-[11px] font-mono bg-muted rounded p-3 text-foreground overflow-x-auto whitespace-pre-wrap">
                     {data.formula}
                   </pre>
                 </section>
@@ -63,17 +63,17 @@ export function ProvenancePanel({ metricId, onClose }: Props) {
 
               {data.notebook && (
                 <section>
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/60 mb-1">Notebook</p>
+                  <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/60 mb-1">Notebook</p>
                   <p className="text-xs font-mono text-indigo-400">{data.notebook}</p>
                 </section>
               )}
 
               {data.source_files && data.source_files.length > 0 && (
                 <section>
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/60 mb-1">Source files</p>
+                  <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/60 mb-1">Source files</p>
                   <ul className="space-y-1">
                     {data.source_files.map((f) => (
-                      <li key={f} className="text-[10px] font-mono text-muted-foreground">{f}</li>
+                      <li key={f} className="text-[11px] font-mono text-muted-foreground">{f}</li>
                     ))}
                   </ul>
                 </section>
@@ -81,10 +81,10 @@ export function ProvenancePanel({ metricId, onClose }: Props) {
 
               {data.input_values && Object.keys(data.input_values).length > 0 && (
                 <section>
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/60 mb-1">Input values</p>
+                  <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/60 mb-1">Input values</p>
                   <div className="space-y-1">
                     {Object.entries(data.input_values).map(([k, v]) => (
-                      <div key={k} className="flex justify-between text-[10px] font-mono">
+                      <div key={k} className="flex justify-between text-[11px] font-mono">
                         <span className="text-muted-foreground">{k}</span>
                         <span className="text-foreground">{String(v)}</span>
                       </div>

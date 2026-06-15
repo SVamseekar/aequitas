@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react"
 import * as Plot from "@observablehq/plot"
 import { CATEGORICAL } from "@/lib/colours"
+import { useChartWidth } from "@/hooks/useChartWidth"
 import ClusterSizeBar from "./ClusterSizeBar"
 
 interface ClusterPoint {
@@ -15,7 +16,9 @@ interface Props {
 }
 
 export default function ScatterClustersChart({ chartData }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const ref = useRef<HTMLDivElement>(null)
+  const width = useChartWidth(containerRef, 700)
   const clusterSizes = (chartData.cluster_sizes ?? []) as { label: string; n: number }[]
   const points = (chartData.data ?? []) as ClusterPoint[]
   const scatterSuppressed =
@@ -31,7 +34,7 @@ export default function ScatterClustersChart({ chartData }: Props) {
       : undefined
 
     const chart = Plot.plot({
-      width: 700,
+      width,
       height: 450,
       x: { label: (chartData.x_label as string | undefined) ?? "X" },
       y: { label: (chartData.y_label as string | undefined) ?? "Y" },
@@ -62,7 +65,7 @@ export default function ScatterClustersChart({ chartData }: Props) {
 
     ref.current.replaceChildren(chart)
     return () => chart.remove()
-  }, [chartData, scatterSuppressed])
+  }, [chartData, scatterSuppressed, width])
 
   if (scatterSuppressed) {
     const totalN = clusterSizes.reduce((sum, c) => sum + c.n, 0)
@@ -78,7 +81,9 @@ export default function ScatterClustersChart({ chartData }: Props) {
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-start">
-      <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "Cluster scatter"} role="img" />
+      <div ref={containerRef} className="min-w-0 flex-1">
+        <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "Cluster scatter"} role="img" />
+      </div>
       {clusterSizes.length > 0 && (
         <div>
           <p className="mb-1 text-sm font-medium text-muted-foreground">Cluster sizes</p>

@@ -10,10 +10,40 @@ interface AreaDatum {
 
 interface GeoJsonFeature {
   properties: Record<string, unknown>
+  geometry: GeoJSON.Geometry
 }
 
 interface Props {
   chartData: Record<string, unknown>
+}
+
+/** Compute the bounding box of all matched features, walking nested coordinate arrays. */
+function computeBounds(featureCollection: GeoJSON.FeatureCollection): maplibregl.LngLatBoundsLike | null {
+  let minLng = Infinity
+  let minLat = Infinity
+  let maxLng = -Infinity
+  let maxLat = -Infinity
+
+  const walk = (coords: unknown[]): void => {
+    if (typeof coords[0] === "number") {
+      const [lng, lat] = coords as [number, number]
+      minLng = Math.min(minLng, lng)
+      minLat = Math.min(minLat, lat)
+      maxLng = Math.max(maxLng, lng)
+      maxLat = Math.max(maxLat, lat)
+    } else {
+      for (const c of coords) walk(c as unknown[])
+    }
+  }
+
+  for (const feature of featureCollection.features) {
+    if ("coordinates" in feature.geometry) {
+      walk(feature.geometry.coordinates)
+    }
+  }
+
+  if (!Number.isFinite(minLng)) return null
+  return [[minLng, minLat], [maxLng, maxLat]]
 }
 
 export default function ChoroplethMap({ chartData }: Props) {
@@ -31,16 +61,32 @@ export default function ChoroplethMap({ chartData }: Props) {
     const values = new Map(data.map((d) => [d.area_code, d.value]))
     const maxVal = data.length > 0 ? Math.max(...data.map((d) => d.value)) : 1
 
-    fetch("/boundaries/regions.geojson")
+    const geography = (chartData.geography as string | undefined) ?? "region"
+    const boundaryFile = geography === "lad" ? "/boundaries/lad.geojson" : "/boundaries/regions.geojson"
+    const codeKeys = geography === "lad" ? ["LAD22CD", "lad22cd"] : ["RGN22CD", "rgn22cd"]
+    const nameKeys = geography === "lad" ? ["LAD22NM", "lad22nm"] : ["RGN22NM", "rgn22nm"]
+
+    fetch(boundaryFile)
       .then((r) => {
-        if (!r.ok) throw new Error(`Failed to load region boundaries: HTTP ${r.status}`)
+        if (!r.ok) throw new Error(`Failed to load boundaries: HTTP ${r.status}`)
         return r.json()
       })
       .then((geojson: { features: GeoJsonFeature[] }) => {
+        const matched: GeoJsonFeature[] = []
         for (const f of geojson.features) {
-          const code = (f.properties["RGN22CD"] ?? f.properties["rgn22cd"]) as string | undefined
-          f.properties["value"] = code !== undefined ? (values.get(code) ?? 0) : 0
+          const code = (f.properties[codeKeys[0]] ?? f.properties[codeKeys[1]]) as string | undefined
+          if (code !== undefined && values.has(code)) {
+            f.properties["value"] = values.get(code) ?? 0
+            f.properties["area_name"] = f.properties[nameKeys[0]] ?? f.properties[nameKeys[1]]
+            matched.push(f)
+          } else if (geography !== "lad") {
+            // Region-level maps show the full national outline even when a value is missing.
+            f.properties["value"] = code !== undefined ? (values.get(code) ?? 0) : 0
+            f.properties["area_name"] = f.properties[nameKeys[0]] ?? f.properties[nameKeys[1]]
+            matched.push(f)
+          }
         }
+        geojson.features = matched
 
         const style: StyleSpecification = {
           version: 8,
@@ -82,16 +128,22 @@ export default function ChoroplethMap({ chartData }: Props) {
           ],
         }
 
+        const bounds = computeBounds(geojson as GeoJSON.FeatureCollection)
+
         const map = new maplibregl.Map({
           container,
           style,
           center: [-1.5, 52.8],
           zoom: 5.5,
-          scrollZoom: true,
           dragPan: true,
           doubleClickZoom: true,
           attributionControl: false,
+          cooperativeGestures: true,
         })
+
+        if (bounds) {
+          map.fitBounds(bounds, { padding: 24, animate: false })
+        }
 
         const metric = (chartData.metric as string | undefined) ?? "Value"
         const popup = new maplibregl.Popup({

@@ -178,13 +178,13 @@ def test_c5_length_vs_frequency_region_filter() -> None:
 
 _ANOMALIES_DF = pd.DataFrame(
     {
-        "lsoa_cd": [f"E0200000{i}" for i in range(5)],
-        "imd_score": [10, 20, 30, 40, 50],
-        "service_quality_index": [60, 50, 40, 30, 20],
+        "lsoa_cd": [f"E0200000{i}" for i in range(25)],
+        "imd_score": [10, 20, 30, 40, 50] * 5,
+        "service_quality_index": [60, 50, 40, 30, 20] * 5,
         "anomaly_type": (
             ["positive_deprived_well_served"] * 2 + ["inefficiency_affluent_poor_served"] * 3
-        ),
-        "both_anomaly": [True, False, True, False, False],
+        ) * 5,
+        "both_anomaly": [True, False, True, False, False] * 5,
     }
 )
 
@@ -209,8 +209,8 @@ def test_g2_anomalies() -> None:
         sources=sources,
         lsoa_cds=_ANOMALIES_DF["lsoa_cd"],
     )
-    assert chart["type"] == "scatter_regression"
-    assert len(chart["data"]) == 5
+    assert chart["type"] == "scatter_clusters"
+    assert len(chart["data"]) == 25
 
 
 def test_g2_anomalies_empty_stats() -> None:
@@ -1599,6 +1599,7 @@ _PS5_STATS = {
     "scenarios": [
         {"name": "A", "population": 5_000_000, "cost_m": 50.0, "co2_t": 1200.0},
         {"name": "B", "population": 2_000_000, "cost_m": 20.0, "co2_t": 500.0},
+        {"name": "D", "population": 760_008, "cost_m": None, "co2_t": None},
     ],
     "best_bcr_scenario": "A",
 }
@@ -1621,13 +1622,18 @@ def test_ps5_scenario_comparison() -> None:
     assert chart["columns"] == [
         "Scenario", "Population affected", "Cost £m/yr", "CO2 t/yr", "Cost/beneficiary (£)",
     ]
-    # Sorted by population descending: A (5M) before B (2M)
-    assert [row["Scenario"] for row in chart["data"]] == ["A", "B"]
+    # Sorted by population descending: A (5M) before B (2M) before D (760K)
+    assert [row["Scenario"] for row in chart["data"]] == ["A", "B", "D"]
     row_a = chart["data"][0]
     assert row_a["Population affected"] == 5_000_000
     assert row_a["Cost £m/yr"] == 50.0
     assert row_a["CO2 t/yr"] == 1200.0
     assert row_a["Cost/beneficiary (£)"] == round(50.0 * 1e6 / 5_000_000, 2)
+
+    row_d = chart["data"][2]
+    assert row_d["Cost £m/yr"] is None
+    assert row_d["CO2 t/yr"] is None
+    assert row_d["Cost/beneficiary (£)"] is None
 
 
 def test_ps5_scenario_comparison_empty_stats_returns_empty() -> None:

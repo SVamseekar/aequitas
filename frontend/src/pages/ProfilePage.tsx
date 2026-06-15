@@ -60,7 +60,7 @@ export default function ProfilePage() {
         </div>
 
         <section className="mb-8">
-          <h2 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
+          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
             Policy Interests
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -81,7 +81,7 @@ export default function ProfilePage() {
         </section>
 
         <section className="border-t border-border pt-8">
-          <h2 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
+          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
             Account
           </h2>
           <button

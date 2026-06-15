@@ -14,6 +14,7 @@ export interface DimensionOverview {
 
 export interface OverviewResponse {
   dimensions: DimensionOverview[]
+  built_at?: string
 }
 
 export interface SectionItem {

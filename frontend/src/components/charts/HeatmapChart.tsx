@@ -1,12 +1,15 @@
 import { useRef, useEffect } from "react"
 import * as Plot from "@observablehq/plot"
+import { useChartWidth } from "@/hooks/useChartWidth"
 
 interface Props {
   chartData: Record<string, unknown>
 }
 
 export default function HeatmapChart({ chartData }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const ref = useRef<HTMLDivElement>(null)
+  const width = useChartWidth(containerRef, 700)
 
   useEffect(() => {
     if (!ref.current) return
@@ -29,7 +32,7 @@ export default function HeatmapChart({ chartData }: Props) {
     const chart = Plot.plot({
       marginLeft: 120,
       marginBottom: 60,
-      width: 700,
+      width,
       height: Math.max(300, yLabels.length * 40 + 80),
       x: { label: null, tickRotate: -30 },
       y: { label: null },
@@ -53,7 +56,11 @@ export default function HeatmapChart({ chartData }: Props) {
 
     ref.current.replaceChildren(chart)
     return () => chart.remove()
-  }, [chartData])
+  }, [chartData, width])
 
-  return <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "Heatmap"} role="img" />
+  return (
+    <div ref={containerRef}>
+      <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "Heatmap"} role="img" />
+    </div>
+  )
 }

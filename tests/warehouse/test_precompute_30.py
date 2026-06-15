@@ -1,4 +1,4 @@
-"""Tests for precompute_all_sections — verifies full 50-section x 30-combo coverage."""
+"""Tests for precompute_all_sections — verifies full 55-section x 30-combo coverage."""
 import pytest
 
 from aequitas.core.config import PipelineConfig
@@ -11,15 +11,15 @@ def cfg() -> PipelineConfig:
     return PipelineConfig()
 
 
-def test_precomputes_30_combos_times_50_sections(cfg):
+def test_precomputes_30_combos_times_55_sections(cfg):
     results = precompute_all_sections(cfg)
-    assert len(results) == 30 * 50
+    assert len(results) == 30 * 55
 
 
 def test_every_registered_section_appears_in_every_combo(cfg):
     results = precompute_all_sections(cfg)
     seen = {(r["region"], r["urban_rural"], r["section_id"]) for r in results}
-    assert len(seen) == 30 * 50
+    assert len(seen) == 30 * 55
     for section_id in SECTION_REGISTRY:
         matching = [r for r in results if r["section_id"] == section_id]
         assert len(matching) == 30, f"{section_id} missing combos"

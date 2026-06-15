@@ -136,7 +136,7 @@ export function ChatDrawer({ open, onClose }: Props) {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="text-[10px] font-mono text-muted-foreground hover:text-foreground uppercase tracking-wider transition-colors"
+              className="text-[11px] font-mono text-muted-foreground hover:text-foreground uppercase tracking-wide transition-colors"
               onClick={clearMessages}
               aria-label="Clear chat messages"
             >
@@ -187,7 +187,7 @@ export function ChatDrawer({ open, onClose }: Props) {
               onInput={handleInput}
               placeholder="Ask a question... (Shift+Enter for new line)"
               rows={1}
-              className="flex-1 resize-none rounded border border-border bg-card px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+              className="flex-1 resize-none rounded border border-border bg-card px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
               style={{ minHeight: "36px", maxHeight: "120px" }}
               disabled={isStreaming}
             />
@@ -200,7 +200,7 @@ export function ChatDrawer({ open, onClose }: Props) {
               {isStreaming ? "..." : "Send"}
             </button>
           </div>
-          <p className="text-[9px] text-muted-foreground/30 mt-2 font-mono">
+          <p className="text-[11px] text-muted-foreground/40 mt-2 font-mono">
             Grounded in pre-computed analytics - Powered by Gemini Flash
           </p>
         </div>

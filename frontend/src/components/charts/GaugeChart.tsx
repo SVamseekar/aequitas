@@ -1,3 +1,10 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
 interface GaugeBand {
   label: string
   min: number
@@ -66,36 +73,52 @@ export default function GaugeChart({ chartData }: Props) {
   return (
     <div role="img" aria-label={title ?? "Threshold gauge"}>
       {title && <p className="text-sm font-medium text-foreground mb-2">{title}</p>}
-      <div className="relative h-6 w-full rounded overflow-hidden border border-border flex">
-        {bands.map((band) => {
-          const start = toPercent(band.min, scaleMax)
-          const end = toPercent(band.max ?? scaleMax, scaleMax)
-          return (
+      <TooltipProvider>
+        <div className="relative h-6 w-full rounded overflow-hidden border border-border flex">
+          {bands.map((band) => {
+            const start = toPercent(band.min, scaleMax)
+            const end = toPercent(band.max ?? scaleMax, scaleMax)
+            return (
+              <Tooltip key={band.label}>
+                <TooltipTrigger
+                  render={
+                    <div
+                      className={`${COLOR_MAP[band.color_hint] ?? "bg-muted"} h-full`}
+                      style={{ width: `${end - start}%` }}
+                    />
+                  }
+                />
+                <TooltipContent>
+                  {band.label}: {band.min}{band.max !== null ? `-${band.max}` : "+"}
+                </TooltipContent>
+              </Tooltip>
+            )
+          })}
+          {referenceLines.map((ref) => (
             <div
-              key={band.label}
-              className={`${COLOR_MAP[band.color_hint] ?? "bg-muted"} h-full`}
-              style={{ width: `${end - start}%` }}
-              title={`${band.label}: ${band.min}${band.max !== null ? `-${band.max}` : "+"}`}
+              key={`ref-${ref}`}
+              data-testid="gauge-reference-line"
+              className="absolute top-0 h-full w-px bg-foreground/60"
+              style={{ left: `${toPercent(ref, scaleMax)}%` }}
             />
-          )
-        })}
-        {referenceLines.map((ref) => (
-          <div
-            key={`ref-${ref}`}
-            data-testid="gauge-reference-line"
-            className="absolute top-0 h-full w-px bg-foreground/60"
-            style={{ left: `${toPercent(ref, scaleMax)}%` }}
-          />
-        ))}
-        {markers.map((marker) => (
-          <div
-            key={marker.label}
-            className="absolute top-0 h-full w-0.5 bg-foreground"
-            style={{ left: `${toPercent(marker.value, scaleMax)}%` }}
-            title={`${marker.label}: ${marker.value} ${unit ?? ""}`}
-          />
-        ))}
-      </div>
+          ))}
+          {markers.map((marker) => (
+            <Tooltip key={marker.label}>
+              <TooltipTrigger
+                render={
+                  <div
+                    className="absolute top-0 h-full w-0.5 bg-foreground"
+                    style={{ left: `${toPercent(marker.value, scaleMax)}%` }}
+                  />
+                }
+              />
+              <TooltipContent>
+                {marker.label}: {marker.value} {unit ?? ""}
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      </TooltipProvider>
       <div className="flex justify-between text-xs text-muted-foreground mt-1">
         {bands.map((band) => (
           <span key={band.label}>{band.label}</span>

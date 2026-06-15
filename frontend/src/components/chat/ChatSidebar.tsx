@@ -67,13 +67,13 @@ export function ChatSidebar({ open, onClose, activeId, onSelect, onNew }: Props)
         }`}
       >
         <div className="h-7 border-b border-border flex items-center px-4">
-          <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
+          <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">
             Chat History
           </span>
         </div>
 
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <span className="text-[10px] uppercase tracking-[0.15em] text-indigo-400 font-mono font-medium">
+          <span className="text-[11px] uppercase tracking-[0.15em] text-indigo-400 font-mono font-medium">
             Conversations
           </span>
           <div className="flex items-center gap-1">
@@ -101,7 +101,7 @@ export function ChatSidebar({ open, onClose, activeId, onSelect, onNew }: Props)
               <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
             </div>
           ) : conversations.length === 0 ? (
-            <p className="text-[10px] text-muted-foreground/40 text-center py-8 font-mono uppercase">
+            <p className="text-[11px] text-muted-foreground/40 text-center py-8 font-mono uppercase">
               No conversations yet
             </p>
           ) : (
@@ -122,13 +122,13 @@ export function ChatSidebar({ open, onClose, activeId, onSelect, onNew }: Props)
                   <MessageSquare className="w-3.5 h-3.5 text-muted-foreground/40 mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] font-medium text-foreground truncate">{c.title}</p>
-                    <p className="text-[9px] text-muted-foreground/40 mt-0.5 font-mono">
+                    <p className="text-[11px] text-muted-foreground/40 mt-0.5 font-mono">
                       {formatRelativeTime(c.updated_at)}
                     </p>
                   </div>
                   <button
                     onClick={(e) => void handleDelete(e, c.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/10 text-muted-foreground/30 hover:text-red-400 transition-all shrink-0"
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/10 text-muted-foreground/40 hover:text-red-400 transition-all shrink-0"
                     aria-label="Delete conversation"
                   >
                     <Trash2 className="w-3 h-3" />

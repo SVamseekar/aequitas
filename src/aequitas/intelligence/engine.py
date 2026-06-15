@@ -66,7 +66,7 @@ _SECTION_TEMPLATES: dict[str, str] = {
     # Category G: ML Insights
     "g1_route_clusters": "ml_clusters.j2",
     "g2_anomalies": "anomaly_spotlight.j2",
-    "g3_coverage_model": "ml_prediction.j2",
+    "g3_coverage_model": "coverage_model_fit.j2",
     "g4_shap": "ml_prediction.j2",
     "g5_scenario_model": "policy_scenario.j2",
     # Category J: Economic Impact & BCR

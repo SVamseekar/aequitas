@@ -49,30 +49,39 @@ export default function HorizontalBarChart({ chartData }: Props) {
 
     const marks: Plot.Markish[] = []
 
+    const sanitizeValue = (val: unknown): number => {
+      if (val === null || val === undefined) return 0
+      const num = Number(val)
+      return isNaN(num) ? 0 : num
+    }
+
     if (variant === "grouped_bar") {
-      const data = normalizeGroupedData(chartData)
+      const rawData = normalizeGroupedData(chartData)
+      const data = rawData.map(d => ({ ...d, value: sanitizeValue(d.value) }))
       if (data.length === 0) { ref.current.replaceChildren(); return }
       marks.push(
         Plot.barX(data, Plot.groupY({ x: "sum" }, {
           y: "label", x: "value", fill: "group",
           sort: { y: "x", reverse: true },
           tip: true,
-          title: (d: GroupedDatum) => `${d.label} — ${d.group}\n${xLabel}: ${Number(d.value).toLocaleString()}`,
+          title: (d: GroupedDatum) => `${d.label} — ${d.group}\n${xLabel}: ${d.value.toLocaleString()}`,
         })),
       )
     } else if (variant === "stacked_bar") {
-      const data = normalizeGroupedData(chartData)
+      const rawData = normalizeGroupedData(chartData)
+      const data = rawData.map(d => ({ ...d, value: sanitizeValue(d.value) }))
       if (data.length === 0) { ref.current.replaceChildren(); return }
       marks.push(
         Plot.barX(data, Plot.stackX({
           y: "label", x: "value", fill: "group",
           sort: { y: "x", reverse: true },
           tip: true,
-          title: (d: GroupedDatum) => `${d.label} — ${d.group}\n${xLabel}: ${Number(d.value).toLocaleString()}`,
+          title: (d: GroupedDatum) => `${d.label} — ${d.group}\n${xLabel}: ${d.value.toLocaleString()}`,
         })),
       )
     } else {
-      const data = (chartData.data ?? []) as BarDatum[]
+      const rawData = (chartData.data ?? []) as BarDatum[]
+      const data = rawData.map(d => ({ ...d, value: sanitizeValue(d.value) }))
       if (data.length === 0) { ref.current.replaceChildren(); return }
       marks.push(
         Plot.barX(data, {

@@ -1,14 +1,20 @@
 import { useNavigate } from "react-router"
 import { ArrowLeft, GitBranch, Mail } from "lucide-react"
+import { Seo } from "@/components/shared/Seo"
 
 export default function ContactPage() {
   const navigate = useNavigate()
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Contact Aequitas — Feedback & Research Enquiries"
+        description="Get in touch with the Aequitas team for bug reports, data accuracy issues, research collaboration, or institutional use cases."
+        path="/contact"
+      />
       <div className="border-b border-border bg-card/50">
         <div className="max-w-4xl mx-auto px-4 flex items-center h-8">
-          <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">Contact</span>
+          <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">Contact</span>
         </div>
       </div>
 
@@ -21,7 +27,7 @@ export default function ContactPage() {
         </button>
 
         <div className="h-px bg-indigo-500/40 mb-8 max-w-xs" />
-        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-indigo-400 font-medium">Contact & Feedback</span>
+        <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-indigo-400 font-medium">Contact & Feedback</span>
         <h1 className="text-2xl font-bold tracking-tight mt-3 mb-4 text-foreground">
           Get in Touch
         </h1>
@@ -40,7 +46,14 @@ export default function ContactPage() {
               Bug reports, feature requests, and data accuracy issues. Please include the dimension,
               metric, and LSOA/region in question.
             </p>
-            <p className="text-[10px] font-mono text-indigo-400/70 uppercase tracking-wider">Preferred channel</p>
+            <a
+              href="https://github.com/SVamseekar/aequitas/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] font-mono text-indigo-400 uppercase tracking-wide hover:underline"
+            >
+              Open an issue on GitHub
+            </a>
           </div>
 
           <div className="border border-border rounded bg-card p-5">
@@ -50,14 +63,19 @@ export default function ContactPage() {
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-3">
               For research collaboration, data licensing questions, or institutional use cases,
-              use GitHub Discussions on the project repository.
+              email us directly.
             </p>
-            <p className="text-[10px] font-mono text-indigo-400/70 uppercase tracking-wider">Via GitHub Discussions</p>
+            <a
+              href="mailto:martisoura@gmail.com"
+              className="text-[11px] font-mono text-indigo-400 uppercase tracking-wide hover:underline"
+            >
+              martisoura@gmail.com
+            </a>
           </div>
         </div>
 
         <section>
-          <h2 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
+          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
             Known Limitations
           </h2>
           <div className="border border-border rounded bg-card p-4 text-xs text-muted-foreground leading-relaxed space-y-2">

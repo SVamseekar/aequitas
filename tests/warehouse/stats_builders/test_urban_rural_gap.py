@@ -122,7 +122,11 @@ def test_c4_filters_by_region():
         region_name="London",
         region="E12000007",
     )
-    assert stats == {}  # urban_value would be 0 for London-only rural routes
+    # urban_pct is 0 for London-only rural routes — insufficient_data sentinel,
+    # not {}, so the section still renders n_rural/n_mixed.
+    assert stats == {
+        "insufficient_data": True, "n_lsoas": 2, "n_urban": 0, "n_rural": 2, "n_mixed": 0,
+    }
 
 
 def test_empty_region_df_returns_insufficient_data():
@@ -143,10 +147,11 @@ def test_no_rural_lsoas_returns_insufficient_data():
     assert stats == {"insufficient_data": True, "n_lsoas": 2, "n_urban": 2, "n_rural": 0}
 
 
-def test_zero_urban_value_returns_empty():
+def test_zero_urban_value_returns_insufficient_data():
     df = pd.DataFrame({
         "urban_rural": ["Urban", "Rural"],
         "trips_per_capita": [0.0, 4.0],
         "service_quality_index": [0.0, 40.0],
     })
-    assert build_urban_rural_gap_stats("a6_urban_rural_gap", region_df=df, urban_rural="all") == {}
+    stats = build_urban_rural_gap_stats("a6_urban_rural_gap", region_df=df, urban_rural="all")
+    assert stats == {"insufficient_data": True, "n_lsoas": 2, "n_urban": 1, "n_rural": 1}

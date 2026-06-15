@@ -64,7 +64,13 @@ def _build_c4_stats(
     urban_pct = n_urban / n_total * 100
     rural_pct = n_rural / n_total * 100
     if urban_pct == 0:
-        return {}
+        return {
+            "insufficient_data": True,
+            "n_lsoas": n_total,
+            "n_urban": n_urban,
+            "n_rural": n_rural,
+            "n_mixed": n_mixed,
+        }
 
     stats = {
         "urban_value": round(urban_pct, 1),
@@ -127,7 +133,9 @@ def build_urban_rural_gap_stats(
 
     Returns:
         Dict matching urban_rural_gap.j2's contract, or {} when source data
-        is empty or urban_value is zero (divide-by-zero guard).
+        is empty. Returns `{"insufficient_data": True, ...}` when urban_value
+        is zero (divide-by-zero guard) — surfaced to the template rather than
+        silently dropping the section.
     """
     if section_id == "c4_urban_rural_routes":
         return _build_c4_stats(
@@ -160,7 +168,12 @@ def build_urban_rural_gap_stats(
     urban_value = float(urban[column].mean())
     rural_value = float(rural[column].mean())
     if urban_value == 0:
-        return {}
+        return {
+            "insufficient_data": True,
+            "n_lsoas": len(region_df),
+            "n_urban": int(len(urban)),
+            "n_rural": int(len(rural)),
+        }
 
     return {
         "urban_value": round(urban_value, 2),

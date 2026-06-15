@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import { toast, Toaster } from "sonner"
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react"
+import { AequitasLogo } from "@/components/shared/AequitasLogo"
+import { Seo } from "@/components/shared/Seo"
 
 const HEADLINE_STATS = [
   { label: "GINI COEFF", value: "0.5741", note: "bus service" },
@@ -65,6 +67,12 @@ export default function AuthPage() {
 
   return (
     <>
+      <Seo
+        title="Sign In — Aequitas"
+        description="Sign in to Aequitas to access policy intelligence analytics for transport equity."
+        path="/auth"
+        noindex
+      />
       <Toaster position="top-right" />
       <div className="min-h-screen bg-background flex">
         {/* Left — branding panel */}
@@ -73,9 +81,10 @@ export default function AuthPage() {
 
           <div className="relative z-10 p-10">
             <button
-              onClick={() => navigate("/landing")}
-              className="text-sm font-mono font-bold tracking-widest text-foreground uppercase"
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2.5 text-sm font-mono font-bold tracking-widest text-foreground uppercase hover:text-indigo-400 transition-colors"
             >
+              <AequitasLogo className="w-5 h-5 text-slate-300" />
               AEQUITAS
             </button>
           </div>
@@ -96,13 +105,13 @@ export default function AuthPage() {
             <div className="mt-10 grid grid-cols-3 gap-px max-w-sm">
               {HEADLINE_STATS.map((m) => (
                 <div key={m.label} className="bg-card/60 p-3 border border-border">
-                  <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/60">
+                  <p className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground/60">
                     {m.label}
                   </p>
                   <p className="text-sm font-mono font-semibold text-indigo-400 mt-1">
                     {m.value}
                   </p>
-                  <p className="text-[10px] font-mono text-muted-foreground/40">
+                  <p className="text-[11px] font-mono text-muted-foreground/40">
                     {m.note}
                   </p>
                 </div>
@@ -111,7 +120,7 @@ export default function AuthPage() {
           </div>
 
           <div className="relative z-10 p-10 pt-0">
-            <p className="text-[10px] text-muted-foreground/30 font-mono">
+            <p className="text-[11px] text-amber-400 font-mono font-semibold tracking-wide">
               POLICY ANALYSIS TOOL — NOT OFFICIAL DfT GUIDANCE
             </p>
           </div>
@@ -120,7 +129,8 @@ export default function AuthPage() {
         {/* Right — form */}
         <div className="flex-1 flex items-center justify-center p-6 sm:p-12 border-l border-border">
           <div className="w-full max-w-sm">
-            <div className="lg:hidden mb-10">
+            <div className="lg:hidden mb-10 flex items-center gap-2">
+              <AequitasLogo className="w-5 h-5 text-slate-300" />
               <span className="text-sm font-mono font-bold tracking-widest uppercase">AEQUITAS</span>
             </div>
 
@@ -149,7 +159,7 @@ export default function AuthPage() {
 
             <div className="flex items-center gap-3 mb-5">
               <div className="flex-1 h-px bg-border" />
-              <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 font-mono">or</span>
+              <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono">or</span>
               <div className="flex-1 h-px bg-border" />
             </div>
 

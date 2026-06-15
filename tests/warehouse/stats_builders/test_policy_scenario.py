@@ -33,15 +33,15 @@ def test_ps1_returns_row_zero_with_nan_coalesced():
     assert s["estimated_annual_cost_m"] == pytest.approx(72.7)
 
 
-def test_ps2_coalesces_nan_co2_to_zero():
+def test_ps2_preserves_nan_co2_as_none():
     stats = build_policy_scenario_stats("ps2_evening_extension", scenarios_df=_scenarios_df())
-    assert stats["scenario"]["co2_saving_t_yr"] == 0.0
+    assert stats["scenario"]["co2_saving_t_yr"] is None
 
 
-def test_ps4_coalesces_nan_cost_to_zero():
+def test_ps4_preserves_nan_cost_and_co2_as_none():
     stats = build_policy_scenario_stats("ps4_franchise", scenarios_df=_scenarios_df())
-    assert stats["scenario"]["estimated_annual_cost_m"] == 0.0
-    assert stats["scenario"]["co2_saving_t_yr"] == 0.0
+    assert stats["scenario"]["estimated_annual_cost_m"] is None
+    assert stats["scenario"]["co2_saving_t_yr"] is None
 
 
 def test_g5_mirrors_ps1_flagship_scenario():
@@ -58,7 +58,7 @@ def test_ps5_builds_portfolio_with_best_bcr_by_cost_per_beneficiary():
     assert first["population"] == 5689818
     assert first["cost_m"] == pytest.approx(72.7)
     assert first["co2_t"] == pytest.approx(952.0)
-    assert stats["scenarios"][3]["cost_m"] == 0.0  # row D NaN coalesced
+    assert stats["scenarios"][3]["cost_m"] is None  # row D not modeled, not coalesced to 0
     # cost-per-beneficiary: A=12.78, B=13.92, C=20.81, D=excluded (no cost)
     assert stats["best_bcr_scenario"] == "Frequency restoration — bottom IMD decile"
 

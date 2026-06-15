@@ -109,7 +109,7 @@ export function UserMenu() {
             <User className="w-3 h-3 text-muted-foreground" />
           </div>
         )}
-        <span className="text-[10px] text-muted-foreground hidden sm:inline truncate max-w-[100px] font-mono">
+        <span className="text-[11px] text-muted-foreground hidden sm:inline truncate max-w-[100px] font-mono">
           {name}
         </span>
       </button>

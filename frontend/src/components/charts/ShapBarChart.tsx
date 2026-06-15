@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react"
 import * as Plot from "@observablehq/plot"
 import { CATEGORICAL } from "@/lib/colours"
+import { useChartWidth } from "@/hooks/useChartWidth"
 
 interface FeatureDatum {
   name: string
@@ -12,7 +13,9 @@ interface Props {
 }
 
 export default function ShapBarChart({ chartData }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const ref = useRef<HTMLDivElement>(null)
+  const width = useChartWidth(containerRef, 700)
 
   useEffect(() => {
     if (!ref.current) return
@@ -22,7 +25,7 @@ export default function ShapBarChart({ chartData }: Props) {
 
     const chart = Plot.plot({
       marginLeft: 160,
-      width: 700,
+      width,
       height: Math.max(300, features.length * 28),
       x: { label: "SHAP Importance" },
       y: { label: null },
@@ -49,13 +52,13 @@ export default function ShapBarChart({ chartData }: Props) {
 
     ref.current.replaceChildren(chart)
     return () => chart.remove()
-  }, [chartData])
+  }, [chartData, width])
 
   const features = (chartData.features ?? []) as FeatureDatum[]
   const topFeature = features[0] as FeatureDatum | undefined
 
   return (
-    <div>
+    <div ref={containerRef}>
       {topFeature && (
         <p className="text-sm font-medium text-muted-foreground mb-1">
           Top driver: <span className="text-foreground">{topFeature.name}</span> — {topFeature.importance.toFixed(3)}

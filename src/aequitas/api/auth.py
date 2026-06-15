@@ -26,10 +26,18 @@ def verify_supabase_jwt(
 ) -> dict:
     """Validate Supabase JWT and return decoded payload with user sub.
 
-    Dev mode: if supabase_jwt_secret is empty AND ENVIRONMENT is not production
-    AND DEV_AUTH_BYPASS=true, a placeholder dev-user payload is returned.
+    Dev mode: when ENVIRONMENT is not production AND DEV_AUTH_BYPASS=true, a
+    placeholder dev-user payload is returned for missing credentials, an
+    unconfigured supabase_jwt_secret, or an invalid/expired token — not just
+    when no secret is configured. DEV_AUTH_BYPASS must never be set to true
+    in production.
     """
     cfg = ApiConfig()
+
+    if _is_dev_bypass_allowed():
+        if not credentials:
+            logger.info("Using dev bypass: missing authorization token")
+            return {"sub": "dev-user"}
 
     if not cfg.supabase_jwt_secret:
         if _is_dev_bypass_allowed():
@@ -52,4 +60,7 @@ def verify_supabase_jwt(
         )
         return payload
     except JWTError as exc:
+        if _is_dev_bypass_allowed():
+            logger.warning(f"Invalid token ({exc}) — using dev bypass fallback")
+            return {"sub": "dev-user"}
         raise HTTPException(status_code=401, detail=f"Invalid token: {exc}") from exc

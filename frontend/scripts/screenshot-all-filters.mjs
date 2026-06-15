@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5173"
-const OUT_DIR = path.join(__dirname, "..", "screenshots")
+const OUT_DIR = process.env.OUT_DIR ?? path.join(__dirname, "..", "screenshots")
 const STORAGE_STATE = path.join(__dirname, ".auth-state.json")
 
 const DIMENSIONS = [

@@ -47,11 +47,13 @@ def test_empty_complete_case_pair_returns_insufficient_data():
     assert stats == {"insufficient_data": True, "n_observations": 0}
 
 
-def test_correlation_config_covers_all_eight_sections():
+def test_correlation_config_covers_all_thirteen_sections():
     expected = {
         "d1_coverage_deprivation", "d2_coverage_unemployment", "d3_coverage_car",
         "d4_coverage_elderly", "d5_coverage_income", "b5_frequency_deprivation",
         "c5_length_vs_frequency", "f3_ethnic_access",
+        "d9a_health_access", "d9b_employment_access", "d9c_crime_access",
+        "d9d_environment_access", "d9e_barriers_access",
     }
     assert set(CORRELATION_CONFIG.keys()) == expected
     for sid, cfg in CORRELATION_CONFIG.items():

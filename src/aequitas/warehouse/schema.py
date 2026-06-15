@@ -69,6 +69,12 @@ CORE_TABLES: dict[str, str] = {
             source_files VARCHAR[]
         )
     """,
+    "metadata": """
+        CREATE TABLE IF NOT EXISTS metadata (
+            key VARCHAR PRIMARY KEY,
+            value VARCHAR
+        )
+    """,
 }
 
 # Analytics tables — loaded directly from processed Parquet files.

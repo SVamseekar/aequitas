@@ -1,14 +1,20 @@
 import { useNavigate } from "react-router"
 import { ArrowLeft } from "lucide-react"
+import { Seo } from "@/components/shared/Seo"
 
 export default function DisclaimerPage() {
   const navigate = useNavigate()
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="Disclaimer — Aequitas"
+        description="Aequitas is a policy analysis tool, not official government guidance. Read about data limitations and intended use."
+        path="/disclaimer"
+      />
       <div className="border-b border-border bg-card/50">
         <div className="max-w-4xl mx-auto px-4 flex items-center h-8">
-          <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">Disclaimer</span>
+          <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">Disclaimer</span>
         </div>
       </div>
 
@@ -21,7 +27,7 @@ export default function DisclaimerPage() {
         </button>
 
         <div className="h-px bg-indigo-500/40 mb-8 max-w-xs" />
-        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-indigo-400 font-medium">Legal Disclaimer</span>
+        <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-indigo-400 font-medium">Legal Disclaimer</span>
         <h1 className="text-2xl font-bold tracking-tight mt-3 mb-4 text-foreground">
           Not Official Government Guidance
         </h1>

@@ -25,7 +25,7 @@ const ACTIONS = [
 export function QuickActions({ onSelect }: Props) {
   return (
     <div className="space-y-2">
-      <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 mb-3">
+      <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground mb-3">
         Quick actions
       </p>
       <div className="grid grid-cols-3 gap-2">
@@ -36,7 +36,7 @@ export function QuickActions({ onSelect }: Props) {
             className="flex flex-col items-center gap-1.5 p-3 border border-border rounded bg-card hover:border-indigo-500/40 hover:bg-card/80 transition-all group text-center"
           >
             <a.icon className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
-            <span className="text-[10px] font-mono text-muted-foreground group-hover:text-foreground leading-tight transition-colors">
+            <span className="text-[11px] font-mono text-muted-foreground group-hover:text-foreground leading-tight transition-colors">
               {a.label}
             </span>
           </button>

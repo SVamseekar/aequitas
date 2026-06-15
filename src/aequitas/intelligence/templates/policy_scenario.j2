@@ -3,8 +3,8 @@
 
 **Target:** {{ scenario.scope }}
 **Population affected:** {{ scenario.population_affected|int|format_thousands }} residents
-**Estimated annual cost:** £{{ scenario.estimated_annual_cost_m|round(1) }}m/year{% if scenario.population_affected == 0 %} (England-wide baseline — not attributable to this filter){% endif %}
-**CO₂ saving:** {{ scenario.co2_saving_t_yr|int|format_thousands }} tonnes/year{% if scenario.population_affected == 0 %} (England-wide baseline — not attributable to this filter){% endif %}
+**Estimated annual cost:** {% if scenario.estimated_annual_cost_m is not none %}£{{ scenario.estimated_annual_cost_m|round(1) }}m/year{% if scenario.population_affected == 0 %} (England-wide baseline — not attributable to this filter){% endif %}{% else %}not modelled{% endif %}
+**CO₂ saving:** {% if scenario.co2_saving_t_yr is not none %}{{ scenario.co2_saving_t_yr|int|format_thousands }} tonnes/year{% if scenario.population_affected == 0 %} (England-wide baseline — not attributable to this filter){% endif %}{% else %}not modelled{% endif %}
 **Confidence:** {{ scenario.confidence }}
 
 ## What This Scenario Does
@@ -18,12 +18,20 @@
 ## Cost-Benefit Context
 
 {% if scenario.population_affected > 0 -%}
+{% if scenario.estimated_annual_cost_m is not none -%}
 At £{{ scenario.estimated_annual_cost_m|round(1) }}m/year for {{ scenario.population_affected|int|format_thousands }} beneficiaries, the cost per beneficiary is approximately **£{{ ((scenario.estimated_annual_cost_m * 1e6) / scenario.population_affected)|round(0)|int }}/person/year**. For context, DfT's transport poverty analysis estimates the annual economic cost of inadequate transport access at £3,000–£8,000 per person in restricted employment and healthcare access. Even at modest take-up rates, the intervention likely delivers positive net economic value.
+{%- else -%}
+This scenario's cost is not modelled (see Confidence Assessment), so no cost-per-beneficiary figure applies here.
+{%- endif %}
 {%- else -%}
 This scenario's target population in the selected region/area-type filter is 0 — no LSOAs in this scope fall within the current filter, so no beneficiaries or cost-per-beneficiary figure applies here.
 {%- endif %}
 
+{% if scenario.co2_saving_t_yr is not none -%}
 The {{ scenario.co2_saving_t_yr|int|format_thousands }} tonnes/year CO₂ saving adds an additional external benefit valued at approximately £{{ ((scenario.co2_saving_t_yr * 80) / 1000)|round(0)|int }}k/year at TAG carbon prices — further strengthening the BCR.
+{%- else -%}
+CO₂ saving is not modelled for this scenario, so no carbon-price benefit is included in this assessment.
+{%- endif %}
 
 ## Confidence Assessment
 
@@ -37,5 +45,5 @@ Under the Bus Services Act 2025, this scenario can be delivered through:
 3. Franchising scheme with service obligations built into operator contracts
 4. DfT BSIP funding support for routes meeting deprivation and coverage gap criteria
 
-*Methodology: Scenario parameters from DfT Bus Back Better (2021) intervention templates, updated with BSIP 2023 cost benchmarks. Population affected from Census 2021. CO₂ saving from DfT modal shift elasticity × DESNZ 2025 conversion factors.*
+*Methodology: Scenario parameters from DfT Bus Back Better (2021) intervention templates, updated with BSIP 2023 cost benchmarks. Population affected from Census 2021.{% if scenario.co2_saving_t_yr is not none %} CO₂ saving from DfT modal shift elasticity × DESNZ 2025 conversion factors.{% endif %}*
 {%- endif %}

@@ -4,7 +4,7 @@
 **{{ scenarios|length }} policy scenarios** have been modelled for this area, covering the full spectrum of Bus Services Act 2025 intervention types — from targeted frequency restoration to rural DRT and full franchising. The table below ranks scenarios by population impact:
 
 {% for s in scenarios -%}
-- **{{ s.name }}**: {{ s.population|int|format_thousands }} people affected, **£{{ s.cost_m|round(1) }}m/yr**, {{ s.co2_t|int|format_thousands }} t CO₂ saved/yr
+- **{{ s.name }}**: {{ s.population|int|format_thousands }} people affected, {% if s.cost_m is not none %}**£{{ s.cost_m|round(1) }}m/yr**{% else %}cost not modelled{% endif %}, {% if s.co2_t is not none %}{{ s.co2_t|int|format_thousands }} t CO₂ saved/yr{% else %}CO₂ saving not modelled{% endif %}
 {% endfor %}
 
 {% if best_bcr_scenario -%}

@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react"
 import * as Plot from "@observablehq/plot"
+import { useChartWidth } from "@/hooks/useChartWidth"
 
 interface CurvePoint {
   cum_pop: number
@@ -11,7 +12,9 @@ interface Props {
 }
 
 export default function LorenzCurveChart({ chartData }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const ref = useRef<HTMLDivElement>(null)
+  const width = useChartWidth(containerRef, 600)
 
   useEffect(() => {
     if (!ref.current) return
@@ -30,7 +33,7 @@ export default function LorenzCurveChart({ chartData }: Props) {
       : ""
 
     const chart = Plot.plot({
-      width: 600,
+      width,
       height: 500,
       x: { label: "Cumulative population share", domain: [0, 1] },
       y: { label: "Cumulative service share", domain: [0, 1] },
@@ -49,7 +52,11 @@ export default function LorenzCurveChart({ chartData }: Props) {
 
     ref.current.replaceChildren(chart)
     return () => chart.remove()
-  }, [chartData])
+  }, [chartData, width])
 
-  return <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "Lorenz curve"} role="img" />
+  return (
+    <div ref={containerRef}>
+      <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "Lorenz curve"} role="img" />
+    </div>
+  )
 }

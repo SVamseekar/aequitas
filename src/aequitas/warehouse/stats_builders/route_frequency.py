@@ -71,11 +71,14 @@ def build_route_frequency_stats(
 
     sorted_routes = routes.sort_values("n_trips_per_day", ascending=False)
     top_routes = [_route_record(row) for _, row in sorted_routes.head(_TOP_N).iterrows()]
+
+    # When fewer than 2*_TOP_N routes are in scope, head(_TOP_N) and a naive
+    # tail(_TOP_N) would overlap — the same route would appear as both
+    # "busiest" and "least busy". Exclude rows already in top_routes.
+    remaining = sorted_routes.iloc[_TOP_N:]
     bottom_routes = [
         _route_record(row)
-        for _, row in sorted_routes.tail(min(_TOP_N, len(sorted_routes))).sort_values(
-            "n_trips_per_day"
-        ).iterrows()
+        for _, row in remaining.tail(_TOP_N).sort_values("n_trips_per_day").iterrows()
     ]
 
     scope_label = region_name

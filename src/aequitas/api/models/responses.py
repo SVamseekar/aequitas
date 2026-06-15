@@ -18,6 +18,7 @@ class DimensionOverview(BaseModel):
 
 class OverviewResponse(BaseModel):
     dimensions: list[DimensionOverview]
+    built_at: str | None = None
 
 
 class SectionItem(BaseModel):

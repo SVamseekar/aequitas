@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router"
 import { ArrowLeft } from "lucide-react"
+import { Seo } from "@/components/shared/Seo"
 
 const DIMENSIONS = [
   { name: "Equity & Deprivation", metrics: "Gini coefficient (0.5741), Lorenz curve, Palma ratio (5.702×), Concentration Index (+0.1358 pro-rich), triple-deprived LSOAs (612, 1.8%)." },
@@ -30,9 +31,14 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Seo
+        title="About Aequitas — Public Sector Transport Intelligence"
+        description="Aequitas pre-computes evidence-graded transport equity analytics across 8 policy dimensions, drawing on national open data sources."
+        path="/about"
+      />
       <div className="border-b border-border bg-card/50">
         <div className="max-w-4xl mx-auto px-4 flex items-center h-8">
-          <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">About</span>
+          <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">About</span>
         </div>
       </div>
 
@@ -45,7 +51,7 @@ export default function AboutPage() {
         </button>
 
         <div className="h-px bg-indigo-500/40 mb-8 max-w-xs" />
-        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-indigo-400 font-medium">About Aequitas</span>
+        <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-indigo-400 font-medium">About Aequitas</span>
         <h1 className="text-2xl font-bold tracking-tight mt-3 mb-4 text-foreground">
           UK Bus Transport Policy Intelligence
         </h1>
@@ -57,7 +63,7 @@ export default function AboutPage() {
         </p>
 
         <section className="mb-12">
-          <h2 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-6">
+          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-6">
             8 Policy Dimensions
           </h2>
           <div className="space-y-4">
@@ -71,13 +77,13 @@ export default function AboutPage() {
         </section>
 
         <section className="mb-12">
-          <h2 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-6">
+          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-6">
             Data Sources
           </h2>
           <div className="grid sm:grid-cols-2 gap-3">
             {DATA_SOURCES.map((s) => (
               <div key={s.name} className="border border-border rounded bg-card p-3">
-                <p className="text-[10px] font-mono text-indigo-400 uppercase tracking-wider mb-1">{s.name}</p>
+                <p className="text-[11px] font-mono text-indigo-400 uppercase tracking-wide mb-1">{s.name}</p>
                 <p className="text-xs text-muted-foreground">{s.desc}</p>
               </div>
             ))}
@@ -85,7 +91,7 @@ export default function AboutPage() {
         </section>
 
         <section>
-          <h2 className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
+          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
             Methodology
           </h2>
           <div className="border border-border rounded bg-card p-4 text-xs text-muted-foreground leading-relaxed space-y-2">

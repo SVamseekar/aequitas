@@ -43,6 +43,7 @@ def api_client(tmp_path, monkeypatch):
     monkeypatch.setenv("AEQUITAS_DB_PATH", str(db_path))
     monkeypatch.setenv("AEQUITAS_FAISS_INDEX", str(tmp_path / "faiss.bin"))
     monkeypatch.setenv("AEQUITAS_FAISS_METADATA", str(tmp_path / "faiss_meta.json"))
+    monkeypatch.setenv("DEV_AUTH_BYPASS", "true")
 
     from aequitas.api.app import create_app
     app = create_app()

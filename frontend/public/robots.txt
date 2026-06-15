@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /saved
+Disallow: /notes
+Disallow: /regions
+Disallow: /auth
+
+Sitemap: https://aequitas.example.com/sitemap.xml

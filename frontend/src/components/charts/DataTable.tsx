@@ -25,15 +25,34 @@ export function DataTable({ chartData }: Props) {
           </tr>
         </thead>
         <tbody>
-          {data.slice(0, 100).map((row, i) => (
-            <tr key={i} className="border-b border-border hover:bg-muted/50 transition-colors">
-              {columns.map((col) => (
-                <td key={col} className="px-3 py-2 text-muted-foreground">
-                  {String(row[col] ?? "")}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {data.slice(0, 100).map((row, i) => {
+            const isCustom = String(row["Scenario"] ?? "").includes("My Custom Scenario")
+            return (
+              <tr
+                key={i}
+                className={`border-b border-border transition-colors ${
+                  isCustom
+                    ? "bg-indigo-950/30 font-semibold border-l-2 border-l-indigo-500"
+                    : "hover:bg-muted/50"
+                }`}
+              >
+                {columns.map((col) => (
+                  <td
+                    key={col}
+                    className={`px-3 py-2 ${
+                      isCustom ? "text-indigo-400 font-mono" : "text-muted-foreground"
+                    }`}
+                  >
+                    {row[col] === null || row[col] === undefined
+                      ? "—"
+                      : typeof row[col] === "number"
+                      ? (row[col] as number).toLocaleString(undefined, { maximumFractionDigits: 2 })
+                      : String(row[col])}
+                  </td>
+                ))}
+              </tr>
+            )
+          })}
         </tbody>
       </table>
       {data.length > 100 && (

@@ -2,7 +2,9 @@
 
 Covers: d1_coverage_deprivation, d2_coverage_unemployment, d3_coverage_car,
 d4_coverage_elderly, d5_coverage_income, b5_frequency_deprivation,
-c5_length_vs_frequency, f3_ethnic_access.
+c5_length_vs_frequency, f3_ethnic_access, d9a_health_access,
+d9b_employment_access, d9c_crime_access, d9d_environment_access,
+d9e_barriers_access.
 
 Reuses aequitas.intelligence.calculators.calculate_correlation — the Pearson
 r/p-value/strength/direction logic already exists and is tested there.
@@ -55,6 +57,26 @@ CORRELATION_CONFIG: dict[str, dict] = {
         # frequency along a route.
         "x_col": "length_km", "y_col": "stop_count",
         "x_label": "Route Length (km)", "y_label": "Stops per Route (frequency proxy)",
+    },
+    "d9a_health_access": {
+        "x_col": "health_score", "y_col": "trips_per_capita",
+        "x_label": "IMD Health & Disability Score", "y_label": "Trips per Capita",
+    },
+    "d9b_employment_access": {
+        "x_col": "employment_score", "y_col": "trips_per_capita",
+        "x_label": "IMD Employment Deprivation Score", "y_label": "Trips per Capita",
+    },
+    "d9c_crime_access": {
+        "x_col": "crime_score", "y_col": "service_quality_index",
+        "x_label": "IMD Crime Score", "y_label": "Service Quality Index",
+    },
+    "d9d_environment_access": {
+        "x_col": "living_env_score", "y_col": "service_quality_index",
+        "x_label": "IMD Living Environment Score", "y_label": "Service Quality Index",
+    },
+    "d9e_barriers_access": {
+        "x_col": "barriers_score", "y_col": "trips_per_capita",
+        "x_label": "IMD Barriers to Housing & Services Score", "y_label": "Trips per Capita",
     },
 }
 

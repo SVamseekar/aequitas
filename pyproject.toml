@@ -30,6 +30,8 @@ dependencies = [
     "faiss-cpu>=1.8.0",
     "sentence-transformers>=3.3.0",
     "google-generativeai>=0.8.0",
+    "python-jose>=3.5.0",
+    "reportlab>=4.5.1",
 ]
 
 [project.optional-dependencies]

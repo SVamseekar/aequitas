@@ -1,5 +1,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@import "@fontsource-variable/geist";
+
+html {
+  font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+}
 
 /* Aequitas dark theme — Bloomberg-dark palette with indigo primary */
 @theme {
@@ -40,6 +45,16 @@
   50%       { opacity: 1; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-in,
+  .animate-pulse-glow,
+  .chart-animate-in,
+  .ticker-track {
+    animation: none !important;
+  }
+}
+
 .animate-fade-in   { animation: fade-in 0.3s ease-out; }
 .animate-slide-in  { animation: slide-in-right 0.3s ease-out; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
@@ -77,4 +92,26 @@
 
 .ticker-track:hover {
   animation-play-state: paused;
+}
+
+/* Observable Plot tip marks default to a white background via an internal
+   :where(.plot-xxx) rule with higher specificity than ancestor selectors —
+   override with !important so dark-theme tips are readable. */
+[role="img"] svg[class^="plot-"] {
+  --plot-background: var(--color-popover) !important;
+  color: var(--color-popover-foreground);
+}
+
+.maplibre-hover-popup .maplibregl-popup-content {
+  background-color: var(--color-foreground);
+  color: var(--color-background);
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+  box-shadow: none;
+}
+
+.maplibre-hover-popup .maplibregl-popup-tip {
+  border-top-color: var(--color-foreground);
+  border-bottom-color: var(--color-foreground);
 }

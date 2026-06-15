@@ -16,21 +16,54 @@ from aequitas.api.services.rag import build_prompt, retrieve_chunks, stream_gemi
 
 router = APIRouter(tags=["chat"])
 
-# Simple in-memory rate limiter: max 10 requests per 60s per user
+import sqlite3
+
+# Persistent SQLite-backed rate limiter: max 10 requests per 60s per user
 _RATE_LIMIT = 10
 _RATE_WINDOW = 60.0
-_request_log: dict[str, list[float]] = defaultdict(list)
 
 
 def _check_rate_limit(user_id: str) -> None:
-    """Raise 429 if user exceeds rate limit."""
-    now = time.monotonic()
-    timestamps = _request_log[user_id]
-    # Prune old entries
-    _request_log[user_id] = [t for t in timestamps if now - t < _RATE_WINDOW]
-    if len(_request_log[user_id]) >= _RATE_LIMIT:
-        raise HTTPException(429, "Rate limit exceeded — max 10 requests per minute")
-    _request_log[user_id].append(now)
+    """Raise 429 if user exceeds rate limit using SQLite database-backed tracking."""
+    cfg = ApiConfig()
+    db_dir = cfg.db_path.parent
+    db_dir.mkdir(parents=True, exist_ok=True)
+    db_path = db_dir / "chat_rate_limit.sqlite"
+
+    conn = sqlite3.connect(str(db_path), timeout=10.0)
+    try:
+        with conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS chat_rate_limits (
+                    user_id TEXT,
+                    timestamp REAL
+                )
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_user_ts ON chat_rate_limits(user_id, timestamp)")
+
+            now = time.time()
+            cutoff = now - _RATE_WINDOW
+
+            # Prune old entries
+            conn.execute("DELETE FROM chat_rate_limits WHERE timestamp < ?", (cutoff,))
+
+            # Count recent requests
+            cursor = conn.execute(
+                "SELECT COUNT(*) FROM chat_rate_limits WHERE user_id = ? AND timestamp >= ?",
+                (user_id, cutoff)
+            )
+            count = cursor.fetchone()[0]
+
+            if count >= _RATE_LIMIT:
+                raise HTTPException(429, f"Rate limit exceeded — max {_RATE_LIMIT} requests per minute")
+
+            # Record current request
+            conn.execute(
+                "INSERT INTO chat_rate_limits (user_id, timestamp) VALUES (?, ?)",
+                (user_id, now)
+            )
+    finally:
+        conn.close()
 
 
 @router.post("/chat")

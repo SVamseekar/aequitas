@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route } from "react-router"
+import { HelmetProvider } from "react-helmet-async"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { AuthProvider } from "@/contexts/AuthContext"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
@@ -44,6 +45,7 @@ const fallback = <div className="min-h-screen flex items-center justify-center">
 
 export default function App() {
   return (
+    <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
@@ -59,11 +61,9 @@ export default function App() {
               {/* Protected — main app shell */}
               <Route path="/dashboard" element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
                 <Route index element={<HomePage />} />
+                <Route path="compare" element={<ComparePage />} />
                 <Route path=":dimensionSlug" element={<DimensionPage />} />
               </Route>
-
-              {/* Protected — compare page (standalone, no AppShell) */}
-              <Route path="/compare" element={<ProtectedRoute><ComparePage /></ProtectedRoute>} />
 
               {/* Protected — standalone pages */}
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
@@ -75,5 +75,6 @@ export default function App() {
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
+    </HelmetProvider>
   )
 }

@@ -1,16 +1,20 @@
 import { Link } from "react-router"
+import {
+  Scale, MapPin, Bus, Network, BarChart3, PoundSterling, FileText, Sliders,
+  type LucideIcon,
+} from "lucide-react"
 import type { DimensionOverview } from "@/api/types"
 import { SEVERITY } from "@/lib/colours"
 
-const DIMENSION_ICONS: Record<string, string> = {
-  equity: "F",
-  accessibility: "A",
-  service_quality: "B",
-  route_network: "C",
-  correlations: "D",
-  economic: "J",
-  bus_services_act: "BSA",
-  scenarios: "PS",
+const DIMENSION_ICONS: Record<string, LucideIcon> = {
+  equity: Scale,
+  accessibility: MapPin,
+  service_quality: Bus,
+  route_network: Network,
+  correlations: BarChart3,
+  economic: PoundSterling,
+  bus_services_act: FileText,
+  scenarios: Sliders,
 }
 
 function formatHeadline(dim: DimensionOverview): string {
@@ -27,7 +31,7 @@ interface Props {
 }
 
 export function DimensionCard({ dim }: Props) {
-  const icon = DIMENSION_ICONS[dim.id] ?? dim.id[0].toUpperCase()
+  const Icon = DIMENSION_ICONS[dim.id] ?? Scale
   const severityColor = (dim.headline_stat.severity in SEVERITY
     ? SEVERITY[dim.headline_stat.severity as keyof typeof SEVERITY]
     : SEVERITY.low)
@@ -35,22 +39,16 @@ export function DimensionCard({ dim }: Props) {
   return (
     <Link
       to={dim.route.slice(1)}
-      className="group block bg-card rounded border border-border p-5 hover:border-indigo-500/40 hover:bg-card/80 transition-all"
+      className="group block text-left p-5 rounded-lg border border-border bg-card/40 hover:border-indigo-400/30 hover:bg-card/60 transition-colors duration-300"
     >
-      <div className="flex items-start gap-3">
-        <span className="inline-flex items-center justify-center w-8 h-8 rounded bg-indigo-500/10 text-indigo-400 text-xs font-bold shrink-0 font-mono">
-          {icon}
-        </span>
-        <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-400 transition-colors">
-            {dim.name}
-          </h3>
-          <p className="text-2xl font-bold font-mono mt-1" style={{ color: severityColor }}>
-            {formatHeadline(dim)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">{dim.headline_stat.label}</p>
-        </div>
-      </div>
+      <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-indigo-400 transition-colors">
+        <Icon className="w-4 h-4 text-indigo-400 shrink-0" />
+        {dim.name}
+      </h3>
+      <p className="text-2xl font-bold font-mono mt-1" style={{ color: severityColor }}>
+        {formatHeadline(dim)}
+      </p>
+      <p className="text-xs text-muted-foreground mt-0.5">{dim.headline_stat.label}</p>
     </Link>
   )
 }

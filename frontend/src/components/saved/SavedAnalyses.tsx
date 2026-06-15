@@ -47,9 +47,9 @@ export function SavedAnalyses() {
               <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
               <div className="flex items-center gap-3 mt-0.5">
                 {a.dimension && (
-                  <span className="text-[10px] font-mono text-indigo-400 uppercase">{a.dimension}</span>
+                  <span className="text-[11px] font-mono text-indigo-400 uppercase">{a.dimension}</span>
                 )}
-                <span className="text-[10px] text-muted-foreground/40 font-mono">
+                <span className="text-[11px] text-muted-foreground/40 font-mono">
                   {new Date(a.created_at).toLocaleDateString("en-GB")}
                 </span>
               </div>

@@ -11,6 +11,16 @@ interface BoxDatum {
   max: number
 }
 
+interface BoxGroup {
+  label: string
+  min: number
+  q1: number
+  median: number
+  q3: number
+  max: number
+  outliers?: number[]
+}
+
 interface Props {
   chartData: Record<string, unknown>
 }
@@ -20,7 +30,15 @@ export default function BoxViolinChart({ chartData }: Props) {
 
   useEffect(() => {
     if (!ref.current) return
-    const data = (chartData.data ?? []) as BoxDatum[]
+    const groups = (chartData.groups ?? chartData.data ?? []) as BoxGroup[]
+    const data: BoxDatum[] = groups.map((g) => ({
+      group: g.label,
+      min: g.min,
+      q1: g.q1,
+      median: g.median,
+      q3: g.q3,
+      max: g.max,
+    }))
 
     // Build flat arrays for link/rect marks — keep orig BoxDatum reference for tooltips
     const whiskers = data.map((d) => ({ ...d, y: d.group, x1: d.min, x2: d.max }))
@@ -50,13 +68,13 @@ export default function BoxViolinChart({ chartData }: Props) {
         // Median markers
         Plot.dot(medians, {
           x: "x", y: "y",
-          fill: "#333", r: 4,
+          fill: "currentColor", r: 4,
         }),
         // Median labels
         Plot.text(data, {
           x: "median", y: "group",
           text: (d: BoxDatum) => d.median.toFixed(1),
-          dy: -14, fontSize: 10, fill: "#333",
+          dy: -14, fontSize: 10, fill: "currentColor",
         }),
       ],
     })

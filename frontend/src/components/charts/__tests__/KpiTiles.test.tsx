@@ -34,4 +34,46 @@ describe("KpiTiles", () => {
     render(<KpiTiles chartData={{ type: "kpi_tiles", title: "Empty", tiles: [] }} />)
     expect(screen.getByText("No data available")).toBeTruthy()
   })
+
+  it("renders a proportion bar when chartData.proportion is present", () => {
+    const { container } = render(
+      <KpiTiles
+        chartData={{
+          type: "kpi_tiles",
+          title: "Frequency Restoration",
+          tiles: [
+            { label: "Population affected", value: 5_000_000, unit: "people" },
+          ],
+          proportion: {
+            type: "grouped_bar",
+            title: "Frequency Restoration — population affected vs England total",
+            categories: ["England (56.5m)"],
+            series: [
+              { name: "Population affected", values: [5_000_000] },
+              { name: "Remaining population", values: [51_490_056] },
+            ],
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getAllByText("Population affected").length).toBeGreaterThan(0)
+    expect(container.querySelector("svg")).toBeTruthy()
+  })
+
+  it("omits the proportion bar when chartData.proportion is absent", () => {
+    const { container } = render(
+      <KpiTiles
+        chartData={{
+          type: "kpi_tiles",
+          title: "Frequency Restoration",
+          tiles: [
+            { label: "Population affected", value: 5_000_000, unit: "people" },
+          ],
+        }}
+      />,
+    )
+
+    expect(container.querySelector("svg")).toBeNull()
+  })
 })

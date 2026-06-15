@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { Outlet } from "react-router"
+import { Helmet } from "react-helmet-async"
 import { Header } from "./Header"
 import { TabBar } from "./TabBar"
-import { StatusBar } from "./StatusBar"
 import { MetricsTicker } from "./MetricsTicker"
 import { Footer } from "./Footer"
 import { ChatFAB } from "../chat/ChatFAB"
@@ -13,7 +13,9 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <StatusBar />
+      <Helmet>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Header />
       <MetricsTicker />
       <TabBar />

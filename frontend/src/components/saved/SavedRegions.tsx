@@ -44,7 +44,7 @@ export function SavedRegions() {
           <MapPin className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground">{r.region_name}</p>
-            <p className="text-[10px] font-mono text-muted-foreground/40 mt-0.5">{r.region_code}</p>
+            <p className="text-[11px] font-mono text-muted-foreground/40 mt-0.5">{r.region_code}</p>
             {r.notes && <p className="text-xs text-muted-foreground mt-1">{r.notes}</p>}
           </div>
           <button

@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react"
 import * as Plot from "@observablehq/plot"
 import { CATEGORICAL } from "@/lib/colours"
+import { useChartWidth } from "@/hooks/useChartWidth"
 
 interface ScatterDatum {
   x: number
@@ -18,7 +19,9 @@ interface Props {
 }
 
 export default function ScatterRegressionChart({ chartData }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const ref = useRef<HTMLDivElement>(null)
+  const width = useChartWidth(containerRef, 700)
 
   useEffect(() => {
     if (!ref.current) return
@@ -56,7 +59,7 @@ export default function ScatterRegressionChart({ chartData }: Props) {
       : ""
 
     const chart = Plot.plot({
-      width: 700,
+      width,
       height: 450,
       x: { label: xLabel },
       y: { label: yLabel },
@@ -66,7 +69,11 @@ export default function ScatterRegressionChart({ chartData }: Props) {
 
     ref.current.replaceChildren(chart)
     return () => chart.remove()
-  }, [chartData])
+  }, [chartData, width])
 
-  return <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "Scatter plot"} role="img" />
+  return (
+    <div ref={containerRef}>
+      <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "Scatter plot"} role="img" />
+    </div>
+  )
 }

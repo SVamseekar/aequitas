@@ -54,7 +54,9 @@ _RANKING_SECTIONS = {"a1_route_density", "a2_stop_density", "b1_frequency",
                      "f6_equitable_regions", "j4_investment_priority", "bsa1_franchising_readiness"}
 _CORRELATION_SECTIONS = {"b5_frequency_deprivation", "c5_length_vs_frequency", "d1_coverage_deprivation",
                          "d2_coverage_unemployment", "d3_coverage_car", "d4_coverage_elderly",
-                         "d5_coverage_income", "f3_ethnic_access"}
+                         "d5_coverage_income", "f3_ethnic_access",
+                         "d9a_health_access", "d9b_employment_access", "d9c_crime_access",
+                         "d9d_environment_access", "d9e_barriers_access"}
 _ML_CLUSTER_SECTIONS = {"c6_route_archetypes", "d6_transport_poverty", "g1_route_clusters"}
 _ML_PREDICTION_SECTIONS = {"a8_coverage_prediction", "d8_feature_importance", "g3_coverage_model", "g4_shap"}
 _MARKET_CONCENTRATION_SECTIONS = {"c3_operator_hhi", "bsa2_operator_concentration"}
@@ -198,10 +200,17 @@ def _build_correlation_df(policy_df: pd.DataFrame, master_lsoa_path, service_lev
 
     f3_ethnic_access needs nonwhite_pct, a precomputed ts021-derived column
     already present in master_lsoa_table (see ingestion/census.py).
+
+    d9a-d9e need the five IMD subdomain scores (employment, health, crime,
+    living environment, barriers) — all present in master_lsoa_table but
+    previously unused downstream of demographics.py.
     """
     df = policy_df
     if master_lsoa_path.exists():
-        extra_cols = ["lsoa_cd", "unemployment_rate", "nocar_pct", "elderly_pct", "income_score", "nonwhite_pct"]
+        extra_cols = [
+            "lsoa_cd", "unemployment_rate", "nocar_pct", "elderly_pct", "income_score", "nonwhite_pct",
+            "employment_score", "health_score", "crime_score", "living_env_score", "barriers_score",
+        ]
         master_df = pd.read_parquet(master_lsoa_path, columns=extra_cols)
         df = df.merge(master_df, on="lsoa_cd", how="left", suffixes=("", "_master"))
 

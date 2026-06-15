@@ -57,6 +57,11 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     "d6_transport_poverty": SectionDef("ml_clusters.j2", "scatter_clusters", "D", "Transport poverty clusters"),
     "d7_deprivation_urban_rural": SectionDef("heatmap.j2", "horizontal_bar", "D", "Deprivation x urban/rural"),
     "d8_feature_importance": SectionDef("ml_prediction.j2", "shap_bar", "D", "Feature importance"),
+    "d9a_health_access": SectionDef("correlation.j2", "scatter_regression", "D", "Coverage vs health deprivation"),
+    "d9b_employment_access": SectionDef("correlation.j2", "scatter_regression", "D", "Coverage vs employment deprivation"),
+    "d9c_crime_access": SectionDef("correlation.j2", "scatter_regression", "D", "Service quality vs crime"),
+    "d9d_environment_access": SectionDef("correlation.j2", "scatter_regression", "D", "Service quality vs living environment"),
+    "d9e_barriers_access": SectionDef("correlation.j2", "scatter_regression", "D", "Coverage vs housing/services barriers"),
     # Category F: Equity & Social Inclusion
     "f1_gini": SectionDef("equity.j2", "lorenz_curve", "F", "Gini coefficient"),
     "f2_disparity_ratio": SectionDef("equity_decile.j2", "horizontal_bar", "F", "Disparity by IMD decile"),
@@ -65,8 +70,8 @@ SECTION_REGISTRY: dict[str, SectionDef] = {
     "f6_equitable_regions": SectionDef("ranking.j2", "horizontal_bar", "F", "Most equitable regions"),
     # Category G: ML Insights
     "g1_route_clusters": SectionDef("ml_clusters.j2", "scatter_clusters", "G", "Route clustering"),
-    "g2_anomalies": SectionDef("anomaly_spotlight.j2", "scatter_regression", "G", "Anomaly detection"),
-    "g3_coverage_model": SectionDef("ml_prediction.j2", "scatter_regression", "G", "Coverage prediction"),
+    "g2_anomalies": SectionDef("anomaly_spotlight.j2", "scatter_clusters", "G", "Anomaly detection"),
+    "g3_coverage_model": SectionDef("coverage_model_fit.j2", "scatter_regression", "G", "Coverage prediction"),
     "g4_shap": SectionDef("ml_prediction.j2", "shap_bar", "G", "Feature importance (SHAP)"),
     "g5_scenario_model": SectionDef("policy_scenario.j2", "kpi_tiles", "G", "Scenario modelling"),
     # Category J: Economic Impact & BCR

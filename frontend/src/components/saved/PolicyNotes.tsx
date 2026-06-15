@@ -53,7 +53,7 @@ export function PolicyNotes() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-mono">
+        <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono">
           {notes.length} notes
         </span>
         <button
@@ -122,13 +122,13 @@ export function PolicyNotes() {
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-mono text-indigo-400 uppercase">{n.dimension}</span>
-                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${STANCE_LABELS[n.stance]?.colour ?? ""}`}>
+                    <span className="text-[11px] font-mono text-indigo-400 uppercase">{n.dimension}</span>
+                    <span className={`text-[11px] font-mono px-1.5 py-0.5 rounded border ${STANCE_LABELS[n.stance]?.colour ?? ""}`}>
                       {STANCE_LABELS[n.stance]?.label ?? n.stance}
                     </span>
                   </div>
                   <p className="text-xs text-foreground leading-relaxed">{n.thesis}</p>
-                  <p className="text-[10px] text-muted-foreground/40 font-mono mt-2">
+                  <p className="text-[11px] text-muted-foreground/40 font-mono mt-2">
                     {new Date(n.created_at).toLocaleDateString("en-GB")}
                   </p>
                 </div>

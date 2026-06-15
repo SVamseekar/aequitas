@@ -50,10 +50,23 @@ def get_overview(
 ) -> OverviewResponse:
     """Return headline stats for all 8 dimensions."""
     if db is None:
-        return OverviewResponse(dimensions=[
-            DimensionOverview(id=dim_id, name=name, headline_stat=HeadlineStat(value=0.0, label=label, severity="low"), summary="", route=route)
-            for dim_id, (name, label, route) in _DIMENSION_META.items()
-        ])
+        return OverviewResponse(
+            dimensions=[
+                DimensionOverview(id=dim_id, name=name, headline_stat=HeadlineStat(value=0.0, label=label, severity="low"), summary="", route=route)
+                for dim_id, (name, label, route) in _DIMENSION_META.items()
+            ],
+            built_at=None,
+        )
+
+    # Query built_at timestamp
+    built_at = None
+    try:
+        res = db.execute("SELECT value FROM metadata WHERE key = 'built_at'").fetchone()
+        if res:
+            built_at = res[0]
+    except Exception:
+        pass
+
     rows = query_overview(db, region, urban_rural)
 
     dimensions = []
@@ -73,4 +86,4 @@ def get_overview(
                 route=route,
             )
         )
-    return OverviewResponse(dimensions=dimensions)
+    return OverviewResponse(dimensions=dimensions, built_at=built_at)

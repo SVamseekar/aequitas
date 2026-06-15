@@ -2,14 +2,14 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { fetchJson } from "@/api/client"
 import type { SectionsResponse } from "@/api/types"
-import { DIMENSIONS, REGIONS } from "@/lib/constants"
+import { DIMENSIONS, REGIONS, AREA_TYPES, SECTION_TITLES } from "@/lib/constants"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { ArrowLeftRight } from "lucide-react"
 
-function useCompareSection(dimension: string, region: string) {
+function useCompareSection(dimension: string, region: string, urbanRural: string) {
   return useQuery({
-    queryKey: ["sections", dimension, region, "all"],
-    queryFn: () => fetchJson<SectionsResponse>("/sections", { dimension, region, urban_rural: "all" }),
+    queryKey: ["sections", dimension, region, urbanRural],
+    queryFn: () => fetchJson<SectionsResponse>("/sections", { dimension, region, urban_rural: urbanRural }),
     staleTime: Infinity,
     enabled: !!dimension,
   })
@@ -21,11 +21,11 @@ function StatValue({ v }: { v: unknown }) {
     return <span className="text-foreground font-mono">{parseFloat(v.toPrecision(4))}</span>
   }
   if (typeof v === "string") return <span className="text-foreground font-mono">{v}</span>
-  return <span className="text-muted-foreground/40 text-[9px]">{JSON.stringify(v).slice(0, 40)}</span>
+  return <span className="text-muted-foreground/40 text-[11px]">{JSON.stringify(v).slice(0, 40)}</span>
 }
 
-function RegionColumn({ dimension, region }: { dimension: string; region: string }) {
-  const { data, isLoading } = useCompareSection(dimension, region)
+function RegionColumn({ dimension, region, urbanRural }: { dimension: string; region: string; urbanRural: string }) {
+  const { data, isLoading } = useCompareSection(dimension, region, urbanRural)
   const regionName = REGIONS.find((r) => r.code === region)?.name ?? region
 
   if (isLoading) {
@@ -42,21 +42,22 @@ function RegionColumn({ dimension, region }: { dimension: string; region: string
 
   return (
     <div>
-      <p className="text-[10px] font-mono uppercase tracking-wider text-indigo-400 mb-3">{regionName}</p>
+      <p className="text-[11px] font-mono uppercase tracking-wide text-indigo-400 mb-3">{regionName}</p>
       <div className="space-y-3">
-        {sections.slice(0, 8).map((s) => {
+        {sections.map((s) => {
           const stats = Object.entries(s.stats ?? {}).filter(([k, v]) =>
             k !== "unit" && k !== "entity_type" && (typeof v === "number" || typeof v === "string")
           )
+          const sectionTitle = SECTION_TITLES[s.section_id] ?? s.section_id.replace(/_/g, " ")
           return (
             <div key={s.section_id} className="border border-border rounded bg-card p-3">
-              <p className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60 mb-2">
-                {s.section_id.replace(/_/g, " ")}
+              <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-2 font-bold">
+                {sectionTitle}
               </p>
               <div className="space-y-1">
                 {stats.slice(0, 4).map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-2">
-                    <span className="text-[9px] text-muted-foreground/50 font-mono truncate">{k}</span>
+                    <span className="text-[11px] text-muted-foreground font-mono truncate">{k}</span>
                     <StatValue v={v} />
                   </div>
                 ))}
@@ -76,20 +77,19 @@ export default function ComparePage() {
   const [dimension, setDimension] = useState("equity")
   const [regionA, setRegionA] = useState("E12000002") // North West
   const [regionB, setRegionB] = useState("E12000007") // London
+  const [urbanRural, setUrbanRural] = useState("all")
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b border-border bg-card/50 h-8 flex items-center">
-        <div className="max-w-7xl mx-auto px-4 w-full">
-          <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">Compare regions</span>
-        </div>
+    <div>
+      <div className="mb-6">
+        <h1 className="text-base font-bold tracking-tight text-foreground">Compare Regions</h1>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div>
         {/* Controls */}
         <div className="flex flex-wrap gap-3 mb-8">
           <div className="flex flex-col gap-1">
-            <label className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60">Dimension</label>
+            <label className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/60">Dimension</label>
             <select
               value={dimension}
               onChange={(e) => setDimension(e.target.value)}
@@ -102,7 +102,20 @@ export default function ComparePage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60">Region A</label>
+            <label className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/60">Area Type</label>
+            <select
+              value={urbanRural}
+              onChange={(e) => setUrbanRural(e.target.value)}
+              className="text-xs font-mono bg-card border border-border rounded px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              {AREA_TYPES.map((a) => (
+                <option key={a.code} value={a.code}>{a.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/60">Region A</label>
             <select
               value={regionA}
               onChange={(e) => setRegionA(e.target.value)}
@@ -119,7 +132,7 @@ export default function ComparePage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60">Region B</label>
+            <label className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/60">Region B</label>
             <select
               value={regionB}
               onChange={(e) => setRegionB(e.target.value)}
@@ -140,11 +153,12 @@ export default function ComparePage() {
           />
         ) : (
           <div className="grid sm:grid-cols-2 gap-6">
-            <RegionColumn dimension={dimension} region={regionA} />
-            <RegionColumn dimension={dimension} region={regionB} />
+            <RegionColumn dimension={dimension} region={regionA} urbanRural={urbanRural} />
+            <RegionColumn dimension={dimension} region={regionB} urbanRural={urbanRural} />
           </div>
         )}
       </div>
     </div>
   )
 }
+

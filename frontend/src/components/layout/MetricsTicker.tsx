@@ -39,10 +39,10 @@ export function MetricsTicker() {
       <div className="flex items-center gap-0 ticker-track" aria-hidden="true">
         {doubled.map((m, i) => (
           <div key={`${m.key}-${i}`} className="flex items-center gap-4 px-6 shrink-0">
-            <span className="text-[10px] font-mono text-muted-foreground/50 uppercase tracking-wider">{m.label}</span>
+            <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wide">{m.label}</span>
             <span className="text-[11px] font-mono font-semibold text-indigo-400">{m.value}</span>
-            <span className="text-[9px] text-muted-foreground/30">{m.sub}</span>
-            <span className="text-border text-[10px] ml-2">·</span>
+            <span className="text-[11px] text-muted-foreground/40">{m.sub}</span>
+            <span className="text-border text-[11px] ml-2">·</span>
           </div>
         ))}
       </div>

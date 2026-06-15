@@ -4,7 +4,9 @@ import type { SectionItem } from "@/api/types"
 import { Markdown } from "@/components/shared/Markdown"
 import { ChartRenderer } from "@/components/charts/ChartRenderer"
 import { SECTION_TITLES } from "@/lib/constants"
+import { extractHeadline } from "@/lib/narrative"
 import { ProvenancePanel } from "./ProvenancePanel"
+import { useFilters, useScenarioCalculation } from "@/api/hooks"
 
 function formatValue(key: string, v: unknown): string {
   if (v === null || v === undefined) return "—"
@@ -48,13 +50,34 @@ export function SectionCard({ section }: Props) {
   const [narrativeOpen, setNarrativeOpen] = useState(false)
   const [provenanceMetric, setProvenanceMetric] = useState<string | null>(null)
 
+  const { region, urbanRural } = useFilters()
+  const { populationAffected, co2Saving, total_cost } = useScenarioCalculation(region, urbanRural)
+
   const rawTitle = section.chart_data?.title
   const title = SECTION_TITLES[section.section_id]
     ?? (typeof rawTitle === "string" ? rawTitle : undefined)
     ?? section.section_id.replace(/_/g, " ")
 
-  const hasChart = section.chart_data && Object.keys(section.chart_data).length > 0
+  let chartData = section.chart_data
+  if (section.section_id === "ps5_scenario_comparison" && chartData) {
+    const originalData = Array.isArray(chartData.data) ? chartData.data : []
+    const costPerBeneficiary = populationAffected > 0 ? (total_cost * 1_000_000) / populationAffected : 0
+    const customRow = {
+      "Scenario": "My Custom Scenario (Sandbox)",
+      "Population affected": populationAffected,
+      "Cost £m/yr": Number(total_cost.toFixed(1)),
+      "CO2 t/yr": Number((co2Saving * 1000).toFixed(0)),
+      "Cost/beneficiary (£)": Number(costPerBeneficiary.toFixed(2))
+    }
+    chartData = {
+      ...chartData,
+      data: [customRow, ...originalData]
+    }
+  }
+
+  const hasChart = chartData && Object.keys(chartData).length > 0
   const hasNarrative = !!section.narrative?.trim()
+  const headline = hasNarrative ? extractHeadline(section.narrative) : null
 
   // Flatten stats
   const flatStats: [string, unknown][] = []
@@ -63,6 +86,10 @@ export function SectionCard({ section }: Props) {
     if (typeof v === "object" && v !== null) {
       const obj = v as Record<string, unknown>
       if ("best" in obj) continue
+      if (("label" in obj && "value" in obj) || ("name" in obj && "value" in obj)) {
+        flatStats.push([k, v])
+        continue
+      }
       for (const [innerK, innerV] of Object.entries(obj)) {
         if (typeof innerV !== "object" || innerV === null) {
           flatStats.push([innerK, innerV])
@@ -101,10 +128,19 @@ export function SectionCard({ section }: Props) {
           </button>
         </div>
 
+        {/* Headline finding */}
+        {headline && (
+          <div className="px-5 pb-3">
+            <p className="text-sm text-foreground border-l-2 border-indigo-500 pl-3">
+              {headline}
+            </p>
+          </div>
+        )}
+
         {/* Chart */}
         {hasChart && (
           <div className="px-4 pb-3">
-            <ChartRenderer chartData={section.chart_data} />
+            <ChartRenderer chartData={chartData} />
           </div>
         )}
 
@@ -132,7 +168,7 @@ export function SectionCard({ section }: Props) {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               {displayStats.map(([key, val]) => (
                 <div key={key} className="bg-background rounded border border-border p-3">
-                  <p className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-wider leading-tight">
+                  <p className="text-[11px] font-mono text-muted-foreground/60 uppercase tracking-wide leading-tight">
                     {formatKey(key)}
                   </p>
                   <p className="text-sm font-semibold text-foreground mt-1 font-mono">
@@ -149,13 +185,13 @@ export function SectionCard({ section }: Props) {
           <div className="px-5 pb-4 border-t border-border pt-3">
             <button
               type="button"
-              className="text-[10px] font-mono text-indigo-400 hover:text-indigo-300 uppercase tracking-wider transition-colors"
+              className="text-[11px] font-mono text-indigo-400 hover:text-indigo-300 uppercase tracking-wide transition-colors"
               onClick={() => setNarrativeOpen(!narrativeOpen)}
             >
               {narrativeOpen ? "Hide analysis" : "Read analysis"}
             </button>
             {narrativeOpen && (
-              <div className="mt-3 prose prose-sm prose-invert max-w-none text-xs text-muted-foreground">
+              <div className="mt-3 prose prose-sm prose-invert max-w-none text-sm text-muted-foreground">
                 <Markdown content={section.narrative} />
               </div>
             )}

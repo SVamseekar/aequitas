@@ -101,7 +101,7 @@ function DimensionPageContent() {
         <div>
           <h2 className="text-base font-semibold text-foreground font-mono tracking-tight">{dim?.name}</h2>
           <p className="text-muted-foreground text-xs mt-1">{dim?.description}</p>
-          <p className="text-muted-foreground/50 text-[10px] font-mono mt-2 uppercase tracking-wider">
+          <p className="text-muted-foreground text-[11px] font-mono mt-2 uppercase tracking-wide">
             {sections.length} sections · {withCharts} charts · {withNarrative} narratives ·{" "}
             {regionName} · {areaName}
           </p>

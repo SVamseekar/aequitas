@@ -21,9 +21,10 @@ for the "all"/"all" combo — see tests):
 - ps4: top-5 LADs by franchising_readiness (LAD-grain, not region-decomposable)
   -> 5 LADs, pop 760,008. Kept as the England-wide constant for all filters.
 
-NaN coalescing to 0.0 is required: co2_saving_t_yr is NaN for rows B/C/D,
-estimated_annual_cost_m is NaN for row D — the Jinja templates call
-|round(1) and |int on these fields, which raise on None/NaN.
+co2_saving_t_yr is NaN ("not modelled") for rows B/C/D, and
+estimated_annual_cost_m is NaN ("not modelled") for row D. These are
+converted to `None` via `_or_none` and rendered as "not modelled" in the
+Jinja templates rather than coalesced to 0.0.
 """
 
 import math
@@ -50,14 +51,15 @@ _SCENARIO_FIELDS = (
 ELDERLY_PCT_Q75_THRESHOLD = 24.7
 
 
-def _coalesce(value: float) -> float:
-    return 0.0 if value is None or (isinstance(value, float) and math.isnan(value)) else float(value)
+def _or_none(value: float) -> float | None:
+    """Convert NaN/None to `None`, preserving "not modeled" rather than coalescing to 0.0."""
+    return None if value is None or (isinstance(value, float) and math.isnan(value)) else float(value)
 
 
 def _row_to_scenario(row: pd.Series) -> dict:
     scenario = {field: row[field] for field in _SCENARIO_FIELDS}
-    scenario["estimated_annual_cost_m"] = _coalesce(scenario["estimated_annual_cost_m"])
-    scenario["co2_saving_t_yr"] = _coalesce(scenario["co2_saving_t_yr"])
+    scenario["estimated_annual_cost_m"] = _or_none(scenario["estimated_annual_cost_m"])
+    scenario["co2_saving_t_yr"] = _or_none(scenario["co2_saving_t_yr"])
     scenario["population_affected"] = int(scenario["population_affected"])
     scenario["annual_additional_trips"] = int(scenario["annual_additional_trips"])
     scenario["name"] = str(scenario["name"])
@@ -123,6 +125,13 @@ def _recompute_population_affected(
     return national_population
 
 
+def _population_ratio(population_affected: int, national_population: int) -> float:
+    """Ratio of recomputed to national population_affected (1.0 if national is 0)."""
+    if national_population <= 0:
+        return 1.0
+    return population_affected / national_population
+
+
 def _scale_trips(annual_additional_trips: int, population_affected: int, national_population: int) -> int:
     """Scale annual_additional_trips proportionally to the recomputed population.
 
@@ -131,10 +140,21 @@ def _scale_trips(annual_additional_trips: int, population_affected: int, nationa
     recomputed to national population_affected. For "all"/"all" this is a
     no-op (ratio == 1).
     """
-    if national_population <= 0:
-        return annual_additional_trips
-    ratio = population_affected / national_population
+    ratio = _population_ratio(population_affected, national_population)
     return int(round(annual_additional_trips * ratio))
+
+
+def _scale_by_population(value: float | None, population_affected: int, national_population: int) -> float | None:
+    """Scale a national cost/CO2 constant by the population ratio, preserving `None`.
+
+    Same rationale as `_scale_trips`: no per-LSOA cost/CO2 breakdown is
+    carried into this builder, so the national constant is scaled by the
+    ratio of recomputed to national population_affected.
+    """
+    if value is None:
+        return None
+    ratio = _population_ratio(population_affected, national_population)
+    return value * ratio
 
 
 def _build_single(
@@ -151,6 +171,12 @@ def _build_single(
     if recomputed is not None:
         scenario["population_affected"] = recomputed
         scenario["annual_additional_trips"] = _scale_trips(national_trips, recomputed, national_population)
+        scenario["estimated_annual_cost_m"] = _scale_by_population(
+            scenario["estimated_annual_cost_m"], recomputed, national_population,
+        )
+        scenario["co2_saving_t_yr"] = _scale_by_population(
+            scenario["co2_saving_t_yr"], recomputed, national_population,
+        )
 
     return {"scenario": scenario}
 
@@ -164,19 +190,24 @@ def _build_comparison(scenarios_df: pd.DataFrame, elderly_df: pd.DataFrame) -> d
     best_ratio = math.inf
 
     for row_index, (_, row) in enumerate(scenarios_df.iterrows()):
-        cost_m = _coalesce(row["estimated_annual_cost_m"])
+        cost_m = _or_none(row["estimated_annual_cost_m"])
+        co2_t = _or_none(row["co2_saving_t_yr"])
         national_population = int(row["population_affected"])
 
         recomputed = _recompute_population_affected(row_index, elderly_df, national_population)
         population = national_population if recomputed is None else recomputed
 
+        if recomputed is not None:
+            cost_m = _scale_by_population(cost_m, recomputed, national_population)
+            co2_t = _scale_by_population(co2_t, recomputed, national_population)
+
         scenarios.append({
             "name": str(row["name"]),
             "population": population,
             "cost_m": cost_m,
-            "co2_t": _coalesce(row["co2_saving_t_yr"]),
+            "co2_t": co2_t,
         })
-        if cost_m > 0 and population > 0:
+        if cost_m is not None and cost_m > 0 and population > 0:
             ratio = (cost_m * 1e6) / population
             if ratio < best_ratio:
                 best_ratio = ratio
