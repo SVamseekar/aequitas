@@ -619,7 +619,7 @@ def _scenario_proportion_chart(section_id: str, stats: dict) -> dict:
     """Before/after grouped bar of population affected vs England total (E14).
 
     Shows the scenario's `population_affected` against the England total
-    population (the fixed denominator per CLAUDE.md, never pipeline-filtered)
+    population (the fixed denominator per system design, never pipeline-filtered)
     so readers can gauge the scale of the intervention at a glance. Embedded
     as a `proportion` field on the kpi_tiles chart_data for ps1-ps4/g5 — a
     two-category grouped bar: "Population affected" vs "Remaining England

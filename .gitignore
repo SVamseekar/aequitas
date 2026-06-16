@@ -47,3 +47,8 @@ Thumbs.db
 
 # Git worktrees
 .worktrees/
+
+# Documentation (kept locally only)
+docs/
+ISSUES.md
+frontend/README.md

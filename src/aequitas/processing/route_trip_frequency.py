@@ -17,7 +17,7 @@ from aequitas.ingestion.bods import load_bods_routes, load_bods_trips
 
 # GTFS route_type 3 = Bus. BODS includes other modes (rail, tube, DLR, coach,
 # tram, ferry) under the same trips.txt — restricting to type 3 matches the
-# ground-truth "13,099 unique BODS routes" (CLAUDE.md) and avoids non-bus
+# ground-truth "13,099 unique BODS routes" (ground truth) and avoids non-bus
 # services (e.g. London Underground, DLR) dominating the frequency ranking.
 _BUS_ROUTE_TYPE = 3
 
