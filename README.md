@@ -153,9 +153,9 @@ The dashboard connects to `http://localhost:8000` by default. See `frontend/src/
 
 ## Project status
 
-Active development. The England implementation is complete — 33,755 LSOAs, the full national bus network, all analytics modules.
+The England implementation is complete — 33,755 LSOAs, the full national bus network, all eight analytics modules, pre-computed warehouse, dashboard, and RAG chatbot.
 
-The data model is intentionally country-agnostic. If you're working on a port to another country or want to discuss methodology, open an issue or reach out directly.
+The data model is country-agnostic by design. If you're working on a port to another country or want to discuss methodology, open an issue or reach out directly.
 
 This is a policy analysis tool, not official government guidance. See the in-app disclaimer for data limitations.
 
