@@ -1,5 +1,14 @@
 # Aequitas
 
+[![GitHub Stars](https://img.shields.io/github/stars/SVamseekar/aequitas?style=flat-square&color=ffd700&label=Stars)](https://github.com/SVamseekar/aequitas/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/SVamseekar/aequitas?style=flat-square&color=87ceeb&label=Forks)](https://github.com/SVamseekar/aequitas/network/members)
+[![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![Gemini](https://img.shields.io/badge/Gemini%20AI-Flash-orange?style=flat-square&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![DuckDB](https://img.shields.io/badge/DuckDB-Analytics-yellowgreen?style=flat-square&logo=duckdb&logoColor=white)](https://duckdb.org/)
+[![License](https://img.shields.io/github/license/SVamseekar/aequitas?style=flat-square&color=gray)](LICENSE)
+
 **Policy intelligence for bus transport equity — evidence-graded analytics for transport authorities, ministries, and researchers.**
 
 Aequitas pre-computes equity, accessibility, and economic analytics over national open transport and census data, then surfaces them through a fast, evidence-graded dashboard and a natural-language Q&A assistant. Built first for the UK, designed to generalise to any country with comparable open data (EU, US, AUS, NZ).
