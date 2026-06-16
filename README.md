@@ -9,44 +9,55 @@
 [![DuckDB](https://img.shields.io/badge/DuckDB-Analytics-yellowgreen?style=flat-square&logo=duckdb&logoColor=white)](https://duckdb.org/)
 [![License](https://img.shields.io/github/license/SVamseekar/aequitas?style=flat-square&color=gray)](LICENSE)
 
-**Policy intelligence for bus transport equity — evidence-graded analytics for transport authorities, ministries, and researchers.**
+**Open transport equity intelligence — evidence-graded analytics for transport authorities, ministries, and researchers.**
 
-Aequitas pre-computes equity, accessibility, and economic analytics over national open transport and census data, then surfaces them through a fast, evidence-graded dashboard and a natural-language Q&A assistant. Built first for the UK, designed to generalise to any country with comparable open data (EU, US, AUS, NZ).
+Aequitas answers the question every transport authority faces but rarely has the tools to answer cleanly: **which communities are underserved, by how much, and what would it cost to fix?**
+
+It pre-computes equity, accessibility, and economic analytics over open transport and census data, then surfaces them through a fast, evidence-graded dashboard and a natural-language Q&A assistant. The reference implementation covers England — the data model and pipeline are designed from the ground up to port to any country with comparable open datasets (Australia, New Zealand, EU member states, United States).
 
 ![Aequitas landing page](docs/screenshots/landing-page.png)
 
 ---
 
+## Who it's for
+
+- **Transport authorities and local government** — build the evidence base for funding bids, route reviews, and franchising decisions
+- **National ministries and regulators** — benchmark equity across regions, model policy scenarios before committing spend
+- **Researchers and academics** — reproducible, open methodology; every metric traces back to its source formula and data
+- **Civic technologists** — fork it, adapt the pipeline to your country's data sources, and deploy your own instance
+
+---
+
 ## What it does
 
-Most transport authorities sit on mountains of open data — stop locations, timetables, census deprivation indices, route geometries — spread across a dozen incompatible formats. Aequitas turns that data into a single, navigable answer to the question that matters: **which communities are underserved, by how much, and what would it cost to fix?**
+Most transport authorities sit on mountains of open data — stop locations, timetables, census deprivation indices, route geometries — spread across a dozen incompatible formats. Aequitas ingests, joins, and pre-computes all of it so the runtime API is a fast, read-only lookup — never running live analysis during a user session.
 
 - **Equity & deprivation** — Gini, Lorenz, Palma ratio, concentration index, triple-deprivation flags
-- **Accessibility** — 2SFCA catchments, 400m coverage, job/healthcare/education gaps
+- **Accessibility** — 2SFCA catchments, 400m coverage, job/healthcare/education access gaps
 - **Service quality** — headway, evening isolation, Sunday deserts, peak service ratios
 - **Route network** — geometry, operator concentration (HHI), route clustering
 - **Modal shift & carbon** — elasticity-based modal shift, national carbon factors
 - **Economic appraisal** — benefit-cost ratios via standard transport appraisal methodology
-- **Franchising readiness** — operator concentration and readiness tiers
-- **Policy scenarios** — model frequency restoration, last-bus extension, demand-responsive transport, and see the projected population impact and cost before writing a funding bid
+- **Franchising readiness** — operator concentration and readiness tiers by region
+- **Policy scenarios** — model frequency restoration, last-bus extension, demand-responsive transport, and see projected population impact and cost before writing a funding bid
 
-Every chart and number ships with a plain-English narrative explanation and a documented formula trace back to source data — built for people who need to defend a number in a board meeting, not just look at it.
+Every chart and number ships with a plain-English narrative and a documented formula trace back to source data — built for people who need to defend a number in a board meeting, not just look at it.
 
 ---
 
 ## Architecture
 
 ```
-Raw open data  →  Python pipeline (ingestion → processing → analytics)
-               →  Pre-computed results in DuckDB (read-only at runtime)
-               →  FastAPI backend
-               →  React dashboard + RAG chatbot (Gemini + FAISS)
+Open data sources  →  Python pipeline (ingestion → processing → analytics)
+                   →  Pre-computed results in DuckDB (read-only at runtime)
+                   →  FastAPI backend
+                   →  React dashboard + RAG chatbot (Gemini + FAISS)
 ```
 
 **Design principles:**
 - Analytics are pre-computed at build time — the runtime API is a read-only lookup, never running live analysis
-- Narrative generation is deterministic (Jinja2 + evidence-gated rules) — no LLM in the analytics path
-- The chatbot uses retrieval-augmented generation over the same pre-computed narratives, so it can't hallucinate numbers that aren't in the warehouse
+- Narrative generation is deterministic (Jinja2 + evidence-gated rules) — no generative model in the analytics path
+- The chatbot uses retrieval-augmented generation over the same pre-computed narratives, so answers are grounded in the warehouse data
 
 ### Stack
 
@@ -60,6 +71,22 @@ Raw open data  →  Python pipeline (ingestion → processing → analytics)
 | Vector store | FAISS (in-memory) |
 | Embeddings | all-MiniLM-L6-v2 |
 | Auth & persistence | Supabase |
+
+---
+
+## Adapting to your country
+
+The pipeline is structured around a common data model. To run Aequitas for a new country you need:
+
+| Data type | England source | Equivalent elsewhere |
+|---|---|---|
+| Bus timetables | BODS (GTFS) | Any GTFS feed |
+| Stop locations | NaPTAN | Any GTFS stops.txt |
+| Deprivation index | IMD 2019/2025 | SEIFA (AU), NZDep (NZ), ACS (US), EU-SILC (EU) |
+| Census boundaries | ONS LSOA | SA1 (AU), Meshblock (NZ), Census Tract (US), LAU (EU) |
+| Population | Census | National census |
+
+Swap the ingestion modules, keep the analytics and frontend unchanged.
 
 ---
 
@@ -88,7 +115,7 @@ The dashboard expects the API at `http://localhost:8000` by default — see `fro
 
 ## Project status
 
-Aequitas is under active development. Current focus: building out the pipeline and warehouse for England, with the data model designed to extend to other countries with comparable open transport/census datasets.
+Active development. Current reference implementation covers England (33,755 LSOAs, national bus network). The data model is intentionally generic — contributions adapting the pipeline to other countries are welcome.
 
 This is a policy analysis tool, not official government guidance — see the in-app disclaimer for data limitations.
 
