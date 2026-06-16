@@ -22,17 +22,17 @@
 
 ## The problem
 
-Transport authorities have the data. They rarely have the tools to turn it into defensible, audit-ready evidence. Stop locations, timetables, deprivation indices, and route geometries sit across a dozen incompatible formats — and the question *"which communities are underserved, and by how much?"* still gets answered with spreadsheets and gut feel.
+Transport authorities everywhere have the same problem: mountains of open data — stop locations, timetables, deprivation indices, route geometries — spread across incompatible formats, and no fast path from raw data to the question that actually matters: **which communities are underserved, and by how much?**
 
-Aequitas changes that. It ingests open transport and census data, runs a rigorous analytics pipeline, and serves the results through a fast evidence-graded dashboard and a natural-language Q&A assistant — so a policy analyst can find an answer, trace it to its source formula, and defend it in a board meeting.
+That question still gets answered with spreadsheets and gut feel in most cities and regions around the world. Aequitas gives you a rigorous, auditable answer — complete with formula traces, plain-English narratives, and a policy scenario sandbox — in a dashboard anyone can use without a data science team.
 
-> **Want to use this for your country or region?** Get in touch before you start — martisoura@gmail.com
+> **Want to use or adapt this for your region?** Reach out first — martisoura@gmail.com
 
 ---
 
-## What's inside
+## What it produces
 
-| Module | What it produces |
+| Module | Output |
 |---|---|
 | **Equity** | Gini coefficient, Lorenz curve, Palma ratio, concentration index, triple-deprivation flags |
 | **Accessibility** | 2SFCA catchments, 400m stop coverage, job/healthcare/education access gaps |
@@ -40,40 +40,44 @@ Aequitas changes that. It ingests open transport and census data, runs a rigorou
 | **Route network** | Geometry, HHI operator concentration, route clustering by archetype |
 | **Economic appraisal** | Benefit-cost ratios via standard transport appraisal methodology |
 | **Carbon & modal shift** | Elasticity-based modal shift scenarios, national carbon reduction factors |
-| **Policy scenarios** | Frequency restoration, last-bus extension, DRT — with projected population impact and cost |
-| **Franchising readiness** | Operator concentration and readiness tiers by region |
+| **Policy scenarios** | Frequency restoration, last-bus extension, DRT — projected population impact and cost |
+| **Market structure** | Franchising readiness and operator concentration tiers by region |
 
-Every metric ships with a plain-English narrative and a formula trace back to the source data.
+Every metric ships with a plain-English narrative and a documented formula trace back to the source data.
 
 ---
 
-## Key findings — England reference implementation
+## What the data shows — England reference implementation
 
-> These numbers come from the pre-computed warehouse over all 33,755 LSOAs in England.
+> Numbers from the pre-computed warehouse covering all 33,755 lower-layer super output areas in England.
 
-- **Gini 0.57** — bus service is more unequally distributed than UK household income (Gini 0.36)
-- **Palma 5.7** — the top 10% of areas receive 5.7× more service than the bottom 40%
-- **Concentration index +0.14** — service provision is pro-rich; deprived communities are systematically under-served
-- **6,776 LSOAs** have zero accessibility to key services within a 400m walk of any bus stop
-- **53–72% of service variance** is explained by policy choices, not demographics — the gap is fixable
+- **Gini 0.57** — bus service is more unequally distributed than household income (income Gini: 0.36)
+- **Palma 5.7** — the best-served 10% of areas receive 5.7× more service than the bottom 40%
+- **Concentration index +0.14** — service provision is systematically pro-rich
+- **6,776 areas** have zero accessible services within a 400m walk of any bus stop
+- **53–72% of service variance** is explained by policy choices, not demographics — the gap is a decision, not a inevitability
+
+The same methodology applies anywhere. The numbers change; the analytical framework does not.
 
 ---
 
 ## Architecture
 
 ```
-Open data  ──►  Ingestion          NaPTAN · BODS/GTFS · Census · IMD · GIAS · OS
-               └──► Processing     Deduplication · spatial joins · service quality
-                    └──► Analytics Equity · accessibility · ML · economic appraisal
-                         └──► DuckDB warehouse  (read-only at runtime)
-                              └──► FastAPI  ──►  React dashboard
-                                             └──►  RAG chatbot (FAISS + Gemini Flash)
+Open data sources
+    └──► Ingestion       GTFS · census boundaries · deprivation index · points of interest
+         └──► Processing  Deduplication · spatial joins · service quality aggregation
+              └──► Analytics  Equity · accessibility · ML clustering · economic appraisal
+                   └──► DuckDB warehouse  ◄── read-only at runtime
+                        └──► FastAPI backend
+                             ├──► React dashboard
+                             └──► RAG chatbot  (FAISS retrieval + Gemini Flash)
 ```
 
 **Design principles**
-- Pre-computed at build time — the runtime API is a read-only lookup, zero live analysis during user sessions
-- Narratives are deterministic (Jinja2 + evidence-gated rules) — suppressed when evidence is absent, never fabricated
-- The chatbot is grounded in the warehouse; it cannot return numbers that aren't in the pre-computed data
+- All analytics are pre-computed at build time — the runtime API is a read-only lookup, zero live computation during a user session
+- Narratives are generated by deterministic, evidence-gated rules — suppressed when evidence is weak, never fabricated
+- The chatbot is grounded in the warehouse; it cannot return a number that isn't in the pre-computed data
 
 ### Stack
 
@@ -81,7 +85,7 @@ Open data  ──►  Ingestion          NaPTAN · BODS/GTFS · Census · IMD ·
 |---|---|
 | Frontend | React 18, Vite, TypeScript, Tailwind CSS, shadcn/ui, Mapbox GL |
 | Backend | FastAPI (Python 3.12+) |
-| Warehouse | DuckDB (single pre-built file, served read-only) |
+| Warehouse | DuckDB (single pre-built binary, served read-only) |
 | Intermediate data | Parquet |
 | Chatbot | Gemini Flash + FAISS + all-MiniLM-L6-v2 embeddings |
 | Auth & persistence | Supabase |
@@ -90,43 +94,36 @@ Open data  ──►  Ingestion          NaPTAN · BODS/GTFS · Census · IMD ·
 
 ## Who it's for
 
-**Transport authorities and local government** — build the evidence base for funding bids, route reviews, and franchising decisions without a data science team.
+**Transport authorities and local government** — build the evidence base for funding bids, route reviews, and franchising decisions without needing an in-house data science team.
 
-**National ministries and regulators** — benchmark equity across regions, run what-if policy scenarios, and produce audit-ready outputs.
+**National ministries and regulators** — benchmark equity performance across regions, run what-if policy scenarios, and produce audit-ready outputs for committees and consultations.
 
-**Researchers and academics** — reproducible, open methodology; every metric is documented to formula level with source data citations.
+**Researchers and academics** — fully reproducible, open methodology; every metric is documented to formula level with source data citations and a ground-truth validation suite.
 
-**Civic technologists** — fork it, adapt the ingestion pipeline to your country's data sources, keep the analytics and frontend.
+**Civic technologists and open data practitioners** — fork the repo, swap the ingestion layer for your country's data sources, and keep the analytics pipeline and dashboard unchanged.
 
 ---
 
-## Adapting to your country
+## Running it for your country
 
-The pipeline is built around a common data model. To run Aequitas for a new country:
+The pipeline is built around a country-agnostic data model. The only layer that changes between countries is ingestion.
 
-| Data type | England source | Equivalent |
+| Data type | England source | Standard equivalent |
 |---|---|---|
-| Bus timetables | BODS (GTFS) | Any national GTFS feed |
+| Transit timetables | BODS | Any GTFS feed |
 | Stop locations | NaPTAN | GTFS `stops.txt` |
-| Deprivation index | IMD 2019/2025 | SEIFA (AU) · NZDep (NZ) · ACS (US) · EU-SILC (EU) |
+| Deprivation index | IMD | SEIFA (AU) · NZDep (NZ) · ACS (US) · EU-SILC (EU) · national equivalents |
 | Small-area boundaries | ONS LSOA | SA1 (AU) · Meshblock (NZ) · Census Tract (US) · LAU (EU) |
-| Points of interest | GIAS / NHS ODS | National equivalents |
+| Points of interest | GIAS / NHS ODS | National open datasets |
+| Population | ONS Census | Any national census |
 
-Swap the ingestion modules. The analytics, warehouse, and frontend need no changes.
-
-Contributions adapting the pipeline to Australia, New Zealand, EU member states, or the United States are very welcome — open an issue to discuss.
+Write a new ingestion module. The processing, analytics, warehouse schema, and frontend need no changes.
 
 ---
 
 ## Getting started
 
-### Prerequisites
-
-- Python 3.12+
-- Node 18+
-- [`uv`](https://docs.astral.sh/uv/) (Python package manager)
-- A Supabase project (for auth)
-- A Gemini API key (for the chatbot)
+**Prerequisites:** Python 3.12+, Node 18+, [`uv`](https://docs.astral.sh/uv/), a Supabase project, a Gemini API key.
 
 ### Backend
 
@@ -135,7 +132,7 @@ git clone https://github.com/SVamseekar/aequitas.git
 cd aequitas
 
 uv sync
-uv run aequitas build        # ingest data, run analytics, build the DuckDB warehouse
+uv run aequitas build        # ingest → process → analyse → build DuckDB warehouse
 uv run uvicorn aequitas.api.app:app --reload
 ```
 
@@ -147,30 +144,20 @@ npm install
 npm run dev
 ```
 
-The dashboard connects to `http://localhost:8000` by default. See `frontend/src/api/client.ts` to point it at a different API host.
-
----
-
-## Project status
-
-The England implementation is complete — 33,755 LSOAs, the full national bus network, all eight analytics modules, pre-computed warehouse, dashboard, and RAG chatbot.
-
-The data model is country-agnostic by design. If you're working on a port to another country or want to discuss methodology, open an issue or reach out directly.
-
-This is a policy analysis tool, not official government guidance. See the in-app disclaimer for data limitations.
+Dashboard connects to `http://localhost:8000` by default. See `frontend/src/api/client.ts` to configure a different API host.
 
 ---
 
 ## Get in touch
 
-If you're a transport authority, ministry, research institution, or civic tech team and want to use or adapt Aequitas — **reach out before you start**. I can help you assess data availability for your country, scope the adaptation work, and avoid the traps we hit building the England implementation.
+If you're a transport authority, ministry, research institution, or civic tech organisation and want to deploy or adapt Aequitas — **reach out before you start**. I can help assess data availability for your country, scope the adaptation work, and flag the gotchas from the England build.
 
-**Marti Soura Vamseekar** — martisoura@gmail.com
+**Marti Soura Vamseekar** · martisoura@gmail.com
 
-Relevant conversations:
-- Deploying Aequitas for a new country or region
-- Research collaboration or methodology questions
-- Institutional partnerships or funding
-- Custom analytics modules or policy scenarios
+Good reasons to reach out:
+- Adapting Aequitas to a new country or transit network
+- Research collaboration or co-authorship
+- Institutional partnerships or grant-funded deployments
+- Custom analytics modules, additional policy scenarios, or bespoke appraisal methodologies
 
 Bug reports and feature requests: [open an issue](https://github.com/SVamseekar/aequitas/issues)
