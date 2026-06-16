@@ -1,7 +1,7 @@
 """InsightEngine orchestrator — deterministic narrative generation.
 
 Wires together: context resolver → rules → Jinja2 templates → JSON output.
-No LLM calls. All insights are evidence-gated: rules suppress rather than mislead.
+Fully deterministic. All insights are evidence-gated: rules suppress rather than mislead.
 """
 
 from pathlib import Path

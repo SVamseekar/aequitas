@@ -1,10 +1,29 @@
-# Superpowers brainstorm artifacts
+# AI tool artifacts — never commit
 .superpowers/
+.playwright-mcp/
+.serena/
+.claude/
+.cursor/
+.aider*
+.copilot/
+
+# Auth state / session tokens
+frontend/scripts/.auth-state.json
+
+# Debug screenshots — generated at runtime, not source
+*.png
+*.jpg
+*.jpeg
+!frontend/public/**
+!frontend/src/assets/**
+!data/audit/figures-registry.json
 
 # Data — never commit raw or processed data
 data/raw/
 data/processed/
 data/audit/*.json
+data/audit/*.png
+data/audit/figures/
 !data/audit/ground_truth.json
 
 # Python
