@@ -26,6 +26,8 @@ Transport authorities have the data. They rarely have the tools to turn it into 
 
 Aequitas changes that. It ingests open transport and census data, runs a rigorous analytics pipeline, and serves the results through a fast evidence-graded dashboard and a natural-language Q&A assistant — so a policy analyst can find an answer, trace it to its source formula, and defend it in a board meeting.
 
+> **Want to use this for your country or region?** Get in touch before you start — martisoura@gmail.com
+
 ---
 
 ## What's inside
@@ -159,19 +161,16 @@ This is a policy analysis tool, not official government guidance. See the in-app
 
 ---
 
-## Contributing
+## Get in touch
 
-Pull requests are welcome. For significant changes, open an issue first to discuss the approach.
+If you're a transport authority, ministry, research institution, or civic tech team and want to use or adapt Aequitas — **reach out before you start**. I can help you assess data availability for your country, scope the adaptation work, and avoid the traps we hit building the England implementation.
 
-Areas where contributions are most useful:
-- Country ports (new ingestion modules)
-- Additional equity metrics or appraisal methodologies
-- Frontend improvements and accessibility
+**Marti Soura Vamseekar** — martisoura@gmail.com
 
----
-
-## Contact
+Relevant conversations:
+- Deploying Aequitas for a new country or region
+- Research collaboration or methodology questions
+- Institutional partnerships or funding
+- Custom analytics modules or policy scenarios
 
 Bug reports and feature requests: [open an issue](https://github.com/SVamseekar/aequitas/issues)
-
-Research collaboration or institutional enquiries: martisoura@gmail.com
