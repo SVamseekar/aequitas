@@ -14,13 +14,15 @@ export function LandingNav() {
     <header className="border-b border-border bg-card/40 backdrop-blur-md relative z-10">
       <nav
         aria-label="Primary"
-        className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16"
+        className="max-w-7xl mx-auto px-6 flex items-center justify-between min-h-16 py-3"
       >
-        <Link to="/" className="flex items-center gap-2.5" aria-label="Aequitas home">
-          <AequitasLogo className="w-5 h-5 text-indigo-400" aria-hidden />
-          <span className="text-sm font-mono font-bold tracking-[0.3em] uppercase text-foreground">
-            AEQUITAS{" "}
-            <span className="text-muted-foreground font-normal">· {SITE_TAGLINE}</span>
+        <Link to="/" className="flex items-center gap-2.5 shrink-0" aria-label="Aequitas home">
+          <AequitasLogo className="w-5 h-5 text-indigo-400 shrink-0" aria-hidden />
+          <span className="text-sm font-mono font-bold tracking-[0.3em] uppercase text-foreground whitespace-nowrap">
+            AEQUITAS
+          </span>
+          <span className="hidden md:inline text-sm font-mono text-muted-foreground font-normal whitespace-nowrap">
+            · {SITE_TAGLINE}
           </span>
         </Link>
         <div className="flex items-center gap-6">
