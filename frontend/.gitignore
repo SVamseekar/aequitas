@@ -29,3 +29,5 @@ scripts/.auth-state.json
 # Audit screenshot dumps (large, regenerated on demand)
 screenshots/
 screenshots_old/
+.vercel
+.env*.local
