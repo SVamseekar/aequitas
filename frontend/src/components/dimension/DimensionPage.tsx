@@ -2,6 +2,7 @@ import { Component, type ReactNode } from "react"
 import { Download, AlertTriangle } from "lucide-react"
 import { useParams } from "react-router"
 import { useFilters, useSections } from "@/api/hooks"
+import { supabase } from "@/integrations/supabase/client"
 import { DIMENSIONS, REGIONS, AREA_TYPES } from "@/lib/constants"
 import { SectionCard } from "./SectionCard"
 import { ScenarioBuilder } from "./ScenarioBuilder"
@@ -95,6 +96,23 @@ function DimensionPageContent() {
   const exportParams = new URLSearchParams({ region, urban_rural: urbanRural })
   const exportUrl = `/api/export/${encodeURIComponent(dimensionId)}?${exportParams}`
 
+  const handleExportPdf = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const headers: Record<string, string> = {}
+    if (session?.access_token) {
+      headers["Authorization"] = `Bearer ${session.access_token}`
+    }
+    const resp = await fetch(exportUrl, { headers })
+    if (!resp.ok) throw new Error(`Export failed (${resp.status})`)
+    const blob = await resp.blob()
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.download = `aequitas_${dimensionId}_${region}_${urbanRural}.pdf`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div>
       <div className="mb-6 flex items-start justify-between gap-4">
@@ -106,14 +124,14 @@ function DimensionPageContent() {
             {regionName} · {areaName}
           </p>
         </div>
-        <a
-          href={exportUrl}
-          download
+        <button
+          type="button"
+          onClick={() => void handleExportPdf()}
           className="flex items-center gap-2 px-3 py-1.5 text-xs border border-border rounded hover:bg-muted hover:border-indigo-500/40 transition-colors shrink-0 font-mono text-muted-foreground hover:text-foreground"
         >
           <Download className="w-3.5 h-3.5" />
           Export PDF
-        </a>
+        </button>
       </div>
 
       {/* Scenario builder — only on scenarios dimension */}

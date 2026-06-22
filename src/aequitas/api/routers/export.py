@@ -13,6 +13,7 @@ from reportlab.lib.units import cm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from aequitas.api.deps import get_db
+from aequitas.api.auth import verify_supabase_jwt
 from aequitas.api.services.warehouse import DIMENSION_PREFIXES, query_sections
 
 router = APIRouter(tags=["export"])
@@ -84,6 +85,7 @@ async def export_dimension_pdf(
     region: str = Query("all"),
     urban_rural: str = Query("all"),
     db: duckdb.DuckDBPyConnection | None = Depends(get_db),
+    user: dict = Depends(verify_supabase_jwt),
 ) -> StreamingResponse:
     """Generate a PDF report for a dimension + filter combination."""
     if dimension not in DIMENSION_PREFIXES:
