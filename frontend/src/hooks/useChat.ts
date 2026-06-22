@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react"
+import { supabase } from "@/integrations/supabase/client"
 
 interface Message {
   id: string
@@ -42,9 +43,15 @@ export function useChat(): UseChatReturn {
       setIsStreaming(true)
 
       try {
+        const { data: { session } } = await supabase.auth.getSession()
+        const headers: Record<string, string> = { "Content-Type": "application/json" }
+        if (session?.access_token) {
+          headers["Authorization"] = `Bearer ${session.access_token}`
+        }
+
         const resp = await fetch("/api/chat", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           signal: controller.signal,
           body: JSON.stringify({
             query,
