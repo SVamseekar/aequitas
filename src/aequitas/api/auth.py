@@ -58,6 +58,7 @@ def verify_supabase_jwt(
             algorithms=["HS256"],
             audience="authenticated",
         )
+        payload["_raw_token"] = credentials.credentials
         return payload
     except JWTError as exc:
         # A supplied-but-invalid token must always 401 — dev bypass only
