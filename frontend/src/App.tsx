@@ -7,6 +7,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { AppShell } from "./components/layout/AppShell"
 import { HomePage } from "./components/home/HomePage"
 import { DimensionPage } from "./components/dimension/DimensionPage"
+import { GoogleAnalytics } from "@/components/GoogleAnalytics"
 
 const AuthPage = lazy(() => import("./pages/AuthPage"))
 const ProfilePage = lazy(() => import("./pages/ProfilePage"))
@@ -74,6 +75,7 @@ export default function App() {
           </Suspense>
         </BrowserRouter>
       </AuthProvider>
+      <GoogleAnalytics />
     </QueryClientProvider>
     </HelmetProvider>
   )
