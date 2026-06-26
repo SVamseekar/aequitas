@@ -1,0 +1,17 @@
+{
+  "name": "Aequitas — Public Sector Transport Intelligence",
+  "short_name": "Aequitas",
+  "description": "Evidence-based bus network and transport equity analytics for UK authorities.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "en-GB",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

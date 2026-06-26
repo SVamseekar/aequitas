@@ -6,5 +6,6 @@ Disallow: /saved
 Disallow: /notes
 Disallow: /regions
 Disallow: /auth
+Disallow: /compare
 
-Sitemap: https://aequitas.example.com/sitemap.xml
+Sitemap: https://aequitas.souravamseekar.com/sitemap.xml
