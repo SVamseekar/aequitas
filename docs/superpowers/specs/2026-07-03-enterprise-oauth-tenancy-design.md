@@ -18,20 +18,21 @@ This is a full replacement of Supabase Auth, not an addition alongside it. There
 - Google OAuth sign-in (no email/password), matching WorkforceGuard's pattern.
 - Every user gets a personal tenant ("workspace") automatically on first sign-in — no forced choice between "create org" / "join org" at signup.
 - Tenants can grow into real organisations via admin-issued invite links.
-- Data shared within a tenant: `conversations`, `messages`, `saved_analyses`, `policy_notes`, `saved_regions` are all tenant-scoped, not just user-scoped — any member of a tenant sees everything the tenant has saved. `profiles` stays per-person (not shared).
+- Data shared within a tenant: `conversations`, `messages`, `saved_analyses`, `policy_notes`, `saved_regions` are all tenant-scoped, not just user-scoped — any member of a tenant sees everything the tenant has saved. `profiles` stays per-person (not shared), but is properly wired up (see Data model and Frontend sections) rather than left as dead schema.
 - Admins (first member of a tenant) can invite and remove members. No other role-gated behavior yet.
 - A user can belong to multiple tenants (their personal workspace plus any org they've joined) and switch the active tenant for their session.
+- Invites are delivered as real emails (via Brevo), not just copy-paste links — see "Invite delivery" under Backend.
+- Sensitive tenant/membership actions (invite created, invite accepted, member removed, role changed) are recorded in a minimal audit log — see "Audit logging" under Data model.
 - Runs entirely on localhost for now — no production hosting decision is part of this work.
 
 ## Non-goals (explicitly out of scope)
 
 - Microsoft OAuth or any other identity provider.
 - Production hosting/deployment configuration for the new Postgres or backend.
-- Transactional email — invites are shareable links the admin copies and sends manually through their own channel (email, Slack, Teams).
 - Seat limits, plans, or billing enforcement.
-- Audit logging of tenant/membership actions.
 - Cross-provider account linking (e.g. same person signing in with Google vs. a future Microsoft option).
 - Migrating existing Supabase-authenticated accounts or their data.
+- EU data residency / region-aware hosting. Aequitas plans to extend its analytics to EU countries in the future (separate, later product work) — that's a data/product scope question, not an auth one, and doesn't change anything in this spec. No EU-specific architecture decisions are made here.
 
 ## Data model
 
@@ -81,11 +82,24 @@ invites
   created_at TIMESTAMPTZ
   expires_at TIMESTAMPTZ NOT NULL
   accepted_at TIMESTAMPTZ  -- null until accepted
+
+audit_log
+  id UUID PK
+  tenant_id UUID FK -> tenants
+  actor_user_id UUID FK -> users        -- who performed the action
+  action TEXT NOT NULL                  -- 'invite_created' | 'invite_accepted' | 'member_removed' | 'role_changed'
+  target_user_id UUID FK -> users NULL  -- who the action was performed on, where applicable (null for invite_created)
+  metadata JSONB                        -- e.g. {"invited_email": "...", "role": "..."} or {"old_role": "member", "new_role": "admin"}
+  created_at TIMESTAMPTZ
 ```
+
+**Audit logging**: deliberately minimal — this is not a general request/activity log, only the four tenant/membership actions above. No retention policy or viewing UI is built in this pass (records just accumulate); a "view audit log" panel is reasonable future work once there's a concrete need to read it. Written to from the corresponding route handlers in `auth.py` (`POST /tenants/{id}/invites`, `POST /invites/{token}/accept`, `DELETE /tenants/{id}/members/{user_id}`, and a role-change endpoint — see Backend section). This exists specifically so an organisation's admin (an LTA's IT/security contact, in the target audience) has an answer to "who removed this person" or "who invited them" if ever asked — not a compliance-driven requirement, just a reasonable minimum for a B2G product.
 
 Existing application tables — `conversations`, `messages`, `saved_analyses`, `policy_notes`, `saved_regions` (all currently `user_id`-scoped, per `supabase/migrations/001_initial.sql`) — are recreated in this same database with a `tenant_id UUID NOT NULL REFERENCES tenants(id)` column replacing `user_id UUID REFERENCES auth.users(id)` as the scoping key. `user_id` is retained on each row (who created it) for display purposes, but access control filters on `tenant_id`, not `user_id`. RLS is not used; every query in the FastAPI layer filters by the session's active `tenant_id` explicitly.
 
 `profiles` (`display_name`, `bio`, `policy_interests`) stays `user_id`-scoped, not tenant-scoped — it's per-person identity data, not shared research, so it doesn't fit the "shared within a tenant" model. It's recreated in the new Postgres keyed on the new `users.id`, and its Supabase auto-create trigger (`handle_new_user`) is replaced by an explicit insert in the OAuth callback when a user is first created.
+
+**`profiles` is currently dead schema and this migration fixes that, not just carries it forward.** The table exists in `supabase/migrations/001_initial.sql` but `frontend/src/pages/ProfilePage.tsx` never reads or writes it today — it pulls name/avatar directly from OAuth `user_metadata`, and the page's "Policy Interests" picker is local component state only (`useState`, no persistence — selections vanish on refresh). As part of this migration: a new `profiles.py` router (list/update, user-scoped) is added, and `ProfilePage.tsx` is updated so the Policy Interests picker actually calls it — `GET` on mount to restore selections, `PATCH`/`PUT` on toggle to persist them. `display_name`/`bio` remain unused by the UI today and are not wired to any input in this pass (no product requirement drove them) — only `policy_interests` gets connected, since that's the one already-built-but-disconnected UI element.
 
 ## Backend (`src/aequitas/api/auth/`)
 
@@ -93,8 +107,9 @@ New package, replacing `src/aequitas/api/auth.py`:
 
 - **`oauth.py`** — Google OAuth client via `authlib`'s `starlette_client.OAuth`, OIDC discovery against Google's `.well-known/openid-configuration`.
 - **`sessions.py`** — session token signing via `itsdangerous.URLSafeTimedSerializer`; cookie is httponly, secure, samesite=lax, 7-day expiry (matches WorkforceGuard).
-- **`db.py`** — asyncpg connection pool and query functions for all six tables above (`get_or_create_user`, `create_tenant`, `create_membership`, `create_session`, `get_session`, `create_invite`, `accept_invite`, `list_memberships_for_user`, `remove_membership`).
+- **`db.py`** — asyncpg connection pool and query functions for all seven tables above (`get_or_create_user`, `create_tenant`, `create_membership`, `create_session`, `get_session`, `create_invite`, `accept_invite`, `list_memberships_for_user`, `remove_membership`, `update_membership_role`, `write_audit_log`).
 - **`dependencies.py`** — `require_session` (reads cookie, loads session + membership, raises 401 if missing/expired) and `require_admin` (wraps `require_session`, raises 403 if role != 'admin' for the active tenant).
+- **`email.py`** — Brevo API client for sending invite emails (see "Invite delivery" below).
 
 Routes (new router, `src/aequitas/api/routers/auth.py`):
 
@@ -105,11 +120,15 @@ Routes (new router, `src/aequitas/api/routers/auth.py`):
 | `/api/auth/logout` | POST | Delete session row, clear cookie |
 | `/api/auth/me` | GET | Returns `{user, active_tenant, role, memberships: [...]}` (snake_case JSON keys, matching the rest of the API's response convention) — 401 if no valid session |
 | `/api/session/switch-tenant` | POST | Body `{tenant_id}`; verifies caller has a membership in that tenant; updates `sessions.tenant_id` |
-| `/api/tenants/{tenant_id}/invites` | POST | Admin-only; body `{email, role}`; creates `invites` row, returns `{token, link}` |
+| `/api/tenants/{tenant_id}/invites` | POST | Admin-only; body `{email, role}`; creates `invites` row, sends the invite email via Brevo (see below), writes an `invite_created` audit log entry, returns `{token, link}` (the link is still returned even though email is sent — useful if the admin wants to also share it manually, and as a fallback if the email fails) |
 | `/api/invites/{token}` | GET | Public; returns `{tenant_name, role}` for the accept-invite screen, 404/410 if invalid/expired/already accepted |
-| `/api/invites/{token}/accept` | POST | Requires session; creates `memberships` row for the caller in the invite's tenant, marks `accepted_at` |
+| `/api/invites/{token}/accept` | POST | Requires session; creates `memberships` row for the caller in the invite's tenant, marks `accepted_at`, writes an `invite_accepted` audit log entry |
 | `/api/tenants/{tenant_id}/members` | GET | Lists memberships (admin-only) |
-| `/api/tenants/{tenant_id}/members/{user_id}` | DELETE | Admin-only; removes the membership (cannot remove the last admin) |
+| `/api/tenants/{tenant_id}/members/{user_id}` | DELETE | Admin-only; removes the membership (cannot remove the last admin), writes a `member_removed` audit log entry |
+| `/api/tenants/{tenant_id}/members/{user_id}/role` | PATCH | Admin-only; body `{role}`; updates the membership's role, writes a `role_changed` audit log entry (records old and new role in `metadata`) |
+| `/api/tenants/{tenant_id}/audit-log` | GET | Admin-only; lists audit log entries for the tenant, newest first (no pagination in this pass — acceptable at this scale) |
+
+**Invite delivery**: invite emails are sent via **Brevo** (free tier: 300 emails/day, no credit card, no domain verification required to start — evaluated against Resend, SendGrid, AWS SES, Mailgun, Postmark, and continuing with Gmail SMTP; Brevo has the lowest setup friction and is purpose-built for transactional sending, unlike Gmail SMTP which risks account suspension under automated/programmatic use even within its stated daily cap). This is separate from the existing Gmail-SMTP-based contact form (`frontend/api/contact.js`) — that stays as-is; invites get their own Brevo integration (`src/aequitas/api/auth/email.py`) since routing automated invite volume through a personal Gmail account is the specific pattern that risks suspension. Requires a `BREVO_API_KEY` env var (new `ApiConfig` field). If the email send fails, the invite row and returned link are still valid — email delivery failure doesn't block invite creation, it's best-effort on top of the link-based flow the earlier design already supported.
 
 Existing routers updated:
 - `conversations.py` — drop the per-request Supabase client (`_get_supabase`) entirely, including its raw `os.environ.get("SUPABASE_URL"/"SUPABASE_ANON_KEY"/"SUPABASE_SERVICE_ROLE_KEY")` reads (these bypass `ApiConfig` today and are deleted, not migrated). Replace with asyncpg queries filtered by `tenant_id` from `require_session`. All five endpoints (list/create/get/update/delete) rewritten. This becomes the single source of truth for conversations — see "Consolidating the dual conversations path" below.
@@ -120,10 +139,13 @@ New routers (none of these exist today — `db.ts` was the only implementation):
 - `src/aequitas/api/routers/saved_analyses.py` — list/create/delete, tenant-scoped, mirroring the shape of the deleted `db.ts` functions (`listSavedAnalyses`, `saveAnalysis`, `deleteSavedAnalysis`).
 - `src/aequitas/api/routers/policy_notes.py` — list/create/update/delete, tenant-scoped.
 - `src/aequitas/api/routers/saved_regions.py` — list/create/delete, tenant-scoped.
+- `src/aequitas/api/routers/profiles.py` — `GET /profile` and `PATCH /profile` (`policy_interests` only — see "profiles is currently dead schema" in Data model), user-scoped, not tenant-scoped.
+
+**Public routers unaffected by this migration**: `overview.py`, `sections.py`, `lsoa.py`, `provenance.py`, and `metrics.py` serve pre-computed, non-personal public transport analytics with no auth dependency today (only `Depends(get_db)`), and stay that way — this is intentional (Aequitas's core value is open policy data, not gated per-tenant), not an oversight, and none of these five routers change in this migration. `GET /api/health` (defined inline in `app.py`, not a router file) is likewise untouched, public, and used only for DuckDB connectivity checks.
 
 **Consolidating the dual conversations path**: `ChatSidebar.tsx` currently reads/writes conversations via `db.ts` → Supabase directly; `conversations.py` is a parallel, currently-unused-by-the-frontend REST implementation of the same feature. This migration deletes `db.ts` entirely (see Frontend section) and points `ChatSidebar.tsx` at the rewritten `conversations.py` endpoints instead — one implementation, not two.
 
-`src/aequitas/api/config.py`'s `ApiConfig` gains new fields for the replacement auth stack: `database_url`, `session_secret`, `google_client_id`, `google_client_secret` (env var names matching WorkforceGuard's `.env.example`: `DATABASE_URL`, `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`). The existing `supabase_jwt_secret` field, and `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`/`SUPABASE_JWT_SECRET` env vars, are removed.
+`src/aequitas/api/config.py`'s `ApiConfig` gains new fields for the replacement auth stack: `database_url`, `session_secret`, `google_client_id`, `google_client_secret`, `brevo_api_key` (env var names: `DATABASE_URL`, `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` matching WorkforceGuard's `.env.example`; `BREVO_API_KEY` is new, specific to Aequitas). The existing `supabase_jwt_secret` field, and `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`/`SUPABASE_JWT_SECRET` env vars, are removed.
 
 `src/aequitas/api/auth.py` (the old Supabase JWT module) is deleted once all call sites are migrated. Its `tests/api/test_auth.py` (6 passing tests) covers a **dev-bypass mode** (`ENVIRONMENT`/`DEV_AUTH_BYPASS` env vars, letting local development skip real token validation) that has no equivalent in the spec as written. The new `require_session` dependency needs the same dev-bypass affordance — when `DEV_AUTH_BYPASS=true` and no session cookie is present, synthesize a placeholder dev user/tenant rather than 401ing — so local development isn't blocked on a real Google OAuth round-trip for every route. This bypass must never activate when `ENVIRONMENT=production`, matching the existing guard.
 
@@ -138,6 +160,11 @@ New routers (none of these exist today — `db.ts` was the only implementation):
 - **`ChatSidebar.tsx`** — repointed from `db.ts`'s Supabase calls to `conversations.py`'s REST endpoints via `api/client.ts`.
 - **`api/client.ts`** — all requests add `credentials: 'include'` so the session cookie rides automatically; a 401 interceptor clears auth state (matches WorkforceGuard's pattern). This is not the only place manually attaching auth today — `hooks/useChat.ts` and `components/dimension/DimensionPage.tsx` (PDF export) both call `supabase.auth.getSession()` directly to attach a bearer token; both are updated to rely on the cookie (`credentials: 'include'`) instead, removing their manual token-attachment code.
 - **`useAuth()` consumers** — 12 files call this hook and need reviewing against the new context shape (most only read `user`, which is unaffected): `ProtectedRoute.tsx`, `AuthPage.tsx`, `UserMenu.tsx`, `ProfilePage.tsx`, `ChatSidebar.tsx`, `PolicyNotes.tsx`, `SavedAnalyses.tsx`, `SavedRegions.tsx`, `LandingNav.tsx`, `LandingHero.tsx`, `LandingDimensions.tsx`, `LandingCta.tsx`.
+- **`ProfilePage.tsx`** — beyond the `AuthContext`/`signOut` compatibility noted above, this page's "Policy Interests" picker is rewired to call the new `profiles.py` router (`GET /api/profile` on mount, `PATCH /api/profile` on toggle) instead of being unpersisted local state — see "profiles is currently dead schema" in the Data model section.
+
+### Confirmed unaffected by this migration
+
+Stated explicitly here so nothing is left ambiguous: the public marketing/legal pages — `LandingPage`, `AboutPage`, `DisclaimerPage`, `/privacy` (content fix noted separately below), `/terms`, `/refunds`, `/contact` — call no protected backend endpoint and require no changes for this migration. `AuthPage.tsx` itself is necessarily public (pre-login). Every route currently wrapped in `ProtectedRoute` (`/dashboard` and its sub-routes `HomePage`/`ComparePage`/`DimensionPage`, `/profile`, `/saved`, `/notes`, `/regions`) continues to work unchanged at the routing layer — `ProtectedRoute` only reads `user` from `useAuth()`, and the new `AuthContext` populates `user` the same way (non-null when signed in, null when not), so the gating mechanism itself needs no logic change, only the test-mock update already listed in Testing.
 
 ### Also affected: PrivacyPage.tsx
 
@@ -153,11 +180,13 @@ Tests are written alongside each piece as it's implemented, not as a separate pa
 - `require_session` / `require_admin`: valid session passes, missing/expired cookie 401s, non-admin hitting an admin route 403s.
 - Invite lifecycle: create → fetch by token → accept → membership exists → re-accepting the same token fails (already accepted or expired).
 - **Cross-tenant isolation** (highest priority): a user in tenant A can never read/write tenant B's data via any router — `conversations`, `messages`, `saved_analyses`, `policy_notes`, `saved_regions` each get an explicit cross-tenant-isolation test, not just incidental happy-path coverage.
-- New routers (`saved_analyses.py`, `policy_notes.py`, `saved_regions.py`): full CRUD test coverage — these have zero existing backend tests today since they were previously implemented only in `db.ts`.
+- New routers (`saved_analyses.py`, `policy_notes.py`, `saved_regions.py`, `profiles.py`): full CRUD test coverage — these have zero existing backend tests today (the first three were previously implemented only in `db.ts`; `profiles.py` is entirely new since the table was previously unused).
 - Rewritten routers (`conversations.py`, `chat.py`, `export.py`): existing test coverage updated to use the new session fixture instead of a mocked Supabase JWT.
+- Audit log: each of the four write sites (invite created/accepted, member removed, role changed) asserts the corresponding `audit_log` row is written with correct `actor_user_id`/`target_user_id`/`action`/`metadata`; `GET /tenants/{id}/audit-log` tested for admin-only access and correct tenant scoping.
+- Invite email: `email.py`'s Brevo client tested with a mocked HTTP call (success and failure paths); confirmed that a failed send doesn't prevent the invite row/link from being created (per the "best-effort" behavior specified above).
 
 **Frontend (vitest)**:
-- `AuthContext`: 200 from `/auth/me` populates state; 401 leaves user null; `logout()` clears state.
+- `AuthContext`: 200 from `/auth/me` populates state; 401 leaves user null; `signOut()` clears state.
 - `ProtectedRoute`: redirects to `/auth` when unauthenticated, renders children when authenticated.
 - Tenant switcher: only renders with >1 membership; posts the right tenant_id.
 - Invite accept page: shows tenant name from a mocked fetch; posts accept and redirects.
@@ -176,7 +205,7 @@ Tests are written alongside each piece as it's implemented, not as a separate pa
 Single cutover, no feature flag: once the new auth stack passes its tests, the old Supabase Auth code paths are removed in the same change, not left running in parallel:
 - Backend: `src/aequitas/api/auth.py`, the `_get_supabase` client factory in `conversations.py`, `supabase>=2.0.0` from `pyproject.toml`.
 - Frontend: `integrations/supabase/client.ts`, `lib/db.ts` (all of it — conversations, saved_analyses, policy_notes, saved_regions), `@supabase/supabase-js` from `frontend/package.json`, the manual `supabase.auth.getSession()` token-attachment code in `hooks/useChat.ts` and `components/dimension/DimensionPage.tsx`.
-- Database: all Supabase RLS policies, `supabase/migrations/001_initial.sql`'s auth-dependent tables (`auth.users`-referencing FKs on `conversations`, `messages`, `saved_analyses`, `policy_notes`, `saved_regions`, `profiles`), and the `handle_new_user` trigger.
+- Database: all Supabase RLS policies, `supabase/migrations/001_initial.sql`'s auth-dependent tables (`auth.users`-referencing FKs on `conversations`, `messages`, `saved_analyses`, `policy_notes`, `saved_regions`, `profiles`), and the `handle_new_user` trigger. New tables added in their place: `tenants`, `users`, `oauth_identities`, `memberships`, `sessions`, `invites`, `audit_log`, plus `tenant_id`-scoped versions of the five shared-data tables and a properly-connected `profiles`.
 
 Existing local Supabase data is discarded (confirmed: no real users to preserve). `frontend/src/pages/PrivacyPage.tsx` is updated in the same change (see Frontend section) so the legal copy doesn't misdescribe the new auth stack.
 
