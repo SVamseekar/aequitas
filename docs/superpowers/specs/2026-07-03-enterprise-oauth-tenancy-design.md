@@ -179,3 +179,13 @@ Single cutover, no feature flag: once the new auth stack passes its tests, the o
 - Database: all Supabase RLS policies, `supabase/migrations/001_initial.sql`'s auth-dependent tables (`auth.users`-referencing FKs on `conversations`, `messages`, `saved_analyses`, `policy_notes`, `saved_regions`, `profiles`), and the `handle_new_user` trigger.
 
 Existing local Supabase data is discarded (confirmed: no real users to preserve). `frontend/src/pages/PrivacyPage.tsx` is updated in the same change (see Frontend section) so the legal copy doesn't misdescribe the new auth stack.
+
+## Development process for this migration
+
+Aequitas is a solo-developer, pre-revenue project on `main`-only with direct pushes and no CI today. Full "industry-grade" process (mandatory review, environment promotion, release trains) is disproportionate at this scale and isn't adopted here. Given the size and risk of this specific migration, three lightweight practices apply to this work specifically:
+
+- **Feature branch, not direct-to-main.** This migration touches auth end-to-end (every router, the whole frontend auth context, the database) and is not safe to land incrementally on `main`. All work happens on a branch (e.g. `feature/enterprise-oauth-tenancy`) and merges to `main` only once the full test suite passes and the OAuth flow is manually verified working on localhost per the Testing section above.
+- **Unrelated in-flight work committed separately first.** The footer/legal-pages and contact-form work (`PrivacyPage.tsx`, `TermsPage.tsx`, `RefundsPage.tsx`, `ContactPage.tsx`, `frontend/api/contact.js`, footer link updates) predates this spec and is unrelated to auth except for the `PrivacyPage.tsx` copy fix noted above. It's committed to `main` on its own before the auth branch is created, so the two efforts don't get tangled in one diff.
+- **CI test-on-push.** A GitHub Actions workflow runs the backend (`uv run pytest`) and frontend (`npx vitest run`) suites on every push to the feature branch and on the merge to `main`, so the 509 backend + 16 frontend tests confirmed passing at spec time don't silently regress during a migration this size. This is new — no CI exists in the repo today — and is scoped to test-running only (no deploy step, no required review gate, since there's no second person to review).
+
+Not adopted as part of this migration: required PR reviews, branch protection rules, conventional commits/semantic-release tooling, or a staging environment — disproportionate overhead for a one-person project at this stage.
