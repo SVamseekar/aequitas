@@ -67,7 +67,12 @@ Thumbs.db
 # Git worktrees
 .worktrees/
 
-# Documentation (kept locally only)
-docs/
+# Documentation (kept locally only, except design specs)
+docs/*
+!docs/superpowers/
+docs/superpowers/*
+!docs/superpowers/specs/
 ISSUES.md
 frontend/README.md
+.vercel
+.env*.local
