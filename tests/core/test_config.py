@@ -1,9 +1,11 @@
 """Tests for pipeline configuration."""
 
 from pathlib import Path
+import pytest
 from aequitas.core.config import PipelineConfig
 
 
+@pytest.mark.requires_data
 def test_default_config_paths_exist():
     cfg = PipelineConfig()
     assert cfg.raw_dir.exists()

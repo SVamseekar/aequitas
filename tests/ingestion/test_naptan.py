@@ -4,6 +4,8 @@ import pytest
 from aequitas.core.config import PipelineConfig
 from aequitas.ingestion.naptan import load_naptan
 
+pytestmark = pytest.mark.requires_data
+
 
 @pytest.fixture
 def naptan_df():

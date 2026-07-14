@@ -30,6 +30,7 @@ def test_classify_route_handles_nan():
 
 
 @pytest.mark.slow
+@pytest.mark.requires_data
 def test_compute_route_urban_rural_schema_and_coverage():
     cfg = PipelineConfig()
     result = compute_route_urban_rural(cfg)

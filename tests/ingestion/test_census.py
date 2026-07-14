@@ -11,6 +11,8 @@ from aequitas.ingestion.census import (
     load_disability,
 )
 
+pytestmark = pytest.mark.requires_data
+
 
 @pytest.fixture(scope="module")
 def cfg():

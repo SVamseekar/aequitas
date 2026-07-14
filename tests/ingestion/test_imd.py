@@ -4,6 +4,8 @@ import pytest
 from aequitas.core.config import PipelineConfig
 from aequitas.ingestion.imd import load_imd
 
+pytestmark = pytest.mark.requires_data
+
 
 def test_imd_lsoa_count(ground_truth):
     cfg = PipelineConfig()

@@ -4,8 +4,9 @@ import pytest
 from aequitas.core.config import PipelineConfig
 from aequitas.processing.service_quality import compute_service_quality
 
+pytestmark = [pytest.mark.slow, pytest.mark.requires_data]
 
-@pytest.mark.slow
+
 def test_sqi_mean():
     cfg = PipelineConfig()
     result = compute_service_quality(cfg)
@@ -13,7 +14,6 @@ def test_sqi_mean():
     assert 60 < result["sqi"].mean() < 70
 
 
-@pytest.mark.slow
 def test_evening_isolated_count():
     cfg = PipelineConfig()
     result = compute_service_quality(cfg)
@@ -22,7 +22,6 @@ def test_evening_isolated_count():
     assert abs(evening - 5189) < 500
 
 
-@pytest.mark.slow
 def test_sunday_desert_count():
     cfg = PipelineConfig()
     result = compute_service_quality(cfg)

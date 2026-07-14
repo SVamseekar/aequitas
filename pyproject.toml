@@ -50,7 +50,10 @@ aequitas = "aequitas.pipeline.cli:main"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-markers = ["slow: marks tests as slow (>5 min, e.g. integration tests)"]
+markers = [
+    "slow: marks tests as slow (>5 min, e.g. integration tests)",
+    "requires_data: marks tests that need local raw data files or the pre-built DuckDB warehouse (data/raw/*, data/aequitas.duckdb), not present in a fresh checkout/CI",
+]
 
 [tool.ruff]
 target-version = "py312"

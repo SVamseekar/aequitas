@@ -4,8 +4,9 @@ import pytest
 from aequitas.core.config import PipelineConfig
 from aequitas.processing.route_geometry import compute_route_geometries
 
+pytestmark = [pytest.mark.slow, pytest.mark.requires_data]
 
-@pytest.mark.slow
+
 def test_routes_with_geometry_count():
     cfg = PipelineConfig()
     result = compute_route_geometries(cfg)
@@ -14,7 +15,6 @@ def test_routes_with_geometry_count():
     assert abs(len(has_geom) - 7241) < 100
 
 
-@pytest.mark.slow
 def test_mean_route_length():
     cfg = PipelineConfig()
     result = compute_route_geometries(cfg)
@@ -24,7 +24,6 @@ def test_mean_route_length():
     assert 20.0 < mean_km < 26.0
 
 
-@pytest.mark.slow
 def test_cross_la_routes():
     cfg = PipelineConfig()
     result = compute_route_geometries(cfg)

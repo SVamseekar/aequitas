@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
       - name: Run backend tests
-        run: uv run pytest tests/ -q
+        run: uv run pytest tests/ -q -m "not requires_data"
 
   frontend:
     runs-on: ubuntu-latest

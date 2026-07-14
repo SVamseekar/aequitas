@@ -4,6 +4,8 @@ import pytest
 from aequitas.core.config import PipelineConfig
 from aequitas.ingestion.bods import load_bods_routes, load_bods_trips, load_bods_stops, load_bods_calendar
 
+pytestmark = pytest.mark.requires_data
+
 
 @pytest.fixture(scope="module")
 def cfg():

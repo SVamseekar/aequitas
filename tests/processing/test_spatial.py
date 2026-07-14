@@ -6,6 +6,8 @@ from aequitas.ingestion.naptan import load_naptan
 from aequitas.ingestion.boundaries import load_lsoa_boundaries
 from aequitas.processing.spatial import assign_stops_to_lsoa
 
+pytestmark = pytest.mark.requires_data
+
 
 @pytest.fixture(scope="module")
 def cfg():

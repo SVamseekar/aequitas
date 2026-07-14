@@ -2,6 +2,8 @@
 import duckdb
 import pytest
 
+pytestmark = pytest.mark.requires_data
+
 
 @pytest.fixture
 def db():

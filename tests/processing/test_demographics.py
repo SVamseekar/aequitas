@@ -5,6 +5,8 @@ from aequitas.core.config import PipelineConfig
 from aequitas.core.constants import LSOA_COUNT_ENGLAND, POPULATION_ENGLAND
 from aequitas.processing.demographics import build_master_lsoa_table
 
+pytestmark = pytest.mark.requires_data
+
 
 def test_master_table_row_count():
     cfg = PipelineConfig()

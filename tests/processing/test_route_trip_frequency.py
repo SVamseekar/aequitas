@@ -6,8 +6,9 @@ import pytest
 from aequitas.core.config import PipelineConfig
 from aequitas.processing.route_trip_frequency import compute_route_trip_frequency
 
+pytestmark = [pytest.mark.slow, pytest.mark.requires_data]
 
-@pytest.mark.slow
+
 def test_compute_route_trip_frequency_schema_and_coverage():
     cfg = PipelineConfig()
     result = compute_route_trip_frequency(cfg)
@@ -24,7 +25,6 @@ def test_compute_route_trip_frequency_schema_and_coverage():
     assert result["n_trips_per_day"].nunique() > 100
 
 
-@pytest.mark.slow
 def test_n_trips_per_day_is_positive_integer():
     cfg = PipelineConfig()
     result = compute_route_trip_frequency(cfg)
