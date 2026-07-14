@@ -67,14 +67,22 @@ Thumbs.db
 # Git worktrees
 .worktrees/
 
-# Documentation (kept locally only, except design specs, implementation plans, and the future-work backlog)
+# Documentation (kept locally only, except the future-work backlog)
 docs/*
-!docs/superpowers/
-docs/superpowers/*
-!docs/superpowers/specs/
-!docs/superpowers/plans/
 !docs/FUTURE_WORK.md
 ISSUES.md
 frontend/README.md
 .vercel
 .env*.local
+
+# Local AI / IDE tooling (never commit)
+AGENTS.md
+.claude/
+.mcp.json
+.superpowers/
+.cursor/
+.playwright-mcp/
+.VSCodeCounter/
+.serena/
+docs/superpowers/
+
