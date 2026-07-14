@@ -9,7 +9,7 @@ export function Footer() {
         <span className="text-[11px] text-amber-400 font-mono font-semibold tracking-wide">
           POLICY ANALYSIS TOOL — NOT OFFICIAL DfT GUIDANCE
         </span>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap justify-center">
           <button
             onClick={() => navigate("/about")}
             className="text-[11px] text-muted-foreground hover:text-muted-foreground font-mono uppercase tracking-wide transition-colors"
@@ -27,6 +27,24 @@ export function Footer() {
             className="text-[11px] text-muted-foreground hover:text-muted-foreground font-mono uppercase tracking-wide transition-colors"
           >
             Contact
+          </button>
+          <button
+            onClick={() => navigate("/privacy")}
+            className="text-[11px] text-muted-foreground hover:text-muted-foreground font-mono uppercase tracking-wide transition-colors"
+          >
+            Privacy
+          </button>
+          <button
+            onClick={() => navigate("/terms")}
+            className="text-[11px] text-muted-foreground hover:text-muted-foreground font-mono uppercase tracking-wide transition-colors"
+          >
+            Terms
+          </button>
+          <button
+            onClick={() => navigate("/refunds")}
+            className="text-[11px] text-muted-foreground hover:text-muted-foreground font-mono uppercase tracking-wide transition-colors"
+          >
+            Refunds
           </button>
         </div>
       </div>

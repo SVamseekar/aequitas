@@ -15,6 +15,9 @@ const LandingPage = lazy(() => import("./pages/LandingPage"))
 const AboutPage = lazy(() => import("./pages/AboutPage"))
 const DisclaimerPage = lazy(() => import("./pages/DisclaimerPage"))
 const ContactPage = lazy(() => import("./pages/ContactPage"))
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"))
+const TermsPage = lazy(() => import("./pages/TermsPage"))
+const RefundsPage = lazy(() => import("./pages/RefundsPage"))
 const ComparePage = lazy(() => import("./pages/ComparePage"))
 
 // Saved sub-pages rendered inside a simple wrapper
@@ -57,6 +60,9 @@ export default function App() {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/disclaimer" element={<DisclaimerPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/refunds" element={<RefundsPage />} />
               <Route path="/auth" element={<AuthPage />} />
 
               {/* Protected — main app shell */}

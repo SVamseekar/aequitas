@@ -8,7 +8,7 @@ export function LandingFooter() {
           <span className="w-2 h-2 rounded-full bg-amber-400" aria-hidden />
           Policy analysis tool — not official government guidance
         </p>
-        <nav aria-label="Footer" className="flex items-center gap-6">
+        <nav aria-label="Footer" className="flex items-center gap-6 flex-wrap justify-center">
           <Link
             to="/about"
             className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-widest transition-colors"
@@ -26,6 +26,24 @@ export function LandingFooter() {
             className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-widest transition-colors"
           >
             Contact
+          </Link>
+          <Link
+            to="/privacy"
+            className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-widest transition-colors"
+          >
+            Privacy
+          </Link>
+          <Link
+            to="/terms"
+            className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-widest transition-colors"
+          >
+            Terms
+          </Link>
+          <Link
+            to="/refunds"
+            className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-widest transition-colors"
+          >
+            Refunds
           </Link>
         </nav>
       </div>

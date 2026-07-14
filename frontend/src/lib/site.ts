@@ -8,3 +8,5 @@ export const DEFAULT_DESCRIPTION =
   "Aequitas helps transport authorities identify underserved communities, model funding scenarios, and build evidence-based business cases for bus network investment."
 
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
+
+export const SUPPORT_EMAIL = "aequitas@souravamseekar.com"
