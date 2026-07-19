@@ -20,6 +20,21 @@
 
 ---
 
+## Current status (read this first)
+
+See **[docs/CURRENT_STATE.md](docs/CURRENT_STATE.md)** for what works online vs local, canonical metrics (55 sections · Gini 0.5741), OAuth setup, and SEO/a11y notes.
+
+**Quick start (full analytics):**
+
+```bash
+cp .env.example .env   # set DATABASE_URL / Google OAuth as needed
+./scripts/dev.sh
+# open http://localhost:5173
+```
+
+**Marketing site only** is on Vercel (`aequitas.souravamseekar.com`). Dashboard data needs the local API.
+
+
 ## The problem
 
 Transport authorities everywhere have the same problem: mountains of open data — stop locations, timetables, deprivation indices, route geometries — spread across incompatible formats, and no fast path from raw data to the question that actually matters: **which communities are underserved, and by how much?**

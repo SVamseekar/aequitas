@@ -70,6 +70,12 @@ Thumbs.db
 # Documentation (kept locally only, except the future-work backlog)
 docs/*
 !docs/FUTURE_WORK.md
+!docs/CURRENT_STATE.md
+!docs/HANDOFF_CV_AND_PITCH.md
+!docs/OAUTH_LOCAL_SETUP.md
+!docs/SEARCH_CONSOLE.md
+!docs/A11Y_REPORT.md
+!docs/guidelines/
 ISSUES.md
 frontend/README.md
 .vercel
