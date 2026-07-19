@@ -11,6 +11,15 @@ Deliberately deferred items — things we decided *not* to build now, with the r
 - **Out of scope until local E2E done:** production Dockerfile / image, Vercel API rewrites to a hosted backend, Cloud Run / managed Postgres, production sleep mitigation, multi-region hosting.
 - **Revisit when:** Parts A–D exit criteria met and a deliberate deploy decision is made. Track under a future plan; do not block product quality (Part E) or metrics handoffs (Part C) on hosting.
 
+## Empty `stops` / `routes` warehouse tables (documented 2026-07-19, Part E)
+
+**Fact:** Live DuckDB (`data/aequitas.duckdb`) has schema for `stops` and `routes` but **0 rows**. Map / network features that would join these tables are **degraded** — do not present choropleth or route-network maps as complete until tables are reloaded from audit/pipeline Parquet (NaPTAN + BODS geometry).
+
+- **Why empty:** warehouse build focused on `section_results` + LSOA analytics; stop/route raw load was skipped or not copied into this DB revision.
+- **What still works:** dimension sections, overview, ticker (from `section_results` / provenance), LSOA tables that *are* populated (`lsoa_demographics`, `anomalies`, `coverage_prediction`, `lsoa_clusters`, …).
+- **Do not:** invent map completeness in marketing copy while row counts are zero.
+- **Fix path:** pipeline/warehouse reload of NaPTAN stops + BODS routes into DuckDB; then re-enable map layers with a row-count guard in the API.
+
 ## From the enterprise OAuth + multi-tenancy migration (2026-07-03)
 
 Spec: `docs/superpowers/specs/2026-07-03-enterprise-oauth-tenancy-design.md`

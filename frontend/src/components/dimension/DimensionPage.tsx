@@ -78,14 +78,26 @@ function DimensionPageContent() {
       (s.narrative?.trim().length ?? 0) > 0
   ) ?? []
 
+  // London is classified almost entirely urban under RUC — rural combos thin out.
+  const isLondonRural = region === "E12000007" && urbanRural === "rural"
+  const impossibleGeographyCopy = isLondonRural
+    ? "London has no rural LSOAs under the RUC classification — choose Urban or All Areas."
+    : null
+
   if (sections.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 max-w-md mx-auto">
         <p className="text-muted-foreground text-sm">
-          No data available for <strong>{regionName}</strong> ({areaName}).
+          {impossibleGeographyCopy ?? (
+            <>
+              No data available for <strong>{regionName}</strong> ({areaName}).
+            </>
+          )}
         </p>
         <p className="text-muted-foreground/60 text-xs mt-2">
-          Try selecting "All England" and "All Areas" for national-level analysis.
+          {isLondonRural
+            ? "This is expected geography, not a data outage."
+            : 'Try selecting "All England" and "All Areas" for national-level analysis.'}
         </p>
       </div>
     )
@@ -110,6 +122,18 @@ function DimensionPageContent() {
 
   return (
     <div>
+      {impossibleGeographyCopy && (
+        <div
+          role="status"
+          className="mb-4 rounded border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-100/90"
+        >
+          <p className="font-medium text-amber-200/90">Limited geography for this filter</p>
+          <p className="mt-1 text-muted-foreground">{impossibleGeographyCopy}</p>
+          <p className="mt-1 text-muted-foreground/70">
+            Some sections below may be empty or national-only for this combo — switch to Urban or All Areas for full London coverage.
+          </p>
+        </div>
+      )}
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-base font-semibold text-foreground font-mono tracking-tight">{dim?.name}</h2>
