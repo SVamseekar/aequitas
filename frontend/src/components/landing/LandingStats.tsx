@@ -1,4 +1,5 @@
-import { HEADLINE_STATS } from "./data"
+import { HEADLINE_STATS, SCALE_STATS } from "./data"
+import { METRICS_CANON } from "@/lib/metricsCanon"
 
 export function LandingStats() {
   return (
@@ -26,9 +27,31 @@ export function LandingStats() {
             </div>
           ))}
         </dl>
+
+        <h3 className="text-[11px] font-mono uppercase tracking-[0.25em] text-muted-foreground font-bold mt-10 mb-4">
+          Scale of the England reference warehouse
+        </h3>
+        <dl className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border overflow-hidden rounded-lg border border-border">
+          {SCALE_STATS.map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-background p-5 hover:bg-card/40 transition-colors duration-300"
+            >
+              <dt className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1">
+                {stat.label}
+              </dt>
+              <dd className="text-2xl font-extrabold font-mono tracking-tight text-foreground">
+                {stat.value}
+              </dd>
+              <dd className="text-xs text-muted-foreground mt-1">{stat.sub}</dd>
+            </div>
+          ))}
+        </dl>
+
         <p className="text-[11px] font-mono text-muted-foreground mt-4">
           Built on national open data — stop locations, timetables, census deprivation indices,
-          and route geometry across 33,755 LSOAs.
+          and route geometry across {METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs ·{" "}
+          {METRICS_CANON.sections} analytical sections · {METRICS_CANON.dimensions} policy dimensions.
         </p>
       </div>
     </section>

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { tickerFallbackMetrics } from "@/lib/metricsCanon"
 
 interface TickerMetric {
   key: string
@@ -7,14 +8,7 @@ interface TickerMetric {
   sub: string
 }
 
-const FALLBACK: TickerMetric[] = [
-  { key: "gini", label: "Gini Coefficient", value: "0.5741", sub: "bus service inequality" },
-  { key: "palma", label: "Palma Ratio", value: "5.702×", sub: "top 10% vs bottom 40%" },
-  { key: "concentration_index", label: "Concentration Index", value: "+0.1358", sub: "pro-rich bias" },
-  { key: "evening_isolated", label: "Evening Isolated", value: "15.4%", sub: "5,189 LSOAs" },
-  { key: "sunday_deserts", label: "Sunday Deserts", value: "20.0%", sub: "6,745 LSOAs" },
-  { key: "mean_sqi", label: "Mean SQI", value: "65.4", sub: "out of 100" },
-]
+const FALLBACK: TickerMetric[] = [...tickerFallbackMetrics()]
 
 function useTickerMetrics() {
   return useQuery<TickerMetric[]>({

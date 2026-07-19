@@ -3,12 +3,9 @@ import { useAuth } from "@/contexts/AuthContext"
 import { Toaster, toast } from "sonner"
 import { AequitasLogo } from "@/components/shared/AequitasLogo"
 import { Seo } from "@/components/shared/Seo"
+import { METRICS_CANON, authHeadlineStats } from "@/lib/metricsCanon"
 
-const HEADLINE_STATS = [
-  { label: "GINI COEFF", value: "0.5741", note: "bus service" },
-  { label: "PALMA RATIO", value: "5.702×", note: "top 10% vs bottom 40%" },
-  { label: "EVENING ISO", value: "15.4%", note: "of LSOAs" },
-]
+const HEADLINE_STATS = authHeadlineStats()
 
 export default function AuthPage() {
   const { user, loading } = useAuth()
@@ -83,8 +80,10 @@ export default function AuthPage() {
               <span className="text-indigo-400">with Evidence.</span>
             </h1>
             <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
-              Evidence-graded analytics for UK bus transport policy. 8 dimensions.
-              33,755 LSOAs. Gemini-powered natural language Q&A.
+              Evidence-graded analytics for UK bus transport policy.{" "}
+              {METRICS_CANON.dimensions} dimensions.{" "}
+              {METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs.{" "}
+              {METRICS_CANON.sections} analytical sections. Gemini-powered natural language Q&A.
             </p>
 
             <div className="mt-10 grid grid-cols-3 gap-px max-w-sm">

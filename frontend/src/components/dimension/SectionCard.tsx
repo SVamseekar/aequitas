@@ -4,6 +4,7 @@ import type { SectionItem } from "@/api/types"
 import { Markdown } from "@/components/shared/Markdown"
 import { ChartRenderer } from "@/components/charts/ChartRenderer"
 import { SECTION_TITLES } from "@/lib/constants"
+import { packEquityDisplayValue } from "@/lib/metricsCanon"
 import { extractHeadline } from "@/lib/narrative"
 import { ProvenancePanel } from "./ProvenancePanel"
 import { useFilters, useScenarioCalculation } from "@/api/hooks"
@@ -11,6 +12,8 @@ import { useFilters, useScenarioCalculation } from "@/api/hooks"
 function formatValue(key: string, v: unknown): string {
   if (v === null || v === undefined) return "—"
   if (typeof v === "number") {
+    const packed = packEquityDisplayValue(key, v)
+    if (packed !== null) return packed
     if (key.includes("pct")) return `${v.toFixed(1)}%`
     if (key.includes("cost") || key.includes("benefit") || key.includes("value_k"))
       return `£${v.toLocaleString(undefined, { maximumFractionDigits: 1 })}m`

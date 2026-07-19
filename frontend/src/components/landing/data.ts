@@ -4,21 +4,24 @@ import {
   Database,
   FileSearch,
   FileText,
-  Leaf,
-  MapPin,
   Network,
   PoundSterling,
   Scale,
   Sliders,
   SlidersHorizontal,
+  MapPin,
+  Brain,
 } from "lucide-react"
+import {
+  METRICS_CANON,
+  headlineInequalityStats,
+  scaleStats,
+} from "@/lib/metricsCanon"
 
-export const HEADLINE_STATS = [
-  { label: "Gini coefficient", value: "0.5741", sub: "Bus service inequality" },
-  { label: "Palma ratio", value: "5.702×", sub: "Top 10% vs bottom 40%" },
-  { label: "Evening isolated", value: "15.4%", sub: "of LSOAs" },
-  { label: "Sunday deserts", value: "20.0%", sub: "of LSOAs" },
-] as const
+export const HEADLINE_STATS = headlineInequalityStats()
+
+/** Scale strip: trips / stops / routes / LSOAs from metrics canon. */
+export const SCALE_STATS = scaleStats()
 
 export const AUDIENCES = [
   {
@@ -33,8 +36,7 @@ export const AUDIENCES = [
   },
   {
     title: "Researchers & analysts",
-    description:
-      "Explore pre-computed metrics across 33,755 LSOAs with traceable formulas and exportable findings.",
+    description: `Explore pre-computed metrics across ${METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs with traceable formulas and exportable findings.`,
   },
 ] as const
 
@@ -57,12 +59,13 @@ export interface DimensionCard {
   route: string
 }
 
+/** Aligns with frontend/src/lib/constants.ts DIMENSIONS (routes + titles). */
 export const DIMENSIONS: DimensionCard[] = [
   {
     icon: Scale,
     title: "Equity & Deprivation",
     question: "Which areas get the least bus service relative to need?",
-    grounded: "Gini, Lorenz, Palma ratio across 33,755 LSOAs",
+    grounded: `Gini, Lorenz, Palma ratio across ${METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs`,
     route: "/equity",
   },
   {
@@ -83,21 +86,21 @@ export const DIMENSIONS: DimensionCard[] = [
     icon: Network,
     title: "Route Network",
     question: "Is the network fragmented across operators and boundaries?",
-    grounded: "13,099 routes, operator concentration analysis",
+    grounded: `${METRICS_CANON.routes.toLocaleString("en-GB")} routes, operator concentration analysis`,
     route: "/route-network",
   },
   {
-    icon: Leaf,
-    title: "Modal Shift & Carbon",
-    question: "What is the emissions impact of shifting car trips to buses?",
-    grounded: "DfT elasticities, DESNZ 2025 carbon factors",
-    route: "/modal-shift",
+    icon: Brain,
+    title: "Socio-Economic & ML",
+    question: "What drives coverage gaps — deprivation, car ownership, or both?",
+    grounded: `Deprivation correlations, SHAP, RF R²=${METRICS_CANON.rfR2}`,
+    route: "/correlations",
   },
   {
     icon: PoundSterling,
     title: "Economic Appraisal",
     question: "Does this investment pass a benefit-cost test?",
-    grounded: "BCR via Green Book / TAG methodology",
+    grounded: "BCR via Green Book / TAG methodology; carbon under j3",
     route: "/economic",
   },
   {

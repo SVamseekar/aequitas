@@ -49,13 +49,22 @@ Every metric ships with a plain-English narrative and a documented formula trace
 
 ## What the data shows — England reference implementation
 
-> Numbers from the pre-computed warehouse covering all 33,755 lower-layer super output areas in England.
+> Canonical pack (2026-07-19) from the pre-computed warehouse (`data/aequitas.duckdb`, built 2026-06-14). Single source of truth in code: `frontend/src/lib/metricsCanon.ts`.
 
-- **Gini 0.57** — bus service is more unequally distributed than household income (income Gini: 0.36)
-- **Palma 5.7** — the best-served 10% of areas receive 5.7× more service than the bottom 40%
-- **Concentration index +0.14** — service provision is systematically pro-rich
-- **6,776 areas** have zero accessible services within a 400m walk of any bus stop
-- **53–72% of service variance** is explained by policy choices, not demographics — the gap is a decision, not a inevitability
+**Scale:** 1.75M GTFS trips · 13,099 routes · 274,719 stops · 33,755 LSOAs (56.5M population)
+
+**Quality:** 103 automated checks · 0 failures · spatial join 99.9993%
+
+**Equity & service:**
+- **Gini 0.5741** — bus service is more unequally distributed than household income (income Gini: 0.36)
+- **Palma 5.702×** — the best-served 10% of areas receive 5.7× more service than the bottom 40%
+- **Concentration index +0.1358** — service provision is systematically pro-rich
+- **4,245 zero-stop LSOAs** · **612 triple-deprived** communities
+- **Evening isolation 15.4%** of LSOAs · **Sunday deserts 20.0%**
+- **55 analytical sections** · **8 policy dimensions** · **30 filter combos**
+- **ML:** Random Forest R² 0.472 · HDBSCAN · Isolation Forest · 2SFCA
+
+> Hosting posture: **local-only** for the current programme. Do not claim always-on cloud production until deliberately deployed.
 
 The same methodology applies anywhere. The numbers change; the analytical framework does not.
 

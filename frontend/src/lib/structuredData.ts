@@ -47,7 +47,7 @@ export function landingPageJsonLd() {
         "Accessibility gap analysis",
         "Service quality metrics",
         "Route network analysis",
-        "Modal shift and carbon modelling",
+        "Socio-economic and ML analytics",
         "Economic appraisal (BCR/Green Book)",
         "Bus Services Act 2025 readiness",
         "Policy scenario modelling",

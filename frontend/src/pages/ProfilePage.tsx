@@ -4,12 +4,13 @@ import { useNavigate } from "react-router"
 import { ArrowLeft, User, Copy, Check } from "lucide-react"
 import { fetchJson, apiPatch, apiPost, apiDelete } from "@/api/client"
 
+/** Labels match app DIMENSIONS in lib/constants.ts (policy interests). */
 const DIMENSIONS = [
   "Equity & Deprivation",
   "Accessibility",
   "Service Quality",
   "Route Network",
-  "Modal Shift & Carbon",
+  "Socio-Economic & ML",
   "Economic Appraisal",
   "Bus Services Act 2025",
   "Policy Scenarios",

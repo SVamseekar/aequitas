@@ -11,6 +11,77 @@ Deliberately deferred items — things we decided *not* to build now, with the r
 - **Out of scope until local E2E done:** production Dockerfile / image, Vercel API rewrites to a hosted backend, Cloud Run / managed Postgres, production sleep mitigation, multi-region hosting.
 - **Revisit when:** Parts A–D exit criteria met and a deliberate deploy decision is made. Track under a future plan; do not block product quality (Part E) or metrics handoffs (Part C) on hosting.
 
+## Metrics canon handoffs (Part C, 2026-07-19)
+
+Code surfaces (landing, about, auth, README, ticker fallback, equity card packing) use `frontend/src/lib/metricsCanon.ts` — **55 sections**, Gini **0.5741**, full scale pack. Non-code surfaces (CV `.docx`, portfolio `projects.ts`, pitch PDF) are **not** edited in this repo; apply the packets below in separate sessions. Do **not** claim always-on cloud production (local-only programme).
+
+### Canonical pack
+
+```
+Aequitas — Public transport equity intelligence (England)
+Scale: 1,752,443 GTFS trips · 13,099 routes · 274,719 active bus stops · 33,755 LSOAs · 56.5M population
+Quality: 103 automated checks · 0 failures · spatial join 99.9993%
+Equity: Gini 0.5741 · Palma 5.702× · CI +0.1358 pro-rich · 4,245 zero-stop LSOAs · 612 triple-deprived
+Service: evening isolation 15.4% of LSOAs (5,189) · Sunday deserts 20.0% (6,745)
+ML: Random Forest R² 0.472 · HDBSCAN · Isolation Forest · 2SFCA (400m)
+Product: 55 analytical sections · 8 policy dimensions · 30 filter combos · FAISS RAG + Gemini 2.5 Flash
+Stack (public): Python · FastAPI · DuckDB · React/Vite · Postgres session auth · FAISS · sentence-transformers · MapLibre · Observable Plot
+Hosting: local demo / research platform — not marketed as always-on cloud production
+```
+
+| Wrong / stale | Correct |
+|---|---|
+| 51 analytical sections | **55** analytical sections |
+| Gini 0.574 / 0.57 | Gini **0.5741** |
+| Palma 5.7 alone | Palma **5.702×** |
+| CI +0.14 / 0.1344 | CI **+0.1358** |
+| Supabase-backed auth | Postgres session auth + Google OAuth (local) |
+| Always-on production API | Soften: local demo-ready; cloud deferred |
+
+### Packet 1 — CV
+
+**File:** `/Users/souravamseekarmarti/Documents/Marti_Soura_Vamseekar_CV.docx`  
+Export PDF; replace portfolio `public/*.pdf` CV copies.
+
+```
+• Built Aequitas — England bus transport equity intelligence: 1,752,443 GTFS trips · 13,099 routes · 274,719 stops · 33,755 LSOAs (56.5M population)
+• Pre-computed warehouse with 103 quality checks (0 failures); spatial join accuracy 99.9993%
+• Equity metrics: Gini 0.5741 · Palma 5.702× · CI +0.1358 pro-rich · 4,245 zero-stop LSOAs · 612 triple-deprived communities
+• ML & product: Random Forest (R² 0.472), HDBSCAN, Isolation Forest, 2SFCA; FAISS RAG chatbot across 55 analytical sections and 8 policy dimensions
+• Stack: Python · FastAPI · DuckDB · React/Vite · Postgres session auth · FAISS · Gemini
+```
+
+### Packet 2 — Portfolio
+
+**Repo:** `/Users/souravamseekarmarti/Projects/Portfolio/martisouravamseekar-portfolio`  
+**File:** `src/data/projects.ts` (Aequitas entry)
+
+```ts
+metrics: [
+  "1.75M GTFS trips · 13,099 routes · 274,719 stops · 33,755 LSOAs (56.5M population)",
+  "103 quality checks · 0 failures · spatial join at 99.9993% accuracy",
+  "Gini 0.5741 · Palma 5.702 · 4,245 zero-stop LSOAs · 612 triple-deprived communities",
+  "ML: Random Forest (R² 0.472), HDBSCAN, Isolation Forest, 2SFCA accessibility scoring",
+  "FAISS RAG chatbot across 55 analytical sections and 8 policy dimensions",
+],
+```
+
+Also: drop Supabase from stack if listed; mark `UK_Bus_Analytics_Research_Portfolio.md` historical; refresh CV PDFs.
+
+### Packet 3 — Pitch deck
+
+**File:** `/Users/souravamseekarmarti/Downloads/MSV_AI_Labs_Pitch_Deck.pdf`
+
+| Line | Copy |
+|---|---|
+| Scale 1 | 1.75M trips · 13,099 routes |
+| Scale 2 | 274,719 stops · 33,755 LSOAs |
+| Equity | Gini 0.5741 · Palma 5.702× |
+| Quality / product | 103/0 quality · 55 sections |
+| Optional | 8 policy dimensions · 30 region×area filters |
+
+Remove truncated Gini **0.574**; no overclaim of cloud production.
+
 ## Empty `stops` / `routes` warehouse tables (documented 2026-07-19, Part E)
 
 **Fact:** Live DuckDB (`data/aequitas.duckdb`) has schema for `stops` and `routes` but **0 rows**. Map / network features that would join these tables are **degraded** — do not present choropleth or route-network maps as complete until tables are reloaded from audit/pipeline Parquet (NaPTAN + BODS geometry).
