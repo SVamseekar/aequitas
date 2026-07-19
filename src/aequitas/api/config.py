@@ -28,3 +28,30 @@ class ApiConfig:
     supabase_jwt_secret: str = field(
         default_factory=lambda: os.environ.get("SUPABASE_JWT_SECRET", "")
     )  # Empty = dev mode (skip JWT validation)
+    database_url: str = field(
+        default_factory=lambda: os.environ.get(
+            "DATABASE_URL", "postgresql://localhost/aequitas"
+        )
+    )
+    session_secret: str = field(
+        default_factory=lambda: os.environ.get("SESSION_SECRET", "")
+    )
+    google_client_id: str = field(
+        default_factory=lambda: os.environ.get("GOOGLE_CLIENT_ID", "")
+    )
+    google_client_secret: str = field(
+        default_factory=lambda: os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    )
+    brevo_api_key: str = field(
+        default_factory=lambda: os.environ.get("BREVO_API_KEY", "")
+    )
+    frontend_url: str = field(
+        default_factory=lambda: os.environ.get(
+            "FRONTEND_URL", "http://localhost:5173"
+        )
+    )
+    api_public_url: str = field(
+        default_factory=lambda: os.environ.get(
+            "API_PUBLIC_URL", "http://localhost:8000"
+        )
+    )
