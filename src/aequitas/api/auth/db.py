@@ -304,7 +304,14 @@ async def get_user(pool: asyncpg.Pool, *, user_id: str) -> dict | None:
         return dict(row) if row is not None else None
 
 
-async def create_profile(
+async def _fetch_user(pool: asyncpg.Pool, *, user_id: str) -> dict:
+    row = await get_user(pool, user_id=user_id)
+    if row is None:
+        raise KeyError(f"user not found: {user_id}")
+    return row
+
+
+async def get_or_create_profile(
     pool: asyncpg.Pool, *, user_id: str, display_name: str | None = None
 ) -> dict:
     async with pool.acquire() as conn:
@@ -312,13 +319,22 @@ async def create_profile(
             """
             INSERT INTO profiles (user_id, display_name)
             VALUES ($1, $2)
-            ON CONFLICT (user_id) DO UPDATE SET display_name = COALESCE(EXCLUDED.display_name, profiles.display_name)
+            ON CONFLICT (user_id) DO UPDATE
+              SET display_name = COALESCE(EXCLUDED.display_name, profiles.display_name)
             RETURNING *
             """,
             user_id,
             display_name,
         )
         return dict(row)
+
+
+async def create_profile(
+    pool: asyncpg.Pool, *, user_id: str, display_name: str | None = None
+) -> dict:
+    return await get_or_create_profile(
+        pool, user_id=user_id, display_name=display_name
+    )
 
 
 async def get_profile(pool: asyncpg.Pool, *, user_id: str) -> dict | None:

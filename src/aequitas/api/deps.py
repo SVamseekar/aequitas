@@ -44,14 +44,33 @@ def get_embedding_model() -> Any:
 @asynccontextmanager
 async def lifespan(app: Any):  # type: ignore[type-arg]
     """Load DuckDB + FAISS on startup, close on shutdown."""
+    import os
+
     cfg = ApiConfig()
+
+    # Ensure DATABASE_URL is visible to auth.db.get_pool()
+    if "DATABASE_URL" not in os.environ and cfg.database_url:
+        os.environ["DATABASE_URL"] = cfg.database_url
+
+    # Postgres tenancy schema (idempotent)
+    try:
+        from aequitas.api.auth import db as auth_db
+
+        pool = await auth_db.get_pool()
+        await auth_db.run_migrations(pool)
+        logger.info("Postgres tenancy schema ready")
+    except Exception as exc:
+        logger.warning(f"Postgres tenancy schema not applied: {exc}")
 
     # DuckDB — store path only; each request opens a fresh read-only connection
     if cfg.db_path.exists():
         logger.info(f"DuckDB warehouse found: {cfg.db_path}")
         _state["db_path"] = cfg.db_path
     else:
-        logger.warning(f"Warehouse not found at {cfg.db_path} — run pipeline first. API will start but return empty results.")
+        logger.warning(
+            f"Warehouse not found at {cfg.db_path} — run pipeline first. "
+            "API will start but return empty results."
+        )
 
     # Gemini API key check
     if not cfg.gemini_api_key:
@@ -60,11 +79,13 @@ async def lifespan(app: Any):  # type: ignore[type-arg]
     # FAISS (optional — chat won't work without it but dashboard still does)
     if cfg.faiss_index_path.exists():
         import faiss
+
         logger.info(f"Loading FAISS index: {cfg.faiss_index_path}")
         _state["faiss_index"] = faiss.read_index(str(cfg.faiss_index_path))
         _state["faiss_metadata"] = json.loads(cfg.faiss_metadata_path.read_text())
 
         from sentence_transformers import SentenceTransformer
+
         _state["embedding_model"] = SentenceTransformer("all-MiniLM-L6-v2")
         logger.info("FAISS + embedding model loaded")
     else:
