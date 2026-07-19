@@ -11,7 +11,8 @@ from aequitas.api.deps import get_db
 
 router = APIRouter(tags=["metrics"])
 
-# Locked ground truth values (Phase 0 audit — do not change without re-running audit)
+# Locked Phase 0 ground truth packing (do not change without re-running audit).
+# Equity keys always use this pack — section_results currently truncates Palma/CI.
 _FALLBACK: list[dict] = [
     {"key": "gini", "label": "Gini Coefficient", "value": "0.5741", "sub": "bus service inequality"},
     {"key": "palma", "label": "Palma Ratio", "value": "5.702×", "sub": "top 10% vs bottom 40%"},
@@ -21,6 +22,9 @@ _FALLBACK: list[dict] = [
     {"key": "mean_sqi", "label": "Mean SQI", "value": "65.4", "sub": "out of 100"},
 ]
 
+# Equity metrics locked to ground-truth packing (gini 4 dp, palma 3 dp, CI 4 dp).
+_EQUITY_LOCKED_KEYS = frozenset({"gini", "palma", "concentration_index"})
+
 
 @router.get("/metrics/ticker")
 def get_ticker_metrics(
@@ -28,11 +32,11 @@ def get_ticker_metrics(
 ) -> list[dict]:
     """Return headline stats for the metrics ticker.
 
-    Attempts to pull live values from the warehouse; falls back to Phase 0
-    locked ground truth if the warehouse is not yet populated.
+    Equity metrics (Gini / Palma / CI) use Phase 0 locked ground truth packing.
+    Operating-hours and SQI metrics prefer live ``section_results`` when present.
     """
     if db is None:
-        return _FALLBACK
+        return list(_FALLBACK)
 
     try:
         rows = db.execute(
@@ -45,53 +49,91 @@ def get_ticker_metrics(
         ).fetchall()
     except duckdb.CatalogException:
         logger.warning("section_results table not found — returning fallback ticker")
-        return _FALLBACK
+        return list(_FALLBACK)
 
     if not rows:
         logger.info("No ticker rows in warehouse — returning fallback")
-        return _FALLBACK
+        return list(_FALLBACK)
 
     stats_by_section: dict[str, dict] = {}
     for section_id, stats in rows:
         stats_by_section[section_id] = json.loads(stats) if isinstance(stats, str) else stats
 
-    return _build_live_ticker(stats_by_section)
+    # Prefer provenance table for equity if present (matches GT packing).
+    provenance_equity = _read_equity_from_provenance(db)
+
+    return _build_live_ticker(stats_by_section, provenance_equity)
 
 
-def _build_live_ticker(stats_by_section: dict[str, dict]) -> list[dict]:
-    """Map live `section_results` stats onto the ticker shape, falling back per-metric.
+def _read_equity_from_provenance(db: duckdb.DuckDBPyConnection) -> dict[str, float]:
+    """Load locked equity values from provenance when available."""
+    out: dict[str, float] = {}
+    try:
+        rows = db.execute(
+            """
+            SELECT metric_id, value FROM provenance
+            WHERE metric_id IN ('gini_national', 'palma_ratio', 'concentration_index')
+            """
+        ).fetchall()
+    except duckdb.CatalogException:
+        return out
+    for metric_id, value in rows:
+        if metric_id == "gini_national" and value is not None:
+            out["gini"] = float(value)
+        elif metric_id == "palma_ratio" and value is not None:
+            out["palma"] = float(value)
+        elif metric_id == "concentration_index" and value is not None:
+            out["concentration_index"] = float(value)
+    return out
 
-    Args:
-        stats_by_section: section_id -> stats dict for region='all', urban_rural='all'.
 
-    Returns:
-        Ticker metrics list with live values where available, otherwise the
-        Phase 0 locked fallback value for that metric.
-    """
+def _build_live_ticker(
+    stats_by_section: dict[str, dict],
+    provenance_equity: dict[str, float] | None = None,
+) -> list[dict]:
+    """Map live warehouse stats onto ticker shape; equity prefers GT packing."""
     fallback_by_key = {m["key"]: m for m in _FALLBACK}
+    provenance_equity = provenance_equity or {}
     metrics: list[dict] = []
 
-    gini_stats = stats_by_section.get("f1_gini")
-    if gini_stats and "gini" in gini_stats:
+    # --- Equity: provenance → FALLBACK (never use truncated section_results) ---
+    if "gini" in provenance_equity:
+        g = provenance_equity["gini"]
         metrics.append(
-            {"key": "gini", "label": "Gini Coefficient", "value": f"{gini_stats['gini']:.4f}", "sub": "bus service inequality"}
+            {
+                "key": "gini",
+                "label": "Gini Coefficient",
+                "value": f"{g:.4f}",
+                "sub": "bus service inequality",
+            }
         )
     else:
         metrics.append(fallback_by_key["gini"])
 
-    if gini_stats and "palma" in gini_stats:
+    if "palma" in provenance_equity:
+        p = provenance_equity["palma"]
         metrics.append(
-            {"key": "palma", "label": "Palma Ratio", "value": f"{gini_stats['palma']:.3f}×", "sub": "top 10% vs bottom 40%"}
+            {
+                "key": "palma",
+                "label": "Palma Ratio",
+                "value": f"{p:.3f}×",
+                "sub": "top 10% vs bottom 40%",
+            }
         )
     else:
         metrics.append(fallback_by_key["palma"])
 
-    if gini_stats and "concentration_index" in gini_stats:
-        ci = gini_stats["concentration_index"]
+    if "concentration_index" in provenance_equity:
+        ci = provenance_equity["concentration_index"]
         sign = "+" if ci >= 0 else ""
         sub = "pro-rich bias" if ci >= 0 else "pro-poor bias"
         metrics.append(
-            {"key": "concentration_index", "label": "Concentration Index", "value": f"{sign}{ci:.4f}", "sub": sub}
+            {
+                "key": "concentration_index",
+                "label": "Concentration Index",
+                "value": f"{sign}{ci:.4f}",
+                "sub": sub,
+            }
         )
     else:
         metrics.append(fallback_by_key["concentration_index"])
@@ -125,9 +167,17 @@ def _build_live_ticker(stats_by_section: dict[str, dict]) -> list[dict]:
     freq_stats = stats_by_section.get("b1_frequency")
     if freq_stats and "national_avg" in freq_stats:
         metrics.append(
-            {"key": "mean_sqi", "label": "Mean SQI", "value": f"{freq_stats['national_avg']:.1f}", "sub": "out of 100"}
+            {
+                "key": "mean_sqi",
+                "label": "Mean SQI",
+                "value": f"{freq_stats['national_avg']:.1f}",
+                "sub": "out of 100",
+            }
         )
     else:
         metrics.append(fallback_by_key["mean_sqi"])
 
+    # Ensure key order matches FALLBACK for clients that index positionally.
+    assert [m["key"] for m in metrics] == [m["key"] for m in _FALLBACK]
+    assert _EQUITY_LOCKED_KEYS  # referenced for documentation / lint
     return metrics
