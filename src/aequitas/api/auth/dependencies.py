@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 
 from fastapi import Depends, HTTPException, Request
 
+import asyncpg
+
 from aequitas.api.auth import db
 from aequitas.api.auth.sessions import COOKIE_NAME, unsign_session_id
 
@@ -20,6 +22,53 @@ def _is_dev_bypass_allowed() -> bool:
     return os.getenv("DEV_AUTH_BYPASS", "").lower() in ("1", "true", "yes")
 
 
+async def _ensure_dev_tenant(pool: asyncpg.Pool) -> None:
+    await db.run_migrations(pool)
+    existing = await db._fetch_tenant(pool, tenant_id=_DEV_TENANT_ID)
+    if existing is not None:
+        return
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            INSERT INTO users (id, email, display_name)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (id) DO NOTHING
+            """,
+            _DEV_USER_ID,
+            "dev@localhost",
+            "Dev User",
+        )
+        await conn.execute(
+            """
+            INSERT INTO tenants (id, name, slug)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (id) DO NOTHING
+            """,
+            _DEV_TENANT_ID,
+            "Dev Workspace",
+            "dev-workspace",
+        )
+        await conn.execute(
+            """
+            INSERT INTO memberships (user_id, tenant_id, role)
+            VALUES ($1, $2, $3)
+            ON CONFLICT DO NOTHING
+            """,
+            _DEV_USER_ID,
+            _DEV_TENANT_ID,
+            "admin",
+        )
+        await conn.execute(
+            """
+            INSERT INTO profiles (user_id, display_name)
+            VALUES ($1, $2)
+            ON CONFLICT (user_id) DO NOTHING
+            """,
+            _DEV_USER_ID,
+            "Dev User",
+        )
+
+
 async def require_session(request: Request) -> dict:
     """Load and validate the session from the signed cookie.
 
@@ -31,6 +80,12 @@ async def require_session(request: Request) -> dict:
 
     if cookie_value is None:
         if _is_dev_bypass_allowed():
+            try:
+                pool = await db.get_pool()
+                await _ensure_dev_tenant(pool)
+            except Exception:
+                # Still return synthetic session if DB unavailable
+                pass
             return {
                 "user_id": _DEV_USER_ID,
                 "tenant_id": _DEV_TENANT_ID,

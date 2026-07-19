@@ -1,21 +1,16 @@
-"""Conversations router — CRUD for persisted chat sessions via Supabase."""
+"""Conversations router — tenant-scoped CRUD via asyncpg."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from aequitas.api.auth import verify_supabase_jwt
+from aequitas.api.auth import db
+from aequitas.api.auth.dependencies import require_session
 
 router = APIRouter(tags=["conversations"])
 
-
-# ---------------------------------------------------------------------------
-# Request / response models
-# ---------------------------------------------------------------------------
 
 class ConversationCreate(BaseModel):
     title: str
@@ -26,145 +21,125 @@ class MessageCreate(BaseModel):
     content: str
 
 
-# ---------------------------------------------------------------------------
-# Supabase client helper
-# ---------------------------------------------------------------------------
+def _serialize_row(row: dict) -> dict:
+    out = {}
+    for k, v in row.items():
+        if hasattr(v, "isoformat"):
+            out[k] = v.isoformat()
+        else:
+            out[k] = str(v) if hasattr(v, "hex") else v
+    return out
 
-def _get_supabase(access_token: str | None) -> Any:
-    """Return a Supabase client scoped to the caller's JWT so RLS applies.
-
-    Falls back to the service-role key only when no user token is available
-    (dev-bypass mode), so existing dev workflows keep functioning. In every
-    other case the anon key + forwarded JWT means Postgres RLS policies are
-    the real enforcement boundary, not just the .eq("user_id", ...) filters
-    below.
-    """
-    try:
-        import os
-        from supabase import create_client  # type: ignore[import-untyped]
-
-        url = os.environ.get("SUPABASE_URL", "")
-        if not url:
-            raise RuntimeError("Supabase not configured")
-
-        if access_token:
-            anon_key = os.environ.get("SUPABASE_ANON_KEY", "")
-            if not anon_key:
-                raise RuntimeError("Supabase not configured")
-            client = create_client(url, anon_key)
-            client.postgrest.auth(access_token)
-            return client
-
-        service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
-        if not service_key:
-            raise RuntimeError("Supabase not configured")
-        return create_client(url, service_key)
-    except Exception as exc:
-        raise HTTPException(503, "Supabase unavailable") from exc
-
-
-# ---------------------------------------------------------------------------
-# Endpoints
-# ---------------------------------------------------------------------------
 
 @router.get("/conversations")
-async def list_conversations(user: dict = Depends(verify_supabase_jwt)) -> list[dict]:
-    """List authenticated user's conversations, newest first."""
-    sb = _get_supabase(user.get("_raw_token"))
-    resp = (
-        sb.table("conversations")
-        .select("*")
-        .eq("user_id", user["sub"])
-        .order("updated_at", desc=True)
-        .limit(50)
-        .execute()
-    )
-    return resp.data or []
+async def list_conversations(session: dict = Depends(require_session)) -> list[dict]:
+    """List active tenant's conversations, newest first."""
+    pool = await db.get_pool()
+    rows = await db.list_conversations(pool, tenant_id=session["tenant_id"])
+    return [_serialize_row(r) for r in rows]
 
 
 @router.post("/conversations", status_code=201)
 async def create_conversation(
     body: ConversationCreate,
-    user: dict = Depends(verify_supabase_jwt),
+    session: dict = Depends(require_session),
 ) -> dict:
-    """Create a new conversation for the authenticated user."""
-    sb = _get_supabase(user.get("_raw_token"))
-    resp = (
-        sb.table("conversations")
-        .insert({"user_id": user["sub"], "title": body.title})
-        .execute()
+    """Create a new conversation for the active tenant."""
+    pool = await db.get_pool()
+    row = await db.create_conversation(
+        pool,
+        tenant_id=session["tenant_id"],
+        user_id=session["user_id"],
+        title=body.title,
     )
-    if not resp.data:
-        raise HTTPException(500, "Failed to create conversation")
-    return resp.data[0]
+    return _serialize_row(row)
 
 
 @router.get("/conversations/{conversation_id}/messages")
 async def get_messages(
     conversation_id: UUID,
-    user: dict = Depends(verify_supabase_jwt),
+    session: dict = Depends(require_session),
     offset: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
 ) -> list[dict]:
     """Return messages for a conversation with pagination."""
-    sb = _get_supabase(user.get("_raw_token"))
-    resp = (
-        sb.table("messages")
-        .select("*")
-        .eq("conversation_id", str(conversation_id))
-        .eq("user_id", user["sub"])
-        .order("created_at", desc=False)
-        .range(offset, offset + limit - 1)
-        .execute()
+    pool = await db.get_pool()
+    conv = await db.get_conversation(
+        pool, tenant_id=session["tenant_id"], conversation_id=str(conversation_id)
     )
-    return resp.data or []
+    if conv is None:
+        raise HTTPException(404, "Conversation not found")
+    rows = await db.list_messages(
+        pool,
+        tenant_id=session["tenant_id"],
+        conversation_id=str(conversation_id),
+        offset=offset,
+        limit=limit,
+    )
+    return [_serialize_row(r) for r in rows]
 
 
 @router.post("/conversations/{conversation_id}/messages", status_code=201)
 async def add_message(
     conversation_id: UUID,
     body: MessageCreate,
-    user: dict = Depends(verify_supabase_jwt),
+    session: dict = Depends(require_session),
 ) -> dict:
     """Add a message to a conversation."""
     if body.role not in ("user", "assistant"):
         raise HTTPException(400, "role must be 'user' or 'assistant'")
-    sb = _get_supabase(user.get("_raw_token"))
-    # Verify ownership: conversation must belong to this user
-    conv = (
-        sb.table("conversations")
-        .select("id")
-        .eq("id", str(conversation_id))
-        .eq("user_id", user["sub"])
-        .execute()
+    pool = await db.get_pool()
+    conv = await db.get_conversation(
+        pool, tenant_id=session["tenant_id"], conversation_id=str(conversation_id)
     )
-    if not conv.data:
+    if conv is None:
         raise HTTPException(404, "Conversation not found")
 
-    resp = (
-        sb.table("messages")
-        .insert({
-            "conversation_id": str(conversation_id),
-            "user_id": user["sub"],
-            "role": body.role,
-            "content": body.content,
-        })
-        .execute()
+    row = await db.create_message(
+        pool,
+        tenant_id=session["tenant_id"],
+        conversation_id=str(conversation_id),
+        user_id=session["user_id"],
+        role=body.role,
+        content=body.content,
     )
-    if not resp.data:
-        raise HTTPException(500, "Failed to save message")
-    # Touch conversation updated_at
-    sb.table("conversations").update(
-        {"updated_at": datetime.now(timezone.utc).isoformat()}
-    ).eq("id", str(conversation_id)).execute()
-    return resp.data[0]
+    await db.touch_conversation(
+        pool, tenant_id=session["tenant_id"], conversation_id=str(conversation_id)
+    )
+    return _serialize_row(row)
+
+
+@router.patch("/conversations/{conversation_id}")
+async def update_conversation(
+    conversation_id: UUID,
+    body: ConversationCreate,
+    session: dict = Depends(require_session),
+) -> dict:
+    """Update conversation title."""
+    pool = await db.get_pool()
+    row = await db.update_conversation_title(
+        pool,
+        tenant_id=session["tenant_id"],
+        conversation_id=str(conversation_id),
+        title=body.title,
+    )
+    if row is None:
+        raise HTTPException(404, "Conversation not found")
+    return _serialize_row(row)
 
 
 @router.delete("/conversations/{conversation_id}", status_code=204)
 async def delete_conversation(
     conversation_id: UUID,
-    user: dict = Depends(verify_supabase_jwt),
+    session: dict = Depends(require_session),
 ) -> None:
     """Delete a conversation and its messages (cascades via DB)."""
-    sb = _get_supabase(user.get("_raw_token"))
-    sb.table("conversations").delete().eq("id", str(conversation_id)).eq("user_id", user["sub"]).execute()
+    pool = await db.get_pool()
+    conv = await db.get_conversation(
+        pool, tenant_id=session["tenant_id"], conversation_id=str(conversation_id)
+    )
+    if conv is None:
+        raise HTTPException(404, "Conversation not found")
+    await db.delete_conversation(
+        pool, tenant_id=session["tenant_id"], conversation_id=str(conversation_id)
+    )

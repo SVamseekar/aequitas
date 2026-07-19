@@ -10,7 +10,8 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 
 from aequitas.api.auth import db
-from aequitas.api.auth.dependencies import require_session
+from aequitas.api.auth.dependencies import require_admin, require_session
+from aequitas.api.auth.email import send_invite_email
 from aequitas.api.auth.oauth import get_google_oauth_client
 from aequitas.api.auth.sessions import (
     COOKIE_MAX_AGE_SECONDS,
@@ -29,6 +30,15 @@ _DEV_TENANT_ID = "00000000-0000-0000-0000-000000000002"
 
 class SwitchTenantRequest(BaseModel):
     tenant_id: str
+
+
+class CreateInviteRequest(BaseModel):
+    email: str
+    role: str = "member"
+
+
+class UpdateRoleRequest(BaseModel):
+    role: str
 
 
 def _slugify(value: str) -> str:
@@ -140,33 +150,35 @@ async def logout(request: Request):
 
 @router.get("/auth/me")
 async def me(session: dict = Depends(require_session)) -> dict:
-    # Dev-bypass synthetic session — no DB rows required.
-    if session["session_id"] == "dev-session":
-        return {
-            "user": {
-                "id": session["user_id"],
-                "email": "dev@localhost",
-                "display_name": "Dev User",
-            },
-            "active_tenant": {
-                "id": session["tenant_id"],
-                "name": "Dev Workspace",
-                "slug": "dev-workspace",
-            },
-            "role": session["role"],
-            "memberships": [
-                {
-                    "tenant_id": session["tenant_id"],
-                    "tenant_name": "Dev Workspace",
-                    "tenant_slug": "dev-workspace",
-                    "role": session["role"],
-                }
-            ],
-        }
-
     pool = await db.get_pool()
-    memberships = await db.list_memberships_for_user(pool, user_id=session["user_id"])
-    user_row = await db._fetch_user(pool, user_id=session["user_id"])
+    try:
+        memberships = await db.list_memberships_for_user(
+            pool, user_id=session["user_id"]
+        )
+        user_row = await db.get_user(pool, user_id=session["user_id"])
+    except Exception:
+        memberships = []
+        user_row = None
+
+    if user_row is None and session["session_id"] == "dev-session":
+        user_row = {
+            "id": session["user_id"],
+            "email": "dev@localhost",
+            "display_name": "Dev User",
+        }
+    if not memberships and session["session_id"] == "dev-session":
+        memberships = [
+            {
+                "tenant_id": session["tenant_id"],
+                "tenant_name": "Dev Workspace",
+                "tenant_slug": "dev-workspace",
+                "role": session["role"],
+            }
+        ]
+
+    if user_row is None:
+        raise HTTPException(status_code=401, detail="User not found")
+
     active = next(
         (m for m in memberships if str(m["tenant_id"]) == session["tenant_id"]),
         None,
@@ -175,7 +187,7 @@ async def me(session: dict = Depends(require_session)) -> dict:
         "user": {
             "id": session["user_id"],
             "email": user_row["email"],
-            "display_name": user_row["display_name"],
+            "display_name": user_row.get("display_name"),
         },
         "active_tenant": {
             "id": session["tenant_id"],
@@ -199,19 +211,240 @@ async def me(session: dict = Depends(require_session)) -> dict:
 async def switch_tenant(
     body: SwitchTenantRequest, session: dict = Depends(require_session)
 ) -> dict:
-    if session["session_id"] == "dev-session":
-        # Synthetic dev session has only the fixed tenant.
-        if body.tenant_id != session["tenant_id"]:
-            raise HTTPException(status_code=403, detail="Not a member of this tenant")
-        return {"status": "ok", "active_tenant_id": body.tenant_id}
-
     pool = await db.get_pool()
     membership = await db.get_membership(
         pool, user_id=session["user_id"], tenant_id=body.tenant_id
     )
     if membership is None:
         raise HTTPException(status_code=403, detail="Not a member of this tenant")
-    await db.update_session_tenant(
-        pool, session_id=session["session_id"], tenant_id=body.tenant_id
-    )
+    if session["session_id"] != "dev-session":
+        await db.update_session_tenant(
+            pool, session_id=session["session_id"], tenant_id=body.tenant_id
+        )
     return {"status": "ok", "active_tenant_id": body.tenant_id}
+
+
+@router.post("/tenants/{tenant_id}/invites")
+async def create_invite(
+    tenant_id: str,
+    body: CreateInviteRequest,
+    session: dict = Depends(require_admin),
+) -> dict:
+    if body.role not in ("admin", "member"):
+        raise HTTPException(status_code=400, detail="role must be 'admin' or 'member'")
+
+    pool = await db.get_pool()
+    membership = await db.get_membership(
+        pool, user_id=session["user_id"], tenant_id=tenant_id
+    )
+    if membership is None or membership["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin role required")
+
+    token = db.generate_invite_token()
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    invite = await db.create_invite(
+        pool,
+        tenant_id=tenant_id,
+        email=body.email,
+        role=body.role,
+        token=token,
+        expires_at=expires_at,
+    )
+    await db.write_audit_log(
+        pool,
+        tenant_id=tenant_id,
+        actor_user_id=session["user_id"],
+        action="invite_created",
+        target_user_id=None,
+        metadata={"invited_email": body.email, "role": body.role},
+    )
+
+    cfg = ApiConfig()
+    frontend_origin = cfg.frontend_url.rstrip("/")
+    link = f"{frontend_origin}/invite/{token}"
+
+    tenant_row = await db._fetch_tenant(pool, tenant_id=tenant_id)
+    tenant_name = tenant_row["name"] if tenant_row else "Workspace"
+    await send_invite_email(
+        to_email=body.email, tenant_name=tenant_name, invite_link=link
+    )
+
+    return {"token": token, "link": link, "invite_id": str(invite["id"])}
+
+
+@router.get("/invites/{token}")
+async def get_invite(token: str) -> dict:
+    pool = await db.get_pool()
+    invite = await db.get_invite_by_token(pool, token=token)
+    if invite is None:
+        raise HTTPException(status_code=404, detail="Invite not found")
+    if invite["accepted_at"] is not None:
+        raise HTTPException(status_code=410, detail="Invite already accepted")
+    expires_at = invite["expires_at"]
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=410, detail="Invite expired")
+
+    tenant_row = await db._fetch_tenant(pool, tenant_id=str(invite["tenant_id"]))
+    return {
+        "tenant_name": tenant_row["name"] if tenant_row else None,
+        "role": invite["role"],
+    }
+
+
+@router.post("/invites/{token}/accept")
+async def accept_invite_route(
+    token: str, session: dict = Depends(require_session)
+) -> dict:
+    pool = await db.get_pool()
+    invite = await db.get_invite_by_token(pool, token=token)
+    if invite is None:
+        raise HTTPException(status_code=404, detail="Invite not found")
+
+    accepted = await db.accept_invite(pool, token=token)
+    if accepted is None:
+        raise HTTPException(
+            status_code=410, detail="Invite already accepted or expired"
+        )
+
+    existing = await db.get_membership(
+        pool, user_id=session["user_id"], tenant_id=str(invite["tenant_id"])
+    )
+    if existing is None:
+        await db.create_membership(
+            pool,
+            user_id=session["user_id"],
+            tenant_id=str(invite["tenant_id"]),
+            role=invite["role"],
+        )
+    await db.write_audit_log(
+        pool,
+        tenant_id=str(invite["tenant_id"]),
+        actor_user_id=session["user_id"],
+        action="invite_accepted",
+        target_user_id=session["user_id"],
+        metadata={"invited_email": invite["email"], "role": invite["role"]},
+    )
+    return {"status": "ok", "tenant_id": str(invite["tenant_id"])}
+
+
+@router.get("/tenants/{tenant_id}/members")
+async def list_tenant_members(
+    tenant_id: str, session: dict = Depends(require_admin)
+) -> list[dict]:
+    pool = await db.get_pool()
+    members = await db.list_members_for_tenant(pool, tenant_id=tenant_id)
+    return [
+        {
+            "user_id": str(m["user_id"]),
+            "email": m["email"],
+            "display_name": m["display_name"],
+            "role": m["role"],
+            "created_at": m["created_at"].isoformat()
+            if hasattr(m["created_at"], "isoformat")
+            else m["created_at"],
+        }
+        for m in members
+    ]
+
+
+@router.delete("/tenants/{tenant_id}/members/{user_id}")
+async def remove_tenant_member(
+    tenant_id: str,
+    user_id: str,
+    session: dict = Depends(require_admin),
+) -> dict:
+    pool = await db.get_pool()
+    membership = await db.get_membership(
+        pool, user_id=user_id, tenant_id=tenant_id
+    )
+    if membership is None:
+        raise HTTPException(status_code=404, detail="Membership not found")
+
+    if membership["role"] == "admin":
+        admin_count = await db.count_admins(pool, tenant_id=tenant_id)
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=400, detail="Cannot remove the last admin of a tenant"
+            )
+
+    await db.remove_membership(pool, user_id=user_id, tenant_id=tenant_id)
+    await db.write_audit_log(
+        pool,
+        tenant_id=tenant_id,
+        actor_user_id=session["user_id"],
+        action="member_removed",
+        target_user_id=user_id,
+        metadata={},
+    )
+    return {"status": "ok"}
+
+
+@router.patch("/tenants/{tenant_id}/members/{user_id}/role")
+async def update_member_role(
+    tenant_id: str,
+    user_id: str,
+    body: UpdateRoleRequest,
+    session: dict = Depends(require_admin),
+) -> dict:
+    if body.role not in ("admin", "member"):
+        raise HTTPException(status_code=400, detail="role must be 'admin' or 'member'")
+
+    pool = await db.get_pool()
+    membership = await db.get_membership(
+        pool, user_id=user_id, tenant_id=tenant_id
+    )
+    if membership is None:
+        raise HTTPException(status_code=404, detail="Membership not found")
+
+    old_role = membership["role"]
+    if old_role == "admin" and body.role != "admin":
+        admin_count = await db.count_admins(pool, tenant_id=tenant_id)
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=400, detail="Cannot demote the last admin of a tenant"
+            )
+
+    updated = await db.update_membership_role(
+        pool, user_id=user_id, tenant_id=tenant_id, role=body.role
+    )
+    await db.write_audit_log(
+        pool,
+        tenant_id=tenant_id,
+        actor_user_id=session["user_id"],
+        action="role_changed",
+        target_user_id=user_id,
+        metadata={"old_role": old_role, "new_role": body.role},
+    )
+    return {
+        "status": "ok",
+        "user_id": user_id,
+        "role": updated["role"] if updated else body.role,
+    }
+
+
+@router.get("/tenants/{tenant_id}/audit-log")
+async def get_audit_log(
+    tenant_id: str, session: dict = Depends(require_admin)
+) -> list[dict]:
+    pool = await db.get_pool()
+    entries = await db.list_audit_log(pool, tenant_id=tenant_id)
+    result = []
+    for e in entries:
+        result.append(
+            {
+                "id": str(e["id"]),
+                "tenant_id": str(e["tenant_id"]),
+                "actor_user_id": str(e["actor_user_id"]),
+                "action": e["action"],
+                "target_user_id": str(e["target_user_id"])
+                if e["target_user_id"]
+                else None,
+                "metadata": e["metadata"],
+                "created_at": e["created_at"].isoformat()
+                if hasattr(e["created_at"], "isoformat")
+                else e["created_at"],
+            }
+        )
+    return result

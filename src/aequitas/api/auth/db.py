@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import secrets
 from pathlib import Path
 
 import asyncpg
@@ -292,10 +293,19 @@ async def list_audit_log(pool: asyncpg.Pool, *, tenant_id: str) -> list[dict]:
         return [dict(r) for r in rows]
 
 
+def generate_invite_token() -> str:
+    """Generate a URL-safe random invite token."""
+    return secrets.token_urlsafe(32)
+
+
 async def get_tenant(pool: asyncpg.Pool, *, tenant_id: str) -> dict | None:
     async with pool.acquire() as conn:
         row = await conn.fetchrow("SELECT * FROM tenants WHERE id = $1", tenant_id)
         return dict(row) if row is not None else None
+
+
+async def _fetch_tenant(pool: asyncpg.Pool, *, tenant_id: str) -> dict | None:
+    return await get_tenant(pool, tenant_id=tenant_id)
 
 
 async def get_user(pool: asyncpg.Pool, *, user_id: str) -> dict | None:
@@ -382,3 +392,348 @@ async def list_members(pool: asyncpg.Pool, *, tenant_id: str) -> list[dict]:
             tenant_id,
         )
         return [dict(r) for r in rows]
+
+
+async def list_members_for_tenant(pool: asyncpg.Pool, *, tenant_id: str) -> list[dict]:
+    return await list_members(pool, tenant_id=tenant_id)
+
+
+# ---------------------------------------------------------------------------
+# Tenant-scoped application data (conversations, analyses, notes, regions)
+# ---------------------------------------------------------------------------
+
+
+async def list_conversations(pool: asyncpg.Pool, *, tenant_id: str) -> list[dict]:
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT * FROM conversations
+            WHERE tenant_id = $1
+            ORDER BY updated_at DESC
+            LIMIT 50
+            """,
+            tenant_id,
+        )
+        return [dict(r) for r in rows]
+
+
+async def create_conversation(
+    pool: asyncpg.Pool, *, tenant_id: str, user_id: str, title: str
+) -> dict:
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO conversations (tenant_id, user_id, title)
+            VALUES ($1, $2, $3)
+            RETURNING *
+            """,
+            tenant_id,
+            user_id,
+            title,
+        )
+        return dict(row)
+
+
+async def get_conversation(
+    pool: asyncpg.Pool, *, tenant_id: str, conversation_id: str
+) -> dict | None:
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM conversations WHERE id = $1 AND tenant_id = $2",
+            conversation_id,
+            tenant_id,
+        )
+        return dict(row) if row is not None else None
+
+
+async def update_conversation_title(
+    pool: asyncpg.Pool, *, tenant_id: str, conversation_id: str, title: str
+) -> dict | None:
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            UPDATE conversations
+            SET title = $1, updated_at = now()
+            WHERE id = $2 AND tenant_id = $3
+            RETURNING *
+            """,
+            title,
+            conversation_id,
+            tenant_id,
+        )
+        return dict(row) if row is not None else None
+
+
+async def touch_conversation(
+    pool: asyncpg.Pool, *, tenant_id: str, conversation_id: str
+) -> None:
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            UPDATE conversations SET updated_at = now()
+            WHERE id = $1 AND tenant_id = $2
+            """,
+            conversation_id,
+            tenant_id,
+        )
+
+
+async def delete_conversation(
+    pool: asyncpg.Pool, *, tenant_id: str, conversation_id: str
+) -> None:
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "DELETE FROM conversations WHERE id = $1 AND tenant_id = $2",
+            conversation_id,
+            tenant_id,
+        )
+
+
+async def list_messages(
+    pool: asyncpg.Pool,
+    *,
+    tenant_id: str,
+    conversation_id: str,
+    offset: int = 0,
+    limit: int = 100,
+) -> list[dict]:
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT * FROM messages
+            WHERE conversation_id = $1 AND tenant_id = $2
+            ORDER BY created_at ASC
+            OFFSET $3 LIMIT $4
+            """,
+            conversation_id,
+            tenant_id,
+            offset,
+            limit,
+        )
+        return [dict(r) for r in rows]
+
+
+async def create_message(
+    pool: asyncpg.Pool,
+    *,
+    tenant_id: str,
+    conversation_id: str,
+    user_id: str,
+    role: str,
+    content: str,
+) -> dict:
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO messages (conversation_id, tenant_id, user_id, role, content)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *
+            """,
+            conversation_id,
+            tenant_id,
+            user_id,
+            role,
+            content,
+        )
+        return dict(row)
+
+
+async def list_saved_analyses(pool: asyncpg.Pool, *, tenant_id: str) -> list[dict]:
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT * FROM saved_analyses
+            WHERE tenant_id = $1
+            ORDER BY created_at DESC
+            """,
+            tenant_id,
+        )
+        return [dict(r) for r in rows]
+
+
+async def create_saved_analysis(
+    pool: asyncpg.Pool,
+    *,
+    tenant_id: str,
+    user_id: str,
+    title: str,
+    content: str,
+    section_id: str | None = None,
+    dimension: str | None = None,
+    tags: list[str] | None = None,
+) -> dict:
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO saved_analyses
+              (tenant_id, user_id, title, content, section_id, dimension, tags)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *
+            """,
+            tenant_id,
+            user_id,
+            title,
+            content,
+            section_id,
+            dimension,
+            tags or [],
+        )
+        return dict(row)
+
+
+async def delete_saved_analysis(
+    pool: asyncpg.Pool, *, tenant_id: str, analysis_id: str
+) -> None:
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "DELETE FROM saved_analyses WHERE id = $1 AND tenant_id = $2",
+            analysis_id,
+            tenant_id,
+        )
+
+
+async def list_policy_notes(pool: asyncpg.Pool, *, tenant_id: str) -> list[dict]:
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT * FROM policy_notes
+            WHERE tenant_id = $1
+            ORDER BY updated_at DESC
+            """,
+            tenant_id,
+        )
+        return [dict(r) for r in rows]
+
+
+async def create_policy_note(
+    pool: asyncpg.Pool,
+    *,
+    tenant_id: str,
+    user_id: str,
+    dimension: str,
+    region: str,
+    stance: str | None,
+    thesis: str,
+    critique: str | None = None,
+) -> dict:
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO policy_notes
+              (tenant_id, user_id, dimension, region, stance, thesis, critique)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *
+            """,
+            tenant_id,
+            user_id,
+            dimension,
+            region,
+            stance,
+            thesis,
+            critique,
+        )
+        return dict(row)
+
+
+async def update_policy_note(
+    pool: asyncpg.Pool,
+    *,
+    tenant_id: str,
+    note_id: str,
+    dimension: str | None = None,
+    region: str | None = None,
+    stance: str | None = None,
+    thesis: str | None = None,
+    critique: str | None = None,
+) -> dict | None:
+    existing = None
+    async with pool.acquire() as conn:
+        existing = await conn.fetchrow(
+            "SELECT * FROM policy_notes WHERE id = $1 AND tenant_id = $2",
+            note_id,
+            tenant_id,
+        )
+        if existing is None:
+            return None
+        row = await conn.fetchrow(
+            """
+            UPDATE policy_notes SET
+              dimension = COALESCE($1, dimension),
+              region = COALESCE($2, region),
+              stance = COALESCE($3, stance),
+              thesis = COALESCE($4, thesis),
+              critique = COALESCE($5, critique),
+              updated_at = now()
+            WHERE id = $6 AND tenant_id = $7
+            RETURNING *
+            """,
+            dimension,
+            region,
+            stance,
+            thesis,
+            critique,
+            note_id,
+            tenant_id,
+        )
+        return dict(row) if row is not None else None
+
+
+async def delete_policy_note(
+    pool: asyncpg.Pool, *, tenant_id: str, note_id: str
+) -> None:
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "DELETE FROM policy_notes WHERE id = $1 AND tenant_id = $2",
+            note_id,
+            tenant_id,
+        )
+
+
+async def list_saved_regions(pool: asyncpg.Pool, *, tenant_id: str) -> list[dict]:
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT * FROM saved_regions
+            WHERE tenant_id = $1
+            ORDER BY created_at DESC
+            """,
+            tenant_id,
+        )
+        return [dict(r) for r in rows]
+
+
+async def create_saved_region(
+    pool: asyncpg.Pool,
+    *,
+    tenant_id: str,
+    user_id: str,
+    region_code: str,
+    region_name: str,
+    notes: str | None = None,
+) -> dict:
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO saved_regions
+              (tenant_id, user_id, region_code, region_name, notes)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *
+            """,
+            tenant_id,
+            user_id,
+            region_code,
+            region_name,
+            notes,
+        )
+        return dict(row)
+
+
+async def delete_saved_region(
+    pool: asyncpg.Pool, *, tenant_id: str, region_id: str
+) -> None:
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "DELETE FROM saved_regions WHERE id = $1 AND tenant_id = $2",
+            region_id,
+            tenant_id,
+        )

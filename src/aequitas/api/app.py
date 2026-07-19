@@ -59,7 +59,11 @@ def create_app() -> FastAPI:
         lsoa,
         metrics,
         overview,
+        policy_notes,
+        profiles,
         provenance,
+        saved_analyses,
+        saved_regions,
         sections,
     )
 
@@ -72,5 +76,9 @@ def create_app() -> FastAPI:
     app.include_router(metrics.router, prefix="/api")
     app.include_router(export.router, prefix="/api")
     app.include_router(auth_router.router, prefix="/api")
+    app.include_router(saved_analyses.router, prefix="/api")
+    app.include_router(policy_notes.router, prefix="/api")
+    app.include_router(saved_regions.router, prefix="/api")
+    app.include_router(profiles.router, prefix="/api")
 
     return app

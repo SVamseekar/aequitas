@@ -8,7 +8,7 @@ from collections import defaultdict
 from fastapi import APIRouter, Depends, HTTPException
 from sse_starlette.sse import EventSourceResponse
 
-from aequitas.api.auth import verify_supabase_jwt
+from aequitas.api.auth.dependencies import require_session
 from aequitas.api.config import ApiConfig
 from aequitas.api.deps import get_embedding_model, get_faiss
 from aequitas.api.models.requests import ChatRequest
@@ -69,10 +69,10 @@ def _check_rate_limit(user_id: str) -> None:
 @router.post("/chat")
 async def chat(
     req: ChatRequest,
-    user: dict = Depends(verify_supabase_jwt),
+    session: dict = Depends(require_session),
 ) -> EventSourceResponse:
     """Stream Gemini response grounded in FAISS-retrieved narratives."""
-    _check_rate_limit(user.get("sub", "anon"))
+    _check_rate_limit(session.get("user_id", "anon"))
     faiss_index, faiss_metadata = get_faiss()
     embedding_model = get_embedding_model()
 
