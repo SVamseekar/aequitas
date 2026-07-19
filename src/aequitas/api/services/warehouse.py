@@ -139,15 +139,80 @@ def query_overview(
     return results
 
 
+# Only tables that exist (or may exist empty) in the built warehouse and are
+# safe to expose via GET /api/lsoa/{table}. Phantom names from older builds are
+# handled via TABLE_ALIASES — never listed here.
 ALLOWED_TABLES = {
-    "lsoa_service_quality",
-    "lsoa_equity_metrics",
-    "lsoa_accessibility",
-    "lsoa_economic",
-    "lsoa_policy",
-    "route_details",
-    "lta_readiness",
+    "lsoa_demographics",
+    "anomalies",
+    "coverage_prediction",
+    "lsoa_clusters",
+    "routes",
+    "stops",
+    "route_clusters",
+    "modal_shift_scenarios",
+    "policy_scenarios",
+    "stop_headways",
 }
+
+# Legacy / docs names → live warehouse tables (schema-compatible best-effort).
+TABLE_ALIASES: dict[str, str] = {
+    "lsoa_service_quality": "anomalies",
+    "lsoa_equity_metrics": "lsoa_demographics",
+    "lsoa_accessibility": "coverage_prediction",
+    "lsoa_economic": "modal_shift_scenarios",
+    "lsoa_policy": "policy_scenarios",
+    "route_details": "routes",
+}
+
+# Region filter column candidates (tables differ).
+_REGION_COLUMNS = ("region_code", "region", "region_cd", "region_name")
+
+# Public metric keys / section IDs → provenance.metric_id in warehouse.
+PROVENANCE_ID_ALIASES: dict[str, str] = {
+    "gini": "gini_national",
+    "gini_coefficient": "gini_national",
+    "gini_national": "gini_national",
+    "f1_gini": "gini_national",
+    "palma": "palma_ratio",
+    "palma_ratio": "palma_ratio",
+    "f2_palma": "palma_ratio",
+    "concentration_index": "concentration_index",
+    "ci": "concentration_index",
+    "concentration": "concentration_index",
+    "f3_concentration": "concentration_index",
+}
+
+
+def resolve_lsoa_table(table: str) -> str:
+    """Resolve alias → canonical allowed table name, or raise ValueError."""
+    resolved = TABLE_ALIASES.get(table, table)
+    if resolved not in ALLOWED_TABLES:
+        logger.warning(f"Rejected LSOA query for disallowed table: {table}")
+        raise ValueError(
+            f"Table '{table}' not in allowed list: {sorted(ALLOWED_TABLES)}"
+        )
+    return resolved
+
+
+def _table_columns(db: duckdb.DuckDBPyConnection, table: str) -> list[str] | None:
+    """Return column names for table, or None if the table is missing."""
+    try:
+        rows = db.execute(f"DESCRIBE {table}").fetchall()
+    except duckdb.CatalogException:
+        return None
+    except Exception as exc:
+        # Older DuckDB / alternate drivers may surface missing tables differently.
+        logger.debug(f"DESCRIBE {table} failed: {exc}")
+        return None
+    return [r[0] for r in rows]
+
+
+def _region_column(columns: list[str]) -> str | None:
+    for col in _REGION_COLUMNS:
+        if col in columns:
+            return col
+    return None
 
 
 def query_lsoa(
@@ -157,47 +222,74 @@ def query_lsoa(
     fields: list[str] | None = None,
     limit: int | None = None,
 ) -> tuple[list[dict], int]:
-    """Query LSOA-level analytics table."""
-    if table not in ALLOWED_TABLES:
-        logger.warning(f"Rejected LSOA query for disallowed table: {table}")
-        raise ValueError(f"Table '{table}' not in allowed list: {ALLOWED_TABLES}")
+    """Query LSOA-level analytics table.
 
-    # Count
-    count_sql = f"SELECT COUNT(*) FROM {table}"
-    params: list = []
-    if region:
-        count_sql += " WHERE region_code = ?"
-        params.append(region)
-    total = db.execute(count_sql, params).fetchone()[0]
+    Missing tables (catalog miss) return ``([], 0)`` — never raise CatalogException.
+    Disallowed table names raise ValueError (router maps to 400).
+    """
+    table = resolve_lsoa_table(table)
 
-    # Select — validate field names (alphanumeric + underscore only)
-    if fields:
-        for f in fields:
-            if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", f):
-                raise ValueError(f"Invalid field name: '{f}'")
-    cols = ", ".join(fields) if fields else "*"
-    sql = f"SELECT {cols} FROM {table}"
-    params = []
-    if region:
-        sql += " WHERE region_code = ?"
-        params.append(region)
-    if limit:
-        sql += " LIMIT ?"
-        params.append(int(limit))
+    columns = _table_columns(db, table)
+    if columns is None:
+        logger.warning(f"LSOA table '{table}' not present in warehouse — returning empty")
+        return [], 0
 
-    rows = db.execute(sql, params).fetchdf().to_dict(orient="records")
-    return rows, total
+    region_col = _region_column(columns) if region else None
+    # If caller asked for a region filter but the table has no region column,
+    # ignore the filter rather than 500.
+    apply_region = bool(region and region_col)
+
+    try:
+        count_sql = f"SELECT COUNT(*) FROM {table}"
+        params: list = []
+        if apply_region:
+            count_sql += f" WHERE {region_col} = ?"
+            params.append(region)
+        total = int(db.execute(count_sql, params).fetchone()[0])
+
+        if fields:
+            for f in fields:
+                if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", f):
+                    raise ValueError(f"Invalid field name: '{f}'")
+            missing = [f for f in fields if f not in columns]
+            if missing:
+                raise ValueError(f"Unknown field(s) for '{table}': {missing}")
+        cols = ", ".join(fields) if fields else "*"
+        sql = f"SELECT {cols} FROM {table}"
+        params = []
+        if apply_region:
+            sql += f" WHERE {region_col} = ?"
+            params.append(region)
+        if limit:
+            sql += " LIMIT ?"
+            params.append(int(limit))
+
+        rows = db.execute(sql, params).fetchdf().to_dict(orient="records")
+        return rows, total
+    except duckdb.CatalogException as exc:
+        logger.warning(f"Catalog error querying '{table}': {exc}")
+        return [], 0
+
+
+def resolve_provenance_id(metric_id: str) -> str:
+    """Map public / section keys onto warehouse provenance.metric_id values."""
+    return PROVENANCE_ID_ALIASES.get(metric_id, metric_id)
 
 
 def query_provenance(
     db: duckdb.DuckDBPyConnection,
     metric_id: str,
 ) -> dict | None:
-    """Query provenance for a metric."""
-    row = db.execute(
-        "SELECT metric_id, value, formula, inputs, source_files FROM provenance WHERE metric_id = ?",
-        [metric_id],
-    ).fetchone()
+    """Query provenance for a metric (accepts aliases like 'gini' → 'gini_national')."""
+    resolved = resolve_provenance_id(metric_id)
+    try:
+        row = db.execute(
+            "SELECT metric_id, value, formula, inputs, source_files FROM provenance WHERE metric_id = ?",
+            [resolved],
+        ).fetchone()
+    except duckdb.CatalogException:
+        logger.warning("provenance table missing from warehouse")
+        return None
     if not row:
         return None
     return {
