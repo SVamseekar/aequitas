@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react"
-import { supabase } from "@/integrations/supabase/client"
 
 interface Message {
   id: string
@@ -31,7 +30,6 @@ export function useChat(): UseChatReturn {
 
   const sendMessage = useCallback(
     async (query: string, context: Record<string, string>) => {
-      // Abort any in-flight stream
       controllerRef.current?.abort()
       const controller = new AbortController()
       controllerRef.current = controller
@@ -43,21 +41,18 @@ export function useChat(): UseChatReturn {
       setIsStreaming(true)
 
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        const headers: Record<string, string> = { "Content-Type": "application/json" }
-        if (session?.access_token) {
-          headers["Authorization"] = `Bearer ${session.access_token}`
-        }
-
         const resp = await fetch("/api/chat", {
           method: "POST",
-          headers,
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
           signal: controller.signal,
           body: JSON.stringify({
             query,
             context,
             conversation_id: conversationId.current,
-            history: messagesRef.current.slice(-6).map((m) => ({ role: m.role, content: m.content })),
+            history: messagesRef.current
+              .slice(-6)
+              .map((m) => ({ role: m.role, content: m.content })),
           }),
         })
 
@@ -88,7 +83,6 @@ export function useChat(): UseChatReturn {
           buffer = lines.pop() ?? ""
 
           for (const line of lines) {
-            // Empty line = SSE event separator — reset event type
             if (line === "") {
               currentEventType = "chunk"
               continue
@@ -109,7 +103,13 @@ export function useChat(): UseChatReturn {
                       setMessages((prev) => {
                         const last = prev[prev.length - 1]
                         if (last?.role === "assistant") {
-                          return [...prev.slice(0, -1), { ...last, content: last.content + (payload["text"] as string) }]
+                          return [
+                            ...prev.slice(0, -1),
+                            {
+                              ...last,
+                              content: last.content + (payload["text"] as string),
+                            },
+                          ]
                         }
                         return prev
                       })
@@ -121,20 +121,19 @@ export function useChat(): UseChatReturn {
                     }
                     break
                   case "error":
-                    if (typeof payload["message"] === "string") setError(payload["message"])
+                    if (typeof payload["message"] === "string")
+                      setError(payload["message"])
                     break
                 }
               } catch {
                 // ignore malformed JSON
               }
-              // Do NOT reset currentEventType here — SSE spec resets on blank line
             }
           }
         }
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return
         setError(e instanceof Error ? e.message : "Chat failed")
-        // Remove the empty assistant placeholder on error
         setMessages((prev) => {
           const last = prev[prev.length - 1]
           if (last?.role === "assistant" && !last.content.trim()) {
@@ -146,7 +145,6 @@ export function useChat(): UseChatReturn {
         setIsStreaming(false)
       }
     },
-    // State setters + refs are stable — deps are intentionally empty
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )

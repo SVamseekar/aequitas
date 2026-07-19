@@ -2,7 +2,7 @@ import { Component, type ReactNode } from "react"
 import { Download, AlertTriangle } from "lucide-react"
 import { useParams } from "react-router"
 import { useFilters, useSections } from "@/api/hooks"
-import { supabase } from "@/integrations/supabase/client"
+
 import { DIMENSIONS, REGIONS, AREA_TYPES } from "@/lib/constants"
 import { SectionCard } from "./SectionCard"
 import { ScenarioBuilder } from "./ScenarioBuilder"
@@ -97,12 +97,7 @@ function DimensionPageContent() {
   const exportUrl = `/api/export/${encodeURIComponent(dimensionId)}?${exportParams}`
 
   const handleExportPdf = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    const headers: Record<string, string> = {}
-    if (session?.access_token) {
-      headers["Authorization"] = `Bearer ${session.access_token}`
-    }
-    const resp = await fetch(exportUrl, { headers })
+    const resp = await fetch(exportUrl, { credentials: "include" })
     if (!resp.ok) throw new Error(`Export failed (${resp.status})`)
     const blob = await resp.blob()
     const url = URL.createObjectURL(blob)

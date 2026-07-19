@@ -1,82 +1,50 @@
-"""Unit tests for verify_supabase_jwt dev-bypass boundary conditions."""
-import time
+"""Tests for session-based auth dependencies (replaces Supabase JWT tests)."""
+import os
 
 import pytest
-from fastapi import HTTPException
-from fastapi.security import HTTPAuthorizationCredentials
-from jose import jwt
+from fastapi import HTTPException, Request
 
-from aequitas.api.auth import verify_supabase_jwt
-
-SECRET = "test-secret"
+from aequitas.api.auth import dependencies
 
 
-def _make_token(secret: str = SECRET, exp_delta: int = 3600, audience: str = "authenticated") -> str:
-    payload = {"sub": "real-user", "aud": audience, "exp": int(time.time()) + exp_delta}
-    return jwt.encode(payload, secret, algorithm="HS256")
+def _make_request(cookie_value: str | None = None) -> Request:
+    headers = []
+    if cookie_value is not None:
+        headers.append((b"cookie", f"aequitas_session={cookie_value}".encode()))
+    scope = {
+        "type": "http",
+        "headers": headers,
+        "method": "GET",
+        "path": "/",
+        "query_string": b"",
+    }
+    return Request(scope)
 
 
-def _creds(token: str) -> HTTPAuthorizationCredentials:
-    return HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
+@pytest.mark.asyncio
+async def test_dev_bypass_returns_admin_session(monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    monkeypatch.setenv("DEV_AUTH_BYPASS", "true")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    result = await dependencies.require_session(_make_request(None))
+    assert result["role"] == "admin"
+    assert result["session_id"] == "dev-session"
 
 
-def test_valid_token_returns_payload(monkeypatch):
+@pytest.mark.asyncio
+async def test_missing_cookie_without_bypass_raises_401(monkeypatch):
     monkeypatch.setenv("ENVIRONMENT", "production")
-    monkeypatch.setenv("SUPABASE_JWT_SECRET", SECRET)
-    monkeypatch.delenv("DEV_AUTH_BYPASS", raising=False)
-
-    payload = verify_supabase_jwt(_creds(_make_token()))
-    assert payload["sub"] == "real-user"
-
-
-def test_invalid_token_with_dev_bypass_still_raises_401(monkeypatch):
-    """A *supplied but invalid* token must 401 even when dev bypass is enabled."""
-    monkeypatch.setenv("ENVIRONMENT", "development")
-    monkeypatch.setenv("DEV_AUTH_BYPASS", "true")
-    monkeypatch.setenv("SUPABASE_JWT_SECRET", SECRET)
-
-    bad_token = _make_token(secret="wrong-secret")
-    with pytest.raises(HTTPException) as exc_info:
-        verify_supabase_jwt(_creds(bad_token))
-    assert exc_info.value.status_code == 401
+    monkeypatch.setenv("DEV_AUTH_BYPASS", "true")  # must be ignored
+    with pytest.raises(HTTPException) as exc:
+        await dependencies.require_session(_make_request(None))
+    assert exc.value.status_code == 401
 
 
-def test_expired_token_with_dev_bypass_still_raises_401(monkeypatch):
-    monkeypatch.setenv("ENVIRONMENT", "development")
-    monkeypatch.setenv("DEV_AUTH_BYPASS", "true")
-    monkeypatch.setenv("SUPABASE_JWT_SECRET", SECRET)
-
-    expired_token = _make_token(exp_delta=-3600)
-    with pytest.raises(HTTPException) as exc_info:
-        verify_supabase_jwt(_creds(expired_token))
-    assert exc_info.value.status_code == 401
-
-
-def test_missing_credentials_with_dev_bypass_returns_dev_user(monkeypatch):
-    monkeypatch.setenv("ENVIRONMENT", "development")
-    monkeypatch.setenv("DEV_AUTH_BYPASS", "true")
-    monkeypatch.setenv("SUPABASE_JWT_SECRET", SECRET)
-
-    payload = verify_supabase_jwt(None)
-    assert payload == {"sub": "dev-user"}
-
-
-def test_missing_credentials_without_bypass_raises_401(monkeypatch):
+@pytest.mark.asyncio
+async def test_invalid_cookie_raises_401(monkeypatch):
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.delenv("DEV_AUTH_BYPASS", raising=False)
-    monkeypatch.setenv("SUPABASE_JWT_SECRET", SECRET)
-
-    with pytest.raises(HTTPException) as exc_info:
-        verify_supabase_jwt(None)
-    assert exc_info.value.status_code == 401
-
-
-def test_invalid_token_in_production_raises_401(monkeypatch):
-    monkeypatch.setenv("ENVIRONMENT", "production")
-    monkeypatch.setenv("DEV_AUTH_BYPASS", "true")  # must be ignored in production
-    monkeypatch.setenv("SUPABASE_JWT_SECRET", SECRET)
-
-    bad_token = _make_token(secret="wrong-secret")
-    with pytest.raises(HTTPException) as exc_info:
-        verify_supabase_jwt(_creds(bad_token))
-    assert exc_info.value.status_code == 401
+    monkeypatch.setenv("SESSION_SECRET", "test-secret")
+    with pytest.raises(HTTPException) as exc:
+        await dependencies.require_session(_make_request("not-valid"))
+    assert exc.value.status_code == 401

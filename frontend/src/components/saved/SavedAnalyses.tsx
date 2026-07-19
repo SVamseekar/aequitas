@@ -1,7 +1,17 @@
 import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/contexts/AuthContext"
-import { listSavedAnalyses, deleteSavedAnalysis, type SavedAnalysisRow } from "@/lib/db"
+import { fetchJson, apiDelete } from "@/api/client"
 import { Trash2, ChevronDown, ChevronUp, Bookmark } from "lucide-react"
+
+interface SavedAnalysisRow {
+  id: string
+  title: string
+  content: string
+  section_id: string | null
+  dimension: string | null
+  tags: string[]
+  created_at: string
+}
 
 export function SavedAnalyses() {
   const { user } = useAuth()
@@ -12,20 +22,31 @@ export function SavedAnalyses() {
   const refresh = useCallback(async () => {
     if (!user) return
     setLoading(true)
-    const data = await listSavedAnalyses(user.id)
-    setAnalyses(data)
-    setLoading(false)
+    try {
+      const data = await fetchJson<SavedAnalysisRow[]>("/saved-analyses")
+      setAnalyses(data)
+    } catch {
+      setAnalyses([])
+    } finally {
+      setLoading(false)
+    }
   }, [user])
 
-  useEffect(() => { void refresh() }, [refresh])
+  useEffect(() => {
+    void refresh()
+  }, [refresh])
 
   const handleDelete = async (id: string) => {
-    await deleteSavedAnalysis(id)
+    await apiDelete(`/saved-analyses/${id}`)
     void refresh()
   }
 
   if (loading) {
-    return <div className="flex justify-center py-16"><div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" /></div>
+    return (
+      <div className="flex justify-center py-16">
+        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+      </div>
+    )
   }
 
   if (analyses.length === 0) {
@@ -33,7 +54,9 @@ export function SavedAnalyses() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Bookmark className="w-8 h-8 text-muted-foreground/20 mb-3" />
         <p className="text-sm text-muted-foreground">No saved analyses yet.</p>
-        <p className="text-xs text-muted-foreground/60 mt-1">Save narratives from the dashboard to find them here.</p>
+        <p className="text-xs text-muted-foreground/60 mt-1">
+          Save narratives from the dashboard to find them here.
+        </p>
       </div>
     )
   }
@@ -47,7 +70,9 @@ export function SavedAnalyses() {
               <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
               <div className="flex items-center gap-3 mt-0.5">
                 {a.dimension && (
-                  <span className="text-[11px] font-mono text-indigo-400 uppercase">{a.dimension}</span>
+                  <span className="text-[11px] font-mono text-indigo-400 uppercase">
+                    {a.dimension}
+                  </span>
                 )}
                 <span className="text-[11px] text-muted-foreground/40 font-mono">
                   {new Date(a.created_at).toLocaleDateString("en-GB")}
@@ -59,7 +84,11 @@ export function SavedAnalyses() {
                 onClick={() => setExpanded(expanded === a.id ? null : a.id)}
                 className="p-1.5 rounded hover:bg-muted text-muted-foreground transition-colors"
               >
-                {expanded === a.id ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                {expanded === a.id ? (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                )}
               </button>
               <button
                 onClick={() => void handleDelete(a.id)}
@@ -71,7 +100,9 @@ export function SavedAnalyses() {
           </div>
           {expanded === a.id && (
             <div className="px-4 pb-4 border-t border-border pt-3">
-              <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">{a.content}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                {a.content}
+              </p>
             </div>
           )}
         </div>

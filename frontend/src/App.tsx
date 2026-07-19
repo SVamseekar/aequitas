@@ -19,6 +19,7 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage"))
 const TermsPage = lazy(() => import("./pages/TermsPage"))
 const RefundsPage = lazy(() => import("./pages/RefundsPage"))
 const ComparePage = lazy(() => import("./pages/ComparePage"))
+const InviteAcceptPage = lazy(() => import("./pages/InviteAcceptPage"))
 
 // Saved sub-pages rendered inside a simple wrapper
 const SavedPage = lazy(() =>
@@ -64,6 +65,7 @@ export default function App() {
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/refunds" element={<RefundsPage />} />
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/invite/:token" element={<InviteAcceptPage />} />
 
               {/* Protected — main app shell */}
               <Route path="/dashboard" element={<ProtectedRoute><AppShell /></ProtectedRoute>}>

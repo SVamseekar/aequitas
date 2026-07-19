@@ -1,6 +1,7 @@
 import { Link } from "react-router"
 import { FilterDropdowns } from "./FilterDropdowns"
 import { UserMenu } from "./UserMenu"
+import { TenantSwitcher } from "./TenantSwitcher"
 import { AequitasLogo } from "../shared/AequitasLogo"
 
 export function Header() {
@@ -16,6 +17,7 @@ export function Header() {
         </Link>
         <div className="flex items-center gap-4">
           <FilterDropdowns />
+          <TenantSwitcher />
           <UserMenu />
         </div>
       </div>

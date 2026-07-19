@@ -6,11 +6,11 @@ import { SUPPORT_EMAIL } from "@/lib/site"
 const SECTIONS = [
   {
     title: "Data We Collect",
-    body: "Account details (email address, password hash) via Supabase Auth when you sign up. Saved views, notes, and comparisons you create while using the platform. Aggregated usage analytics via Google Analytics (GA4) on public pages. We do not collect payroll, financial, or personal data about third parties — Aequitas analyses publicly available government transport and demographic datasets, not data you upload about individuals.",
+    body: "Account details (email address and display name) when you sign in with Google OAuth. Saved views, notes, conversations, and comparisons you create while using the platform, scoped to your organisation (tenant) workspace. Aggregated usage analytics via Google Analytics (GA4) on public pages. We do not collect payroll, financial, or personal data about third parties — Aequitas analyses publicly available government transport and demographic datasets, not data you upload about individuals.",
   },
   {
     title: "How We Use Data",
-    body: "Your account details let you sign in and persist saved views, notes, and comparisons across sessions. Usage analytics help us understand which dimensions and regions are most used, so we can prioritise development. We do not sell personal data, and we do not use your account activity to profile individuals outside the platform.",
+    body: "Your account details let you sign in and persist saved views, notes, and comparisons across sessions within your workspace. Usage analytics help us understand which dimensions and regions are most used, so we can prioritise development. We do not sell personal data, and we do not use your account activity to profile individuals outside the platform.",
   },
   {
     title: "Data Retention",
@@ -18,7 +18,7 @@ const SECTIONS = [
   },
   {
     title: "Third-Party Services",
-    body: "Aequitas uses Supabase (authentication and database, EU-hosted), Google Analytics (usage analytics), and Google Gemini (chatbot responses — your questions to the chatbot are sent to Google's API to generate answers grounded in pre-computed narratives). No underlying government source data we analyse contains personal information about individuals.",
+    body: "Aequitas uses Google OAuth for authentication, a self-hosted PostgreSQL database for account and workspace data, Google Analytics (usage analytics), and Google Gemini (chatbot responses — your questions to the chatbot are sent to Google's API to generate answers grounded in pre-computed narratives). Invite emails may be sent via Brevo. No underlying government source data we analyse contains personal information about individuals.",
   },
   {
     title: "Your Rights (UK GDPR)",
@@ -26,7 +26,7 @@ const SECTIONS = [
   },
   {
     title: "Cookies",
-    body: "We use essential cookies for authentication (via Supabase) and analytics cookies (Google Analytics) to understand site usage. You can control cookies through your browser settings; disabling them may affect sign-in functionality.",
+    body: "We use an essential HttpOnly session cookie for authentication (signed, SameSite=Lax) and analytics cookies (Google Analytics) to understand site usage. You can control cookies through your browser settings; disabling essential cookies will prevent sign-in.",
   },
 ]
 

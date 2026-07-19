@@ -34,7 +34,6 @@ def test_brevo_api_key_reads_env(monkeypatch):
     assert cfg.brevo_api_key == "brevo-key-789"
 
 
-def test_supabase_jwt_secret_still_present():
-    """Must stay until Plan 04 removes verify_supabase_jwt's last call site."""
+def test_supabase_jwt_secret_removed():
     cfg = ApiConfig()
-    assert hasattr(cfg, "supabase_jwt_secret")
+    assert not hasattr(cfg, "supabase_jwt_secret")

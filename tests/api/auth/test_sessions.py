@@ -12,7 +12,11 @@ def test_sign_and_unsign_roundtrip(monkeypatch):
 def test_unsign_rejects_tampered_token(monkeypatch):
     monkeypatch.setenv("SESSION_SECRET", "test-secret")
     token = sessions.sign_session_id("session-id-123")
-    tampered = token[:-1] + ("a" if token[-1] != "a" else "b")
+    # Corrupt the payload section (before the first dot) so signature fails.
+    parts = token.split(".")
+    assert len(parts) >= 2
+    parts[0] = ("X" if parts[0][0] != "X" else "Y") + parts[0][1:]
+    tampered = ".".join(parts)
     assert sessions.unsign_session_id(tampered) is None
 
 

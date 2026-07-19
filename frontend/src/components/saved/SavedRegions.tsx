@@ -1,7 +1,15 @@
 import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/contexts/AuthContext"
-import { listSavedRegions, deleteSavedRegion, type SavedRegionRow } from "@/lib/db"
+import { fetchJson, apiDelete } from "@/api/client"
 import { Trash2, MapPin } from "lucide-react"
+
+interface SavedRegionRow {
+  id: string
+  region_code: string
+  region_name: string
+  notes: string | null
+  created_at: string
+}
 
 export function SavedRegions() {
   const { user } = useAuth()
@@ -11,20 +19,31 @@ export function SavedRegions() {
   const refresh = useCallback(async () => {
     if (!user) return
     setLoading(true)
-    const data = await listSavedRegions(user.id)
-    setRegions(data)
-    setLoading(false)
+    try {
+      const data = await fetchJson<SavedRegionRow[]>("/saved-regions")
+      setRegions(data)
+    } catch {
+      setRegions([])
+    } finally {
+      setLoading(false)
+    }
   }, [user])
 
-  useEffect(() => { void refresh() }, [refresh])
+  useEffect(() => {
+    void refresh()
+  }, [refresh])
 
   const handleDelete = async (id: string) => {
-    await deleteSavedRegion(id)
+    await apiDelete(`/saved-regions/${id}`)
     void refresh()
   }
 
   if (loading) {
-    return <div className="flex justify-center py-16"><div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" /></div>
+    return (
+      <div className="flex justify-center py-16">
+        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+      </div>
+    )
   }
 
   if (regions.length === 0) {
@@ -32,7 +51,9 @@ export function SavedRegions() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <MapPin className="w-8 h-8 text-muted-foreground/20 mb-3" />
         <p className="text-sm text-muted-foreground">No tracked regions yet.</p>
-        <p className="text-xs text-muted-foreground/60 mt-1">Save regions from the filter panel to track them here.</p>
+        <p className="text-xs text-muted-foreground/60 mt-1">
+          Save regions from the filter panel to track them here.
+        </p>
       </div>
     )
   }
@@ -40,11 +61,16 @@ export function SavedRegions() {
   return (
     <div className="space-y-2">
       {regions.map((r) => (
-        <div key={r.id} className="border border-border rounded bg-card p-4 flex items-start gap-3">
+        <div
+          key={r.id}
+          className="border border-border rounded bg-card p-4 flex items-start gap-3"
+        >
           <MapPin className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground">{r.region_name}</p>
-            <p className="text-[11px] font-mono text-muted-foreground/40 mt-0.5">{r.region_code}</p>
+            <p className="text-[11px] font-mono text-muted-foreground/40 mt-0.5">
+              {r.region_code}
+            </p>
             {r.notes && <p className="text-xs text-muted-foreground mt-1">{r.notes}</p>}
           </div>
           <button

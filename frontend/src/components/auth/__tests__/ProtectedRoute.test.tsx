@@ -1,6 +1,6 @@
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen } from "@testing-library/react"
-import { describe, it, expect, vi } from "vitest"
-import { MemoryRouter } from "react-router"
+import { MemoryRouter, Route, Routes } from "react-router"
 
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: vi.fn(),
@@ -10,35 +10,76 @@ import { useAuth } from "@/contexts/AuthContext"
 import { ProtectedRoute } from "../ProtectedRoute"
 
 describe("ProtectedRoute", () => {
-  it("shows loading spinner while auth is resolving", () => {
-    vi.mocked(useAuth).mockReturnValue({ user: null, session: null, loading: true, signOut: vi.fn() })
-    const { container } = render(
-      <MemoryRouter>
-        <ProtectedRoute><div>Protected</div></ProtectedRoute>
-      </MemoryRouter>,
-    )
-    expect(container.querySelector(".animate-pulse")).toBeTruthy()
+  beforeEach(() => {
+    vi.mocked(useAuth).mockReset()
   })
 
-  it("renders children when user is authenticated", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(useAuth).mockReturnValue({ user: { id: "u1" } as any, session: null, loading: false, signOut: vi.fn() })
+  it("shows loading when auth is loading", () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: null,
+      activeTenant: null,
+      role: null,
+      memberships: [],
+      loading: true,
+      signOut: vi.fn(),
+      refresh: vi.fn(),
+    })
     render(
       <MemoryRouter>
-        <ProtectedRoute><div>Protected Content</div></ProtectedRoute>
+        <ProtectedRoute>
+          <div>secret</div>
+        </ProtectedRoute>
       </MemoryRouter>,
     )
-    expect(screen.getByText("Protected Content")).toBeTruthy()
+    expect(screen.queryByText("secret")).toBeNull()
   })
 
-  it("redirects to /auth when unauthenticated", () => {
-    vi.mocked(useAuth).mockReturnValue({ user: null, session: null, loading: false, signOut: vi.fn() })
-    const { container } = render(
-      <MemoryRouter initialEntries={["/"]}>
-        <ProtectedRoute><div>Protected</div></ProtectedRoute>
+  it("renders children when authenticated", () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: "u1", email: "a@b.com", display_name: "A" },
+      activeTenant: { id: "t1", name: "T", slug: "t" },
+      role: "admin",
+      memberships: [],
+      loading: false,
+      signOut: vi.fn(),
+      refresh: vi.fn(),
+    })
+    render(
+      <MemoryRouter>
+        <ProtectedRoute>
+          <div>secret</div>
+        </ProtectedRoute>
       </MemoryRouter>,
     )
-    // Navigate replaces content — protected content should not be visible
-    expect(container.querySelector("div:not(:empty)")).toBeNull()
+    expect(screen.getByText("secret")).toBeTruthy()
+  })
+
+  it("redirects to home when unauthenticated", () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: null,
+      activeTenant: null,
+      role: null,
+      memberships: [],
+      loading: false,
+      signOut: vi.fn(),
+      refresh: vi.fn(),
+    })
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <Routes>
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <div>secret</div>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<div>landing</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    expect(screen.getByText("landing")).toBeTruthy()
+    expect(screen.queryByText("secret")).toBeNull()
   })
 })
