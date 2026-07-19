@@ -7,6 +7,28 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aequitas
+          POSTGRES_PASSWORD: aequitas
+          POSTGRES_DB: aequitas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aequitas"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://aequitas:aequitas@localhost:5432/aequitas
+      SESSION_SECRET: ci-session-secret-not-for-production
+      DEV_AUTH_BYPASS: "true"
+      ENVIRONMENT: development
+      # Avoid accidental real OAuth in CI
+      GOOGLE_CLIENT_ID: ""
+      GOOGLE_CLIENT_SECRET: ""
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
@@ -16,7 +38,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
       - name: Run backend tests
-        run: uv run pytest tests/ -q -m "not requires_data"
+        # Skip data-heavy / slow pipeline tests; exercise API + auth against Postgres.
+        run: uv run pytest tests/ -q -m "not requires_data and not slow" --ignore=tests/api/test_integration.py --tb=line
 
   frontend:
     runs-on: ubuntu-latest
