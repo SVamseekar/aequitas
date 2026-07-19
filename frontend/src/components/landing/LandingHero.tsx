@@ -1,14 +1,13 @@
 import { Link, useNavigate } from "react-router"
 import { ArrowRight } from "lucide-react"
-import { useAuth } from "@/contexts/AuthContext"
 import heroImage from "@/assets/hero.png"
 import { SITE_TAGLINE } from "@/lib/site"
 import { METRICS_CANON, formatGini } from "@/lib/metricsCanon"
 
 export function LandingHero() {
   const navigate = useNavigate()
-  const { user } = useAuth()
-  const ctaPath = user ? "/dashboard" : "/auth"
+  // Analytics are public; auth only required for chat/save/profile
+  const ctaPath = "/dashboard"
 
   return (
     <section

@@ -12,7 +12,7 @@ const year = new Date().getFullYear()
 
 export function LandingFooter() {
   const { user } = useAuth()
-  const explorePath = user ? "/dashboard" : "/auth"
+  const explorePath = "/dashboard"
   const signInPath = user ? "/dashboard" : "/auth"
 
   return (

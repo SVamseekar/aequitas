@@ -1,10 +1,8 @@
 import { useNavigate } from "react-router"
-import { useAuth } from "@/contexts/AuthContext"
 import { DIMENSIONS } from "./data"
 
 export function LandingDimensions() {
   const navigate = useNavigate()
-  const { user } = useAuth()
 
   return (
     <section
@@ -26,7 +24,7 @@ export function LandingDimensions() {
           <li key={dimension.title}>
             <button
               type="button"
-              onClick={() => navigate(user ? `/dashboard${dimension.route}` : "/auth")}
+              onClick={() => navigate(`/dashboard${dimension.route}`)}
               className="w-full h-full text-left p-5 rounded-lg border border-border bg-card/40 hover:border-indigo-400/30 hover:bg-card/60 transition-colors duration-300 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
             >
               <dimension.icon

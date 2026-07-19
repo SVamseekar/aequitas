@@ -71,14 +71,14 @@ export default function App() {
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/invite/:token" element={<InviteAcceptPage />} />
 
-              {/* Protected — main app shell */}
-              <Route path="/dashboard" element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+              {/* Public analytics shell — open data; chat/save still need session */}
+              <Route path="/dashboard" element={<AppShell />}>
                 <Route index element={<HomePage />} />
                 <Route path="compare" element={<ComparePage />} />
                 <Route path=":dimensionSlug" element={<DimensionPage />} />
               </Route>
 
-              {/* Protected — standalone pages */}
+              {/* Protected — personal / tenant data */}
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/saved" element={<ProtectedRoute><SavedPage /></ProtectedRoute>} />
               <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />

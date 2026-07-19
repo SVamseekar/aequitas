@@ -1,11 +1,9 @@
 import { Link, useNavigate } from "react-router"
 import { ArrowRight } from "lucide-react"
-import { useAuth } from "@/contexts/AuthContext"
 
 export function LandingCta() {
   const navigate = useNavigate()
-  const { user } = useAuth()
-  const ctaPath = user ? "/dashboard" : "/auth"
+  const ctaPath = "/dashboard"
 
   return (
     <section aria-labelledby="landing-cta-heading" className="border-y border-border bg-card/20 backdrop-blur-sm">

@@ -106,3 +106,18 @@ Spec: `docs/superpowers/specs/2026-07-03-enterprise-oauth-tenancy-design.md`
 ## Open UI gap found during plan review (2026-07-03)
 
 - **Policy notes editing** — was missing entirely from the original 7-plan set (no `db.py` function, no route, no tests, no frontend UI existed anywhere) despite the spec calling for it. Found during plan review and fixed into Plan 04 (backend) and Plan 06 (frontend edit UI) — not deferred, already addressed. Listed here only as a record of what almost shipped incomplete.
+
+## Post-programme red flags status (2026-07-19 closeout)
+
+| Item | Status |
+|---|---|
+| Unpushed A–D commits | Push as part of production cutover |
+| Portfolio 51 sections / Supabase stack | Fixed in portfolio `projects.ts` |
+| Production API | Cloud Run + Vercel `/api` proxy (this cutover) |
+| Empty stops/routes | Backfilled from audit parquets (stops ~216k, routes ~13.6k) |
+| lsoa_demographics.region Unknown | Backfilled from policy synthesis (~33.5k real regions) |
+| Equity Palma/CI truncation | National f1_gini stats packed to GT; UI packing remains |
+| Stale internal docs (51 / precompute-5) | Superseded banners on master reference / gap analysis / paper brief |
+| Chat google.generativeai | google-genai dependency added; dual path kept for fallback |
+| CV / pitch PDF handoffs | Still external (docx/pdf) — apply packets in FUTURE_WORK metrics section |
+| Managed Postgres for prod OAuth | Optional; public analytics work without it. Set DATABASE_URL + Google OAuth for login. |

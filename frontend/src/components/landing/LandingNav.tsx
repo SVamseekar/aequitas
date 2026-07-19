@@ -7,7 +7,7 @@ import { SITE_TAGLINE } from "@/lib/site"
 export function LandingNav() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const ctaPath = user ? "/dashboard" : "/auth"
+  const ctaPath = "/dashboard"
   const ctaLabel = user ? "Open platform" : "Sign in"
 
   return (
