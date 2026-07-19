@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router"
+import { Link, useNavigate } from "react-router"
 import { ArrowLeft } from "lucide-react"
 import { Seo } from "@/components/shared/Seo"
 import {
@@ -7,6 +7,7 @@ import {
   formatGini,
   formatPalma,
 } from "@/lib/metricsCanon"
+import { breadcrumbJsonLd } from "@/lib/structuredData"
 
 const m = METRICS_CANON
 
@@ -89,6 +90,7 @@ export default function AboutPage() {
         title="About Aequitas — Public Sector Transport Intelligence"
         description={`Aequitas pre-computes evidence-graded transport equity analytics across ${m.dimensions} policy dimensions and ${m.sections} analytical sections, drawing on national open data sources.`}
         path="/about"
+        jsonLd={breadcrumbJsonLd([{ name: "About", path: "/about" }])}
       />
       <div className="border-b border-border bg-card/50">
         <div className="max-w-4xl mx-auto px-4 flex items-center h-8">
@@ -173,6 +175,13 @@ export default function AboutPage() {
               sections using FAISS + all-MiniLM-L6-v2 embeddings, then grounds Gemini Flash
               responses in retrieved context. Citations are required; hallucination patterns are
               detected and suppressed.
+            </p>
+            <p>
+              Full public write-up:{" "}
+              <Link to="/methodology" className="text-indigo-400 hover:underline">
+                Methodology &amp; data quality
+              </Link>
+              .
             </p>
           </div>
         </section>

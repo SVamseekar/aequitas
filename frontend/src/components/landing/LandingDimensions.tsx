@@ -7,7 +7,11 @@ export function LandingDimensions() {
   const { user } = useAuth()
 
   return (
-    <section aria-labelledby="landing-dimensions-heading" className="max-w-7xl mx-auto px-6 py-24">
+    <section
+      id="dimensions"
+      aria-labelledby="landing-dimensions-heading"
+      className="max-w-7xl mx-auto px-6 py-24"
+    >
       <p className="text-[11px] font-mono uppercase tracking-[0.3em] text-indigo-400 font-bold">
         8 policy dimensions
       </p>

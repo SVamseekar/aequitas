@@ -9,28 +9,8 @@ export function LandingStats() {
           id="landing-stats-heading"
           className="text-[11px] font-mono uppercase tracking-[0.25em] text-indigo-400 font-bold mb-6"
         >
-          What the data already shows
-        </h2>
-        <dl className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border overflow-hidden rounded-lg border border-border">
-          {HEADLINE_STATS.map((stat) => (
-            <div
-              key={stat.label}
-              className="bg-background p-6 hover:bg-card/40 transition-colors duration-300"
-            >
-              <dt className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                {stat.label}
-              </dt>
-              <dd className="text-3xl font-extrabold font-mono tracking-tight text-indigo-400">
-                {stat.value}
-              </dd>
-              <dd className="text-xs text-muted-foreground mt-1">{stat.sub}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <h3 className="text-[11px] font-mono uppercase tracking-[0.25em] text-muted-foreground font-bold mt-10 mb-4">
           Scale of the England reference warehouse
-        </h3>
+        </h2>
         <dl className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border overflow-hidden rounded-lg border border-border">
           {SCALE_STATS.map((stat) => (
             <div
@@ -41,6 +21,26 @@ export function LandingStats() {
                 {stat.label}
               </dt>
               <dd className="text-2xl font-extrabold font-mono tracking-tight text-foreground">
+                {stat.value}
+              </dd>
+              <dd className="text-xs text-muted-foreground mt-1">{stat.sub}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <h3 className="text-[11px] font-mono uppercase tracking-[0.25em] text-muted-foreground font-bold mt-10 mb-4">
+          What the data already shows
+        </h3>
+        <dl className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border overflow-hidden rounded-lg border border-border">
+          {HEADLINE_STATS.map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-background p-6 hover:bg-card/40 transition-colors duration-300"
+            >
+              <dt className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1">
+                {stat.label}
+              </dt>
+              <dd className="text-3xl font-extrabold font-mono tracking-tight text-indigo-400">
                 {stat.value}
               </dd>
               <dd className="text-xs text-muted-foreground mt-1">{stat.sub}</dd>

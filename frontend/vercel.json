@@ -19,6 +19,8 @@
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
     { "source": "/refunds", "destination": "/refunds.html" },
+    { "source": "/methodology", "destination": "/methodology.html" },
+    { "source": "/accessibility", "destination": "/accessibility.html" },
     {
       "source": "/((?!.*\\..*).*)",
       "destination": "/index.html"

@@ -81,7 +81,7 @@ function DimensionPageContent() {
   // London is classified almost entirely urban under RUC — rural combos thin out.
   const isLondonRural = region === "E12000007" && urbanRural === "rural"
   const impossibleGeographyCopy = isLondonRural
-    ? "London has no rural LSOAs under the RUC classification — choose Urban or All Areas."
+    ? "No LSOAs match this filter (e.g. London has no rural LSOAs under the RUC classification). Choose Urban or All Areas."
     : null
 
   if (sections.length === 0) {
@@ -90,7 +90,7 @@ function DimensionPageContent() {
         <p className="text-muted-foreground text-sm">
           {impossibleGeographyCopy ?? (
             <>
-              No data available for <strong>{regionName}</strong> ({areaName}).
+              No LSOAs match this filter for <strong>{regionName}</strong> ({areaName}).
             </>
           )}
         </p>

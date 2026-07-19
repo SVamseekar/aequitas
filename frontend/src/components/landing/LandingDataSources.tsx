@@ -1,3 +1,4 @@
+import { Link } from "react-router"
 import { DATA_SOURCES } from "./data"
 
 export function LandingDataSources() {
@@ -23,6 +24,14 @@ export function LandingDataSources() {
             </li>
           ))}
         </ul>
+        <p className="text-center mt-5">
+          <Link
+            to="/methodology"
+            className="text-[11px] font-mono uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors"
+          >
+            Full methodology &amp; quality gates →
+          </Link>
+        </p>
       </div>
     </section>
   )

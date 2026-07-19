@@ -21,6 +21,8 @@ export default defineConfig({
         privacy: path.resolve(__dirname, "privacy.html"),
         terms: path.resolve(__dirname, "terms.html"),
         refunds: path.resolve(__dirname, "refunds.html"),
+        methodology: path.resolve(__dirname, "methodology.html"),
+        accessibility: path.resolve(__dirname, "accessibility.html"),
       },
     },
   },

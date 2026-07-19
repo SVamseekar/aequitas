@@ -3,6 +3,7 @@ import { LandingAudience } from "@/components/landing/LandingAudience"
 import { LandingCta } from "@/components/landing/LandingCta"
 import { LandingDataSources } from "@/components/landing/LandingDataSources"
 import { LandingDimensions } from "@/components/landing/LandingDimensions"
+import { LandingFaq } from "@/components/landing/LandingFaq"
 import { LandingFooter } from "@/components/landing/LandingFooter"
 import { LandingHero } from "@/components/landing/LandingHero"
 import { LandingHowItWorks } from "@/components/landing/LandingHowItWorks"
@@ -39,11 +40,12 @@ export default function LandingPage() {
       <main id="main-content" className="relative z-10">
         <LandingHero />
         <LandingStats />
-        <LandingAudience />
         <LandingProblemSolution />
-        <LandingHowItWorks />
         <LandingDimensions />
+        <LandingHowItWorks />
         <LandingDataSources />
+        <LandingAudience />
+        <LandingFaq />
         <LandingCta />
       </main>
 

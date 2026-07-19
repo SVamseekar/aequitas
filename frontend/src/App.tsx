@@ -18,6 +18,8 @@ const ContactPage = lazy(() => import("./pages/ContactPage"))
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"))
 const TermsPage = lazy(() => import("./pages/TermsPage"))
 const RefundsPage = lazy(() => import("./pages/RefundsPage"))
+const MethodologyPage = lazy(() => import("./pages/MethodologyPage"))
+const AccessibilityPage = lazy(() => import("./pages/AccessibilityPage"))
 const ComparePage = lazy(() => import("./pages/ComparePage"))
 const InviteAcceptPage = lazy(() => import("./pages/InviteAcceptPage"))
 
@@ -64,6 +66,8 @@ export default function App() {
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/refunds" element={<RefundsPage />} />
+              <Route path="/methodology" element={<MethodologyPage />} />
+              <Route path="/accessibility" element={<AccessibilityPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/invite/:token" element={<InviteAcceptPage />} />
 

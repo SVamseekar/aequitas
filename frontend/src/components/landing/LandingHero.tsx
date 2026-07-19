@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import heroImage from "@/assets/hero.png"
 import { SITE_TAGLINE } from "@/lib/site"
+import { METRICS_CANON, formatGini } from "@/lib/metricsCanon"
 
 export function LandingHero() {
   const navigate = useNavigate()
@@ -33,6 +34,7 @@ export function LandingHero() {
         </p>
         <div className="flex flex-wrap items-center gap-4">
           <button
+            type="button"
             onClick={() => navigate(ctaPath)}
             className="flex items-center gap-2.5 px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
@@ -47,7 +49,7 @@ export function LandingHero() {
         </div>
       </div>
 
-      <figure className="relative flex justify-center lg:justify-end">
+      <figure className="relative flex flex-col items-center lg:items-end gap-3">
         <div className="relative border border-border rounded-xl p-2 bg-card/60 w-full max-w-lg shadow-2xl shadow-indigo-950/20">
           <img
             src={heroImage}
@@ -58,9 +60,21 @@ export function LandingHero() {
             fetchPriority="high"
             className="w-full h-auto rounded-lg"
           />
+          <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:max-w-[min(100%,280px)] rounded-md border border-indigo-500/30 bg-background/90 backdrop-blur-sm px-3 py-2 shadow-lg">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-indigo-400 font-bold">
+              National equity
+            </p>
+            <p className="text-sm font-mono font-bold text-foreground mt-0.5">
+              Gini {formatGini(METRICS_CANON.gini)}
+              <span className="text-muted-foreground font-normal text-xs ml-2">
+                · {METRICS_CANON.sections} sections
+              </span>
+            </p>
+          </div>
         </div>
-        <figcaption className="sr-only">
-          Preview of the Aequitas policy intelligence dashboard
+        <figcaption className="text-[11px] font-mono text-muted-foreground text-center lg:text-right max-w-lg">
+          National bus service inequality Gini {formatGini(METRICS_CANON.gini)} across{" "}
+          {METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs — pre-computed warehouse, not live ops data.
         </figcaption>
       </figure>
     </section>

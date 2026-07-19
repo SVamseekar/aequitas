@@ -8,7 +8,7 @@ export function LandingNav() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const ctaPath = user ? "/dashboard" : "/auth"
-  const ctaLabel = user ? "Open platform" : "Get started"
+  const ctaLabel = user ? "Open platform" : "Sign in"
 
   return (
     <header className="border-b border-border bg-card/40 backdrop-blur-md relative z-10">
@@ -25,14 +25,21 @@ export function LandingNav() {
             · {SITE_TAGLINE}
           </span>
         </Link>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-5 sm:gap-6">
           <Link
             to="/about"
             className="text-xs text-muted-foreground hover:text-foreground transition-colors font-mono tracking-widest"
           >
             About
           </Link>
+          <Link
+            to="/contact"
+            className="hidden sm:inline text-xs text-muted-foreground hover:text-foreground transition-colors font-mono tracking-widest"
+          >
+            Contact
+          </Link>
           <button
+            type="button"
             onClick={() => navigate(ctaPath)}
             className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
