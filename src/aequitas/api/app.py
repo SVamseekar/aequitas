@@ -82,3 +82,7 @@ def create_app() -> FastAPI:
     app.include_router(profiles.router, prefix="/api")
 
     return app
+
+
+# Module-level app for `uvicorn aequitas.api.app:app` (see AGENTS.md / README).
+app = create_app()
