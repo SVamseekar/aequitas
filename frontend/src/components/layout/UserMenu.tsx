@@ -76,10 +76,8 @@ export function UserMenu() {
 
   if (!user) return null
 
-  const rawAvatar = user.user_metadata?.["avatar_url"] ?? user.user_metadata?.["picture"]
-  const avatar = typeof rawAvatar === "string" ? rawAvatar : undefined
-  const rawName = user.user_metadata?.["full_name"] ?? user.user_metadata?.["name"] ?? user.email?.split("@")[0]
-  const name = typeof rawName === "string" ? rawName : undefined
+  const avatar: string | undefined = undefined
+  const name = user.display_name ?? user.email?.split("@")[0]
 
   const setItemRef = (index: number) => (el: HTMLButtonElement | null) => {
     itemRefs.current[index] = el

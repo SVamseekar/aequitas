@@ -21,8 +21,15 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=cfg.cors_origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "DELETE"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"],
+    )
+    # Required by authlib OAuth (stores state in request.session)
+    from starlette.middleware.sessions import SessionMiddleware
+
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key=cfg.session_secret or "dev-insecure-secret-change-me",
     )
 
     # Health — verifies DuckDB connectivity
@@ -44,7 +51,22 @@ def create_app() -> FastAPI:
             generator.close()
 
     # Register routers
-    from aequitas.api.routers import overview, sections, lsoa, provenance, chat, conversations, metrics, export
+    from aequitas.api.routers import (
+        auth as auth_router,
+        chat,
+        conversations,
+        export,
+        lsoa,
+        metrics,
+        overview,
+        policy_notes,
+        profiles,
+        provenance,
+        saved_analyses,
+        saved_regions,
+        sections,
+    )
+
     app.include_router(overview.router, prefix="/api")
     app.include_router(sections.router, prefix="/api")
     app.include_router(lsoa.router, prefix="/api")
@@ -53,5 +75,14 @@ def create_app() -> FastAPI:
     app.include_router(conversations.router, prefix="/api")
     app.include_router(metrics.router, prefix="/api")
     app.include_router(export.router, prefix="/api")
+    app.include_router(auth_router.router, prefix="/api")
+    app.include_router(saved_analyses.router, prefix="/api")
+    app.include_router(policy_notes.router, prefix="/api")
+    app.include_router(saved_regions.router, prefix="/api")
+    app.include_router(profiles.router, prefix="/api")
 
     return app
+
+
+# Module-level app for `uvicorn aequitas.api.app:app` (see AGENTS.md / README).
+app = create_app()

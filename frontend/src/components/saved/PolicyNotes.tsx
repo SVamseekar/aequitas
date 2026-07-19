@@ -1,17 +1,40 @@
 import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/contexts/AuthContext"
-import { listPolicyNotes, createPolicyNote, deletePolicyNote, type PolicyNoteRow } from "@/lib/db"
+import { fetchJson, apiPost, apiDelete } from "@/api/client"
 import { Plus, Trash2, FileText } from "lucide-react"
 
+interface PolicyNoteRow {
+  id: string
+  dimension: string
+  region: string
+  stance: "priority" | "monitor" | "adequate"
+  thesis: string
+  critique: string | null
+  created_at: string
+  updated_at: string
+}
+
 const DIMENSIONS = [
-  "equity", "accessibility", "service_quality", "route_network",
-  "modal_shift", "economic", "bus_services_act", "scenarios",
+  "equity",
+  "accessibility",
+  "service_quality",
+  "route_network",
+  "modal_shift",
+  "economic",
+  "bus_services_act",
+  "scenarios",
 ]
 
 const STANCE_LABELS: Record<string, { label: string; colour: string }> = {
   priority: { label: "Priority", colour: "text-red-400 bg-red-400/10 border-red-400/20" },
-  monitor: { label: "Monitor", colour: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
-  adequate: { label: "Adequate", colour: "text-green-400 bg-green-400/10 border-green-400/20" },
+  monitor: {
+    label: "Monitor",
+    colour: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
+  },
+  adequate: {
+    label: "Adequate",
+    colour: "text-green-400 bg-green-400/10 border-green-400/20",
+  },
 }
 
 export function PolicyNotes() {
@@ -19,35 +42,49 @@ export function PolicyNotes() {
   const [notes, setNotes] = useState<PolicyNoteRow[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
-  const [form, setForm] = useState<{ dimension: string; region: string; stance: "priority" | "monitor" | "adequate"; thesis: string }>(
-    { dimension: "equity", region: "all", stance: "monitor", thesis: "" }
-  )
+  const [form, setForm] = useState<{
+    dimension: string
+    region: string
+    stance: "priority" | "monitor" | "adequate"
+    thesis: string
+  }>({ dimension: "equity", region: "all", stance: "monitor", thesis: "" })
 
   const refresh = useCallback(async () => {
     if (!user) return
     setLoading(true)
-    const data = await listPolicyNotes(user.id)
-    setNotes(data)
-    setLoading(false)
+    try {
+      const data = await fetchJson<PolicyNoteRow[]>("/policy-notes")
+      setNotes(data)
+    } catch {
+      setNotes([])
+    } finally {
+      setLoading(false)
+    }
   }, [user])
 
-  useEffect(() => { void refresh() }, [refresh])
+  useEffect(() => {
+    void refresh()
+  }, [refresh])
 
   const handleCreate = async () => {
     if (!user || !form.thesis.trim()) return
-    await createPolicyNote(user.id, form)
+    await apiPost("/policy-notes", form)
     setForm({ dimension: "equity", region: "all", stance: "monitor", thesis: "" })
     setAdding(false)
     void refresh()
   }
 
   const handleDelete = async (id: string) => {
-    await deletePolicyNote(id)
+    await apiDelete(`/policy-notes/${id}`)
     void refresh()
   }
 
   if (loading) {
-    return <div className="flex justify-center py-16"><div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" /></div>
+    return (
+      <div className="flex justify-center py-16">
+        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+      </div>
+    )
   }
 
   return (
@@ -73,11 +110,20 @@ export function PolicyNotes() {
               onChange={(e) => setForm((f) => ({ ...f, dimension: e.target.value }))}
               className="px-3 py-2 text-xs bg-muted/50 border border-border rounded font-mono text-foreground"
             >
-              {DIMENSIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+              {DIMENSIONS.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
             </select>
             <select
               value={form.stance}
-              onChange={(e) => setForm((f) => ({ ...f, stance: e.target.value as "priority" | "monitor" | "adequate" }))}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  stance: e.target.value as "priority" | "monitor" | "adequate",
+                }))
+              }
               className="px-3 py-2 text-xs bg-muted/50 border border-border rounded font-mono text-foreground"
             >
               <option value="priority">Priority</option>
@@ -113,7 +159,9 @@ export function PolicyNotes() {
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <FileText className="w-8 h-8 text-muted-foreground/20 mb-3" />
           <p className="text-sm text-muted-foreground">No policy notes yet.</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">Record your analysis stance per dimension.</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">
+            Record your analysis stance per dimension.
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -122,8 +170,12 @@ export function PolicyNotes() {
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[11px] font-mono text-indigo-400 uppercase">{n.dimension}</span>
-                    <span className={`text-[11px] font-mono px-1.5 py-0.5 rounded border ${STANCE_LABELS[n.stance]?.colour ?? ""}`}>
+                    <span className="text-[11px] font-mono text-indigo-400 uppercase">
+                      {n.dimension}
+                    </span>
+                    <span
+                      className={`text-[11px] font-mono px-1.5 py-0.5 rounded border ${STANCE_LABELS[n.stance]?.colour ?? ""}`}
+                    >
                       {STANCE_LABELS[n.stance]?.label ?? n.stance}
                     </span>
                   </div>

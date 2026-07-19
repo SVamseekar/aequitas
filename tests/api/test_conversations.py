@@ -1,33 +1,43 @@
-"""Tests for conversations router Supabase client scoping."""
-from unittest.mock import MagicMock, patch
+"""Tests for tenant-scoped conversations router."""
+import os
 
-from aequitas.api.routers.conversations import _get_supabase
-
-
-def test_get_supabase_uses_anon_key_and_forwards_user_token(monkeypatch):
-    monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
-    monkeypatch.setenv("SUPABASE_ANON_KEY", "anon-key-value")
-    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "service-role-key-value")
-
-    mock_client = MagicMock()
-    with patch("supabase.create_client", return_value=mock_client) as mock_create:
-        result = _get_supabase(access_token="user-jwt-token")
-
-    # Must be created with the anon key, never the service-role key, when a
-    # user token is available — RLS only applies to the anon/authenticated role.
-    mock_create.assert_called_once_with("https://example.supabase.co", "anon-key-value")
-    mock_client.postgrest.auth.assert_called_once_with("user-jwt-token")
-    assert result is mock_client
+import pytest
 
 
-def test_get_supabase_falls_back_to_service_role_without_token(monkeypatch):
-    """Dev-bypass mode has no raw JWT — fall back to service role so dev flows keep working."""
-    monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
-    monkeypatch.setenv("SUPABASE_ANON_KEY", "anon-key-value")
-    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "service-role-key-value")
+def _requires_database_url():
+    if "DATABASE_URL" not in os.environ:
+        pytest.skip("DATABASE_URL not set; requires a live Postgres instance")
 
-    mock_client = MagicMock()
-    with patch("supabase.create_client", return_value=mock_client) as mock_create:
-        _get_supabase(access_token=None)
 
-    mock_create.assert_called_once_with("https://example.supabase.co", "service-role-key-value")
+@pytest.fixture(autouse=True)
+def _clean_tables():
+    _requires_database_url()
+    import asyncio
+
+    from aequitas.api.auth import db
+
+    async def _truncate():
+        pool = await db.get_pool()
+        await db.run_migrations(pool)
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "TRUNCATE tenants, users, oauth_identities, memberships, "
+                "sessions, conversations, messages CASCADE"
+            )
+
+    asyncio.run(_truncate())
+    yield
+
+
+def test_list_conversations_empty(api_client):
+    resp = api_client.get("/api/conversations")
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+def test_create_and_list_conversation(api_client):
+    create = api_client.post("/api/conversations", json={"title": "Hello"})
+    assert create.status_code == 201
+    listed = api_client.get("/api/conversations")
+    assert len(listed.json()) == 1
+    assert listed.json()[0]["title"] == "Hello"
