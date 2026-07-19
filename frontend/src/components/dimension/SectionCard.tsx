@@ -42,6 +42,14 @@ function formatKey(key: string): string {
     .replace(/\b(pct|n|hhi|r2|vot|co2|bcr|drt|lta)\b/gi, (m) => m.toUpperCase())
 }
 
+/** Section / stat keys that resolve on GET /api/provenance/{id}. */
+const PROVENANCE_KEYS: Record<string, string> = {
+  f1_gini: "gini_national",
+  gini: "gini_national",
+  palma: "palma_ratio",
+  concentration_index: "concentration_index",
+}
+
 interface Props {
   section: SectionItem
 }
@@ -49,6 +57,9 @@ interface Props {
 export function SectionCard({ section }: Props) {
   const [narrativeOpen, setNarrativeOpen] = useState(false)
   const [provenanceMetric, setProvenanceMetric] = useState<string | null>(null)
+  const provenanceId =
+    PROVENANCE_KEYS[section.section_id] ??
+    (typeof section.stats?.gini === "number" ? "gini_national" : null)
 
   const { region, urbanRural } = useFilters()
   const { populationAffected, co2Saving, total_cost } = useScenarioCalculation(region, urbanRural)
@@ -117,15 +128,17 @@ export function SectionCard({ section }: Props) {
         {/* Header */}
         <div className="px-5 pt-4 pb-3 flex items-center justify-between">
           <h3 className="text-xs font-semibold font-mono uppercase tracking-wider text-foreground">{title}</h3>
-          <button
-            type="button"
-            onClick={() => setProvenanceMetric(section.section_id)}
-            className="text-muted-foreground/40 hover:text-indigo-400 transition-colors ml-2"
-            title="Show data source"
-            aria-label="Show data provenance"
-          >
-            <Info className="w-3.5 h-3.5" />
-          </button>
+          {provenanceId && (
+            <button
+              type="button"
+              onClick={() => setProvenanceMetric(provenanceId)}
+              className="text-muted-foreground/40 hover:text-indigo-400 transition-colors ml-2"
+              title="Show data source"
+              aria-label="Show data provenance"
+            >
+              <Info className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Headline finding */}
