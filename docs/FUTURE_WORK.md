@@ -2,6 +2,15 @@
 
 Deliberately deferred items — things we decided *not* to build now, with the reasoning, so they don't get lost or accidentally re-litigated later. Not a bug list; see `ISSUES.md` for that.
 
+## Production hosting / cloud deploy (deferred 2026-07-19)
+
+**Decision:** local-only until the full local E2E programme (Parts A–D) is complete. No Cloud Run, no Vercel-hosted API, no always-on production stack in this programme.
+
+- **Why:** production site was broken / sleeping third parties; product shell (auth, LSOA, chat, empty filters) needs local reliability first. Human decision 2026-07-19.
+- **In scope now:** `scripts/dev.sh`, Docker Compose Postgres, DuckDB on disk, Vite → local FastAPI proxy, smoke script.
+- **Out of scope until local E2E done:** production Dockerfile / image, Vercel API rewrites to a hosted backend, Cloud Run / managed Postgres, production sleep mitigation, multi-region hosting.
+- **Revisit when:** Parts A–D exit criteria met and a deliberate deploy decision is made. Track under a future plan; do not block product quality (Part E) or metrics handoffs (Part C) on hosting.
+
 ## From the enterprise OAuth + multi-tenancy migration (2026-07-03)
 
 Spec: `docs/superpowers/specs/2026-07-03-enterprise-oauth-tenancy-design.md`

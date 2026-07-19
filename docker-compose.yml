@@ -1,0 +1,32 @@
+# Local Postgres for Aequitas auth / multi-tenancy (Part A).
+# Analytics warehouse remains DuckDB on disk — not containerised.
+#
+# Usage:
+#   docker compose up -d
+#   export DATABASE_URL=postgresql://aequitas:aequitas@localhost:5432/aequitas
+#
+# Or use Homebrew Postgres and DATABASE_URL=postgresql://localhost/aequitas
+# if you already have a local cluster (scripts/dev.sh detects either).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aequitas-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: aequitas
+      POSTGRES_PASSWORD: aequitas
+      POSTGRES_DB: aequitas
+    volumes:
+      - aequitas_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aequitas -d aequitas"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+volumes:
+  aequitas_pgdata:

@@ -88,7 +88,7 @@ Open data sources
 | Warehouse | DuckDB (single pre-built binary, served read-only) |
 | Intermediate data | Parquet |
 | Chatbot | Gemini Flash + FAISS + all-MiniLM-L6-v2 embeddings |
-| Auth & persistence | Supabase |
+| Auth & persistence | Local Postgres + Google OAuth (session cookies); multi-tenant workspaces |
 
 ---
 
@@ -123,20 +123,39 @@ Write a new ingestion module. The processing, analytics, warehouse schema, and f
 
 ## Getting started
 
-**Prerequisites:** Python 3.12+, Node 18+, [`uv`](https://docs.astral.sh/uv/), a Supabase project, a Gemini API key.
+**Prerequisites:** Python 3.12+, Node 18+, [`uv`](https://docs.astral.sh/uv/). Optional: Docker (Postgres for auth), Google OAuth credentials, `GEMINI_API_KEY` (chat).
 
-### Backend
+**Local only** for the current programme — production hosting is deferred (see `docs/FUTURE_WORK.md`).
+
+### Quick start (one command)
 
 ```bash
 git clone https://github.com/SVamseekar/aequitas.git
 cd aequitas
-
 uv sync
-uv run aequitas build        # ingest → process → analyse → build DuckDB warehouse
-uv run uvicorn aequitas.api.app:app --reload
+cp .env.example .env   # edit as needed
+# If you already have a built warehouse at data/aequitas.duckdb, skip the pipeline.
+# Otherwise: uv run aequitas run
+chmod +x scripts/dev.sh
+./scripts/dev.sh
 ```
 
-### Frontend
+- API: `http://127.0.0.1:8000` — `GET /api/health` → `{"status":"ok","warehouse":"connected"}`
+- Frontend: `http://localhost:5173` — Vite proxies `/api` → `:8000`
+- Smoke: `uv run python scripts/smoke_local.py`
+
+`scripts/dev.sh` starts Postgres when nothing is listening on `:5432` (via `docker compose`), then uvicorn and Vite. It defaults `ENVIRONMENT=development` and `DEV_AUTH_BYPASS=true` so the dashboard works without Google for local analytics demos.
+
+### Backend only
+
+```bash
+uv sync
+uv run uvicorn aequitas.api.app:app --reload --host 127.0.0.1 --port 8000
+```
+
+The ASGI target is the module-level `app` (`app = create_app()` in `src/aequitas/api/app.py`). Factory form: `uvicorn aequitas.api.app:create_app --factory`.
+
+### Frontend only
 
 ```bash
 cd frontend
@@ -144,7 +163,21 @@ npm install
 npm run dev
 ```
 
-Dashboard connects to `http://localhost:8000` by default. See `frontend/src/api/client.ts` to configure a different API host.
+### Local environment variables
+
+See `.env.example` and `AGENTS.md`. Summary:
+
+| Area | Variables |
+|---|---|
+| Analytics warehouse | `AEQUITAS_DB_PATH`, FAISS paths |
+| Auth / tenancy | `DATABASE_URL`, `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
+| Local demos | `ENVIRONMENT=development`, `DEV_AUTH_BYPASS=true` (never in production) |
+| Chat (optional) | `GEMINI_API_KEY` |
+| URLs | `AEQUITAS_CORS_ORIGINS`, `FRONTEND_URL`, `API_PUBLIC_URL` |
+
+**Postgres:** `docker compose up -d` → `DATABASE_URL=postgresql://aequitas:aequitas@localhost:5432/aequitas`, or Homebrew Postgres → `postgresql://localhost/aequitas`. Schema migrations run on API startup.
+
+**Auth notes:** Overview and dimension sections are public. Dashboard shell, chat, export, and saved items require a session. With `DEV_AUTH_BYPASS=true` the API returns a synthetic dev user from `/api/auth/me` so ProtectedRoute works without Google. For real OAuth, set Google credentials and `DEV_AUTH_BYPASS=false`.
 
 ---
 
