@@ -71,7 +71,11 @@ async def chat(
     req: ChatRequest,
     session: dict = Depends(require_session),
 ) -> EventSourceResponse:
-    """Stream Gemini response grounded in FAISS-retrieved narratives."""
+    """Stream Gemini response grounded in FAISS-retrieved narratives.
+
+    Request body uses ``query`` (not ``message`` / ``prompt``). Missing key or
+    FAISS index returns HTTP 503 with a clear detail string before SSE starts.
+    """
     _check_rate_limit(session.get("user_id", "anon"))
     faiss_index, faiss_metadata = get_faiss()
     embedding_model = get_embedding_model()
@@ -80,12 +84,17 @@ async def chat(
         raise HTTPException(503, "Chat is unavailable — FAISS index not loaded")
 
     cfg = ApiConfig()
+    if not (cfg.gemini_api_key and str(cfg.gemini_api_key).strip()):
+        raise HTTPException(
+            503,
+            "Chat not configured — set GEMINI_API_KEY to enable the policy assistant",
+        )
 
     # Retrieve
     chunks = retrieve_chunks(
         req.query, embedding_model, faiss_index, faiss_metadata, context=req.context
     )
-    source_sections = list({c["section_id"] for c in chunks})
+    source_sections = list({c["section_id"] for c in chunks if "section_id" in c})
 
     # Build prompt
     messages = build_prompt(req.query, chunks, req.context, req.history)
