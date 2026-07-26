@@ -10,48 +10,42 @@ export default function AccessibilityPage() {
     "Aequitas accessibility statement: WCAG 2.2 AA target, known gaps, and how to report issues."
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen app-atmosphere text-foreground">
       <Seo
         title="Accessibility Statement — Aequitas"
         description={description}
         path="/accessibility"
         jsonLd={breadcrumbJsonLd([{ name: "Accessibility", path: "/accessibility" }])}
       />
-      <div className="border-b border-border bg-card/50">
-        <div className="max-w-4xl mx-auto px-4 flex items-center h-8">
-          <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">
-            Accessibility
-          </span>
+      <div className="border-b border-white/50 bg-white/20 backdrop-blur-2xl">
+        <div className="max-w-3xl mx-auto px-6 flex items-center min-h-11">
+          <span className="text-sm text-muted-foreground">Accessibility</span>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-3xl mx-auto px-6 py-12 sm:py-14">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground mb-8 font-mono transition-colors"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> BACK
+          <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="h-px bg-indigo-500/40 mb-8 max-w-xs" />
-        <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-indigo-400 font-medium">
-          Inclusive design
-        </span>
-        <h1 className="text-2xl font-bold tracking-tight mt-3 mb-4 text-foreground">
+        <div className="h-px bg-primary/40 mb-8 max-w-xs" />
+        <p className="marketing-eyebrow text-primary">Inclusive design</p>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-4 text-foreground">
           Accessibility statement
         </h1>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-10 max-w-2xl">
+        <p className="marketing-lede mb-12">
           Aequitas aims to be usable by as many people as possible, including disabled users and
           those using assistive technologies. This statement describes our target standard, what we
           have implemented, known gaps, and how to contact us about barriers.
         </p>
 
         <section className="mb-10">
-          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
-            Standard
-          </h2>
-          <div className="border border-border rounded bg-card p-4 text-xs text-muted-foreground leading-relaxed">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Standard</h2>
+          <div className="app-glass-strong rounded-2xl border border-white/60 p-5 marketing-body">
             <p>
               We target{" "}
               <strong className="text-foreground">WCAG 2.2 Level AA</strong> for public marketing
@@ -62,32 +56,32 @@ export default function AccessibilityPage() {
         </section>
 
         <section className="mb-10">
-          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
-            Measures in place
-          </h2>
-          <div className="border border-border rounded bg-card p-4 text-xs text-muted-foreground leading-relaxed">
-            <ul className="list-disc pl-4 space-y-2">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Measures in place</h2>
+          <div className="app-glass-strong rounded-2xl border border-white/60 p-5 marketing-body">
+            <ul className="list-disc pl-5 space-y-2.5">
               <li>Semantic headings, landmarks, and skip-to-main-content on the landing page.</li>
               <li>Visible focus styles on primary navigation and CTAs.</li>
               <li>Text alternatives for key imagery (e.g. hero dashboard preview).</li>
               <li>
                 Colour is not the sole means of conveying severity in many chart and KPI surfaces
-                (labels and mono values accompany colour).
+                (labels and values accompany colour).
               </li>
               <li>
                 Keyboard-operable filters and routes in the main app shell (browser-native and
                 component focus management).
+              </li>
+              <li>
+                Marketing and legal pages use a minimum body size of 16px with improved secondary
+                text contrast against the dark theme.
               </li>
             </ul>
           </div>
         </section>
 
         <section className="mb-10">
-          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
-            Known gaps
-          </h2>
-          <div className="border border-border rounded bg-card p-4 text-xs text-muted-foreground leading-relaxed">
-            <ul className="list-disc pl-4 space-y-2">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Known gaps</h2>
+          <div className="app-glass-strong rounded-2xl border border-white/60 p-5 marketing-body">
+            <ul className="list-disc pl-5 space-y-2.5">
               <li>
                 Complex visualisations (maps, multi-series charts) may have limited screen-reader
                 density compared with tabular exports; PDF export is available for dimension packs
@@ -110,20 +104,18 @@ export default function AccessibilityPage() {
         </section>
 
         <section className="mb-10">
-          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
-            Feedback
-          </h2>
-          <div className="border border-border rounded bg-card p-4 text-xs text-muted-foreground leading-relaxed space-y-2">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Feedback</h2>
+          <div className="app-glass-strong rounded-2xl border border-white/60 p-5 marketing-body space-y-2">
             <p>
               If you encounter an accessibility barrier, please email{" "}
               <a
                 href={`mailto:${SUPPORT_EMAIL}?subject=Accessibility%20feedback`}
-                className="text-indigo-400 hover:underline"
+                className="text-primary hover:underline font-medium"
               >
                 {SUPPORT_EMAIL}
               </a>{" "}
               or use the{" "}
-              <Link to="/contact" className="text-indigo-400 hover:underline">
+              <Link to="/contact" className="text-primary hover:underline font-medium">
                 contact form
               </Link>
               . Include the page URL, what you were trying to do, and the assistive technology you
@@ -133,17 +125,17 @@ export default function AccessibilityPage() {
           </div>
         </section>
 
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Related:{" "}
-          <Link to="/methodology" className="text-indigo-400 hover:underline">
+          <Link to="/methodology" className="text-primary hover:underline">
             Methodology
           </Link>
           {" · "}
-          <Link to="/privacy" className="text-indigo-400 hover:underline">
+          <Link to="/privacy" className="text-primary hover:underline">
             Privacy
           </Link>
           {" · "}
-          <Link to="/" className="text-indigo-400 hover:underline">
+          <Link to="/" className="text-primary hover:underline">
             Home
           </Link>
         </p>

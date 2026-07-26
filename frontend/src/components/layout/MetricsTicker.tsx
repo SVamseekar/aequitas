@@ -25,18 +25,17 @@ function useTickerMetrics() {
 
 export function MetricsTicker() {
   const { data: metrics } = useTickerMetrics()
-  // Double the list so the CSS scroll loop is seamless
   const doubled = [...metrics, ...metrics]
 
   return (
-    <div className="border-b border-border bg-card/20 overflow-hidden h-8 flex items-center">
+    <div className="border-b border-white/50 bg-white/20 backdrop-blur-2xl overflow-hidden h-9 flex items-center">
       <div className="flex items-center gap-0 ticker-track" aria-hidden="true">
         {doubled.map((m, i) => (
-          <div key={`${m.key}-${i}`} className="flex items-center gap-4 px-6 shrink-0">
-            <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wide">{m.label}</span>
-            <span className="text-[11px] font-mono font-semibold text-indigo-400">{m.value}</span>
-            <span className="text-[11px] text-muted-foreground/40">{m.sub}</span>
-            <span className="text-border text-[11px] ml-2">·</span>
+          <div key={`${m.key}-${i}`} className="flex items-center gap-3 px-5 shrink-0">
+            <span className="text-xs text-muted-foreground">{m.label}</span>
+            <span className="text-xs font-semibold tabular-nums text-primary">{m.value}</span>
+            <span className="text-xs text-muted-foreground/90">{m.sub}</span>
+            <span className="text-border text-xs ml-1">·</span>
           </div>
         ))}
       </div>

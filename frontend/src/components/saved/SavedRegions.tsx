@@ -41,7 +41,7 @@ export function SavedRegions() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
       </div>
     )
   }
@@ -63,9 +63,9 @@ export function SavedRegions() {
       {regions.map((r) => (
         <div
           key={r.id}
-          className="border border-border rounded bg-card p-4 flex items-start gap-3"
+          className="app-glass-strong rounded-2xl border border-white/60 p-4 flex items-start gap-3"
         >
-          <MapPin className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
+          <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground">{r.region_name}</p>
             <p className="text-[11px] font-mono text-muted-foreground/40 mt-0.5">

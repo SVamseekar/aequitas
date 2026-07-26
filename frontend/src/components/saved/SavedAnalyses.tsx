@@ -44,7 +44,7 @@ export function SavedAnalyses() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
       </div>
     )
   }
@@ -64,13 +64,13 @@ export function SavedAnalyses() {
   return (
     <div className="space-y-2">
       {analyses.map((a) => (
-        <div key={a.id} className="border border-border rounded bg-card">
+        <div key={a.id} className="app-glass-strong rounded-2xl border border-white/60">
           <div className="flex items-start gap-3 p-4">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
               <div className="flex items-center gap-3 mt-0.5">
                 {a.dimension && (
-                  <span className="text-[11px] font-mono text-indigo-400 uppercase">
+                  <span className="text-[11px] font-mono text-primary uppercase">
                     {a.dimension}
                   </span>
                 )}

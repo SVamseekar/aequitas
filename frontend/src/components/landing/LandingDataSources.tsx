@@ -1,37 +1,35 @@
-import { Link } from "react-router"
 import { DATA_SOURCES } from "./data"
 
 export function LandingDataSources() {
+  const loop = [...DATA_SOURCES, ...DATA_SOURCES]
+
   return (
     <section
-      aria-labelledby="landing-sources-heading"
-      className="border-y border-border bg-card/10"
+      aria-label="Data sources"
+      className="relative border-y border-white/40 py-5 overflow-hidden bg-white/20 backdrop-blur-xl"
     >
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        <h2
-          id="landing-sources-heading"
-          className="text-[11px] font-mono uppercase tracking-[0.25em] text-muted-foreground font-bold mb-5 text-center"
-        >
-          Grounded in official UK open data
-        </h2>
-        <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-          {DATA_SOURCES.map((source) => (
-            <li
-              key={source}
-              className="text-xs font-mono text-muted-foreground uppercase tracking-wider"
+      <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--l-slate)] mb-3 px-4">
+        Grounded in official UK open data
+      </p>
+      <div className="relative">
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-28 z-10 bg-gradient-to-r from-[var(--l-paper)] to-transparent"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-28 z-10 bg-gradient-to-l from-[var(--l-paper)] to-transparent"
+          aria-hidden
+        />
+        <div className="landing-marquee-track gap-2.5 px-3">
+          {loop.map((source, i) => (
+            <span
+              key={`${source}-${i}`}
+              className="landing-chip inline-flex rounded-full px-3.5 py-1.5 text-sm text-[var(--l-ink)] whitespace-nowrap"
             >
               {source}
-            </li>
+            </span>
           ))}
-        </ul>
-        <p className="text-center mt-5">
-          <Link
-            to="/methodology"
-            className="text-[11px] font-mono uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors"
-          >
-            Full methodology &amp; quality gates →
-          </Link>
-        </p>
+        </div>
       </div>
     </section>
   )

@@ -1,58 +1,62 @@
 import { HEADLINE_STATS, SCALE_STATS } from "./data"
 import { METRICS_CANON } from "@/lib/metricsCanon"
+import { LandingEquityViz } from "./LandingEquityViz"
 
 export function LandingStats() {
+  // Skip Gini (shown in viz); show the other three headline stats once
+  const sideStats = HEADLINE_STATS.slice(1)
+
   return (
-    <section aria-labelledby="landing-stats-heading" className="border-y border-border bg-card/20">
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <h2
-          id="landing-stats-heading"
-          className="text-[11px] font-mono uppercase tracking-[0.25em] text-indigo-400 font-bold mb-6"
-        >
-          Scale of the England reference warehouse
-        </h2>
-        <dl className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border overflow-hidden rounded-lg border border-border">
+    <section id="proof" aria-labelledby="landing-stats-heading" className="relative">
+      <div className="landing-shell py-12 sm:py-14 lg:py-16">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-10 mb-8 lg:mb-10">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--l-rust)] mb-3">
+              The evidence already exists
+            </p>
+            <h2
+              id="landing-stats-heading"
+              className="font-display text-3xl sm:text-4xl lg:text-[2.75rem] leading-[1.12] text-[var(--l-ink)] max-w-md"
+            >
+              A full England warehouse — not a demo spreadsheet.
+            </h2>
+          </div>
+          <p className="text-lg text-[var(--l-slate)] leading-relaxed max-w-xl lg:pt-8">
+            Stops, timetables, deprivation, and route geometry joined once offline. The product is a
+            lookup layer over audited analytics across {METRICS_CANON.lsoas.toLocaleString("en-GB")}{" "}
+            LSOAs.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-12 gap-4 lg:gap-5">
+          <div className="lg:col-span-7">
+            <LandingEquityViz />
+          </div>
+          <div className="lg:col-span-5 grid gap-4">
+            {sideStats.map((stat) => (
+              <div key={stat.label} className="landing-card p-6 sm:p-7">
+                <p className="text-sm text-[var(--l-slate)]">{stat.label}</p>
+                <p className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 tabular-nums">
+                  {stat.value}
+                </p>
+                <p className="text-sm text-[var(--l-slate)] mt-2">{stat.sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <ul className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
           {SCALE_STATS.map((stat) => (
-            <div
+            <li
               key={stat.label}
-              className="bg-background p-5 hover:bg-card/40 transition-colors duration-300"
+              className="landing-glass rounded-2xl px-4 py-4 sm:px-5 sm:py-5"
             >
-              <dt className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                {stat.label}
-              </dt>
-              <dd className="text-2xl font-extrabold font-mono tracking-tight text-foreground">
-                {stat.value}
-              </dd>
-              <dd className="text-xs text-muted-foreground mt-1">{stat.sub}</dd>
-            </div>
+              <p className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">{stat.label}</p>
+              <p className="font-display text-2xl text-[var(--l-ink)] mt-1 tabular-nums">{stat.value}</p>
+              <p className="text-xs text-[var(--l-slate)] mt-1">{stat.sub}</p>
+            </li>
           ))}
-        </dl>
-
-        <h3 className="text-[11px] font-mono uppercase tracking-[0.25em] text-muted-foreground font-bold mt-10 mb-4">
-          What the data already shows
-        </h3>
-        <dl className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border overflow-hidden rounded-lg border border-border">
-          {HEADLINE_STATS.map((stat) => (
-            <div
-              key={stat.label}
-              className="bg-background p-6 hover:bg-card/40 transition-colors duration-300"
-            >
-              <dt className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                {stat.label}
-              </dt>
-              <dd className="text-3xl font-extrabold font-mono tracking-tight text-indigo-400">
-                {stat.value}
-              </dd>
-              <dd className="text-xs text-muted-foreground mt-1">{stat.sub}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <p className="text-[11px] font-mono text-muted-foreground mt-4">
-          Built on national open data — stop locations, timetables, census deprivation indices,
-          and route geometry across {METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs ·{" "}
-          {METRICS_CANON.sections} analytical sections · {METRICS_CANON.dimensions} policy dimensions.
-        </p>
+        </ul>
       </div>
     </section>
   )

@@ -1,3 +1,5 @@
+import { useState } from "react"
+import { Plus, Minus } from "lucide-react"
 import { METRICS_CANON, formatGini, formatPalma } from "@/lib/metricsCanon"
 
 const m = METRICS_CANON
@@ -33,32 +35,67 @@ export const FAQ_ITEMS = [
 ] as const
 
 export function LandingFaq() {
+  const [open, setOpen] = useState<number | null>(0)
+
   return (
     <section
       id="faq"
       aria-labelledby="landing-faq-heading"
-      className="max-w-7xl mx-auto px-6 py-24"
+      className="relative border-y border-white/40 bg-white/15 backdrop-blur-md"
     >
-      <p className="text-[11px] font-mono uppercase tracking-[0.3em] text-indigo-400 font-bold">
-        FAQ
-      </p>
-      <h2
-        id="landing-faq-heading"
-        className="text-2xl font-bold text-foreground tracking-tight mt-3 mb-10"
-      >
-        Common questions from transport authorities
-      </h2>
-      <dl className="max-w-3xl space-y-4">
-        {FAQ_ITEMS.map((item) => (
-          <div
-            key={item.question}
-            className="border border-border rounded-lg bg-card/40 p-5 hover:border-indigo-500/20 transition-colors"
-          >
-            <dt className="text-sm font-semibold text-foreground mb-2">{item.question}</dt>
-            <dd className="text-sm text-muted-foreground leading-relaxed">{item.answer}</dd>
+      <div className="landing-shell py-12 sm:py-14 lg:py-16">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
+          <div className="lg:col-span-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--l-rust)] mb-3">
+              FAQ
+            </p>
+            <h2
+              id="landing-faq-heading"
+              className="font-display text-3xl sm:text-4xl leading-[1.12] text-[var(--l-ink)]"
+            >
+              Questions authorities ask first.
+            </h2>
           </div>
-        ))}
-      </dl>
+
+          <div className="lg:col-span-8">
+            <dl className="divide-y divide-[var(--l-rule)] border-y border-[var(--l-rule)]">
+              {FAQ_ITEMS.map((item, index) => {
+                const isOpen = open === index
+                return (
+                  <div key={item.question}>
+                    <dt>
+                      <button
+                        type="button"
+                        aria-expanded={isOpen}
+                        onClick={() => setOpen(isOpen ? null : index)}
+                        className="w-full flex items-start justify-between gap-4 py-5 text-left"
+                      >
+                        <span className="text-base sm:text-lg font-semibold text-[var(--l-ink)] pr-2">
+                          {item.question}
+                        </span>
+                        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--l-rule)] bg-[var(--l-paper)]">
+                          {isOpen ? (
+                            <Minus className="w-3.5 h-3.5" aria-hidden />
+                          ) : (
+                            <Plus className="w-3.5 h-3.5" aria-hidden />
+                          )}
+                        </span>
+                      </button>
+                    </dt>
+                    {isOpen && (
+                      <dd className="pb-5 pr-10">
+                        <p className="text-base text-[var(--l-slate)] leading-relaxed max-w-2xl">
+                          {item.answer}
+                        </p>
+                      </dd>
+                    )}
+                  </div>
+                )
+              })}
+            </dl>
+          </div>
+        </div>
+      </div>
     </section>
   )
 }

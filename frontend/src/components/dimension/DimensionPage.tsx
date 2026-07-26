@@ -54,7 +54,7 @@ function DimensionPageContent() {
     return (
       <div className="space-y-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-48 bg-muted animate-pulse rounded" />
+          <div key={i} className="h-48 app-glass animate-pulse rounded-2xl" />
         ))}
       </div>
     )
@@ -125,20 +125,20 @@ function DimensionPageContent() {
       {impossibleGeographyCopy && (
         <div
           role="status"
-          className="mb-4 rounded border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-100/90"
+          className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
         >
-          <p className="font-medium text-amber-200/90">Limited geography for this filter</p>
-          <p className="mt-1 text-muted-foreground">{impossibleGeographyCopy}</p>
-          <p className="mt-1 text-muted-foreground/70">
+          <p className="font-medium text-amber-900">Limited geography for this filter</p>
+          <p className="mt-1 text-amber-900/80">{impossibleGeographyCopy}</p>
+          <p className="mt-1 text-amber-900/70 text-xs">
             Some sections below may be empty or national-only for this combo — switch to Urban or All Areas for full London coverage.
           </p>
         </div>
       )}
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold text-foreground font-mono tracking-tight">{dim?.name}</h2>
-          <p className="text-muted-foreground text-xs mt-1">{dim?.description}</p>
-          <p className="text-muted-foreground text-[11px] font-mono mt-2 uppercase tracking-wide">
+          <h2 className="text-xl font-semibold text-foreground tracking-tight">{dim?.name}</h2>
+          <p className="text-muted-foreground text-sm mt-1">{dim?.description}</p>
+          <p className="text-muted-foreground text-xs mt-2">
             {sections.length} sections · {withCharts} charts · {withNarrative} narratives ·{" "}
             {regionName} · {areaName}
           </p>
@@ -146,7 +146,7 @@ function DimensionPageContent() {
         <button
           type="button"
           onClick={() => void handleExportPdf()}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs border border-border rounded hover:bg-muted hover:border-indigo-500/40 transition-colors shrink-0 font-mono text-muted-foreground hover:text-foreground"
+          className="app-glass flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-full hover:border-primary/35 transition-colors shrink-0 text-muted-foreground hover:text-foreground"
         >
           <Download className="w-3.5 h-3.5" />
           Export PDF

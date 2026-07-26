@@ -12,9 +12,10 @@ export function AppShell() {
   const [chatOpen, setChatOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="app-atmosphere flex flex-col">
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
+        <meta name="theme-color" content="#F4F0E8" />
       </Helmet>
       <Header />
       <MetricsTicker />

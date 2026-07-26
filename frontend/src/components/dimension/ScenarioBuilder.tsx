@@ -45,9 +45,9 @@ export function ScenarioBuilder() {
 
 
   return (
-    <div className="border border-indigo-500/30 rounded bg-card mb-6 overflow-hidden">
+    <div className="app-glass-strong rounded-2xl mb-6 overflow-hidden">
       <div className="px-5 py-3 border-b border-border flex items-center gap-2">
-        <Sliders className="w-4 h-4 text-indigo-400" />
+        <Sliders className="w-4 h-4 text-primary" />
         <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-foreground">Scenario Builder</h3>
         <span className="text-[11px] text-muted-foreground font-mono ml-2">
           Indicative estimates · not DfT-validated
@@ -62,14 +62,14 @@ export function ScenarioBuilder() {
               <label className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground">
                 Frequency increase
               </label>
-              <span className="text-[11px] font-mono text-indigo-400 font-semibold">+{freqPct}%</span>
+              <span className="text-[11px] font-mono text-primary font-semibold">+{freqPct}%</span>
             </div>
             <input
               type="range"
               min={0} max={50} step={5}
               value={freqPct}
               onChange={(e) => setSettings({ freqPct: clamp(Number(e.target.value), 0, 50) })}
-              className="w-full accent-indigo-500"
+              className="w-full accent-primary"
             />
             <div className="flex justify-between text-[11px] text-muted-foreground/40 font-mono mt-0.5">
               <span>0%</span><span>50%</span>
@@ -81,14 +81,14 @@ export function ScenarioBuilder() {
               <label className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground">
                 Last bus extension
               </label>
-              <span className="text-[11px] font-mono text-indigo-400 font-semibold">to {lastBusHour}:00</span>
+              <span className="text-[11px] font-mono text-primary font-semibold">to {lastBusHour}:00</span>
             </div>
             <input
               type="range"
               min={19} max={23} step={1}
               value={lastBusHour}
               onChange={(e) => setSettings({ lastBusHour: clamp(Number(e.target.value), 19, 23) })}
-              className="w-full accent-indigo-500"
+              className="w-full accent-primary"
             />
             <div className="flex justify-between text-[11px] text-muted-foreground/40 font-mono mt-0.5">
               <span>19:00</span><span>23:00</span>
@@ -100,14 +100,14 @@ export function ScenarioBuilder() {
               <label className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground">
                 DRT rural coverage
               </label>
-              <span className="text-[11px] font-mono text-indigo-400 font-semibold">{drtCoverage}%</span>
+              <span className="text-[11px] font-mono text-primary font-semibold">{drtCoverage}%</span>
             </div>
             <input
               type="range"
               min={0} max={100} step={5}
               value={drtCoverage}
               onChange={(e) => setSettings({ drtCoverage: clamp(Number(e.target.value), 0, 100) })}
-              className="w-full accent-indigo-500"
+              className="w-full accent-primary"
             />
             <div className="flex justify-between text-[11px] text-muted-foreground/40 font-mono mt-0.5">
               <span>0%</span><span>100%</span>
@@ -124,10 +124,10 @@ export function ScenarioBuilder() {
                   key={opt}
                   type="button"
                   onClick={() => setSettings({ franchise: opt })}
-                  className={`px-3 py-1.5 text-[11px] font-mono uppercase rounded border transition-colors ${
+                  className={`px-3 py-1.5 text-xs font-semibold capitalize rounded-full border transition-colors ${
                     franchise === opt
-                      ? "bg-indigo-600 border-indigo-600 text-white"
-                      : "border-border text-muted-foreground hover:border-indigo-500/40 hover:text-foreground"
+                      ? "bg-primary border-primary text-white"
+                      : "app-glass border-white/60 text-muted-foreground hover:border-primary/35 hover:text-foreground"
                   }`}
                 >
                   {opt}
@@ -145,15 +145,15 @@ export function ScenarioBuilder() {
           {metrics.map((m) => (
             <div
               key={m.label}
-              className={`border border-border rounded p-3 transition-opacity ${
-                m.isMuted ? "bg-muted/10 opacity-60 select-none" : "bg-background"
+              className={`rounded-xl p-3 transition-opacity border border-white/60 ${
+                m.isMuted ? "app-glass opacity-60 select-none" : "app-glass"
               }`}
             >
-              <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/60">{m.label}</p>
-              <p className={`text-lg font-mono font-bold mt-0.5 ${m.isMuted ? "text-muted-foreground/40" : "text-indigo-400"}`}>
+              <p className="text-xs text-muted-foreground">{m.label}</p>
+              <p className={`text-lg font-bold tabular-nums mt-0.5 ${m.isMuted ? "text-muted-foreground/50" : "text-primary"}`}>
                 {m.value}
               </p>
-              <p className="text-[11px] text-muted-foreground/40 leading-snug">{m.sub}</p>
+              <p className="text-xs text-muted-foreground leading-snug mt-0.5">{m.sub}</p>
             </div>
           ))}
           <p className="text-[11px] text-muted-foreground/40 leading-relaxed mt-2">

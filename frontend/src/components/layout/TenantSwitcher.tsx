@@ -37,14 +37,14 @@ export function TenantSwitcher() {
         <ChevronDown className="w-3 h-3 shrink-0" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-56 py-1 rounded bg-card border border-border shadow-lg z-50">
+        <div className="absolute right-0 top-full mt-1 w-56 py-1 rounded-2xl app-glass-strong border border-white/60 shadow-lg z-50">
           {memberships.map((m) => (
             <button
               key={m.tenant_id}
               onClick={() => void switchTenant(m.tenant_id)}
               className={`w-full text-left px-3 py-2 text-xs font-mono hover:bg-muted/50 ${
                 m.tenant_id === activeTenant?.id
-                  ? "text-indigo-400"
+                  ? "text-primary"
                   : "text-foreground"
               }`}
             >

@@ -127,15 +127,15 @@ export function SectionCard({ section }: Props) {
 
   return (
     <>
-      <article className="bg-card border border-border rounded overflow-hidden mb-4 animate-fade-in">
+      <article className="app-glass-strong rounded-2xl overflow-hidden mb-4 animate-fade-in">
         {/* Header */}
         <div className="px-5 pt-4 pb-3 flex items-center justify-between">
-          <h3 className="text-xs font-semibold font-mono uppercase tracking-wider text-foreground">{title}</h3>
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">{title}</h3>
           {provenanceId && (
             <button
               type="button"
               onClick={() => setProvenanceMetric(provenanceId)}
-              className="text-muted-foreground/40 hover:text-indigo-400 transition-colors ml-2"
+              className="text-muted-foreground hover:text-primary transition-colors ml-2"
               title="Show data source"
               aria-label="Show data provenance"
             >
@@ -147,7 +147,7 @@ export function SectionCard({ section }: Props) {
         {/* Headline finding */}
         {headline && (
           <div className="px-5 pb-3">
-            <p className="text-sm text-foreground border-l-2 border-indigo-500 pl-3">
+            <p className="text-sm text-foreground border-l-2 border-primary pl-3 leading-relaxed">
               {headline}
             </p>
           </div>
@@ -166,9 +166,9 @@ export function SectionCard({ section }: Props) {
             {rankingStats.map(([statKey, val]) => {
               const obj = val as { best: { name: string; value: number }; worst: { name: string; value: number } }
               return (
-                <div key={statKey} className="flex gap-4 text-xs">
-                  <span className="text-green-400">Best: <strong>{obj.best.name}</strong> ({obj.best.value})</span>
-                  <span className="text-red-400">Worst: <strong>{obj.worst.name}</strong> ({obj.worst.value})</span>
+                <div key={statKey} className="flex flex-wrap gap-4 text-xs">
+                  <span className="text-emerald-700">Best: <strong>{obj.best.name}</strong> ({obj.best.value})</span>
+                  <span className="text-red-700">Worst: <strong>{obj.worst.name}</strong> ({obj.worst.value})</span>
                   {nationalAvg !== undefined && (
                     <span className="text-muted-foreground">Avg: {nationalAvg}{unit ? ` ${unit}` : ""}</span>
                   )}
@@ -183,11 +183,11 @@ export function SectionCard({ section }: Props) {
           <div className="px-5 pb-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               {displayStats.map(([key, val]) => (
-                <div key={key} className="bg-background rounded border border-border p-3">
-                  <p className="text-[11px] font-mono text-muted-foreground/60 uppercase tracking-wide leading-tight">
+                <div key={key} className="app-glass rounded-xl p-3">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wide leading-tight">
                     {formatKey(key)}
                   </p>
-                  <p className="text-sm font-semibold text-foreground mt-1 font-mono">
+                  <p className="text-sm font-semibold text-foreground mt-1 tabular-nums">
                     {formatValue(key, val)}
                   </p>
                 </div>
@@ -198,16 +198,16 @@ export function SectionCard({ section }: Props) {
 
         {/* Narrative toggle */}
         {hasNarrative && (
-          <div className="px-5 pb-4 border-t border-border pt-3">
+          <div className="px-5 pb-4 border-t border-border/60 pt-3">
             <button
               type="button"
-              className="text-[11px] font-mono text-indigo-400 hover:text-indigo-300 uppercase tracking-wide transition-colors"
+              className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
               onClick={() => setNarrativeOpen(!narrativeOpen)}
             >
               {narrativeOpen ? "Hide analysis" : "Read analysis"}
             </button>
             {narrativeOpen && (
-              <div className="mt-3 prose prose-sm prose-invert max-w-none text-sm text-muted-foreground">
+              <div className="mt-3 prose prose-sm max-w-none text-sm text-muted-foreground">
                 <Markdown content={section.narrative} />
               </div>
             )}

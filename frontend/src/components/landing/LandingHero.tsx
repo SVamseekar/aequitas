@@ -1,81 +1,91 @@
 import { Link, useNavigate } from "react-router"
-import { ArrowRight } from "lucide-react"
-import heroImage from "@/assets/hero.png"
-import { SITE_TAGLINE } from "@/lib/site"
+import { ArrowRight, ArrowUpRight } from "lucide-react"
 import { METRICS_CANON, formatGini } from "@/lib/metricsCanon"
+import { LandingHeroVisual } from "./LandingHeroVisual"
 
 export function LandingHero() {
   const navigate = useNavigate()
-  // Analytics are public; auth only required for chat/save/profile
-  const ctaPath = "/dashboard"
 
   return (
     <section
       aria-labelledby="landing-hero-heading"
-      className="max-w-7xl mx-auto px-6 pt-20 pb-16 lg:pt-24 lg:pb-20 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center"
+      className="relative border-b border-[var(--l-rule)]"
+      style={{
+        background:
+          "radial-gradient(800px 420px at 90% 0%, rgb(184 78 31 / 0.08), transparent 55%), var(--l-paper)",
+      }}
     >
-      <div className="max-w-2xl motion-safe:animate-fade-in">
-        <div className="h-px bg-indigo-400/40 mb-6 max-w-[64px]" aria-hidden />
-        <p className="text-[11px] font-mono uppercase tracking-[0.3em] text-indigo-400 font-bold">
-          {SITE_TAGLINE}
-        </p>
-        <h1
-          id="landing-hero-heading"
-          className="text-4xl sm:text-5xl lg:text-[54px] font-black leading-[1.02] tracking-tight mt-3 mb-6 text-foreground"
-        >
-          See where your bus network
-          <span className="text-indigo-400"> is failing people.</span>
-        </h1>
-        <p className="text-base text-muted-foreground max-w-lg leading-relaxed mb-9">
-          Aequitas maps bus service levels against local deprivation, identifies underserved
-          communities, and models the cost and impact of fixing it — so funding decisions are
-          backed by evidence, not guesswork.
-        </p>
-        <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="button"
-            onClick={() => navigate(ctaPath)}
-            className="flex items-center gap-2.5 px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            Explore the platform <ArrowRight className="w-4 h-4" aria-hidden />
-          </button>
-          <Link
-            to="/contact"
-            className="flex items-center gap-2.5 px-6 py-3.5 border border-border hover:border-indigo-500/40 text-muted-foreground hover:text-foreground hover:bg-card/50 text-xs font-bold uppercase tracking-wider rounded transition-all"
-          >
-            Request access
-          </Link>
-        </div>
-      </div>
+      <div className="landing-shell py-12 sm:py-14 lg:py-16">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-10 items-center">
+          <div className="min-w-0">
+            <p className="landing-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-[var(--l-slate)] mb-5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--l-rust)] shadow-[0_0_0_3px_rgb(184_78_31_/_0.15)]" aria-hidden />
+              England · {METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs · open data
+            </p>
 
-      <figure className="relative flex flex-col items-center lg:items-end gap-3">
-        <div className="relative border border-border rounded-xl p-2 bg-card/60 w-full max-w-lg shadow-2xl shadow-indigo-950/20">
-          <img
-            src={heroImage}
-            alt="Aequitas dashboard showing bus equity analytics across England"
-            width={640}
-            height={400}
-            loading="eager"
-            fetchPriority="high"
-            className="w-full h-auto rounded-lg"
-          />
-          <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:max-w-[min(100%,280px)] rounded-md border border-indigo-500/30 bg-background/90 backdrop-blur-sm px-3 py-2 shadow-lg">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-indigo-400 font-bold">
-              National equity
+            <h1
+              id="landing-hero-heading"
+              className="font-display text-4xl sm:text-5xl lg:text-[3.35rem] leading-[1.08] text-[var(--l-ink)]"
+            >
+              See where the bus network{" "}
+              <span className="text-[var(--l-rust)]">fails people</span>
+              <span className="text-[var(--l-slate)]"> — and what it costs to fix.</span>
+            </h1>
+
+            <p className="mt-5 text-lg text-[var(--l-slate)] leading-relaxed max-w-xl">
+              Spatial policy intelligence for UK transport authorities. Equity, accessibility, and
+              funding scenarios — pre-computed, evidence-graded, ready for the business case.
             </p>
-            <p className="text-sm font-mono font-bold text-foreground mt-0.5">
-              Gini {formatGini(METRICS_CANON.gini)}
-              <span className="text-muted-foreground font-normal text-xs ml-2">
-                · {METRICS_CANON.sections} sections
-              </span>
-            </p>
+
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard")}
+                className="landing-btn-primary"
+              >
+                Explore the platform
+                <ArrowRight className="w-4 h-4" aria-hidden />
+              </button>
+              <Link to="/methodology" className="landing-btn-secondary">
+                Methodology
+                <ArrowUpRight className="w-4 h-4 opacity-70" aria-hidden />
+              </Link>
+            </div>
+
+            <dl className="mt-8 grid grid-cols-3 gap-4 max-w-md border-t border-[var(--l-rule)] pt-5">
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">
+                  Inequality
+                </dt>
+                <dd className="font-display text-2xl sm:text-3xl text-[var(--l-ink)] tabular-nums mt-1">
+                  {formatGini(METRICS_CANON.gini)}
+                </dd>
+                <dd className="text-xs text-[var(--l-slate)] mt-0.5">National Gini</dd>
+              </div>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">
+                  Sections
+                </dt>
+                <dd className="font-display text-2xl sm:text-3xl text-[var(--l-ink)] tabular-nums mt-1">
+                  {METRICS_CANON.sections}
+                </dd>
+                <dd className="text-xs text-[var(--l-slate)] mt-0.5">Pre-computed</dd>
+              </div>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">Scope</dt>
+                <dd className="font-display text-2xl sm:text-3xl text-[var(--l-ink)] mt-1">
+                  {METRICS_CANON.dimensions}
+                </dd>
+                <dd className="text-xs text-[var(--l-slate)] mt-0.5">Policy dims</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="min-w-0" aria-hidden={false}>
+            <LandingHeroVisual />
           </div>
         </div>
-        <figcaption className="text-[11px] font-mono text-muted-foreground text-center lg:text-right max-w-lg">
-          National bus service inequality Gini {formatGini(METRICS_CANON.gini)} across{" "}
-          {METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs — pre-computed warehouse, not live ops data.
-        </figcaption>
-      </figure>
+      </div>
     </section>
   )
 }

@@ -72,7 +72,7 @@ export function SuggestedQuestions({ dimension, onSelect }: Props) {
         <button
           key={q}
           onClick={() => onSelect(q)}
-          className="w-full text-left text-xs text-muted-foreground hover:text-foreground hover:bg-card border border-border hover:border-indigo-500/40 rounded px-3 py-2 transition-all"
+          className="w-full text-left text-xs text-muted-foreground hover:text-foreground hover:app-glass-strong border border-white/60 hover:border-primary/35 rounded px-3 py-2 transition-all"
         >
           {q}
         </button>

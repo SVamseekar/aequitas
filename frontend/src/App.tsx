@@ -37,9 +37,9 @@ const RegionsPage = lazy(() =>
 function SavedPageWrapper(Component: React.ComponentType, title: string) {
   return function WrappedPage() {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen app-atmosphere">
         <div className="max-w-3xl mx-auto px-6 py-10">
-          <h1 className="text-base font-bold tracking-tight text-foreground mb-6">{title}</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground mb-6">{title}</h1>
           <Component />
         </div>
       </div>
@@ -48,7 +48,11 @@ function SavedPageWrapper(Component: React.ComponentType, title: string) {
 }
 
 const queryClient = new QueryClient()
-const fallback = <div className="min-h-screen flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" /></div>
+const fallback = (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+  </div>
+)
 
 export default function App() {
   return (

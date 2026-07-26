@@ -50,11 +50,11 @@ export default function InviteAcceptPage() {
   return (
     <>
       <Seo title="Accept invite — Aequitas" path={`/invite/${token ?? ""}`} noindex />
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="w-full max-w-md border border-border rounded bg-card p-8">
+      <div className="min-h-screen app-atmosphere flex items-center justify-center p-6">
+        <div className="w-full max-w-md app-glass-strong rounded-2xl border border-white/60 p-8">
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             </div>
           ) : error ? (
             <div>
@@ -74,7 +74,7 @@ export default function InviteAcceptPage() {
               <button
                 onClick={() => void handleAccept()}
                 disabled={accepting}
-                className="w-full px-4 py-3 text-sm font-medium bg-indigo-600 text-white rounded hover:bg-indigo-500 disabled:opacity-50"
+                className="w-full px-4 py-3 text-sm font-medium bg-primary text-white rounded hover:bg-primary/90 disabled:opacity-50"
               >
                 {user
                   ? accepting

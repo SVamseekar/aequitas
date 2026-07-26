@@ -111,7 +111,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen app-atmosphere">
       <div className="max-w-2xl mx-auto px-6 py-10">
         <button
           onClick={() => navigate(-1)}
@@ -129,7 +129,7 @@ export default function ProfilePage() {
             <p className="text-sm font-semibold text-foreground">{name}</p>
             <p className="text-xs text-muted-foreground font-mono">{user.email}</p>
             {activeTenant?.name && (
-              <p className="text-[11px] text-indigo-400 font-mono mt-1">
+              <p className="text-[11px] text-primary font-mono mt-1">
                 {activeTenant.name}
                 {role ? ` · ${role}` : ""}
               </p>
@@ -149,7 +149,7 @@ export default function ProfilePage() {
                   onClick={() => void handleSwitchTenant(m.tenant_id)}
                   className={`w-full text-left px-3 py-2 rounded border text-xs font-mono transition-colors ${
                     m.tenant_id === activeTenant?.id
-                      ? "border-indigo-500/40 bg-indigo-500/10 text-foreground"
+                      ? "border-primary/35 bg-primary/10 text-foreground"
                       : "border-border hover:bg-muted/40 text-muted-foreground"
                   }`}
                 >
@@ -171,8 +171,8 @@ export default function ProfilePage() {
                 onClick={() => void toggleDimension(d)}
                 className={`px-3 py-1.5 rounded text-xs font-mono transition-colors border ${
                   selectedDimensions.includes(d)
-                    ? "bg-indigo-600 text-white border-indigo-600"
-                    : "bg-muted/30 text-muted-foreground border-border hover:border-indigo-500/40"
+                    ? "bg-primary text-white border-primary"
+                    : "bg-muted/30 text-muted-foreground border-border hover:border-primary/35"
                 }`}
               >
                 {d}
@@ -196,7 +196,7 @@ export default function ProfilePage() {
               />
               <button
                 onClick={() => void handleInvite()}
-                className="px-3 py-2 text-xs font-mono bg-indigo-600 text-white rounded hover:bg-indigo-500"
+                className="px-3 py-2 text-xs font-mono bg-primary text-white rounded hover:bg-primary/90"
               >
                 INVITE
               </button>

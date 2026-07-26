@@ -13,8 +13,8 @@ export default function AuthPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+      <div className="app-atmosphere flex items-center justify-center">
+        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
       </div>
     )
   }
@@ -35,7 +35,6 @@ export default function AuthPage() {
         window.location.href = "/api/auth/login/google"
         return
       }
-      // 503 etc. — not configured
       let detail = "Google sign-in is not configured"
       try {
         const body = await res.json()
@@ -58,79 +57,68 @@ export default function AuthPage() {
         noindex
       />
       <Toaster position="top-right" />
-      <div className="min-h-screen bg-background flex">
-        <div className="hidden lg:flex lg:w-[55%] flex-col justify-between relative overflow-hidden">
-          <div className="absolute inset-0 opacity-40 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-
+      <div className="app-atmosphere flex min-h-screen">
+        <div className="hidden lg:flex lg:w-[55%] flex-col justify-between relative overflow-hidden border-r border-white/40">
           <div className="relative z-10 p-10">
             <button
               onClick={() => navigate("/")}
-              className="flex items-center gap-2.5 text-sm font-mono font-bold tracking-widest text-foreground uppercase hover:text-indigo-400 transition-colors"
+              className="flex items-center gap-2.5 text-sm font-semibold text-foreground hover:text-primary transition-colors"
             >
-              <AequitasLogo className="w-5 h-5 text-slate-300" />
-              AEQUITAS
+              <span className="app-glass flex h-9 w-9 items-center justify-center rounded-xl">
+                <AequitasLogo className="w-4 h-4 text-primary" />
+              </span>
+              Aequitas
             </button>
           </div>
 
           <div className="relative z-10 p-10 pb-16">
-            <div className="h-px bg-indigo-500/40 mb-8 max-w-sm" />
-            <h1 className="text-4xl xl:text-5xl font-bold leading-[1.05] tracking-tight mb-5">
-              Policy Intelligence
+            <h1 className="text-4xl xl:text-5xl font-semibold leading-[1.1] tracking-tight mb-5 text-foreground">
+              Policy intelligence
               <br />
-              <span className="text-indigo-400">with Evidence.</span>
+              <span className="text-primary">with evidence.</span>
             </h1>
-            <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
+            <p className="text-base text-muted-foreground max-w-md leading-relaxed">
               Evidence-graded analytics for UK bus transport policy.{" "}
               {METRICS_CANON.dimensions} dimensions.{" "}
               {METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs.{" "}
               {METRICS_CANON.sections} analytical sections. Gemini-powered natural language Q&A.
             </p>
 
-            <div className="mt-10 grid grid-cols-3 gap-px max-w-sm">
+            <div className="mt-10 grid grid-cols-3 gap-3 max-w-md">
               {HEADLINE_STATS.map((m) => (
-                <div key={m.label} className="bg-card/60 p-3 border border-border">
-                  <p className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground/60">
-                    {m.label}
-                  </p>
-                  <p className="text-sm font-mono font-semibold text-indigo-400 mt-1">
-                    {m.value}
-                  </p>
-                  <p className="text-[11px] font-mono text-muted-foreground/40">
-                    {m.note}
-                  </p>
+                <div key={m.label} className="app-glass-strong p-3.5 rounded-2xl">
+                  <p className="text-xs text-muted-foreground">{m.label}</p>
+                  <p className="text-base font-semibold text-primary mt-1 tabular-nums">{m.value}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{m.note}</p>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="relative z-10 p-10 pt-0">
-            <p className="text-[11px] text-amber-400 font-mono font-semibold tracking-wide">
-              POLICY ANALYSIS TOOL — NOT OFFICIAL DfT GUIDANCE
+            <p className="text-sm text-amber-900 bg-amber-50/90 border border-amber-200/80 rounded-full px-3 py-2 inline-block leading-snug backdrop-blur-sm">
+              Policy analysis tool — not official DfT guidance
             </p>
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-6 sm:p-12 border-l border-border">
-          <div className="w-full max-w-sm">
-            <div className="lg:hidden mb-10 flex items-center gap-2">
-              <AequitasLogo className="w-5 h-5 text-slate-300" />
-              <span className="text-sm font-mono font-bold tracking-widest uppercase">
-                AEQUITAS
-              </span>
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
+          <div className="w-full max-w-sm app-glass-strong rounded-3xl p-8">
+            <div className="lg:hidden mb-8 flex items-center gap-2">
+              <AequitasLogo className="w-5 h-5 text-primary" />
+              <span className="text-sm font-semibold">Aequitas</span>
             </div>
 
-            <h2 className="text-lg font-bold tracking-tight mb-1 text-foreground">
-              Welcome
-            </h2>
-            <p className="text-xs text-muted-foreground mb-8">
-              Sign in with Google to access the policy intelligence terminal
+            <h2 className="text-xl font-bold tracking-tight mb-2 text-foreground">Welcome</h2>
+            <p className="text-base text-muted-foreground mb-8 leading-relaxed">
+              Sign in with Google to access the policy intelligence platform
             </p>
 
             <button
               onClick={() => void handleGoogle()}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded border border-border bg-card hover:bg-muted/60 transition-colors text-sm font-medium"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-full border border-white/50 bg-white/50 hover:bg-white/70 transition-colors text-sm font-medium shadow-sm backdrop-blur-md"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"

@@ -42,7 +42,7 @@ function RegionColumn({ dimension, region, urbanRural }: { dimension: string; re
 
   return (
     <div>
-      <p className="text-[11px] font-mono uppercase tracking-wide text-indigo-400 mb-3">{regionName}</p>
+      <p className="text-[11px] font-mono uppercase tracking-wide text-primary mb-3">{regionName}</p>
       <div className="space-y-3">
         {sections.map((s) => {
           const stats = Object.entries(s.stats ?? {}).filter(([k, v]) =>
@@ -50,7 +50,7 @@ function RegionColumn({ dimension, region, urbanRural }: { dimension: string; re
           )
           const sectionTitle = SECTION_TITLES[s.section_id] ?? s.section_id.replace(/_/g, " ")
           return (
-            <div key={s.section_id} className="border border-border rounded bg-card p-3">
+            <div key={s.section_id} className="app-glass-strong rounded-2xl border border-white/60 p-3">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-2 font-bold">
                 {sectionTitle}
               </p>
@@ -93,7 +93,7 @@ export default function ComparePage() {
             <select
               value={dimension}
               onChange={(e) => setDimension(e.target.value)}
-              className="text-xs font-mono bg-card border border-border rounded px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="text-xs font-mono app-glass-strong border border-white/60 rounded-2xl px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {DIMENSIONS.map((d) => (
                 <option key={d.id} value={d.id}>{d.name}</option>
@@ -106,7 +106,7 @@ export default function ComparePage() {
             <select
               value={urbanRural}
               onChange={(e) => setUrbanRural(e.target.value)}
-              className="text-xs font-mono bg-card border border-border rounded px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="text-xs font-mono app-glass-strong border border-white/60 rounded-2xl px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {AREA_TYPES.map((a) => (
                 <option key={a.code} value={a.code}>{a.name}</option>
@@ -119,7 +119,7 @@ export default function ComparePage() {
             <select
               value={regionA}
               onChange={(e) => setRegionA(e.target.value)}
-              className="text-xs font-mono bg-card border border-border rounded px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="text-xs font-mono app-glass-strong border border-white/60 rounded-2xl px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {REGIONS.filter((r) => r.code !== "all").map((r) => (
                 <option key={r.code} value={r.code}>{r.name}</option>
@@ -136,7 +136,7 @@ export default function ComparePage() {
             <select
               value={regionB}
               onChange={(e) => setRegionB(e.target.value)}
-              className="text-xs font-mono bg-card border border-border rounded px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="text-xs font-mono app-glass-strong border border-white/60 rounded-2xl px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {REGIONS.filter((r) => r.code !== "all").map((r) => (
                 <option key={r.code} value={r.code}>{r.name}</option>

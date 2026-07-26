@@ -103,18 +103,18 @@ export function UserMenu() {
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-6 h-6 rounded bg-muted flex items-center justify-center border border-border">
-            <User className="w-3 h-3 text-muted-foreground" />
+          <div className="app-glass w-7 h-7 rounded-full flex items-center justify-center">
+            <User className="w-3.5 h-3.5 text-muted-foreground" />
           </div>
         )}
-        <span className="text-[11px] text-muted-foreground hidden sm:inline truncate max-w-[100px] font-mono">
+        <span className="text-xs text-muted-foreground hidden sm:inline truncate max-w-[100px]">
           {name}
         </span>
       </button>
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-2 w-48 py-1 rounded bg-card border border-border shadow-lg z-50"
+          className="absolute right-0 top-full mt-2 w-52 py-1.5 rounded-2xl app-glass-strong z-50"
           role="menu"
           aria-label="User menu"
           onKeyDown={handleMenuKeyDown}
@@ -124,51 +124,51 @@ export function UserMenu() {
             role="menuitem"
             tabIndex={-1}
             onClick={() => { navigate("/profile"); setOpen(false) }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-foreground hover:bg-muted/50 transition-colors font-mono"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-white/40 transition-colors"
           >
             <Settings className="w-3.5 h-3.5 text-muted-foreground" />
-            PROFILE
+            Profile
           </button>
           <button
             ref={setItemRef(1)}
             role="menuitem"
             tabIndex={-1}
             onClick={() => { navigate("/regions"); setOpen(false) }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-foreground hover:bg-muted/50 transition-colors font-mono"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-white/40 transition-colors"
           >
             <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
-            SAVED REGIONS
+            Saved regions
           </button>
           <button
             ref={setItemRef(2)}
             role="menuitem"
             tabIndex={-1}
             onClick={() => { navigate("/notes"); setOpen(false) }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-foreground hover:bg-muted/50 transition-colors font-mono"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-white/40 transition-colors"
           >
             <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-            POLICY NOTES
+            Policy notes
           </button>
           <button
             ref={setItemRef(3)}
             role="menuitem"
             tabIndex={-1}
             onClick={() => { navigate("/saved"); setOpen(false) }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-foreground hover:bg-muted/50 transition-colors font-mono"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-white/40 transition-colors"
           >
             <Bookmark className="w-3.5 h-3.5 text-muted-foreground" />
-            SAVED
+            Saved
           </button>
-          <div className="h-px bg-border my-1" role="separator" />
+          <div className="h-px bg-border/80 my-1" role="separator" />
           <button
             ref={setItemRef(4)}
             role="menuitem"
             tabIndex={-1}
             onClick={() => { void signOut(); setOpen(false) }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-red-400 hover:bg-muted/50 transition-colors font-mono"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-700 hover:bg-white/40 transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
-            SIGN OUT
+            Sign out
           </button>
         </div>
       )}

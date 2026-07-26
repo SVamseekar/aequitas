@@ -12,14 +12,14 @@ export function ProvenancePanel({ metricId, onClose }: Props) {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} aria-hidden="true" />
+      <div className="fixed inset-0 bg-stone-900/25 backdrop-blur-sm z-40" onClick={onClose} aria-hidden="true" />
 
       {/* Panel */}
-      <div className="fixed top-0 right-0 h-full w-[360px] bg-background border-l border-border shadow-2xl z-50 flex flex-col">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+      <div className="fixed top-0 right-0 h-full w-[min(100%,360px)] app-glass-strong border-l border-white/50 shadow-2xl z-50 flex flex-col rounded-l-2xl">
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/60">
           <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-indigo-400" />
-            <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-foreground">Data Provenance</h3>
+            <BookOpen className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Data provenance</h3>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Close provenance panel">
             <X className="w-4 h-4" />
@@ -27,7 +27,7 @@ export function ProvenancePanel({ metricId, onClose }: Props) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          <p className="text-[11px] font-mono text-indigo-400/70 uppercase tracking-wide mb-4">{metricId}</p>
+          <p className="text-[11px] font-mono text-primary/70 uppercase tracking-wide mb-4">{metricId}</p>
 
           {isLoading && (
             <div className="space-y-2">
@@ -64,7 +64,7 @@ export function ProvenancePanel({ metricId, onClose }: Props) {
               {data.notebook && (
                 <section>
                   <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground/60 mb-1">Notebook</p>
-                  <p className="text-xs font-mono text-indigo-400">{data.notebook}</p>
+                  <p className="text-xs font-mono text-primary">{data.notebook}</p>
                 </section>
               )}
 

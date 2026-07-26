@@ -7,180 +7,143 @@ import {
   isAnalyticsConfigured,
 } from "@/lib/site"
 import { useAuth } from "@/contexts/AuthContext"
+import { AequitasLogo } from "@/components/shared/AequitasLogo"
 
 const year = new Date().getFullYear()
+const linkClass = "text-sm text-[var(--l-slate)] hover:text-[var(--l-ink)] transition-colors"
 
 export function LandingFooter() {
   const { user } = useAuth()
-  const explorePath = "/dashboard"
-  const signInPath = user ? "/dashboard" : "/auth"
 
   return (
-    <footer className="border-t border-border bg-background">
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <p className="flex items-center gap-2 text-[11px] text-amber-400 font-mono font-semibold tracking-[0.2em] uppercase mb-10">
-          <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" aria-hidden />
-          Policy analysis tool — not official government guidance
-        </p>
+    <footer className="relative border-t border-white/40 bg-white/20 backdrop-blur-xl">
+      <div className="landing-shell py-10 sm:py-12">
+        <div className="flex flex-col lg:flex-row lg:justify-between gap-8 mb-8">
+          <div className="max-w-sm">
+            <div className="flex items-center gap-2.5 mb-3">
+              <AequitasLogo className="w-5 h-5 text-[var(--l-rust)]" aria-hidden />
+              <span className="font-semibold text-[var(--l-ink)]">Aequitas</span>
+            </div>
+            <p className="text-sm text-[var(--l-slate)] leading-relaxed mb-4">
+              Public-sector transport intelligence for England — equity, accessibility, and funding
+              scenarios on national open data.
+            </p>
+            <p className="inline-flex items-center gap-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-full px-3 py-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-600" aria-hidden />
+              Not official government guidance
+            </p>
+          </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
-          <nav aria-label="Product">
-            <h2 className="text-[11px] font-mono uppercase tracking-widest text-foreground font-bold mb-4">
-              Product
-            </h2>
-            <ul className="space-y-2.5">
-              <li>
-                <Link
-                  to={explorePath}
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  Explore
-                </Link>
-              </li>
-              <li>
-                <a
-                  href="/#dimensions"
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  Dimensions
-                </a>
-              </li>
-              <li>
-                <Link
-                  to={signInPath}
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  Sign in
-                </Link>
-              </li>
-            </ul>
-          </nav>
-
-          <nav aria-label="Resources">
-            <h2 className="text-[11px] font-mono uppercase tracking-widest text-foreground font-bold mb-4">
-              Resources
-            </h2>
-            <ul className="space-y-2.5">
-              <li>
-                <Link
-                  to="/methodology"
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  Methodology
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/about"
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/accessibility"
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  Accessibility
-                </Link>
-              </li>
-            </ul>
-          </nav>
-
-          <nav aria-label="Legal">
-            <h2 className="text-[11px] font-mono uppercase tracking-widest text-foreground font-bold mb-4">
-              Legal
-            </h2>
-            <ul className="space-y-2.5">
-              <li>
-                <Link
-                  to="/privacy"
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  Privacy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/terms"
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  Terms
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/disclaimer"
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  Disclaimer
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/refunds"
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  Refunds
-                </Link>
-              </li>
-            </ul>
-          </nav>
-
-          <nav aria-label="Contact">
-            <h2 className="text-[11px] font-mono uppercase tracking-widest text-foreground font-bold mb-4">
-              Contact
-            </h2>
-            <ul className="space-y-2.5">
-              <li>
-                <a
-                  href={`mailto:${SUPPORT_EMAIL}`}
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono tracking-wider transition-colors break-all"
-                >
-                  {SUPPORT_EMAIL}
-                </a>
-              </li>
-              <li>
-                <Link
-                  to="/contact"
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  Contact form
-                </Link>
-              </li>
-              <li>
-                <a
-                  href={PORTFOLIO_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  Portfolio
-                </a>
-              </li>
-              <li>
-                <a
-                  href={GITHUB_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] text-muted-foreground hover:text-foreground font-mono uppercase tracking-wider transition-colors"
-                >
-                  GitHub
-                </a>
-              </li>
-            </ul>
-          </nav>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 flex-1 lg:max-w-2xl">
+            <nav aria-label="Product">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--l-ink)] mb-3">
+                Product
+              </h2>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/dashboard" className={linkClass}>
+                    Explore
+                  </Link>
+                </li>
+                <li>
+                  <a href="/#dimensions" className={linkClass}>
+                    Dimensions
+                  </a>
+                </li>
+                <li>
+                  <Link to={user ? "/dashboard" : "/auth"} className={linkClass}>
+                    Sign in
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+            <nav aria-label="Resources">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--l-ink)] mb-3">
+                Resources
+              </h2>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/methodology" className={linkClass}>
+                    Methodology
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/about" className={linkClass}>
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/accessibility" className={linkClass}>
+                    Accessibility
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+            <nav aria-label="Legal">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--l-ink)] mb-3">
+                Legal
+              </h2>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/privacy" className={linkClass}>
+                    Privacy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/terms" className={linkClass}>
+                    Terms
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/disclaimer" className={linkClass}>
+                    Disclaimer
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/refunds" className={linkClass}>
+                    Refunds
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+            <nav aria-label="Contact">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--l-ink)] mb-3">
+                Contact
+              </h2>
+              <ul className="space-y-2">
+                <li>
+                  <Link to="/contact" className={linkClass}>
+                    Contact form
+                  </Link>
+                </li>
+                <li>
+                  <a href={`mailto:${SUPPORT_EMAIL}`} className={linkClass}>
+                    Email
+                  </a>
+                </li>
+                <li>
+                  <a href={PORTFOLIO_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                    Portfolio
+                  </a>
+                </li>
+                <li>
+                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                    GitHub
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </div>
         </div>
 
-        <div className="border-t border-border pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <p className="text-[11px] font-mono text-muted-foreground">
+        <div className="border-t border-[var(--l-rule)] pt-5 flex flex-col sm:flex-row sm:justify-between gap-2">
+          <p className="text-sm text-[var(--l-slate)]">
             © {year} Aequitas · {AUTHOR_NAME}
           </p>
           {isAnalyticsConfigured() && (
-            <p className="text-[11px] font-mono text-muted-foreground/80">
-              We use privacy-respecting analytics when configured.{" "}
-              <Link to="/privacy" className="text-indigo-400/90 hover:underline">
+            <p className="text-sm text-[var(--l-slate)]">
+              Privacy-respecting analytics when configured.{" "}
+              <Link to="/privacy" className="text-[var(--l-rust)] hover:underline">
                 Privacy
               </Link>
             </p>

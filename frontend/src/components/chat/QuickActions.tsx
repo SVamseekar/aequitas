@@ -33,9 +33,9 @@ export function QuickActions({ onSelect }: Props) {
           <button
             key={a.label}
             onClick={() => onSelect(a.prompt)}
-            className="flex flex-col items-center gap-1.5 p-3 border border-border rounded bg-card hover:border-indigo-500/40 hover:bg-card/80 transition-all group text-center"
+            className="flex flex-col items-center gap-1.5 p-3 app-glass-strong rounded-2xl border border-white/60 hover:border-primary/35 hover:bg-white/40 transition-all group text-center"
           >
-            <a.icon className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
+            <a.icon className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
             <span className="text-[11px] font-mono text-muted-foreground group-hover:text-foreground leading-tight transition-colors">
               {a.label}
             </span>

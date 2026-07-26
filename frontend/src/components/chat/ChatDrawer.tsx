@@ -115,7 +115,7 @@ export function ChatDrawer({ open, onClose }: Props) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 z-40"
+        className="fixed inset-0 bg-stone-900/25 backdrop-blur-sm z-40"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -125,18 +125,18 @@ export function ChatDrawer({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label="Ask Aequitas chat"
-        className="fixed top-0 right-0 h-full w-[420px] bg-background border-l border-border shadow-2xl z-50 flex flex-col"
+        className="fixed top-0 right-0 h-full w-[min(100%,420px)] app-glass-strong border-l border-white/50 shadow-2xl z-50 flex flex-col rounded-l-2xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/60">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-            <h2 className="text-xs font-mono font-bold uppercase tracking-widest text-foreground">Ask Aequitas</h2>
+            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <h2 className="text-sm font-semibold text-foreground">Ask Aequitas</h2>
           </div>
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="text-[11px] font-mono text-muted-foreground hover:text-foreground uppercase tracking-wide transition-colors"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               onClick={clearMessages}
               aria-label="Clear chat messages"
             >
@@ -172,7 +172,7 @@ export function ChatDrawer({ open, onClose }: Props) {
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border/60 bg-white/30">
           <div className="flex gap-2 items-end">
             <textarea
               ref={textareaRef}
@@ -187,7 +187,7 @@ export function ChatDrawer({ open, onClose }: Props) {
               onInput={handleInput}
               placeholder="Ask a question... (Shift+Enter for new line)"
               rows={1}
-              className="flex-1 resize-none rounded border border-border bg-card px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+              className="flex-1 resize-none rounded app-glass-strong border border-white/60 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
               style={{ minHeight: "36px", maxHeight: "120px" }}
               disabled={isStreaming}
             />
@@ -195,7 +195,7 @@ export function ChatDrawer({ open, onClose }: Props) {
               type="button"
               onClick={handleSend}
               disabled={isStreaming || !input.trim()}
-              className="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+              className="px-4 py-2 bg-primary text-white text-xs font-semibold rounded hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
             >
               {isStreaming ? "..." : "Send"}
             </button>

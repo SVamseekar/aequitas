@@ -75,7 +75,7 @@ export function ChatSidebar({ open, onClose, activeId, onSelect, onNew }: Props)
         />
       )}
       <div
-        className={`fixed top-0 left-0 h-full w-72 bg-card border-r border-border z-50 transform transition-transform duration-200 ${
+        className={`fixed top-0 left-0 h-full w-72 app-glass-strong border-r border-white/50 z-50 transform transition-transform duration-200 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -86,7 +86,7 @@ export function ChatSidebar({ open, onClose, activeId, onSelect, onNew }: Props)
         </div>
 
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <span className="text-[11px] uppercase tracking-[0.15em] text-indigo-400 font-mono font-medium">
+          <span className="text-[11px] uppercase tracking-[0.15em] text-primary font-mono font-medium">
             Conversations
           </span>
           <div className="flex items-center gap-1">
@@ -111,7 +111,7 @@ export function ChatSidebar({ open, onClose, activeId, onSelect, onNew }: Props)
         <div className="overflow-y-auto h-[calc(100%-88px)] p-2">
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             </div>
           ) : conversations.length === 0 ? (
             <p className="text-[11px] text-muted-foreground/40 text-center py-8 font-mono uppercase">
@@ -136,7 +136,7 @@ export function ChatSidebar({ open, onClose, activeId, onSelect, onNew }: Props)
                   }}
                   className={`w-full group flex items-start gap-2.5 px-3 py-2.5 rounded text-left transition-colors cursor-pointer ${
                     activeId === c.id
-                      ? "bg-indigo-500/10 border border-indigo-500/20"
+                      ? "bg-primary/10 border border-primary/20"
                       : "hover:bg-muted/40 border border-transparent"
                   }`}
                 >

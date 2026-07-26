@@ -85,37 +85,33 @@ export default function AboutPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen app-atmosphere text-foreground">
       <Seo
         title="About Aequitas — Public Sector Transport Intelligence"
         description={`Aequitas pre-computes evidence-graded transport equity analytics across ${m.dimensions} policy dimensions and ${m.sections} analytical sections, drawing on national open data sources.`}
         path="/about"
         jsonLd={breadcrumbJsonLd([{ name: "About", path: "/about" }])}
       />
-      <div className="border-b border-border bg-card/50">
-        <div className="max-w-4xl mx-auto px-4 flex items-center h-8">
-          <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">
-            About
-          </span>
+      <div className="border-b border-white/50 bg-white/20 backdrop-blur-2xl">
+        <div className="max-w-3xl mx-auto px-6 flex items-center min-h-11">
+          <span className="text-sm text-muted-foreground">About</span>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-3xl mx-auto px-6 py-12 sm:py-14">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground mb-8 font-mono transition-colors"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> BACK
+          <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="h-px bg-indigo-500/40 mb-8 max-w-xs" />
-        <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-indigo-400 font-medium">
-          About Aequitas
-        </span>
-        <h1 className="text-2xl font-bold tracking-tight mt-3 mb-4 text-foreground">
+        <div className="h-px bg-primary/40 mb-8 max-w-xs" />
+        <p className="marketing-eyebrow text-primary">About Aequitas</p>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-4 text-foreground">
           UK Bus Transport Policy Intelligence
         </h1>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-10 max-w-2xl">
+        <p className="marketing-lede mb-12">
           Aequitas is a policy intelligence platform for UK government, Local Transport Authorities
           (LTAs), and transport researchers. It pre-computes evidence-graded analytics across{" "}
           {m.dimensions} policy dimensions and {m.sections} analytical sections, covering all{" "}
@@ -124,40 +120,34 @@ export default function AboutPage() {
         </p>
 
         <section className="mb-12">
-          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-6">
+          <h2 className="text-lg font-semibold text-foreground mb-5">
             {m.dimensions} Policy Dimensions
           </h2>
           <div className="space-y-4">
             {DIMENSIONS.map((d) => (
-              <div key={d.name} className="border border-border rounded bg-card p-4">
-                <p className="text-xs font-semibold text-indigo-400 mb-1">{d.name}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{d.metrics}</p>
+              <div key={d.name} className="app-glass-strong rounded-2xl border border-white/60 p-5">
+                <p className="marketing-card-title mb-2">{d.name}</p>
+                <p className="marketing-body">{d.metrics}</p>
               </div>
             ))}
           </div>
         </section>
 
         <section className="mb-12">
-          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-6">
-            Data Sources
-          </h2>
+          <h2 className="text-lg font-semibold text-foreground mb-5">Data Sources</h2>
           <div className="grid sm:grid-cols-2 gap-3">
             {DATA_SOURCES.map((s) => (
-              <div key={s.name} className="border border-border rounded bg-card p-3">
-                <p className="text-[11px] font-mono text-indigo-400 uppercase tracking-wide mb-1">
-                  {s.name}
-                </p>
-                <p className="text-xs text-muted-foreground">{s.desc}</p>
+              <div key={s.name} className="app-glass-strong rounded-2xl border border-white/60 p-4">
+                <p className="text-sm font-semibold text-primary mb-1.5">{s.name}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
         </section>
 
         <section>
-          <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-mono mb-4">
-            Methodology
-          </h2>
-          <div className="border border-border rounded bg-card p-4 text-xs text-muted-foreground leading-relaxed space-y-2">
+          <h2 className="text-lg font-semibold text-foreground mb-5">Methodology</h2>
+          <div className="app-glass-strong rounded-2xl border border-white/60 p-5 marketing-body space-y-3">
             <p>
               All analytics are pre-computed at build time via a Python pipeline. The DuckDB
               warehouse is a read-only lookup store — zero runtime analytics. Every metric on
@@ -178,7 +168,7 @@ export default function AboutPage() {
             </p>
             <p>
               Full public write-up:{" "}
-              <Link to="/methodology" className="text-indigo-400 hover:underline">
+              <Link to="/methodology" className="text-primary hover:underline font-medium">
                 Methodology &amp; data quality
               </Link>
               .

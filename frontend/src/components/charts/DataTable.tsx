@@ -32,7 +32,7 @@ export function DataTable({ chartData }: Props) {
                 key={i}
                 className={`border-b border-border transition-colors ${
                   isCustom
-                    ? "bg-indigo-950/30 font-semibold border-l-2 border-l-indigo-500"
+                    ? "bg-primary/10 font-semibold border-l-2 border-l-primary"
                     : "hover:bg-muted/50"
                 }`}
               >
@@ -40,7 +40,7 @@ export function DataTable({ chartData }: Props) {
                   <td
                     key={col}
                     className={`px-3 py-2 ${
-                      isCustom ? "text-indigo-400 font-mono" : "text-muted-foreground"
+                      isCustom ? "text-primary font-mono" : "text-muted-foreground"
                     }`}
                   >
                     {row[col] === null || row[col] === undefined

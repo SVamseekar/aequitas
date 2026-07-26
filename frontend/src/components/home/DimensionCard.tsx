@@ -1,6 +1,13 @@
 import { Link } from "react-router"
 import {
-  Scale, MapPin, Bus, Network, BarChart3, PoundSterling, FileText, Sliders,
+  Scale,
+  MapPin,
+  Bus,
+  Network,
+  BarChart3,
+  PoundSterling,
+  FileText,
+  Sliders,
   type LucideIcon,
 } from "lucide-react"
 import type { DimensionOverview } from "@/api/types"
@@ -32,23 +39,24 @@ interface Props {
 
 export function DimensionCard({ dim }: Props) {
   const Icon = DIMENSION_ICONS[dim.id] ?? Scale
-  const severityColor = (dim.headline_stat.severity in SEVERITY
-    ? SEVERITY[dim.headline_stat.severity as keyof typeof SEVERITY]
-    : SEVERITY.low)
+  const severityColor =
+    dim.headline_stat.severity in SEVERITY
+      ? SEVERITY[dim.headline_stat.severity as keyof typeof SEVERITY]
+      : SEVERITY.low
 
   return (
     <Link
       to={dim.route.slice(1)}
-      className="group block text-left p-5 rounded-lg border border-border bg-card/40 hover:border-indigo-400/30 hover:bg-card/60 transition-colors duration-300"
+      className="app-glass-strong group block text-left p-5 rounded-2xl hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5"
     >
-      <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-indigo-400 transition-colors">
-        <Icon className="w-4 h-4 text-indigo-400 shrink-0" />
+      <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+        <Icon className="w-4 h-4 text-primary shrink-0" />
         {dim.name}
       </h3>
-      <p className="text-2xl font-bold font-mono mt-1" style={{ color: severityColor }}>
+      <p className="text-2xl font-bold tabular-nums mt-2" style={{ color: severityColor }}>
         {formatHeadline(dim)}
       </p>
-      <p className="text-xs text-muted-foreground mt-0.5">{dim.headline_stat.label}</p>
+      <p className="text-sm text-muted-foreground mt-1 leading-snug">{dim.headline_stat.label}</p>
     </Link>
   )
 }

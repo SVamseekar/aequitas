@@ -6,38 +6,38 @@ export default function DisclaimerPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen app-atmosphere text-foreground">
       <Seo
         title="Disclaimer — Aequitas"
         description="Aequitas is a policy analysis tool, not official government guidance. Read about data limitations and intended use."
         path="/disclaimer"
       />
-      <div className="border-b border-border bg-card/50">
-        <div className="max-w-4xl mx-auto px-4 flex items-center h-8">
-          <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest">Disclaimer</span>
+      <div className="border-b border-white/50 bg-white/20 backdrop-blur-2xl">
+        <div className="max-w-3xl mx-auto px-6 flex items-center min-h-11">
+          <span className="text-sm text-muted-foreground">Disclaimer</span>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-3xl mx-auto px-6 py-12 sm:py-14">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground mb-8 font-mono transition-colors"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> BACK
+          <ArrowLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="h-px bg-indigo-500/40 mb-8 max-w-xs" />
-        <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-indigo-400 font-medium">Legal Disclaimer</span>
-        <h1 className="text-2xl font-bold tracking-tight mt-3 mb-4 text-foreground">
+        <div className="h-px bg-primary/40 mb-8 max-w-xs" />
+        <p className="marketing-eyebrow text-primary">Legal Disclaimer</p>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-4 text-foreground">
           Not Official Government Guidance
         </h1>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-10 max-w-2xl">
-          Aequitas is an independent policy intelligence tool. It is not affiliated with, endorsed by,
-          or produced by the Department for Transport (DfT), the Office for National Statistics (ONS),
-          or any other UK government body.
+        <p className="marketing-lede mb-12">
+          Aequitas is an independent policy intelligence tool. It is not affiliated with, endorsed
+          by, or produced by the Department for Transport (DfT), the Office for National Statistics
+          (ONS), or any other UK government body.
         </p>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {[
             {
               title: "Data Accuracy",
@@ -64,9 +64,9 @@ export default function DisclaimerPage() {
               body: "Underlying datasets are licensed under the Open Government Licence v3.0 (OGL3), the Open Data Commons Open Database Licence (ODbL), and other open licences as specified by each originating body. Aequitas does not redistribute raw source data.",
             },
           ].map((s) => (
-            <div key={s.title} className="border border-border rounded bg-card p-4">
-              <p className="text-xs font-semibold text-indigo-400 mb-2">{s.title}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">{s.body}</p>
+            <div key={s.title} className="app-glass-strong rounded-2xl border border-white/60 p-5">
+              <p className="marketing-card-title mb-2">{s.title}</p>
+              <p className="marketing-body">{s.body}</p>
             </div>
           ))}
         </div>
