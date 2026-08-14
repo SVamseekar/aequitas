@@ -1,7 +1,12 @@
 # Aequitas — Current State (2026-08-13)
 
-Authoritative snapshot for England score, map home, Studio, and Reach.
-France is not built. **15/30/45 still unavailable** without r5py.
+Authoritative snapshot after **Waves 5 and 6 stamped Done** (2026-08-13
+visual pass). England Waves 1–4 remain live. Ireland **TFI × Pobal HP 2022 ×
+CSO SA 2022** is on disk at CSO scale (**18,919** Small Areas). Ireland FAISS
+is country-keyed (`data/ireland/faiss_index.bin`, 4,457 chunks). Wave 7
+Netherlands warehouse is live (not stamped Done — PNG pass outstanding).
+France is not built. **15/30/45 still unavailable** without r5py. One network
+date per country — do not invent a second.
 
 **Git:** no commits **mid-wave**. When we open git, PRs are **split logically**
 (England 1–4, Ireland 5, packs/`time` 6, NL 7, ops 8, FR 9) — not one mega-PR.
@@ -12,7 +17,10 @@ See `docs/guidelines/git-branching.md`.
 ## 1. Product
 
 Aequitas is a **free, multi-country bus × deprivation briefing platform**.
-England is live. Other countries use the same method when their warehouses exist. Deprivation ranks stay **inside each country**.
+England is live. Ireland’s **doors and full pack** are live locally
+(`data/aequitas_ireland.duckdb`). The Netherlands and France use the **same ten doors and
+same/replace/omit catalogue** (Waves 7 and 9). Deprivation ranks stay
+**inside each country**.
 
 Not a SaaS clone of Remix/TRACC. Not a 55-bar factory. Not a lock on Gini 0.5741.
 
@@ -24,9 +32,9 @@ Not a SaaS clone of Remix/TRACC. Not a 55-bar factory. Not a lock on Gini 0.5741
 | 2 | Map home, MapLibre, r5py 15/30/45, quoteable score | Done (map race leftover fixed with Wave 3) |
 | 3 | Studio (walk-to-stop live; r5py still optional) | Done (walk-to-stop; r5py still optional) |
 | 4 | Reach / Aequitas bands + research export pack | Done (service bands live; r5py 15/30/45 still optional) |
-| 5 | Other countries | Later |
-| 6 | Dated packs / time | Later |
-| 7 | Netherlands | Later |
+| 5 | Ireland pack + country switcher data | **Done** (warehouse + briefing + chat). 18,919 SA. Catalogue **36 same / 12 replace / 7 omit** after CSO SAPS Theme 8 / T15 / 65+ implemented. Distinct exhibits + Insight Engine on SAME/REPLACE. FAISS[ireland] retrieves Republic narratives. |
+| 6 | Monthly snapshots / refresh | **Done** (one real date each). `/time` one point + “only one network date.” Unknown pack 404s time, score, ticker. Methodology names frozen Census/HP/IMD vs monthly GTFS. |
+| 7 | Netherlands + bus \| all-PT | **Done** (warehouse + briefing PNG 2026-08-14). Chat still honest empty (`FAISS[netherlands]` not built). Sunday 49.6%. National **69.6** bus / **71.1** all-PT. Home SVG provincies paint. |
 | 8 | Ops GTFS-RT/SIRI | Later |
 | 9 | France NAP harvest + F-EDI or proxy | Later |
 
@@ -36,8 +44,8 @@ Not a SaaS clone of Remix/TRACC. Not a 55-bar factory. Not a lock on Gini 0.5741
 |---|---|
 | `/` | Four-country landing, no “Request access”, no fake refunds |
 | `/app/england` | **Map home** + in-country score + 8 doors (legacy `/dashboard/*` redirects here) |
-| `/app/ireland` | Honest empty until the Ireland pack lands |
-| `/app/netherlands` | Honest empty until the Netherlands pack lands |
+| `/app/ireland` | Map + score + 10 doors; 18,919 SA pack; county SVG; Ireland FAISS chat. Mistakes already paid for stay in `docs/guidelines/country-sections.md` § Ireland mistakes — **do not repeat on NL/FR.** |
+| `/app/netherlands` | Warehouse + briefing live; map + 10 doors; `?mode=bus` (default) or `?mode=all`. Chat: index not built. |
 | `/app/france` | Honest empty: pack not built yet |
 | Vercel marketing | Static pages; analytics need local API |
 | Pipeline Stage 3 | **Writes** equity Parquet (and mirrors policy/SHAP if present) |
@@ -99,7 +107,8 @@ on `lsoa_code`; region + urban/rural come from the pack, not guessed). Apply use
 warehouse stops + `compute_score` on the **active filter**. Who-gains people / IMD
 deciles / area rows are real. Label stays “walk-to-stop change, not 45-minute jobs.”
 Frequency / new corridor still needs r5py + PBF + BODS — we do not invent 15/30/45.
-London × rural: one empty sentence.
+Ireland studio: Republic bbox + SA centroids when present; Birmingham rejected.
+NL / FR studio: pack not built. London × rural: one empty sentence.
 
 **Centroids (not committed as a shapefile):** helper
 `src/aequitas/analytics/centroids.py` downloads
@@ -147,3 +156,52 @@ and Geofabrik PBF are not in the tree; CLI explains and writes no invented count
 **Research pack:** `GET /api/export/pack.csv` and `GET /api/export/pack.html` — English
 headers, score, people × band × IMD decile, 400 m share, 15/30/45 or honest missing,
 optional Studio job (`studio_job=`). Title: research pack, not statutory BSIP.
+
+## 9. Wave 5 — Ireland
+
+Warehouse: `data/aequitas_ireland.duckdb` (never overwrites `data/aequitas.duckdb`).
+CLI: `uv run aequitas ireland` or `uv run aequitas process --country ireland`.
+API: `?country=ireland` — **no England fallback**.
+
+Ireland warehouse: `uv run aequitas ireland` overwrites **only** `data/aequitas_ireland.duckdb`. Catalogue (`docs/guidelines/country-sections.md` / `src/aequitas/ireland/sections.py`):
+
+| Action | Count | Notes |
+|--------|------:|-------|
+| same | 36 | A/B/C plus HP-swapped D/F/G; d2–d4 from CSO SAPS; bsa2 = c3 HHI |
+| replace | 12 | J (CAF/PAG / EPA IE), BSA→NTA, PS Irish interventions, g5 |
+| omit | 7 | d5 income, d9a–e, f3 — one sentence, no free SA variable |
+| **answers** | **55** | Matches England `SECTION_REGISTRY` |
+
+- Deprivation: Pobal HP 2022 relative index / decile. Never labelled IMD.
+- Small areas: CSO SA 2022. Republic only. Northern Ireland clipped. Ticker says **Small Areas**.
+- Transport: TFI `GTFS_All.zip` including **full** `stop_times`. Evening = no departure after 19:00.
+- Urban/rural: density rule (≥150 people/km²), not England RUC.
+- Score: same `compute_score` with HP–service gap instead of IMD.
+- Economy: CAF/PAG / NTA PSO people-gap; EPA/SEAI carbon illustration; **no TAG**.
+- Policy: National policy (NTA) — Connecting Ireland, BusConnects, Local Link, PSO.
+- Scenarios: those Irish interventions × people / HP. € only if cited.
+- Studio: Republic bbox; Birmingham click rejected; walk-to-stop uses `data/processed/ireland/sa_centroids.parquet`.
+- Reach: service bands 1–6 (not TfL PTAL). 15/30/45 honest empty unless r5py ran.
+- Compare: two Irish counties. **No `/app/compare-countries` page** this wave.
+- Home / Access / Policy maps (seen 2026-08-13): **26 Republic county polygons**
+  (SVG fill from `ireland_counties.geojson`). Earlier MapLibre-only pass painted a
+  GB basemap with “boundaries could not be loaded.” Dublin vs Cork are different
+  county shapes and scores (88 vs 52). Not ITL1 boxes.
+
+**Pack on disk (2026-08-13 rebuild):**
+
+| Fact | Value |
+|------|--------|
+| n Small Areas | **18,919** (CSO 2022; seed was 208) |
+| Population (T1_1AGETT) | 5,149,139 |
+| Counties | 26 Republic (DLR / N+S Tipperary folded) |
+| National score (API terms) | ~55 from 400 m share 55.1% (freq + HP–service still in warehouse) |
+| Dublin vs Cork | Dublin **5,076** SAs, 400 m **93.2%**, SQI **67.9**; Cork **2,206** SAs, 400 m **52.4%**, SQI **31.5** — scores move |
+| Gini (TFI weekday trips/capita) | 0.820 (computed, not 0.5741) |
+| TFI | 13,492 Republic stops; HHI **896** / 10,000; 6,008,341 `stop_times` rows |
+| HP URL that worked | `https://data.gov.ie/datastore/dump/0806f07b-b514-4769-bd3d-649da87ad205` (CKAN; pobal.ie timed out). **ED-level** 3,417 rows joined SA→ED via `ED_ID_STR` (99.11%). Not invented SA deciles. SA-level HP CSV is not on data.gov.ie. |
+| SA GeoJSON | `https://opendata.arcgis.com/api/v3/datasets/7ff6cde006db4a98876c58de49f108b1_0/downloads/data?format=geojson&spatialRefId=4326` (`SMALL_AREA_2022`, 18,919 features) |
+| SAPS | `https://www.cso.ie/en/media/csoie/census/census2022/SAPS_2022_Small_Area_UR_171024.csv` — GUID ↔ `SA_GUID_2022`, pop = **T1_1AGETT** |
+| Chat | **Ireland FAISS** `data/ireland/faiss_index.bin` (4,457 chunks from Ireland `section_results` only). Drawer on `/app/ireland` sends `context.country=ireland`. Retrieval returns TFI / Pobal HP / Small Area chunks. Invalid/missing Gemini → retrieval-only text, not England BSA. Irish Quick Actions + suggestions (no BSA/IMD). |
+
+Wave 7 warehouse + briefing PNG pass are on disk. France is not built. `FAISS[netherlands]` is not built.
