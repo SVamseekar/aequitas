@@ -11,6 +11,8 @@ Usage::
     aequitas run         — Run all stages end-to-end
     aequitas reach       — r5py 15/30/45 destination counts (after process)
     aequitas studio      — apply a StudioPatch (walk-to-stop; r5py if present)
+    aequitas refresh     — Unattended NaPTAN+BODS download + rebuild
+    aequitas schedule-refresh — Install monthly macOS launchd job
 """
 
 import click

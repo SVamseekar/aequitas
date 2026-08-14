@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.aequitas.refresh</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>uv</string>
+    <string>run</string>
+    <string>aequitas</string>
+    <string>refresh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Day</key>
+    <integer>1</integer>
+    <key>Hour</key>
+    <integer>2</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+</dict>
+</plist>
+<!--
+Install (this Mac only; no cloud console):
+
+  uv run aequitas schedule-refresh
+
+  launchctl list | grep aequitas
+  launchctl unload ~/Library/LaunchAgents/com.aequitas.refresh.plist
+
+Leaves Census / IMD / HP frozen. Writes data/packs/{country}/{YYYY-MM-DD}/ then
+swaps current if sanity passes. Ireland: uv run aequitas refresh --country ireland
+-->

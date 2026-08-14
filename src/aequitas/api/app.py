@@ -77,6 +77,8 @@ def create_app() -> FastAPI:
                 regions = []
             finally:
                 conn.close()
+        from aequitas.warehouse.packs import list_packs
+
         if nl is not None:
             import duckdb
 
@@ -93,18 +95,26 @@ def create_app() -> FastAPI:
                 nl_regions = []
             finally:
                 conn.close()
+        dated = {
+            "england": list_packs("england"),
+            "ireland": list_packs("ireland"),
+            "netherlands": list_packs("netherlands"),
+        }
         return {
             "england": {
                 "packReady": Path(en).exists() if en else False,
                 "regions": None,
+                "dates": dated["england"],
             },
             "ireland": {
                 "packReady": Path(ie).exists() if ie else False,
                 "regions": regions or None,
+                "dates": dated["ireland"],
             },
             "netherlands": {
                 "packReady": Path(nl).exists() if nl else False,
                 "regions": nl_regions or None,
+                "dates": dated["netherlands"],
             },
             "france": {"packReady": False, "regions": None},
         }
@@ -128,10 +138,12 @@ def create_app() -> FastAPI:
         score,
         sections,
         studio,
+        time_series,
     )
 
     app.include_router(overview.router, prefix="/api")
     app.include_router(score.router, prefix="/api")
+    app.include_router(time_series.router, prefix="/api")
     app.include_router(map_data.router, prefix="/api")
     app.include_router(reach.router, prefix="/api")
     app.include_router(studio.router, prefix="/api")
