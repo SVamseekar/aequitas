@@ -59,7 +59,15 @@ function toPercent(value: number, scaleMax: number): number {
  */
 export default function GaugeChart({ chartData }: Props) {
   const bands = (chartData.bands ?? []) as GaugeBand[]
-  const markers = (chartData.markers ?? []) as GaugeMarker[]
+  let markers = (chartData.markers ?? []) as GaugeMarker[]
+  const rawValue = chartData.value
+  if (
+    markers.length === 0 &&
+    typeof rawValue === "number" &&
+    Number.isFinite(rawValue)
+  ) {
+    markers = [{ label: "HHI", value: rawValue }]
+  }
   const referenceLines = (chartData.reference_lines ?? []) as number[]
   const title = chartData.title as string | undefined
   const unit = chartData.unit as string | undefined
@@ -129,7 +137,9 @@ export default function GaugeChart({ chartData }: Props) {
           <li key={marker.label} className="flex justify-between">
             <span className="text-foreground">{marker.label}</span>
             <span className="text-muted-foreground">
-              {marker.value} {unit ?? ""}
+              {typeof marker.value === "number"
+                ? `${Math.round(marker.value).toLocaleString("en-GB")} ${unit ?? ""}`.trim()
+                : `${marker.value} ${unit ?? ""}`}
             </span>
           </li>
         ))}

@@ -1,42 +1,233 @@
 import { useQuery } from "@tanstack/react-query"
-import { useSearchParams } from "react-router"
+import { useNavigate, useParams, useSearchParams } from "react-router"
 import { fetchJson } from "./client"
-import type { OverviewResponse, SectionsResponse, ProvenanceResponse, LsoaResponse } from "./types"
+import type {
+  OverviewResponse,
+  SectionsResponse,
+  ProvenanceResponse,
+  LsoaResponse,
+  ScoreResponse,
+  MapResponse,
+  ReachResponse,
+  ReachBandsResponse,
+  TimeSeriesResponse,
+  PacksResponse,
+} from "./types"
+import { COUNTRIES } from "@/lib/constants"
+import { appPath } from "@/lib/appRoutes"
 
-/** Read global filters from URL search params. */
+/** Read global filters from URL search params + country path. */
 export function useFilters() {
   const [params, setParams] = useSearchParams()
+  const { country: countryParam } = useParams<{ country?: string }>()
+  const navigate = useNavigate()
   const region = params.get("region") ?? "all"
   const urbanRural = params.get("urban_rural") ?? "all"
+  const pack = params.get("pack") ?? params.get("as_of") ?? ""
+  const modeRaw = (params.get("mode") ?? "bus").toLowerCase()
+  const mode = modeRaw === "all" ? "all" : "bus"
+  const country =
+    COUNTRIES.find((c) => c.code === countryParam)?.code ?? "england"
+
+  const keepMode = (next: URLSearchParams) => {
+    if (country === "netherlands") next.set("mode", mode)
+  }
 
   const setRegion = (r: string) => {
-    const next = new URLSearchParams(params)
+    const next = new URLSearchParams()
     next.set("region", r)
+    next.set("urban_rural", urbanRural === "urban" || urbanRural === "rural" ? urbanRural : "all")
+    if (pack) next.set("pack", pack)
+    keepMode(next)
     setParams(next)
   }
   const setUrbanRural = (u: string) => {
-    const next = new URLSearchParams(params)
+    const next = new URLSearchParams()
+    next.set("region", region.startsWith("E12") && country === "ireland" ? "all" : region)
     next.set("urban_rural", u)
+    if (pack) next.set("pack", pack)
+    keepMode(next)
     setParams(next)
   }
+  const setPack = (nextPack: string) => {
+    const next = new URLSearchParams()
+    next.set("region", region)
+    next.set("urban_rural", urbanRural === "urban" || urbanRural === "rural" ? urbanRural : "all")
+    if (nextPack && nextPack !== "current") next.set("pack", nextPack)
+    keepMode(next)
+    setParams(next)
+  }
+  const setMode = (nextMode: string) => {
+    const next = new URLSearchParams()
+    next.set("region", region)
+    next.set("urban_rural", urbanRural === "urban" || urbanRural === "rural" ? urbanRural : "all")
+    if (pack) next.set("pack", pack)
+    next.set("mode", nextMode === "all" ? "all" : "bus")
+    setParams(next)
+  }
+  const setCountry = (nextCountry: string) => {
+    const slug = window.location.pathname.split("/").slice(3).join("/")
+    const next = new URLSearchParams()
+    next.set("region", "all")
+    next.set("urban_rural", urbanRural === "urban" || urbanRural === "rural" ? urbanRural : "all")
+    if (nextCountry === "netherlands") next.set("mode", "bus")
+    navigate(`${appPath(nextCountry, slug || undefined)}?${next.toString()}`)
+  }
 
-  return { region, urbanRural, setRegion, setUrbanRural }
+  return { country, region, urbanRural, pack, mode, setCountry, setRegion, setUrbanRural, setPack, setMode }
 }
 
-export function useOverview(region: string, urbanRural: string) {
+function packParams(pack?: string): Record<string, string> {
+  return pack ? { pack } : {}
+}
+
+export function useOverview(
+  region: string,
+  urbanRural: string,
+  country = "england",
+  pack = "",
+  mode = "",
+) {
   return useQuery({
-    queryKey: ["overview", region, urbanRural],
-    queryFn: () => fetchJson<OverviewResponse>("/overview", { region, urban_rural: urbanRural }),
+    queryKey: ["overview", country, region, urbanRural, pack, mode],
+    queryFn: () =>
+      fetchJson<OverviewResponse>("/overview", {
+        region,
+        urban_rural: urbanRural,
+        country,
+        ...packParams(pack),
+        ...(country === "netherlands" ? { mode: mode || "bus" } : {}),
+      }),
+    staleTime: Infinity,
+    retry: pack ? false : 1,
+  })
+}
+
+export function useScore(region: string, urbanRural: string, country = "england", pack = "", mode = "") {
+  return useQuery({
+    queryKey: ["score", country, region, urbanRural, pack, mode],
+    queryFn: () =>
+      fetchJson<ScoreResponse>("/score", {
+        region,
+        urban_rural: urbanRural,
+        country,
+        ...packParams(pack),
+        ...(country === "netherlands" ? { mode: mode || "bus" } : {}),
+      }),
     staleTime: Infinity,
   })
 }
 
-export function useSections(dimension: string, region: string, urbanRural: string) {
+export function useMapLayer(
+  region: string,
+  urbanRural: string,
+  country = "england",
+  pack = "",
+  mode = "",
+) {
   return useQuery({
-    queryKey: ["sections", dimension, region, urbanRural],
+    queryKey: ["map", country, region, urbanRural, pack, mode],
     queryFn: () =>
-      fetchJson<SectionsResponse>("/sections", { dimension, region, urban_rural: urbanRural }),
+      fetchJson<MapResponse>("/map", {
+        region,
+        urban_rural: urbanRural,
+        country,
+        ...packParams(pack),
+        ...(country === "netherlands" ? { mode: mode || "bus" } : {}),
+      }),
     staleTime: Infinity,
+    retry: pack ? false : 1,
+  })
+}
+
+export function useReachBands(region: string, urbanRural: string, country = "england") {
+  return useQuery({
+    queryKey: ["reach-bands", country, region, urbanRural],
+    queryFn: () =>
+      fetchJson<ReachBandsResponse>("/reach/bands", {
+        region,
+        urban_rural: urbanRural,
+        country,
+      }),
+    staleTime: Infinity,
+  })
+}
+
+export function useReach(
+  region: string,
+  urbanRural: string,
+  destType: string,
+  cutoff: number,
+  country = "england",
+) {
+  return useQuery({
+    queryKey: ["reach", country, region, urbanRural, destType, cutoff],
+    queryFn: () =>
+      fetchJson<ReachResponse>("/reach", {
+        region,
+        urban_rural: urbanRural,
+        dest_type: destType,
+        cutoff: String(cutoff),
+        country,
+      }),
+    staleTime: Infinity,
+  })
+}
+
+export function useSections(
+  dimension: string,
+  region: string,
+  urbanRural: string,
+  country = "england",
+  pack = "",
+  mode = "",
+) {
+  return useQuery({
+    queryKey: ["sections", country, dimension, region, urbanRural, pack, mode],
+    queryFn: () =>
+      fetchJson<SectionsResponse>("/sections", {
+        dimension,
+        region,
+        urban_rural: urbanRural,
+        country,
+        ...packParams(pack),
+        ...(country === "netherlands" ? { mode: mode || "bus" } : {}),
+      }),
+    staleTime: Infinity,
+  })
+}
+
+export function useTimeSeries(
+  country: string,
+  region: string,
+  urbanRural: string,
+  metric = "score",
+  pack = "",
+) {
+  return useQuery({
+    queryKey: ["time", country, region, urbanRural, metric, pack],
+    queryFn: () =>
+      fetchJson<TimeSeriesResponse>("/time", {
+        country,
+        region,
+        urban_rural: urbanRural,
+        metric,
+        ...packParams(pack),
+      }),
+    staleTime: Infinity,
+    retry: (count, err) => {
+      const status = (err as { status?: number })?.status
+      if (status === 404) return false
+      return count < 1
+    },
+  })
+}
+
+export function usePackDates() {
+  return useQuery({
+    queryKey: ["packs"],
+    queryFn: () => fetchJson<PacksResponse>("/packs"),
+    staleTime: 60_000,
   })
 }
 

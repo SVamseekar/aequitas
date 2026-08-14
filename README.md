@@ -2,9 +2,9 @@
 
 <div align="center">
 
-**Open transport equity intelligence for governments, researchers, and civic technologists.**
+**See where the bus fails people — England, Ireland, the Netherlands, and France.**
 
-*Which communities are underserved — by how much — and what would it cost to fix?*
+*Open timetables × official deprivation. Same method, four countries. No licence fee.*
 
 [![Stars](https://img.shields.io/github/stars/SVamseekar/aequitas?style=flat-square&color=ffd700&label=Stars)](https://github.com/SVamseekar/aequitas/stargazers)
 [![Forks](https://img.shields.io/github/forks/SVamseekar/aequitas?style=flat-square&color=87ceeb&label=Forks)](https://github.com/SVamseekar/aequitas/network/members)
@@ -22,7 +22,7 @@
 
 ## Current status (read this first)
 
-See **[docs/CURRENT_STATE.md](docs/CURRENT_STATE.md)** for what works online vs local, canonical metrics (55 sections · Gini 0.5741), OAuth setup, and SEO/a11y notes.
+See **[docs/CURRENT_STATE.md](docs/CURRENT_STATE.md)** for wave status. **Waves 1–5:** England map-first briefing + Ireland pack (`/app/ireland`) on the same score formula (HP decile, not IMD). Studio walk-to-stop is live when centroids exist. 15/30/45 stays honest-empty without r5py. NL / FR packs are **not** live (waves 7, 9). Waves 6–9 are not done.
 
 **Quick start (full analytics):**
 
@@ -34,6 +34,17 @@ cp .env.example .env   # set DATABASE_URL / Google OAuth as needed
 
 **Marketing site only** is on Vercel (`aequitas.souravamseekar.com`). Dashboard data needs the local API.
 
+
+## Countries (same method)
+
+| Country | Timetables | Deprivation | Small areas | Wave |
+|---|---|---|---|---|
+| England | BODS GTFS + NaPTAN | IMD 2025 (in-country) | LSOA 2021 | 1 live |
+| Ireland | TFI GTFS_All.zip (free) | Pobal HP 2022 relative index / decile (not IMD) | CSO SA 2022, Republic only | 5 live |
+| Netherlands | gtfs.ovapi.nl | CBS SES-WOA | wijk/buurt | 7 |
+| France | NAP GTFS harvest | F-EDI or Filosofi proxy | IRIS | 9 |
+
+Never plot those deprivation indices on one axis.
 
 ## The problem
 
@@ -107,7 +118,7 @@ Open data sources
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18, Vite, TypeScript, Tailwind CSS, shadcn/ui, Mapbox GL |
+| Frontend | React 19, Vite, TypeScript, Tailwind CSS, MapLibre + free OSM/CARTO tiles |
 | Backend | FastAPI (Python 3.12+) |
 | Warehouse | DuckDB (single pre-built binary, served read-only) |
 | Intermediate data | Parquet |
@@ -147,7 +158,7 @@ Write a new ingestion module. The processing, analytics, warehouse schema, and f
 
 ## Getting started
 
-**Prerequisites:** Python 3.12+, Node 18+, [`uv`](https://docs.astral.sh/uv/). Optional: Docker (Postgres for auth), Google OAuth credentials, `GEMINI_API_KEY` (chat).
+**Prerequisites:** Python 3.12+, Node 18+, [`uv`](https://docs.astral.sh/uv/). Optional: Docker (Postgres for auth), Google OAuth credentials, `GEMINI_API_KEY` (chat). **r5py reach:** JDK **17** (`brew install openjdk@17`) and `uv pip install r5py` — not required for the rest of the dashboard.
 
 **Local only** for the current programme — production hosting is deferred (see `docs/FUTURE_WORK.md`).
 
@@ -167,6 +178,14 @@ chmod +x scripts/dev.sh
 - API: `http://127.0.0.1:8000` — `GET /api/health` → `{"status":"ok","warehouse":"connected"}`
 - Frontend: `http://localhost:5173` — Vite proxies `/api` → `:8000`
 - Smoke: `uv run python scripts/smoke_local.py`
+- App: `http://localhost:5173/app/england` (map home + score)
+- Reach (optional, hours for full England): place Geofabrik England PBF in `data/raw/osm/` (gitignored) and BODS GTFS in `data/raw/bods/`, destination points as `data/processed/destinations_{jobs,gp,school}.parquet`, then:
+
+```bash
+uv run aequitas reach --region E12000005   # West Midlands batch; add --force to recompute
+```
+
+Skip is automatic when the reach cache is newer than GTFS+PBF. Access UI names ITL1s that are not in the parquet.
 
 `scripts/dev.sh` starts Postgres when nothing is listening on `:5432` (via `docker compose`), then uvicorn and Vite. It defaults `ENVIRONMENT=development` and `DEV_AUTH_BYPASS=true` so the dashboard works without Google for local analytics demos.
 

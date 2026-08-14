@@ -3,20 +3,24 @@ import { Info } from "lucide-react"
 import type { SectionItem } from "@/api/types"
 import { Markdown } from "@/components/shared/Markdown"
 import { ChartRenderer } from "@/components/charts/ChartRenderer"
-import { SECTION_TITLES } from "@/lib/constants"
+import { HIDDEN_STAT_KEYS, statLabel, sectionTitle } from "@/lib/constants"
 import { packEquityDisplayValue } from "@/lib/metricsCanon"
 import { extractHeadline } from "@/lib/narrative"
 import { ProvenancePanel } from "./ProvenancePanel"
 import { useFilters, useScenarioCalculation } from "@/api/hooks"
 
-function formatValue(key: string, v: unknown): string {
+function formatValue(key: string, v: unknown, country: string): string {
   if (v === null || v === undefined) return "—"
   if (typeof v === "number") {
+    if (v === 0) return key.includes("pct") ? "0.0%" : "0.0"
     const packed = packEquityDisplayValue(key, v)
     if (packed !== null) return packed
+    if (key === "hhi" || key.includes("hhi")) return `${Math.round(v).toLocaleString("en-GB")} / 10,000`
     if (key.includes("pct")) return `${v.toFixed(1)}%`
-    if (key.includes("cost") || key.includes("benefit") || key.includes("value_k"))
+    if (key.includes("cost") || key.includes("benefit") || key.includes("value_k")) {
+      if (country === "ireland") return `${v.toLocaleString(undefined, { maximumFractionDigits: 1 })} (people only)`
       return `£${v.toLocaleString(undefined, { maximumFractionDigits: 1 })}m`
+    }
     if (key.includes("co2") || key.includes("saving")) return `${v.toLocaleString(undefined, { maximumFractionDigits: 0 })} t`
     if (Number.isInteger(v)) return v.toLocaleString()
     return parseFloat(v.toPrecision(4)).toString()
@@ -39,10 +43,8 @@ function formatValue(key: string, v: unknown): string {
   return String(v)
 }
 
-function formatKey(key: string): string {
-  return key
-    .replace(/_/g, " ")
-    .replace(/\b(pct|n|hhi|r2|vot|co2|bcr|drt|lta)\b/gi, (m) => m.toUpperCase())
+function formatKey(key: string, country: string): string {
+  return statLabel(key, country)
 }
 
 /** Section / stat keys that resolve on GET /api/provenance/{id}. */
@@ -58,22 +60,39 @@ interface Props {
 }
 
 export function SectionCard({ section }: Props) {
-  const [narrativeOpen, setNarrativeOpen] = useState(false)
   const [provenanceMetric, setProvenanceMetric] = useState<string | null>(null)
   const provenanceId =
     PROVENANCE_KEYS[section.section_id] ??
     (typeof section.stats?.gini === "number" ? "gini_national" : null)
 
-  const { region, urbanRural } = useFilters()
+  const { country, region, urbanRural } = useFilters()
   const { populationAffected, co2Saving, total_cost } = useScenarioCalculation(region, urbanRural)
 
   const rawTitle = section.chart_data?.title
-  const title = SECTION_TITLES[section.section_id]
+  const title = sectionTitle(section.section_id, country)
     ?? (typeof rawTitle === "string" ? rawTitle : undefined)
+    ?? (typeof section.stats?.title === "string" ? section.stats.title : undefined)
     ?? section.section_id.replace(/_/g, " ")
 
-  let chartData = section.chart_data
-  if (section.section_id === "ps5_scenario_comparison" && chartData) {
+  const omitted = Boolean(section.stats?.omit)
+  let chartData = omitted ? undefined : section.chart_data
+  const pctCovered = section.stats?.pct_covered
+  if (
+    country !== "ireland" &&
+    section.section_id === "a3_walking_distance" &&
+    typeof pctCovered === "number" &&
+    (!chartData?.type || !chartData?.data)
+  ) {
+    chartData = {
+      type: "horizontal_bar",
+      x_label: "% of population",
+      data: [
+        { label: "Within 400m of a stop", value: Number(pctCovered.toFixed(1)) },
+        { label: "Beyond 400m", value: Number((100 - pctCovered).toFixed(1)) },
+      ],
+    }
+  }
+  if (country !== "ireland" && section.section_id === "ps5_scenario_comparison" && chartData) {
     const originalData = Array.isArray(chartData.data) ? chartData.data : []
     const costPerBeneficiary = populationAffected > 0 ? (total_cost * 1_000_000) / populationAffected : 0
     const customRow = {
@@ -89,14 +108,18 @@ export function SectionCard({ section }: Props) {
     }
   }
 
-  const hasChart = chartData && Object.keys(chartData).length > 0
+  const hasChart = Boolean(
+    chartData &&
+      (chartData.type || (Array.isArray(chartData.data) && chartData.data.length > 0)),
+  )
   const hasNarrative = !!section.narrative?.trim()
   const headline = hasNarrative ? extractHeadline(section.narrative) : null
 
   // Flatten stats
   const flatStats: [string, unknown][] = []
   for (const [k, v] of Object.entries(section.stats ?? {})) {
-    if (Array.isArray(v) || k === "unit" || k === "entity_type") continue
+    if (Array.isArray(v) || HIDDEN_STAT_KEYS.has(k)) continue
+    if (k === "bcr" && (v === null || v === undefined) && section.stats?.omit_euro) continue
     if (typeof v === "object" && v !== null) {
       const obj = v as Record<string, unknown>
       if ("best" in obj) continue
@@ -185,10 +208,10 @@ export function SectionCard({ section }: Props) {
               {displayStats.map(([key, val]) => (
                 <div key={key} className="app-glass rounded-xl p-3">
                   <p className="text-[11px] text-muted-foreground uppercase tracking-wide leading-tight">
-                    {formatKey(key)}
+                    {formatKey(key, country)}
                   </p>
                   <p className="text-sm font-semibold text-foreground mt-1 tabular-nums">
-                    {formatValue(key, val)}
+                    {formatValue(key, val, country)}
                   </p>
                 </div>
               ))}
@@ -196,21 +219,14 @@ export function SectionCard({ section }: Props) {
           </div>
         )}
 
-        {/* Narrative toggle */}
         {hasNarrative && (
           <div className="px-5 pb-4 border-t border-border/60 pt-3">
-            <button
-              type="button"
-              className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-              onClick={() => setNarrativeOpen(!narrativeOpen)}
-            >
-              {narrativeOpen ? "Hide analysis" : "Read analysis"}
-            </button>
-            {narrativeOpen && (
-              <div className="mt-3 prose prose-sm max-w-none text-sm text-muted-foreground">
-                <Markdown content={section.narrative} />
-              </div>
-            )}
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+              For this filter
+            </p>
+            <div className="text-sm">
+              <Markdown content={section.narrative} />
+            </div>
           </div>
         )}
       </article>

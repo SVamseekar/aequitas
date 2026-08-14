@@ -15,7 +15,7 @@ export default function HeatmapChart({ chartData }: Props) {
     if (!ref.current) return
     const xLabels = (chartData.x_labels ?? []) as string[]
     const yLabels = (chartData.y_labels ?? []) as string[]
-    const values = (chartData.values ?? []) as number[][]
+    const values = (chartData.values ?? chartData.z ?? []) as number[][]
 
     // Flatten to cell data
     const cells: { x: string; y: string; value: number }[] = []
@@ -24,7 +24,7 @@ export default function HeatmapChart({ chartData }: Props) {
         cells.push({
           x: xLabels[xi],
           y: yLabels[yi],
-          value: values[yi]?.[xi] ?? 0,
+          value: Number.isFinite(Number(values[yi]?.[xi])) ? Number(values[yi][xi]) : 0,
         })
       }
     }
@@ -34,8 +34,8 @@ export default function HeatmapChart({ chartData }: Props) {
       marginBottom: 60,
       width,
       height: Math.max(300, yLabels.length * 40 + 80),
-      x: { label: null, tickRotate: -30 },
-      y: { label: null },
+      x: { label: null, tickRotate: -30, domain: xLabels },
+      y: { label: null, domain: [...yLabels].reverse() },
       color: { scheme: "YlOrRd", legend: true, label: "Value" },
       marks: [
         Plot.cell(cells, {

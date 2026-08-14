@@ -26,7 +26,11 @@ export async function fetchJson<T>(
     // Session expired — leave AuthContext to clear on next /me
     throw new Error("Unauthorized")
   }
-  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`)
+  if (!res.ok) {
+    const err = new Error(`API ${res.status}: ${await res.text()}`) as Error & { status?: number }
+    err.status = res.status
+    throw err
+  }
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
 }

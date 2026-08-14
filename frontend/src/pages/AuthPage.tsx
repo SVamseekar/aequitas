@@ -19,7 +19,7 @@ export default function AuthPage() {
     )
   }
 
-  if (user) return <Navigate to="/dashboard" replace />
+  if (user) return <Navigate to="/app/england" replace />
 
   const handleGoogle = async () => {
     try {
@@ -57,6 +57,9 @@ export default function AuthPage() {
         noindex
       />
       <Toaster position="top-right" />
+      <p className="sr-only">
+        If development bypass is on, opening the app uses a synthetic local session.
+      </p>
       <div className="app-atmosphere flex min-h-screen">
         <div className="hidden lg:flex lg:w-[55%] flex-col justify-between relative overflow-hidden border-r border-white/40">
           <div className="relative z-10 p-10">

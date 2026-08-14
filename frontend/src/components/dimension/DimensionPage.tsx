@@ -3,9 +3,13 @@ import { Download, AlertTriangle } from "lucide-react"
 import { useParams } from "react-router"
 import { useFilters, useSections } from "@/api/hooks"
 
-import { DIMENSIONS, REGIONS, AREA_TYPES } from "@/lib/constants"
+import { DIMENSION_API_IDS, AREA_TYPES, regionsForCountry, dimensionsForCountry } from "@/lib/constants"
+import { COUNTRIES } from "@/lib/constants"
+import { filterImpossibleSections, isLondonRural, selectUniqueSections } from "@/lib/uniqueExhibits"
+import { filterSentence } from "@/lib/scoreFormat"
 import { SectionCard } from "./SectionCard"
 import { ScenarioBuilder } from "./ScenarioBuilder"
+import { AccessReachPanel } from "@/components/access/AccessReachPanel"
 
 // Error boundary to catch rendering crashes in child components
 interface ErrorBoundaryState {
@@ -42,12 +46,12 @@ class DimensionErrorBoundary extends Component<{ children: ReactNode }, ErrorBou
 
 function DimensionPageContent() {
   const { dimensionSlug } = useParams<{ dimensionSlug: string }>()
-  const dim = DIMENSIONS.find((d) => d.route === `/${dimensionSlug}`)
-  const dimensionId = dim?.id ?? dimensionSlug ?? ""
-
-  const { region, urbanRural } = useFilters()
-  const { data, isLoading, error } = useSections(dimensionId, region, urbanRural)
-  const regionName = REGIONS.find((r) => r.code === region)?.name ?? region
+  const { country, region, urbanRural, pack, mode } = useFilters()
+  const dim = dimensionsForCountry(country).find((d) => d.route === `/${dimensionSlug}` || d.id === dimensionSlug)
+  const apiDimensionId = DIMENSION_API_IDS[dimensionSlug ?? ""] ?? dim?.id ?? dimensionSlug ?? ""
+  const countryName = COUNTRIES.find((c) => c.code === country)?.name ?? country
+  const { data, isLoading, error } = useSections(apiDimensionId, region, urbanRural, country, pack, mode)
+  const regionName = regionsForCountry(country).find((r) => r.code === region)?.name ?? region
   const areaName = AREA_TYPES.find((a) => a.code === urbanRural)?.name ?? urbanRural
 
   if (isLoading) {
@@ -78,35 +82,38 @@ function DimensionPageContent() {
       (s.narrative?.trim().length ?? 0) > 0
   ) ?? []
 
-  // London is classified almost entirely urban under RUC — rural combos thin out.
-  const isLondonRural = region === "E12000007" && urbanRural === "rural"
-  const impossibleGeographyCopy = isLondonRural
-    ? "No LSOAs match this filter (e.g. London has no rural LSOAs under the RUC classification). Choose Urban or All Areas."
-    : null
+  const unique = filterImpossibleSections(
+    selectUniqueSections(apiDimensionId, sections, country),
+    urbanRural,
+  )
+  const londonRural = isLondonRural(region, urbanRural)
+  const showUrbanDrtNote = apiDimensionId === "scenarios" && urbanRural === "urban"
+  const packReady = COUNTRIES.find((c) => c.code === country)?.packReady ?? false
+  const packMissing = !packReady
+  const impossibleGeographyCopy = londonRural
+    ? `London has no rural LSOAs under the official urban/rural classification — this ${countryName} filter is empty.`
+    : packMissing
+      ? `${countryName} pack is not built yet. England and Ireland are live; the method is the same.`
+      : null
 
-  if (sections.length === 0) {
+  if (unique.length === 0 || londonRural || packMissing) {
     return (
-      <div className="text-center py-12 max-w-md mx-auto">
-        <p className="text-muted-foreground text-sm">
-          {impossibleGeographyCopy ?? (
-            <>
-              No LSOAs match this filter for <strong>{regionName}</strong> ({areaName}).
-            </>
-          )}
-        </p>
-        <p className="text-muted-foreground/60 text-xs mt-2">
-          {isLondonRural
-            ? "This is expected geography, not a data outage."
-            : 'Try selecting "All England" and "All Areas" for national-level analysis.'}
+      <div>
+        <h1 className="text-xl font-semibold text-foreground tracking-tight mb-3">
+          {dim?.name ?? "Dimension"}
+        </h1>
+        <p className="text-muted-foreground text-sm py-8 max-w-xl">
+          {impossibleGeographyCopy ??
+            `No areas match ${regionName} (${areaName}) for this ${countryName} filter.`}
         </p>
       </div>
     )
   }
 
-  const withCharts = sections.filter((s) => Object.keys(s.chart_data ?? {}).length > 0).length
-  const withNarrative = sections.filter((s) => (s.narrative?.trim().length ?? 0) > 0).length
+  const withCharts = unique.filter((s) => Object.keys(s.chart_data ?? {}).length > 0).length
+  const withNarrative = unique.filter((s) => (s.narrative?.trim().length ?? 0) > 0).length
   const exportParams = new URLSearchParams({ region, urban_rural: urbanRural })
-  const exportUrl = `/api/export/${encodeURIComponent(dimensionId)}?${exportParams}`
+  const exportUrl = `/api/export/${encodeURIComponent(apiDimensionId)}?${exportParams}`
 
   const handleExportPdf = async () => {
     const resp = await fetch(exportUrl, { credentials: "include" })
@@ -115,32 +122,28 @@ function DimensionPageContent() {
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement("a")
     anchor.href = url
-    anchor.download = `aequitas_${dimensionId}_${region}_${urbanRural}.pdf`
+    anchor.download = `aequitas_${apiDimensionId}_${region}_${urbanRural}.pdf`
     anchor.click()
     URL.revokeObjectURL(url)
   }
 
   return (
     <div>
-      {impossibleGeographyCopy && (
-        <div
-          role="status"
-          className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
-        >
-          <p className="font-medium text-amber-900">Limited geography for this filter</p>
-          <p className="mt-1 text-amber-900/80">{impossibleGeographyCopy}</p>
-          <p className="mt-1 text-amber-900/70 text-xs">
-            Some sections below may be empty or national-only for this combo — switch to Urban or All Areas for full London coverage.
-          </p>
-        </div>
+      {showUrbanDrtNote && (
+        <p role="status" className="mb-4 text-sm text-muted-foreground">
+          Demand-responsive rural scenarios do not apply to an urban-only filter — that card is hidden.
+        </p>
       )}
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-foreground tracking-tight">{dim?.name}</h2>
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">
+            {dim?.name} — {filterSentence(regionName, areaName)}
+          </h1>
           <p className="text-muted-foreground text-sm mt-1">{dim?.description}</p>
           <p className="text-muted-foreground text-xs mt-2">
-            {sections.length} sections · {withCharts} charts · {withNarrative} narratives ·{" "}
-            {regionName} · {areaName}
+            {countryName} · {regionName} · {areaName}
+            {withCharts > 0 ? ` · ${withCharts} exhibits` : ""}
+            {withNarrative > 0 ? ` · ${withNarrative} briefings` : ""}
           </p>
         </div>
         <button
@@ -154,11 +157,13 @@ function DimensionPageContent() {
       </div>
 
       {/* Scenario builder — only on scenarios dimension */}
-      {dimensionId === "scenarios" && <ScenarioBuilder />}
+      {apiDimensionId === "scenarios" && country === "england" && <ScenarioBuilder />}
 
-      {sections.map((s) => (
+      {unique.map((s) => (
         <SectionCard key={s.section_id} section={s} />
       ))}
+
+      {apiDimensionId === "accessibility" && <AccessReachPanel />}
     </div>
   )
 }

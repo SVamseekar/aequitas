@@ -1,5 +1,6 @@
 interface Props {
   dimension: string
+  country?: string
   onSelect: (question: string) => void
 }
 
@@ -60,8 +61,27 @@ const SUGGESTIONS: Record<string, string[]> = {
   ],
 }
 
-export function SuggestedQuestions({ dimension, onSelect }: Props) {
-  const questions = SUGGESTIONS[dimension] ?? SUGGESTIONS.default
+export const NETHERLANDS_SUGGESTIONS = [
+  "Which provincies sit farthest from an OVapi stop on the 400 m map?",
+  "How does SES-WOA line up with OVapi weekday service in this filter?",
+  "Who lives beyond 400 m in Noord-Holland versus Groningen?",
+  "What does OVapi operator HHI say about concentration (bus vs all-PT)?",
+]
+
+export const IRELAND_SUGGESTIONS = [
+  "Which Republic counties sit farthest from a TFI stop on the 400 m map?",
+  "How does Pobal HP 2022 line up with TFI weekday service in this filter?",
+  "Who lives beyond 400 m in Dublin versus Cork?",
+  "What does TFI operator HHI say about concentration in the Republic?",
+]
+
+export function SuggestedQuestions({ dimension, country, onSelect }: Props) {
+  const questions =
+    country === "ireland"
+      ? IRELAND_SUGGESTIONS
+      : country === "netherlands"
+        ? NETHERLANDS_SUGGESTIONS
+        : (SUGGESTIONS[dimension] ?? SUGGESTIONS.default)
 
   return (
     <div className="space-y-2">

@@ -25,8 +25,8 @@ export function LandingFooter() {
               <span className="font-semibold text-[var(--l-ink)]">Aequitas</span>
             </div>
             <p className="text-sm text-[var(--l-slate)] leading-relaxed mb-4">
-              Public-sector transport intelligence for England — equity, accessibility, and funding
-              scenarios on national open data.
+              Free, multi-country bus × deprivation briefing. England and Ireland are live; the
+              Netherlands and France use the same method.
             </p>
             <p className="inline-flex items-center gap-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-full px-3 py-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-600" aria-hidden />
@@ -41,7 +41,7 @@ export function LandingFooter() {
               </h2>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/dashboard" className={linkClass}>
+                  <Link to="/app/england" className={linkClass}>
                     Explore
                   </Link>
                 </li>
@@ -51,7 +51,7 @@ export function LandingFooter() {
                   </a>
                 </li>
                 <li>
-                  <Link to={user ? "/dashboard" : "/auth"} className={linkClass}>
+                  <Link to={user ? "/app/england" : "/auth"} className={linkClass}>
                     Sign in
                   </Link>
                 </li>

@@ -18,15 +18,15 @@ interface Props {
 
 export function ChatDrawer({ open, onClose }: Props) {
   const { messages, isStreaming, error, sendMessage, clearMessages } = useChat()
-  const { region, urbanRural } = useFilters()
+  const { country, region, urbanRural } = useFilters()
   const location = useLocation()
   const [input, setInput] = useState("")
   const messagesEnd = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
 
-  const slug = location.pathname.replace("/", "")
-  const currentDimension = DIMENSIONS.find((d) => d.route === `/${slug}`)?.id ?? ""
+  const slug = location.pathname.split("/").filter(Boolean).at(-1) ?? ""
+  const currentDimension = DIMENSIONS.find((d) => d.route === `/${slug}` || d.id === slug)?.id ?? ""
 
   useEffect(() => {
     messagesEnd.current?.scrollIntoView({ behavior: "smooth" })
@@ -96,16 +96,16 @@ export function ChatDrawer({ open, onClose }: Props) {
 
   const handleSend = useCallback(() => {
     if (!input.trim() || isStreaming) return
-    sendMessage(input.trim(), { dimension: currentDimension, region, urban_rural: urbanRural })
+    sendMessage(input.trim(), { dimension: currentDimension, region, urban_rural: urbanRural, country })
     setInput("")
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto"
     }
-  }, [input, isStreaming, sendMessage, currentDimension, region, urbanRural])
+  }, [input, isStreaming, sendMessage, currentDimension, region, urbanRural, country])
 
   const handleSelect = useCallback((question: string) => {
-    sendMessage(question, { dimension: currentDimension, region, urban_rural: urbanRural })
-  }, [sendMessage, currentDimension, region, urbanRural])
+    sendMessage(question, { dimension: currentDimension, region, urban_rural: urbanRural, country })
+  }, [sendMessage, currentDimension, region, urbanRural, country])
 
   if (!open) return null
 
@@ -115,7 +115,7 @@ export function ChatDrawer({ open, onClose }: Props) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-stone-900/25 backdrop-blur-sm z-40"
+        className="fixed inset-0 bg-stone-900/25 backdrop-blur-sm z-[60]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -125,7 +125,7 @@ export function ChatDrawer({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label="Ask Aequitas chat"
-        className="fixed top-0 right-0 h-full w-[min(100%,420px)] app-glass-strong border-l border-white/50 shadow-2xl z-50 flex flex-col rounded-l-2xl"
+        className="fixed top-0 right-0 h-full w-[min(100%,420px)] app-glass-strong border-l border-white/50 shadow-2xl z-[70] flex flex-col rounded-l-2xl"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-border/60">
@@ -157,8 +157,18 @@ export function ChatDrawer({ open, onClose }: Props) {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {isEmpty ? (
             <div className="space-y-6">
-              <QuickActions onSelect={handleSelect} />
-              <SuggestedQuestions dimension={currentDimension} onSelect={handleSelect} />
+              {country === "netherlands" ? (
+                <p className="text-sm text-muted-foreground" data-testid="nl-faiss-missing">
+                  Netherlands index not built. This drawer does not retrieve England or Ireland
+                  chunks.
+                </p>
+              ) : null}
+              <QuickActions country={country} onSelect={handleSelect} />
+              <SuggestedQuestions
+                dimension={currentDimension}
+                country={country}
+                onSelect={handleSelect}
+              />
             </div>
           ) : (
             <>

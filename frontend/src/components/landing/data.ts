@@ -73,21 +73,21 @@ export const DIMENSIONS: DimensionCard[] = [
     title: "Accessibility",
     question: "Can residents reach jobs, healthcare, and schools by bus?",
     grounded: "2SFCA 400m catchment analysis",
-    route: "/accessibility",
+    route: "/access",
   },
   {
     icon: Bus,
     title: "Service Quality",
     question: "Where do evening and weekend services disappear?",
     grounded: "Headway, isolation, and peak ratio metrics",
-    route: "/service-quality",
+    route: "/service",
   },
   {
     icon: Network,
     title: "Route Network",
     question: "Is the network fragmented across operators and boundaries?",
     grounded: `${METRICS_CANON.routes.toLocaleString("en-GB")} routes, operator concentration analysis`,
-    route: "/route-network",
+    route: "/network",
   },
   {
     icon: Brain,
@@ -101,14 +101,14 @@ export const DIMENSIONS: DimensionCard[] = [
     title: "Economic Appraisal",
     question: "Does this investment pass a benefit-cost test?",
     grounded: "BCR via Green Book / TAG methodology; carbon under j3",
-    route: "/economic",
+    route: "/economy",
   },
   {
     icon: FileText,
     title: "Bus Services Act 2025",
     question: "Is your authority ready for franchising under the new Act?",
     grounded: "Franchising readiness and operator concentration tiers",
-    route: "/bus-services-act",
+    route: "/policy",
   },
   {
     icon: Sliders,
@@ -124,7 +124,7 @@ export const HOW_IT_WORKS = [
     icon: Database,
     step: "Select your region",
     description:
-      "Filter by region and area type to see analytics for the place you are responsible for.",
+      "Pick a country, then region and urban/rural. The ticker and briefing recompute for that filter.",
   },
   {
     icon: FileSearch,
@@ -136,6 +136,6 @@ export const HOW_IT_WORKS = [
     icon: SlidersHorizontal,
     step: "Model scenarios and export",
     description:
-      "Test interventions, see the cost and impact, and export findings ready for your business case.",
+      "Studio walk-to-stop, Reach service bands, and a research export pack are live on the free R5/OSM stack. Ireland is live (Wave 5). Monthly refresh, NL, and France remain later waves.",
   },
 ] as const

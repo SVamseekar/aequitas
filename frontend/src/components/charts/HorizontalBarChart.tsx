@@ -125,9 +125,15 @@ export default function HorizontalBarChart({ chartData }: Props) {
     return () => chart.remove()
   }, [chartData, variant])
 
+  const note = typeof chartData.note === "string" ? chartData.note : null
   return (
     <div>
       <div ref={ref} aria-label={(chartData.title as string | undefined) ?? "Bar chart"} role="img" />
+      {note ? (
+        <p className="text-xs text-muted-foreground mt-2" data-testid="bar-chart-note">
+          {note}
+        </p>
+      ) : null}
     </div>
   )
 }

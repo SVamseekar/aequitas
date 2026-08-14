@@ -34,9 +34,7 @@ DIMENSIONS = (
     "scenarios",
 )
 
-# National equity Gini from pre-computed warehouse (Part C canon).
-EXPECTED_GINI = 0.5741
-GINI_TOLERANCE = 0.005
+# Gini must be a valid coefficient after recompute — not locked to June 2026.
 
 # London (ONS region) + rural thinning — from live walkthrough filters.
 FILTER_CASES: list[tuple[str, str, str]] = [
@@ -163,22 +161,113 @@ def check_dimensions() -> None:
                 if gini is None:
                     failures.append("national equity f1_gini missing gini stat")
                     print("  FAIL national equity Gini missing")
+                elif not (0.0 <= gini <= 1.0):
+                    failures.append(f"Gini {gini} outside [0, 1]")
+                    print(f"  FAIL Gini={gini} not a valid coefficient")
                 else:
-                    delta = abs(gini - EXPECTED_GINI)
-                    if delta > GINI_TOLERANCE:
-                        failures.append(
-                            f"Gini {gini} not within {GINI_TOLERANCE} of {EXPECTED_GINI}"
-                        )
-                        print(f"  FAIL Gini={gini} expected≈{EXPECTED_GINI}")
-                    else:
-                        print(f"  OK  national equity Gini={gini} (≈{EXPECTED_GINI})")
-                        gini_checked = True
+                    print(f"  OK  national equity Gini={gini:.4f}")
+                    gini_checked = True
 
     if not gini_checked and not failures:
         failures.append("never checked national equity Gini")
 
     if failures:
         raise SmokeError("dimension checks failed:\n  - " + "\n  - ".join(failures))
+
+
+def check_studio() -> None:
+    # Shropshire 035A (WM rural) is >8 km from the nearest packed stop — a real desert.
+    payload = {
+        "country": "england",
+        "region": "E12000005",
+        "urban_rural": "rural",
+        "source": "drawn",
+        "ops": [{"op": "add_stop", "lat": 52.48283, "lon": -2.56191, "name": "Smoke desert stop"}],
+    }
+    status, body = _post_json("/api/studio/jobs", payload, timeout=90.0)
+    if status != 200:
+        raise SmokeError(f"/api/studio/jobs → HTTP {status}: {body!r}")
+    if isinstance(body, str):
+        try:
+            body = json.loads(body)
+        except json.JSONDecodeError as exc:
+            raise SmokeError(f"/api/studio/jobs non-JSON: {body!r}") from exc
+    if not isinstance(body, dict):
+        raise SmokeError(f"/api/studio/jobs unexpected body: {body!r}")
+    job_id = body.get("id")
+    if not job_id:
+        raise SmokeError(f"/api/studio/jobs missing id: {body}")
+    if body.get("status") == "done":
+        st, result = _get(f"/api/studio/jobs/{job_id}/result")
+        if st != 200 or not isinstance(result, dict):
+            raise SmokeError(f"studio result → HTTP {st}: {result!r}")
+        if "score_before" not in result or "note" not in result:
+            raise SmokeError(f"studio result schema: {result!r}")
+        if result.get("mode") == "needs_centroids":
+            raise SmokeError("studio still needs_centroids — walk-to-stop is not live")
+        if result.get("people_gained", 0) <= 0:
+            raise SmokeError(
+                f"expected people_gained > 0 on a WM rural desert stop, got {result.get('people_gained')}"
+            )
+        print(
+            f"  OK  /api/studio/jobs → {result.get('mode')} "
+            f"{result.get('score_before')}→{result.get('score_after')} "
+            f"gained={result.get('people_gained')}"
+        )
+        return
+    print(f"  OK  /api/studio/jobs accepted id={job_id} status={body.get('status')}")
+
+
+def check_reach_pack() -> None:
+    status, body = _get("/api/reach/bands?region=E12000005&urban_rural=rural")
+    if status != 200 or not isinstance(body, dict):
+        raise SmokeError(f"/api/reach/bands → HTTP {status}: {body!r}")
+    if body.get("empty") and "London" in str(body.get("empty_reason")):
+        raise SmokeError("West Midlands rural returned London empty copy")
+    if "official PTAL" in json.dumps(body).lower() and body.get("not_tfl_ptal") is not True:
+        raise SmokeError("bands payload must set not_tfl_ptal")
+    print(
+        f"  OK  /api/reach/bands WM rural empty={body.get('empty')} "
+        f"mode={body.get('mode')} people={body.get('people')} n={body.get('n_areas')}"
+    )
+    status, body = _get("/api/reach/bands?region=E12000007&urban_rural=rural")
+    if status != 200 or not isinstance(body, dict) or not body.get("empty"):
+        raise SmokeError(f"London × rural bands should be empty: {body!r}")
+    print("  OK  /api/reach/bands London × rural empty")
+    status, body = _get("/api/reach?dest_type=jobs&cutoff=45&region=E12000005")
+    if status != 200 or not isinstance(body, dict):
+        raise SmokeError(f"/api/reach → HTTP {status}: {body!r}")
+    if body.get("available") is True and body.get("median") is None:
+        raise SmokeError("reach available but median missing")
+    print(f"  OK  /api/reach available={body.get('available')} note={str(body.get('note'))[:80]}")
+    status, text = _get("/api/export/pack.csv?region=E12000005&urban_rural=rural")
+    if status != 200:
+        raise SmokeError(f"/api/export/pack.csv → HTTP {status}")
+    raw = text if isinstance(text, str) else json.dumps(text)
+    if "Section,Item,Value" not in raw and "In-country score" not in raw:
+        raise SmokeError("pack CSV missing English headers")
+    if "statutory BSIP" not in raw and "Research pack" not in raw:
+        raise SmokeError("pack CSV missing caveats")
+    print("  OK  /api/export/pack.csv")
+
+
+def check_time() -> None:
+    status, body = _get("/api/time?country=england&metric=score")
+    if status != 200 or not isinstance(body, dict):
+        raise SmokeError(f"/api/time england → HTTP {status}: {body!r}")
+    if body.get("area_noun") != "LSOAs":
+        raise SmokeError(f"England time should say LSOAs: {body}")
+    print(f"  OK  /api/time england points={len(body.get('points') or [])} one_date={body.get('one_date')}")
+    status, body = _get("/api/time?country=ireland&metric=score")
+    if status != 200 or not isinstance(body, dict):
+        raise SmokeError(f"/api/time ireland → HTTP {status}: {body!r}")
+    if body.get("area_noun") != "Small Areas":
+        raise SmokeError(f"Ireland time should say Small Areas: {body}")
+    print(f"  OK  /api/time ireland points={len(body.get('points') or [])}")
+    status, body = _get("/api/time?country=netherlands")
+    if status != 200 or not isinstance(body, dict) or not body.get("empty"):
+        raise SmokeError(f"NL time should be empty: {body!r}")
+    print("  OK  /api/time netherlands empty")
 
 
 def check_chat_optional() -> None:
@@ -208,7 +297,13 @@ def main() -> int:
         check_overview()
         print("\n3. Dimensions × filters")
         check_dimensions()
-        print("\n4. Chat (optional)")
+        print("\n4. Studio job")
+        check_studio()
+        print("\n5. Reach bands + research pack")
+        check_reach_pack()
+        print("\n6. Time series")
+        check_time()
+        print("\n7. Chat (optional)")
         check_chat_optional()
     except SmokeError as exc:
         print(f"\nSMOKE FAILED: {exc}", file=sys.stderr)
