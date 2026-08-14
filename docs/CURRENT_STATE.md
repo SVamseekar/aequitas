@@ -205,3 +205,147 @@ Ireland warehouse: `uv run aequitas ireland` overwrites **only** `data/aequitas_
 | Chat | **Ireland FAISS** `data/ireland/faiss_index.bin` (4,457 chunks from Ireland `section_results` only). Drawer on `/app/ireland` sends `context.country=ireland`. Retrieval returns TFI / Pobal HP / Small Area chunks. Invalid/missing Gemini → retrieval-only text, not England BSA. Irish Quick Actions + suggestions (no BSA/IMD). |
 
 Wave 7 warehouse + briefing PNG pass are on disk. France is not built. `FAISS[netherlands]` is not built.
+
+## 10. Wave 6 — dated packs + `/time`
+
+**Layout (on disk):** `data/packs/{country}/{YYYY-MM-DD}/metrics.json` plus optional
+`warehouse.duckdb`. Catalogue: `data/packs/manifest.json` (tiny; scores, 400 m %,
+n areas). Live warehouses stay at `data/aequitas.duckdb` and
+`data/aequitas_ireland.duckdb` and are registered as the **current** pack.
+
+**What updates monthly:** BODS (England) / TFI (Ireland) network metrics — 400 m
+coverage, evening isolation, frequency / SQI, in-country score terms that come
+from GTFS.
+
+**What stays frozen:** England Census 2021 LSOAs + population; IMD 2025 ranks;
+Ireland CSO Small Areas 2022 + Pobal HP 2022. Centroids are not rewritten as if
+they moved.
+
+**Routes:** `/app/england/time`, `/app/ireland/time` (explicit, before
+`:dimensionSlug`). Filter `?pack=` / `?as_of=` on score, overview, ticker,
+sections. Switching country **drops** the other country’s pack id. Unknown pack
+→ 404 (Ireland never silently gets England numbers).
+
+**Refresh:** `uv run aequitas refresh` (England BODS) or
+`uv run aequitas refresh --country ireland` (TFI only). Writes a dated pack,
+runs sanity (LSOA ~33,755 / SA ~18,919), swaps current, keeps the previous
+warehouse as `.bak` and as the prior pack folder. `--force` ignores
+`min_interval_days` (25). Failed download: lock released, previous pack stays.
+
+**launchd:** `uv run aequitas schedule-refresh` installs
+`~/Library/LaunchAgents/com.aequitas.refresh.plist` (1st of month, 02:00).
+Example checked in as `scripts/com.aequitas.refresh.plist.example`. No cloud
+console.
+
+**Pack dates on disk (this checkout):**
+
+| Country | pack_id | score | 400 m % | n areas | warehouse |
+|---------|---------|------:|--------:|--------:|-----------|
+| England | `2026-08-01` (current) | 80.0 | 79.27 | (LSOA pack; a3 n not stored) | `data/aequitas.duckdb` |
+| Ireland | `2026-08-13` (current) | 55.5 | 55.05 | 18,919 SA | `data/aequitas_ireland.duckdb` |
+
+A second dated DuckDB appears only after a successful `aequitas refresh`.
+`/time` with one date is a single point plus “only one network date in this checkout.”
+
+**Stamp (2026-08-13):** Wave 5 and Wave 6 are **Done** after warehouse + briefing
++ Ireland FAISS + PNG pass (`qa-visual/wave56-done/`). That does **not** mean
+monthly history exists or 15/30/45 ran. See §12.
+
+## 11. What we found while finishing Waves 5 and 6
+
+This is the measured record (API + DuckDB + screenshots). Earlier agent dumps
+that said “81 loads, #root never empty” without looking at charts are **not**
+this record.
+
+### Scores and pack (re-measured 2026-08-13)
+
+| Filter | Score | n areas | Notes |
+|--------|------:|--------:|-------|
+| England national | 80.0 | LSOA pack | 400 m **79.27%** |
+| Ireland Republic | 55.5 | 18,919 SA | 400 m **55.05%** |
+| Dublin | 88.2 | 5,076 | 400 m ~91.9% on home |
+| Cork | 51.6 | 2,206 | 400 m ~50.9%; silhouette ≠ Dublin |
+| Cork rural | ~15.6 | — | scores move with urban_rural |
+| Leitrim | ~24.8 | — | |
+
+Seed that almost shipped: **208** SA, score ~18.7 everywhere, Gini/SQI/HHI 0.
+
+### CSO SAPS columns we used (do not omit these on NL/FR if CBS has them)
+
+| section_id | SAPS | Republic r (stops/1k) |
+|------------|------|----------------------:|
+| d2 unemployment | Theme 8 ST + LTU / T8_1_TT | 0.010 |
+| d3 no-car | T15_1_NC / T15_1_TC | 0.612 |
+| d4 65+ | T1 ages 65+ / T1_1AGETT | −0.089 |
+
+Catalogue moved **33/12/10 → 36/12/7**. Remaining omits (one sentence): d5
+income, d9a–e HP domains / crime, f3 ethnicity — **no free SA column**.
+
+### Wave 6 API (honest one-date)
+
+| Call | Result |
+|------|--------|
+| `GET /api/time?country=england` | 200, one point `2026-08-01`, LSOAs, score 80 |
+| `GET /api/time?country=ireland` | 200, one point `2026-08-13`, Small Areas, 55.5 |
+| `?pack=2099-01-01` EN+IE | **404** — does not return the current point |
+| `GET /api/score?country=ireland&pack=2026-08-01` | **404** (not England 80) |
+| NL/FR `/api/time` | 200 empty, pack not built |
+| Ireland export CSV/HTML | TFI, CSO SA 2022, Pobal HP, Republic. No BODS/England |
+| NL/FR export | 404 |
+
+`/time` y-axis is 0–100 so a single score point is not a hollow “0000” line.
+
+### Chat
+
+`data/ireland/faiss_index.bin` — **4,457** chunks from Ireland `section_results`
+only. `POST /api/chat` with `context.country=ireland` retrieves TFI / HP /
+Small Area text (example: b5 `r = 0.141` on Republic). Invalid Gemini →
+retrieval-only. Irish Quick Actions (HP × TFI, Dublin vs Cork, NTA). No BSA/IMD.
+
+### Pixel pass (`qa-visual/wave56-done/`)
+
+Republic / Dublin / Cork / Cork rural / Leitrim × Home, Equity, Access,
+Service, Network, Correlations, Economy, Policy, Scenarios, Reach, Studio,
+Compare, Time (four chips). England home 80; London rural empty; `/economic` →
+`/economy`; unknown-pack ticker = Ireland empty / unknown network date.
+
+Home maps are **26-county SVG**, not the GB CARTO frame from the first visual
+fail (`qa-visual/ie-all-home.png`). Correlations stay **4 cards** (matrix +
+scatter + SHAP + omit). Economy is people-gap + illustrative EPA **250,505 t**,
+no invented CAF €.
+
+### Bugs we hit and closed (do not re-open)
+
+| Symptom | Fix |
+|---------|-----|
+| 208-SA seed marked live | Rebuild 18,919; `packReady` only after two regions differ |
+| a4 / c5 / a7 as `kpi_tiles` | Lorenz, scatter, people-gap bars |
+| 18 Correlations cards | matrix + one scatter |
+| GB map + “boundaries could not be loaded” | `geography: ireland_county` + SVG fallback |
+| Export Ireland said England/BODS | Country-keyed `export_pack.py` |
+| `/api/time?pack=2099` returned current point | 404 |
+| Ticker “England is live” on Ireland unknown pack | `tickerForUnknownPack` |
+| Chat BSA/IMD + generic Quick Actions | Irish index + Irish / hidden QA |
+| `/economic` empty h1 | warehouse slugs redirect to product doors |
+| TAG slider on Ireland Scenarios | England-only widget |
+| Studio linked `/app/england/scenarios` | current country |
+| `/time` said BODS on Ireland | TFI-only copy |
+| Footer DfT on Ireland | NTA / CSO / Pobal |
+| Country switch kept E12 / dublin / pack | `withSearch` drops foreign keys |
+| `formatHeadline(0)` → “—” | 0 is 0.0; Palma 0.000× explained |
+| c1 all-zero fake bins | empty exhibit if `stops_per_route` not stored |
+| Two Vite PIDs on :5173 | blanked Choropleth — keep one listener |
+
+Full narrative: `docs/guidelines/country-sections.md` § Ireland mistakes.
+
+## 12. Honest holes after the stamp
+
+- **15/30/45** empty (no r5py / Geofabrik parquet). Compare 45-min empty.
+- **One pack date** each (`2026-08-01` / `2026-08-13`). `/time` is one point,
+  not a monthly series. Do not invent a second date.
+- **c1** stops-per-route list was never persisted; exhibit stays empty until
+  TFI `stop_times` is recomputed into that list.
+- **7 omits** remain (no free SA income / HP domain / crime / ethnicity).
+- Economy has **no published CAF unit cost** — people-gap only.
+- Gemini in this environment may be invalid; generation then retrieval-only.
+- Waves **8–9** not started. France must re-check INSEE; do not copy Irish or Dutch omits.
