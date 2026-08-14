@@ -55,11 +55,17 @@ def _build_prefix_pattern(prefixes: list[str]) -> str:
     return " OR ".join(conditions)
 
 
+def _has_mode_column(db: duckdb.DuckDBPyConnection) -> bool:
+    cols = [r[1] for r in db.execute("PRAGMA table_info('section_results')").fetchall()]
+    return "mode" in cols
+
+
 def query_sections(
     db: duckdb.DuckDBPyConnection,
     dimension: str,
     region: str = "all",
     urban_rural: str = "all",
+    mode: str | None = None,
 ) -> list[dict[str, Any]]:
     """Query section_results for a dimension's sections."""
     prefixes = DIMENSION_PREFIXES.get(dimension, [])
@@ -69,17 +75,19 @@ def query_sections(
 
     where_prefix = _build_prefix_pattern(prefixes)
     logger.debug(f"Querying sections: dimension={dimension}, region={region}, urban_rural={urban_rural}")
-    rows = db.execute(
-        f"""
+    sql = f"""
         SELECT section_id, stats, chart_data, narrative
         FROM section_results
         WHERE ({where_prefix})
           AND region = ?
           AND urban_rural = ?
-        ORDER BY section_id
-        """,
-        [region, urban_rural],
-    ).fetchall()
+    """
+    params: list[Any] = [region, urban_rural]
+    if _has_mode_column(db):
+        sql += " AND mode = ?"
+        params.append((mode or "bus").strip().lower() if (mode or "bus") in {"bus", "all"} else "bus")
+    sql += " ORDER BY section_id"
+    rows = db.execute(sql, params).fetchall()
 
     results = []
     for section_id, stats, chart_data, narrative in rows:

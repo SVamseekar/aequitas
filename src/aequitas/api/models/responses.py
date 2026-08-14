@@ -1,5 +1,5 @@
 from __future__ import annotations
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class HeadlineStat(BaseModel):
@@ -19,6 +19,10 @@ class DimensionOverview(BaseModel):
 class OverviewResponse(BaseModel):
     dimensions: list[DimensionOverview]
     built_at: str | None = None
+    score: float | None = None
+    score_note: str | None = None
+    score_n_areas: int | None = None
+    score_dropped: list[str] = Field(default_factory=list)
 
 
 class SectionItem(BaseModel):

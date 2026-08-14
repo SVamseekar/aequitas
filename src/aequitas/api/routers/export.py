@@ -13,7 +13,7 @@ from reportlab.lib.units import cm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from aequitas.api.auth.dependencies import require_session
-from aequitas.api.deps import get_db
+from aequitas.api.deps import country_warehouse, get_db
 from aequitas.api.services.warehouse import DIMENSION_PREFIXES, query_sections
 
 router = APIRouter(tags=["export"])
@@ -77,6 +77,90 @@ def _build_pdf(dimension: str, sections: list[dict], region: str, urban_rural: s
 
     doc.build(story)
     return buf.getvalue()
+
+
+def _pack_country_or_404(country: str) -> str:
+    key = (country or "england").strip().lower()
+    if key in {"netherlands", "france"}:
+        raise HTTPException(
+            status_code=404,
+            detail=f"The {key.title()} research pack is not built yet.",
+        )
+    if key not in {"england", "ireland"}:
+        raise HTTPException(status_code=404, detail=f"Unknown country {key!r}.")
+    return key
+
+
+@router.get("/export/pack.csv")
+def export_research_pack_csv(
+    region: str = Query("all"),
+    urban_rural: str = Query("all"),
+    dest_type: str = Query("jobs"),
+    cutoff: int = Query(45),
+    studio_job: str | None = Query(None),
+    country: str = Query("england"),
+    db: duckdb.DuckDBPyConnection | None = Depends(country_warehouse),
+) -> StreamingResponse:
+    from aequitas.api.routers import studio as studio_router
+    from aequitas.api.services.export_pack import pack_csv, pack_payload
+
+    key = _pack_country_or_404(country)
+    job = None
+    if studio_job:
+        with studio_router._LOCK:
+            job = studio_router._JOBS.get(studio_job)
+    payload = pack_payload(
+        db,
+        region=region,
+        urban_rural=urban_rural,
+        dest_type=dest_type,
+        cutoff=cutoff,
+        studio_job=job,
+        country=key,
+    )
+    body = pack_csv(payload)
+    safe = re.sub(r"[^a-zA-Z0-9_-]", "_", f"aequitas_research_pack_{region}_{urban_rural}")
+    return StreamingResponse(
+        iter([body.encode("utf-8")]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{safe}.csv"'},
+    )
+
+
+@router.get("/export/pack.html")
+def export_research_pack_html(
+    region: str = Query("all"),
+    urban_rural: str = Query("all"),
+    dest_type: str = Query("jobs"),
+    cutoff: int = Query(45),
+    studio_job: str | None = Query(None),
+    country: str = Query("england"),
+    db: duckdb.DuckDBPyConnection | None = Depends(country_warehouse),
+) -> StreamingResponse:
+    from aequitas.api.routers import studio as studio_router
+    from aequitas.api.services.export_pack import pack_html, pack_payload
+
+    key = _pack_country_or_404(country)
+    job = None
+    if studio_job:
+        with studio_router._LOCK:
+            job = studio_router._JOBS.get(studio_job)
+    payload = pack_payload(
+        db,
+        region=region,
+        urban_rural=urban_rural,
+        dest_type=dest_type,
+        cutoff=cutoff,
+        studio_job=job,
+        country=key,
+    )
+    body = pack_html(payload)
+    safe = re.sub(r"[^a-zA-Z0-9_-]", "_", f"aequitas_research_pack_{region}_{urban_rural}")
+    return StreamingResponse(
+        iter([body.encode("utf-8")]),
+        media_type="text/html; charset=utf-8",
+        headers={"Content-Disposition": f'inline; filename="{safe}.html"'},
+    )
 
 
 @router.get("/export/{dimension}")
