@@ -1,0 +1,7 @@
+{% if score is none %}
+{{ place }} has no in-country score for this cut{% if note %} — {{ note }}{% endif %}.
+{% else %}
+The in-country score for {{ place }} is {{ score | round(1) }} out of 100
+({% if n_areas %}{{ n_areas }} areas{% else %}this filter{% endif %}).
+{% if note %}{{ note }}{% endif %}
+{% endif %}

@@ -15,6 +15,7 @@ _GT_LSOAS_ZERO_STOPS = 4_245
 # Tolerances
 _POPULATION_TOL = 100
 _ROUTES_DRIFT_PCT = 0.10  # BODS is a live feed — allow 10% drift
+_STOPS_DRIFT_PCT = 0.10  # NaPTAN is live — allow 10% drift on refresh
 
 
 def check_population_total(population: int) -> bool:
@@ -44,8 +45,7 @@ def check_lsoa_count(count: int) -> bool:
 def check_entity_counts(stops: int, routes: int) -> bool:
     """Sanity check stop and route counts against ground truth.
 
-    Stops must be exactly 274,719 (NaPTAN is filtered deterministically).
-    Routes allow ±10% because BODS is a live feed.
+    Stops and routes allow ±10% because NaPTAN and BODS are live registers.
 
     Args:
         stops: Number of England active bus stops after filtering.
@@ -54,7 +54,7 @@ def check_entity_counts(stops: int, routes: int) -> bool:
     Returns:
         True if both are within acceptable bounds.
     """
-    stops_ok = stops == _GT_STOPS
+    stops_ok = abs(stops - _GT_STOPS) / _GT_STOPS <= _STOPS_DRIFT_PCT
     routes_ok = abs(routes - _GT_ROUTES) / _GT_ROUTES <= _ROUTES_DRIFT_PCT
     return stops_ok and routes_ok
 

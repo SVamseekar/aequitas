@@ -1,0 +1,8 @@
+{% if note and 'London has no rural' in note %}
+{{ note }}
+{% else %}
+For {{ place }} ({{ n }} areas, {{ patch_ops }} patch operation{{ 's' if patch_ops != 1 else '' }}):
+{{ people_gained | int }} people newly within 400 m of a stop; {{ people_lost | int }} people lose that walk.
+{{ note }}
+This is not a statutory BSIP pack.
+{% endif %}

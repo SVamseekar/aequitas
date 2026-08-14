@@ -43,6 +43,10 @@ build/
 # DuckDB warehouse (large binary — use Git LFS in deployment)
 *.duckdb
 *.duckdb.wal
+data/packs/**/*.duckdb
+data/packs/**/*.bak
+!data/packs/manifest.json
+!data/packs/**/metrics.json
 
 # ML models & FAISS indices
 data/models/
