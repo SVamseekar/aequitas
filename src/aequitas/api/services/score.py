@@ -8,8 +8,14 @@ from typing import Any
 import duckdb
 
 from aequitas.analytics.score import ScoreResult, compute_score, terms_from_section_stats
-from aequitas.ireland.constants import COUNTY_NAME_BY_SLUG
-from aequitas.netherlands.constants import PROVINCE_NAME_BY_SLUG
+try:
+    from aequitas.ireland.constants import COUNTY_NAME_BY_SLUG
+except ImportError:
+    COUNTY_NAME_BY_SLUG: dict[str, str] = {}
+try:
+    from aequitas.netherlands.constants import PROVINCE_NAME_BY_SLUG
+except ImportError:
+    PROVINCE_NAME_BY_SLUG: dict[str, str] = {}
 
 _SECTIONS = (
     "a3_walking_distance",

@@ -34,7 +34,14 @@ from aequitas.intelligence.engine import _TEMPLATES_DIR
 ALLOWED_OPS = ("add_stop", "remove_stop", "add_trips", "frequency_uplift")
 ALLOWED_SOURCES = ("drawn", "upload")
 ENGLAND_BBOX = (-6.5, 49.8, 2.0, 55.9)  # west, south, east, north
-from aequitas.ireland.constants import in_ireland_bbox, in_northern_ireland
+try:
+    from aequitas.ireland.constants import in_ireland_bbox, in_northern_ireland
+except ImportError:  # Ireland pack not on this branch
+    def in_ireland_bbox(lat: float, lon: float) -> bool:
+        return False
+
+    def in_northern_ireland(lat: float, lon: float) -> bool:
+        return False
 WALK_M = 400.0
 WALK_LABEL = "walk-to-stop change, not 45-minute jobs."
 
