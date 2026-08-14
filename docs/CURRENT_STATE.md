@@ -349,3 +349,88 @@ Full narrative: `docs/guidelines/country-sections.md` § Ireland mistakes.
 - Economy has **no published CAF unit cost** — people-gap only.
 - Gemini in this environment may be invalid; generation then retrieval-only.
 - Waves **8–9** not started. France must re-check INSEE; do not copy Irish or Dutch omits.
+
+## 13. Wave 7 — Netherlands warehouse (2026-08-14)
+
+**Briefing PNG pass stamped** (`qa-visual/wave7-finish/`, READ 2026-08-14). Ireland-mistakes stay intact. Chat is still the honest drawer — **not** `FAISS[netherlands]`.
+
+SVG-first choropleth (EN ITL1 + IE counties + NL provincies) so MapLibre abort is not a blank CARTO frame. Gauge synthesizes a marker from `value` if `markers` were dropped. c1/c2 persist `empty_reason: Stops-per-route list not persisted` (no zero bins). Map hook passes `mode`.
+
+**What this PNG pass actually saw:**
+
+| Door | region | urban_rural | mode | PNG | exhibit I SAW | number | Pass/Fail |
+|------|--------|-------------|------|-----|---------------|--------|-----------|
+| Home | all | all | bus | nl-nat-bus-home | NL provincie SVG **filled** + 69.6 | 69.6 / 13,827 | Pass |
+| Home | all | all | all | nl-nat-all-home | 71.1 one decimal; map filled; mode All public transport | 71.1 | Pass |
+| Home | noord-holland | all | bus | nl-nh-bus-home | NH silhouette filled | 75.1 | Pass |
+| Home | groningen | all | bus | nl-gr-bus-home | GR silhouette filled | 64.0 | Pass |
+| Home | zeeland | all | bus | nl-ze-bus-home | Zeeland filled | 52.4 | Pass |
+| Home | zuid-holland | all | bus | nl-zh-bus-home | ZH filled | 72.1 | Pass |
+| Home | all | rural | bus | nl-nat-rural-home | national rural 57.6 + 11 paths | 57.6 | Pass |
+| Home | noord-holland | urban | bus | nl-nh-urban-home | 80.8 | 80.8 | Pass |
+| Home | friesland | all | bus | nl-home-friesland | score 64.5; Fryslân silhouette filled (slug match). | 64.5 | Pass (cleanup) |
+| Home | utrecht | all | bus | nl-home-utrecht | Utrecht silhouette; 77.5 | 77.5 | Pass |
+| Home 390px | all | all | bus | nl-nat-bus-home-390 | 69.6 + filled map | 69.6 | Pass |
+| Service | all | all | bus | nl-nat-bus-service-bars | 12 provincie SQI bars (Utrecht 50.1 … Zeeland 20.3). No Unknown. 21 leftover buurten noted. Ticker Sunday **49.6%** / 6,859. | 49.6% | Pass |
+| Correlations | all | all | bus | nl-nat-bus-corr | heatmap from **z** (not all-zero); urban ~75–87 vs rural ~38–76 | n SES=10,275 | Pass |
+| Network | all | all | bus | nl-nat-bus-network-gauge | HHI gauge Low/Moderate/High + pin at **1,333**; tiles 26 / Qbuzz 23.6% | 1,333 / 3,047 | Pass |
+| Network c1/c2 | all | all | bus | nl-nat-bus-network-c1 | **Stops-per-route list not persisted**; P50/mean —; no zero bins | 3,047 routes | Pass (honest empty) |
+| Scenarios | all | all | bus | nl-nat-bus-scenarios-bars | four people bars 11.4m / 9.9m / 6.2m / 2.2m | people | Pass |
+| Compare | — | — | bus | nl-nat-bus-compare | defaults **Groningen / Noord-Holland** (not E12) | — | Pass |
+| Reach | all | all | bus | nl-nat-bus-reach | honest empty; not England parquet | — | Pass |
+| Time | all | all | bus | nl-nat-bus-time | one date; CBS / SES-WOA / OVapi; four chips | — | Pass |
+| Chat | all | all | bus | nl-chat | “Netherlands index not built”; SES × OVapi chips | — | Pass (honest) |
+| England home | — | — | — | en-home | ITL1 SVG **filled**; 80.0 | 80.0 | Pass |
+| England London rural | E12000007 | rural | — | en-london-rural | empty sentence; score — | — | Pass |
+| Ireland home | — | — | — | ie-home | 26-county SVG **filled**; 55.5 | 55.5 | Pass |
+| Ireland Dublin / Cork | dublin / cork | — | — | notes + scores | Dublin **88.2** ≠ Cork **51.6** | — | Pass scores |
+| France home | — | — | — | fr-home | pack not built | — | Pass |
+| Unknown pack | pack=2099-01-01 | — | bus | nl-unknown-pack | ticker empty + 404 overview/map/ticker | 404 | Pass |
+
+Eight-filter door matrix (Home Equity Access Service Network Correlations Economy Policy Scenarios Reach Studio Compare Time) × (nat-bus, nat-all, nh-bus, gr-bus, ze-bus, zh-bus, nat-rural, nh-urban) is on disk in `qa-visual/wave7-finish/` (104 door PNGs + provincie homes + time chips). Scores on those homes move.
+
+Live API after rewrite (do not treat 70.6/72.0 as still true):
+
+| Filter | score | n |
+|--------|-------|---|
+| NL bus national | **69.6** | 13,827 |
+| NL all-PT national | **71.1** | 13,827 |
+| Noord-Holland bus | **75.1** | 1,998 |
+| Groningen bus | **64.0** | 594 |
+| Zeeland / Utrecht / Flevoland bus | 52.4 / 77.5 / 77.3 | 431 / 928 / 385 |
+| England | 80.0 | — |
+| Ireland | 55.5 | 18,919 |
+| Unknown pack | 404 | — |
+| France | empty | — |
+
+Sunday query: OVapi `gtfs-nl.zip` has **no `calendar.txt`**. `calendar_dates.txt` 180,442 rows, all `exception_type=1`, 17,500 Sunday dates. Joined to `stop_times` by `service_id`. A buurt is a Sunday desert iff no Sunday departure within 400 m. Bus: **6,859 / 13,827 = 49.6%**. All-PT: 6,658 / 13,827 = 48.2%. Previous 100% was the missing calendar join.
+
+SES: rematch without imputing 0. Join **74.3%** (10,275) — earlier 70.5% + fillna(0) invented decile 5 for ~4.5k buurten and pulled national score to 70.6/72.0. Honest r on observed SES moved the deprivation term. **Do not stamp 70.6 as current.**
+
+78 warehouse keys: 13 provincies+all × 3 stedelijkheid × 2 modes. `c1`/`c2` empty this write because stops-per-route scan was skipped to avoid a dual-mode DuckDB SIGTRAP.
+
+**Still hollow:** `FAISS[netherlands]` not built (drawer is the correct sentence). c1/c2 stay honest-empty until a safe bus-then-append spr write.
+
+**Cleanup (same day, not a rebuild):** Fryslân home (`?region=friesland`) paints the provincie silhouette (match GeoJSON slug `friesland`, keep dropdown **Fryslân**). Service weekday-SQI bars are 12 provincies; **21** leftover buurten with no provincie slug excluded (note on the chart). Scores unchanged: NL bus **69.6**, all-PT **71.1**, NH **75.1**, GR **64.0**, EN **80**, IE **55.5**. PNGs: `qa-visual/wave7-cleanup/`.
+
+| Fact | Value |
+|------|--------|
+| Warehouse | `data/aequitas_netherlands.duckdb` (does not overwrite EN/IE) |
+| n buurten | **13,827** with population > 0 (PDOK/CBS 2024 gpkg `buurten` = 14,574 incl. water / 0-pop) |
+| SES-WOA | table **86092NED**, year **2023** (voorlopig). ODataFeed TypedDataSet 18,309 rows (GM+WK+BU). BU keys 14,574. Join rate **70.50%** (honest; remaining SES scores null at buurt) |
+| Kerncijfers | **85984NED** 2024 — 14,574 BU. Unemployment (WW), cars/hh, 65+, income, herkomst, Wmo, labour, huur, stedelijkheid |
+| Geometry | `https://geodata.cbs.nl/files/Wijkenbuurtkaart/WijkBuurtkaart_2024_v2.zip` (104 MB, layer `buurten`). Provincie SVG: cartomap provincie_2024.geojson |
+| Stedelijkheid | `MateVanStedelijkheid_120` (1–5). Urban = 1–3 |
+| OVapi | `https://gtfs.ovapi.nl/nl/gtfs-nl.zip` Last-Modified **2026-08-13 17:17:51 GMT**, 243,143,395 B |
+| Bus stops in NL bbox | 53,157 / 53,772 (BE/DE dropped) |
+| All-PT stops | 55,801 / 56,549 |
+| Rail/tram/metro | present in OVapi `route_type` 0/1/2; `?mode=all` |
+| HHI bus | 1,333 / 10,000 (26 agencies, 3,047 routes) |
+| HHI all-PT | 1,162 / 10,000 (41 agencies, 3,316 routes) |
+| Score (bus, after honest SES + calendar_dates) | National **69.6** (n=13,827); Noord-Holland **75.1** (n=1,998); Groningen **64.0** (n=594). `mode=all` **71.1**. Earlier 70.6/72.0 used imputed SES=0. NH ≠ GR. |
+| Catalogue | **41 same / 12 replace / 2 omit** (d9c crime, d9d environment). CBS income/herkomst/WW used — not Ireland’s 7 omits |
+| 15/30/45 | honest empty |
+| Chat | `FAISS[netherlands]` not built — drawer must say so |
+| Pack date | `2026-08-14` first register. One date only |
+
+CLI: `uv run aequitas netherlands`. API: `?country=netherlands&mode=bus\|all`. Unknown pack **404**.

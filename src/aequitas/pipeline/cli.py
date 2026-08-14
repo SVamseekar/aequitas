@@ -25,12 +25,16 @@ def main() -> None:
 
 
 @main.command()
-@click.option("--country", default="england", help="england | ireland")
+@click.option("--country", default="england", help="england | ireland | netherlands")
 def ingest(country: str) -> None:
     """Stage 1: Load and filter raw data sources."""
     if country == "ireland":
         from aequitas.ireland.pipeline import run_ireland_pack
         run_ireland_pack()
+        return
+    if country == "netherlands":
+        from aequitas.netherlands.pipeline import run_netherlands_pack
+        run_netherlands_pack()
         return
     from aequitas.pipeline._stages import run_ingestion
     run_ingestion()
@@ -43,6 +47,10 @@ def process(country: str) -> None:
     if country == "ireland":
         from aequitas.ireland.pipeline import run_ireland_pack
         run_ireland_pack()
+        return
+    if country == "netherlands":
+        from aequitas.netherlands.pipeline import run_netherlands_pack
+        run_netherlands_pack()
         return
     from aequitas.pipeline._stages import run_processing
     run_processing()
@@ -120,6 +128,17 @@ def ireland(skip_download: bool) -> None:
     write_ireland_bands()
     logger.info("Ireland pack ready: {}", dest)
 
+
+@main.command()
+@click.option("--skip-download", is_flag=True)
+def netherlands(skip_download: bool) -> None:
+    """Build the Netherlands pack (OVapi × SES-WOA × CBS buurt). Never touches EN/IE warehouses."""
+    from aequitas.netherlands.bands import write_netherlands_bands
+    from aequitas.netherlands.pipeline import run_netherlands_pack
+
+    dest = run_netherlands_pack(skip_download=skip_download)
+    write_netherlands_bands()
+    logger.info("Netherlands pack ready: {}", dest)
 
 
 @main.command("run")
