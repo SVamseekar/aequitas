@@ -377,3 +377,44 @@ broken England 5.7.
 
 **Rule:** row counts vs the NSI. Document the URL that worked. Never invent
 deciles. Do **not** copy Ireland’s 10 omits if CBS/INSEE publish the variable.
+
+### NL traps we actually hit (2026-08-14 visual pass)
+
+Do not treat these as Done just because the warehouse is census-scale.
+
+1. **SES join 70.5%** — 86092NED BU keys 14,574; only ~70.5% of populated buurten get a SES-WOA score. Remaining SES is null. Do not invent deciles for the rest.
+2. **`mode=bus` vs `mode=all`** — bus 53,157 stops / HHI ~1333; all-PT 55,801 / HHI ~1162. National score 70.6 vs 72.0. Rounding both to 71 hides the mode. Overview, ticker, and score must pass `mode`.
+3. **Ticker treated NL as empty** — frontend only fetched EN/IE. Live NL then showed “unknown network date” on the current pack.
+4. **`/time` copied Ireland then England copy** — CSO / Pobal / BODS / IMD / LSOA on a Netherlands page. Frozen line is CBS buurten / SES-WOA / OVapi only.
+5. **Reach loaded England bands** — `load_bands_frame` fell through to the England parquet. NL must return an honest empty, never 33,755 LSOAs or an Ireland/GB frame.
+6. **Compare defaulted to E12…** — Drenthe selected in the dropdown, slopes labelled E12000002 / E12000007. Defaults are Groningen / Noord-Holland.
+7. **Chat offered BSA / England** — no `FAISS[netherlands]`. Drawer must say “Netherlands index not built” and not retrieve EN/IE chunks.
+8. **Unknown pack spun “Loading…”** — 404 retried; `isLoading` hid the error. 404 is a sentence, not a pulse.
+9. **Policy title “LTA franchising readiness”** — tab said Concession / OV-wet; card title still UK. `sectionTitle` must be country-keyed.
+10. **Sunday deserts 100% / correlations all 0.0** — Sunday was a **calendar join** bug (OVapi ships `calendar_dates.txt` only). After the join: 49.6% bus, not 100%. Heatmap zeros were the UI reading `values` while writers emitted `z`. Closed in writers; do not re-introduce `calendar.txt`-only Sunday flags.
+11. **Imputed SES=0 changes the national score.** Filling unmatched SES-WOA with 0 produced 70.6 / 72.0. Dropping nulls for r produced 69.6 / 71.1. Do not invent decile 5. State n with SES vs n without.
+12. **GaugeChart ignores `value`.** HHI must send `markers` + band `color_hint` or the first Network card is “No data available” while tiles show 1,333.
+13. **Dual-mode warehouse insert can SIGTRAP** after two 2,145-row precomputes. Write bus, then append `mode=all`. Never overwrite EN/IE duckdbs while doing this.
+14. **Fryslân / friesland + leftover `Unknown` bars.** **Closed (2026-08-14 cleanup).** Home map matches GeoJSON `name` (`friesland`), not the display string Fryslân (dropdown stays Fryslân). Leftover buurten are excluded from provincie bars with an honest n — not a 14th provincie.
+
+### NL / FR checklist (gate)
+
+Before calling Wave 7 or 9 done:
+
+- [ ] Census-scale warehouse; two regions’ scores **differ** (not 208-row seed)
+- [ ] `packReady` only after that; empty pack = one sentence
+- [ ] Ingest → writers → doors (no chrome-on-empty)
+- [ ] Local index, geography words, money, policy **titles** (not BSA/TAG/IMD)
+- [ ] Catalogue same/replace/omit **re-derived** from CBS/INSEE, not copied
+- [ ] Every non-omit section has a **distinct** exhibit (§5.2); `kpi_tiles` ≠ exhibit
+- [ ] Narratives name the **filter** and a real number; no UK noun leakage
+- [ ] Province/région (or county) **polygons**; SVG fallback if MapLibre aborts
+- [ ] Studio bbox = that country; no England region names or `/app/england/…` links
+- [ ] Export CSV/HTML nouns = that country’s GTFS + census + deprivation
+- [ ] Unknown `pack=` **404**s time **and** ticker (no “England is live”)
+- [ ] Chat: `FAISS[country]` or honest “index not built”; suggestions local
+- [ ] Product slugs only (`/economy` not `/economic`); England widgets gated
+- [ ] 15/30/45 honest or real after `aequitas reach` for **that** country
+- [ ] England **and** Ireland regression still green
+- [ ] Briefing quality called out separately from “pack on disk”
+- [ ] Visual pass = screenshots of exhibits, not a text scrape of 80 loads
