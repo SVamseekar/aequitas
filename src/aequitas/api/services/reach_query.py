@@ -95,7 +95,10 @@ def load_bands_frame(cfg: PipelineConfig | None = None, country: str = "england"
         ie = cfg.processed_dir / "ireland" / "sa_access_bands.parquet"
         if ie.exists():
             return pd.read_parquet(ie)
-        from aequitas.ireland.bands import write_ireland_bands
+        try:
+            from aequitas.ireland.bands import write_ireland_bands
+        except ImportError:
+            return pd.DataFrame()
 
         written = write_ireland_bands(cfg)
         return pd.read_parquet(written) if written is not None and written.exists() else pd.DataFrame()

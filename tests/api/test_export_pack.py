@@ -1,6 +1,15 @@
 """Research pack CSV schema — English headers, score + caveats."""
 
+import pytest
+
 from aequitas.api.services.export_pack import CAVEATS, pack_csv, pack_payload
+
+try:
+    import aequitas.ireland  # noqa: F401
+
+    _HAS_IRELAND = True
+except ImportError:
+    _HAS_IRELAND = False
 
 
 def test_pack_csv_english_headers_and_caveats():
@@ -32,6 +41,7 @@ def test_pack_endpoint_html(api_client):
     assert "Aequitas research briefing pack" in resp.text
 
 
+@pytest.mark.skipif(not _HAS_IRELAND, reason="Ireland pack not on this branch")
 def test_ireland_pack_csv_names_tfi_not_england():
     payload = pack_payload(None, region="all", urban_rural="all", country="ireland")
     body = pack_csv(payload)
@@ -43,6 +53,7 @@ def test_ireland_pack_csv_names_tfi_not_england():
     assert "Republic" in body
 
 
+@pytest.mark.skipif(not _HAS_IRELAND, reason="Ireland pack not on this branch")
 def test_ireland_pack_html_names_tfi_not_england():
     from aequitas.api.services.export_pack import pack_html
 

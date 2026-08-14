@@ -4,6 +4,13 @@ import pandas as pd
 import pytest
 
 from aequitas.analytics.score import compute_score
+try:
+    import aequitas.ireland  # noqa: F401
+
+    _HAS_IRELAND = True
+except ImportError:
+    _HAS_IRELAND = False
+
 from aequitas.analytics.studio import (
     WALK_LABEL,
     apply_studio,
@@ -19,6 +26,7 @@ def test_patch_validation_requires_ops():
     assert err and "at least one" in err.lower()
 
 
+@pytest.mark.skipif(not _HAS_IRELAND, reason="Ireland pack not on this branch")
 def test_patch_rejects_england_click_on_ireland():
     patch, err = parse_studio_patch(
         {
@@ -32,6 +40,7 @@ def test_patch_rejects_england_click_on_ireland():
     assert err and "Republic" in err
 
 
+@pytest.mark.skipif(not _HAS_IRELAND, reason="Ireland pack not on this branch")
 def test_patch_accepts_cork_click_on_ireland():
     patch, err = parse_studio_patch(
         {
@@ -252,6 +261,7 @@ def test_uncovered_centroid_fixture_moves_score_and_people():
     assert any(d["people_gained"] > 0 for d in result.deciles)
 
 
+@pytest.mark.skipif(not _HAS_IRELAND, reason="Ireland pack not on this branch")
 def test_ireland_studio_empty_centroids_is_honest():
     patch, _ = parse_studio_patch(
         {"country": "ireland", "ops": [{"op": "add_stop", "lat": 53.3, "lon": -6.2}]}
