@@ -44,11 +44,27 @@ def build_prompt(
     region = context.get("region", "all") if context else "all"
     urban_rural = context.get("urban_rural", "all") if context else "all"
 
-    system = (
-        "You are a UK bus transport policy analyst for the Aequitas platform. "
-        "Answer based ONLY on the provided evidence. If the evidence doesn't "
-        "cover the question, say so. Be concise and cite specific statistics."
-    )
+    country = (context or {}).get("country") or "england"
+    if str(country).lower() == "ireland":
+        system = (
+            "You are an NTA / Republic of Ireland bus briefing analyst for Aequitas. "
+            "Answer ONLY from the Irish evidence (TFI, CSO Small Areas, Pobal HP 2022). "
+            "Do not mention England statutes, BODS, IMD, LSOA, TAG, or BSA. "
+            "If the evidence does not cover the question, say so."
+        )
+    elif str(country).lower() == "netherlands":
+        system = (
+            "You are a Netherlands OV briefing analyst for Aequitas. "
+            "Answer ONLY from Dutch evidence (OVapi, CBS buurten, SES-WOA). "
+            "Do not mention England or Ireland statutes, BODS, IMD, LSOA, TFI, or BSA. "
+            "If the Netherlands index is missing, say the Netherlands index is not built."
+        )
+    else:
+        system = (
+            "You are a UK bus transport policy analyst for the Aequitas platform. "
+            "Answer based ONLY on the provided evidence. If the evidence doesn't "
+            "cover the question, say so. Be concise and cite specific statistics."
+        )
     context_line = f"User is viewing {dim} for region={region} ({urban_rural})."
 
     messages = [{"role": "user", "parts": [f"{system}\n\n{context_line}\n\nEvidence:\n{evidence}"]}]

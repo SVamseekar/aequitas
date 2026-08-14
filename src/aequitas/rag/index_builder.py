@@ -77,14 +77,27 @@ def _load_narratives(db_path: Path) -> list[dict]:
     ]
 
 
-def build_faiss_index(cfg: PipelineConfig) -> dict:
+def ireland_index_paths(project_root: Path) -> tuple[Path, Path]:
+    folder = project_root / "data" / "ireland"
+    return folder / "faiss_index.bin", folder / "faiss_metadata.json"
+
+
+def build_faiss_index(
+    cfg: PipelineConfig,
+    *,
+    warehouse_path: Path | None = None,
+    index_path: Path | None = None,
+    metadata_path: Path | None = None,
+    country: str = "england",
+) -> dict:
     """Build FAISS index from DuckDB narratives.
 
     Returns:
         dict with keys: n_narratives, n_chunks, index_path, metadata_path
     """
-    logger.info("Loading narratives from DuckDB...")
-    narratives = _load_narratives(cfg.warehouse_path)
+    db = warehouse_path or cfg.warehouse_path
+    logger.info("Loading narratives from DuckDB ({})...", db)
+    narratives = _load_narratives(db)
     logger.info(f"Loaded {len(narratives)} narratives")
 
     # Chunk
@@ -98,6 +111,7 @@ def build_faiss_index(cfg: PipelineConfig) -> dict:
                 "section_id": row["section_id"],
                 "region": row["region"],
                 "urban_rural": row["urban_rural"],
+                "country": country,
                 "text": chunk,
             })
 
@@ -117,8 +131,12 @@ def build_faiss_index(cfg: PipelineConfig) -> dict:
     index.add(embeddings_np)
 
     # Save
-    index_path = cfg.project_root / cfg.faiss_index_path
-    metadata_path = cfg.project_root / cfg.faiss_metadata_path
+    if index_path is None or metadata_path is None:
+        if country == "ireland":
+            index_path, metadata_path = ireland_index_paths(cfg.project_root)
+        else:
+            index_path = cfg.project_root / cfg.faiss_index_path
+            metadata_path = cfg.project_root / cfg.faiss_metadata_path
     index_path.parent.mkdir(parents=True, exist_ok=True)
 
     faiss.write_index(index, str(index_path))

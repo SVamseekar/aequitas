@@ -77,36 +77,88 @@ async def chat(
     FAISS index returns HTTP 503 with a clear detail string before SSE starts.
     """
     _check_rate_limit(session.get("user_id", "anon"))
-    faiss_index, faiss_metadata = get_faiss()
+    country = str((req.context or {}).get("country") or "england").lower()
+    faiss_index, faiss_metadata = get_faiss(country)
     embedding_model = get_embedding_model()
 
-    if faiss_index is None or embedding_model is None:
+    if faiss_index is None or embedding_model is None or not faiss_metadata:
+        if country == "ireland":
+            raise HTTPException(503, "Ireland chat index is not built")
+        if country == "netherlands":
+            raise HTTPException(503, "Netherlands index not built.")
         raise HTTPException(503, "Chat is unavailable — FAISS index not loaded")
 
     cfg = ApiConfig()
-    if not (cfg.gemini_api_key and str(cfg.gemini_api_key).strip()):
-        raise HTTPException(
-            503,
-            "Chat not configured — set GEMINI_API_KEY to enable the policy assistant",
-        )
 
-    # Retrieve
+    # Retrieve (works without Gemini)
     chunks = retrieve_chunks(
         req.query, embedding_model, faiss_index, faiss_metadata, context=req.context
     )
     source_sections = list({c["section_id"] for c in chunks if "section_id" in c})
 
-    # Build prompt
+    has_gemini = bool(cfg.gemini_api_key and str(cfg.gemini_api_key).strip())
     messages = build_prompt(req.query, chunks, req.context, req.history)
 
-    # Stream
     async def event_generator():
+        if not has_gemini:
+            text = _honest_retrieval_reply(country, chunks)
+            yield {"event": "chunk", "data": json.dumps({"text": text})}
+            yield {
+                "event": "done",
+                "data": json.dumps(
+                    {
+                        "conversation_id": req.conversation_id or "retrieve-only",
+                        "sources": source_sections,
+                        "generation": "retrieval_only",
+                    }
+                ),
+            }
+            return
+        gemini_failed = False
         async for event in stream_gemini(
             messages, cfg.gemini_api_key, req.conversation_id, source_sections
         ):
+            if event.get("event") == "error":
+                gemini_failed = True
+                text = _honest_retrieval_reply(country, chunks)
+                extra = " Generation failed; showing retrieved chunks instead of another country’s warehouse."
+                yield {"event": "chunk", "data": json.dumps({"text": text + extra})}
+                yield {
+                    "event": "done",
+                    "data": json.dumps(
+                        {
+                            "conversation_id": req.conversation_id or "retrieve-only",
+                            "sources": source_sections,
+                            "generation": "retrieval_only",
+                        }
+                    ),
+                }
+                return
             yield {
                 "event": event["event"],
                 "data": json.dumps(event["data"]),
             }
+        if gemini_failed:
+            return
 
     return EventSourceResponse(event_generator())
+
+
+def _honest_retrieval_reply(country: str, chunks: list[dict]) -> str:
+    place = "Republic of Ireland" if country == "ireland" else "England"
+    if not chunks:
+        return (
+            f"Retrieval ran on the {place} index and found no matching briefing chunks. "
+            "Generation is off until GEMINI_API_KEY is set — I will not answer from another country."
+        )
+    parts = [
+        f"Retrieved {len(chunks)} {place} briefing chunk(s). "
+        "This is retrieval only — no generated answer from another country’s warehouse.",
+        "",
+    ]
+    for i, c in enumerate(chunks, 1):
+        sid = c.get("section_id") or "section"
+        region = c.get("region") or "all"
+        text = (c.get("text") or "").strip()
+        parts.append(f"{i}. [{sid} · {region}]\n{text}")
+    return "\n\n".join(parts)
