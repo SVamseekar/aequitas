@@ -1,0 +1,11 @@
+{
+  "pack_id": "2026-08-01",
+  "as_of": "2026-08-01",
+  "country": "england",
+  "score": 80.0,
+  "pct_400m": 79.27,
+  "evening_isolated_pct": 15.37,
+  "mean_sqi": 65.42,
+  "n_areas": null,
+  "note": "Registered live checkout as first network date (Census/IMD/HP frozen)."
+}

@@ -1,0 +1,48 @@
+{
+  "england": [
+    {
+      "pack_id": "2026-08-01",
+      "as_of": "2026-08-01",
+      "current": true,
+      "score": 80.0,
+      "pct_400m": 79.27,
+      "evening_isolated_pct": 15.37,
+      "mean_sqi": 65.42,
+      "n_areas": null,
+      "warehouse": "data/aequitas.duckdb",
+      "metrics": "data/packs/england/2026-08-01/metrics.json",
+      "note": "Registered live checkout as first network date (Census/IMD/HP frozen)."
+    }
+  ],
+  "ireland": [
+    {
+      "pack_id": "2026-08-13",
+      "as_of": "2026-08-13",
+      "current": true,
+      "score": 55.5,
+      "pct_400m": 55.05,
+      "evening_isolated_pct": 47.77,
+      "mean_sqi": 33.89,
+      "n_areas": 18919,
+      "warehouse": "data/aequitas_ireland.duckdb",
+      "metrics": "data/packs/ireland/2026-08-13/metrics.json",
+      "note": "Registered live checkout as first network date (Census/IMD/HP frozen)."
+    }
+  ],
+  "updated_at": "2026-08-13T18:35:09.282142+00:00",
+  "netherlands": [
+    {
+      "pack_id": "2026-08-13",
+      "as_of": "2026-08-13",
+      "current": true,
+      "score": 70.6,
+      "pct_400m": 88.27,
+      "evening_isolated_pct": 43.28,
+      "mean_sqi": 38.3,
+      "n_areas": 13827,
+      "warehouse": "/Users/souravamseekarmarti/Projects/aequitas/data/aequitas_netherlands.duckdb",
+      "metrics": "data/packs/netherlands/2026-08-13/metrics.json",
+      "note": "Registered live checkout as first network date (Census/IMD/HP frozen)."
+    }
+  ]
+}
