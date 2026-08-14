@@ -18,7 +18,15 @@ export default function LorenzCurveChart({ chartData }: Props) {
 
   useEffect(() => {
     if (!ref.current) return
-    const points = (chartData.curve_points ?? []) as CurvePoint[]
+    const points = (chartData.curve_points ?? chartData.data ?? []) as CurvePoint[]
+    if (points.length < 2) {
+      ref.current.replaceChildren()
+      const p = document.createElement("p")
+      p.className = "text-sm text-foreground py-4"
+      p.textContent = "Lorenz curve needs population-weighted trips for this filter."
+      ref.current.appendChild(p)
+      return
+    }
     const gini = chartData.gini as number | undefined
     const refGini = chartData.reference_gini as number | undefined
     const refLabel = chartData.reference_label as string | undefined

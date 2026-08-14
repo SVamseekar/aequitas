@@ -20,31 +20,40 @@ export function LandingHero() {
           <div className="min-w-0">
             <p className="landing-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-[var(--l-slate)] mb-5">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--l-rust)] shadow-[0_0_0_3px_rgb(184_78_31_/_0.15)]" aria-hidden />
-              England · {METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs · open data
+              England · Ireland · Netherlands · France · £0 stack
             </p>
 
             <h1
               id="landing-hero-heading"
               className="font-display text-4xl sm:text-5xl lg:text-[3.35rem] leading-[1.08] text-[var(--l-ink)]"
             >
-              See where the bus network{" "}
+              See where the bus{" "}
               <span className="text-[var(--l-rust)]">fails people</span>
-              <span className="text-[var(--l-slate)]"> — and what it costs to fix.</span>
+              <span className="text-[var(--l-slate)]"> — in England, Ireland, the Netherlands, and France.</span>
             </h1>
 
             <p className="mt-5 text-lg text-[var(--l-slate)] leading-relaxed max-w-xl">
-              Spatial policy intelligence for UK transport authorities. Equity, accessibility, and
-              funding scenarios — pre-computed, evidence-graded, ready for the business case.
+              Open timetables joined to official deprivation at small-area level. Same method, four
+              countries. No licence fee. Deprivation ranks stay inside each country.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate("/app/england")}
                 className="landing-btn-primary"
               >
-                Explore the platform
+                Explore England
                 <ArrowRight className="w-4 h-4" aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/app/ireland")}
+                className="landing-btn-secondary"
+                data-testid="landing-ireland"
+              >
+                Explore Ireland
+                <ArrowUpRight className="w-4 h-4 opacity-70" aria-hidden />
               </button>
               <Link to="/methodology" className="landing-btn-secondary">
                 Methodology

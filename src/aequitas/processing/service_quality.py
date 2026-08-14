@@ -330,8 +330,9 @@ def compute_service_quality(cfg: PipelineConfig) -> pd.DataFrame:
     zip_path = cfg.raw_dir / "bods" / "bods_gtfs_all.zip"
     audit_headways = cfg.audit_dir / "stop_headways.parquet"
 
-    # Fast path: use pre-computed Phase 0 stop headways
-    if audit_headways.exists():
+    # Fast path: use pre-computed Phase 0 stop headways unless a refresh
+    # explicitly asked to re-stream the latest BODS zip.
+    if audit_headways.exists() and not cfg.force_full_network:
         logger.info("Loading pre-computed stop headways from {}", audit_headways)
         stop_headways = pd.read_parquet(audit_headways)
     else:

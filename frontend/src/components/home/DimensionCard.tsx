@@ -1,10 +1,13 @@
-import { Link } from "react-router"
+import { Link, useSearchParams } from "react-router"
+import { useFilters } from "@/api/hooks"
+import { appPath, dimensionSlugFromApiRoute, withSearch } from "@/lib/appRoutes"
 import {
   Scale,
   MapPin,
   Bus,
   Network,
   BarChart3,
+  Euro,
   PoundSterling,
   FileText,
   Sliders,
@@ -26,7 +29,7 @@ const DIMENSION_ICONS: Record<string, LucideIcon> = {
 
 function formatHeadline(dim: DimensionOverview): string {
   const v = dim.headline_stat.value
-  if (v === 0) return "—"
+  if (v == null || Number.isNaN(v)) return "—"
   if (v >= 10000) return v.toLocaleString(undefined, { maximumFractionDigits: 0 })
   if (dim.headline_stat.label.includes("%")) return `${v.toFixed(1)}%`
   if (v < 10) return v.toFixed(v < 1 ? 3 : 1)
@@ -38,7 +41,12 @@ interface Props {
 }
 
 export function DimensionCard({ dim }: Props) {
-  const Icon = DIMENSION_ICONS[dim.id] ?? Scale
+  const { country } = useFilters()
+  const [params] = useSearchParams()
+  const Icon =
+    dim.id === "economic" && (country === "ireland" || country === "netherlands")
+      ? Euro
+      : (DIMENSION_ICONS[dim.id] ?? Scale)
   const severityColor =
     dim.headline_stat.severity in SEVERITY
       ? SEVERITY[dim.headline_stat.severity as keyof typeof SEVERITY]
@@ -46,7 +54,7 @@ export function DimensionCard({ dim }: Props) {
 
   return (
     <Link
-      to={dim.route.slice(1)}
+      to={withSearch(appPath(country, dimensionSlugFromApiRoute(dim.route)), params.toString())}
       className="app-glass-strong group block text-left p-5 rounded-2xl hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5"
     >
       <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">

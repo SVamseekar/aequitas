@@ -78,6 +78,14 @@ export default function MethodologyPage() {
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-4 text-foreground">
           Methodology &amp; data quality
         </h1>
+        <p className="text-sm text-muted-foreground mb-6">
+          Four countries, one method: GTFS × official small areas × in-country deprivation ranks.
+          Never plot IMD, Pobal HP, SES-WOA, and F-EDI as one number. Router: R5/r5py + Geofabrik OSM
+          (Wave 2). Ireland (Wave 5) uses TFI GTFS, CSO Small Areas 2022, and Pobal HP 2022
+          (never IMD) inside the Republic only. Studio (Wave 3) applies a drawn or uploaded patch: walk-to-stop 400 m and the
+          Wave 2 score without Java; 15/30/45 who-gains only when r5py actually runs — never a made-up
+          frequency multiplier. France deprivation falls back to a documented Filosofi proxy if F-EDI is not free.
+        </p>
         <p className="marketing-lede mb-12">
           Aequitas pre-computes all analytics offline into a read-only DuckDB warehouse. The web app
           is a lookup layer — not a live operational feed. Headline metrics below are locked to the
@@ -93,6 +101,51 @@ export default function MethodologyPage() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{s.detail}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-lg font-semibold text-foreground mb-5">Monthly network dates (Wave 6)</h2>
+          <div className="app-glass-strong rounded-2xl border border-white/60 p-5 marketing-body space-y-3">
+            <p>
+              <code>/app/:country/time</code> plots the same in-country score (and 400 m share)
+              across dated warehouse packs. Only the <strong className="text-foreground">network</strong>{" "}
+              (England BODS / Ireland TFI) is allowed to time-travel.
+            </p>
+            <p>
+              Frozen in every pack: <strong className="text-foreground">Census 2021</strong> LSOAs
+              and population, <strong className="text-foreground">IMD 2025</strong> ranks,
+              Ireland <strong className="text-foreground">CSO Small Areas 2022</strong> and{" "}
+              <strong className="text-foreground">Pobal HP 2022</strong>. Those vintages are not
+              rewritten as if they moved each month.
+            </p>
+            <p>
+              Packs live under <code>data/packs/{"{country}"}/{"{YYYY-MM-DD}"}/</code> with a tiny
+              manifest. <code>uv run aequitas refresh</code> writes a new date then swaps current
+              if sanity passes. One date in the checkout is still a valid page — not a blank.
+            </p>
+          </div>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-lg font-semibold text-foreground mb-5">Ireland pack (Wave 5)</h2>
+          <div className="app-glass-strong rounded-2xl border border-white/60 p-5 marketing-body space-y-3">
+            <p>
+              The Republic pack joins <strong className="text-foreground">TFI GTFS_All.zip</strong>{" "}
+              stops and stop_times to <strong className="text-foreground">CSO Small Areas 2022</strong>{" "}
+              and the <strong className="text-foreground">Pobal HP Deprivation Index 2022</strong>{" "}
+              relative index and in-country decile. That is not IMD and is never plotted against IMD.
+            </p>
+            <p>
+              Evening isolation is no TFI departure at or after 19:00 on a weekday calendar date.
+              Urban/rural is a documented density rule (people per km² ≥ 150), not England RUC codes.
+              Northern Ireland is out of scope (different deprivation measure).
+            </p>
+            <p>
+              TAG/BCR and the Bus Services Act 2025 are England-only. 15/30/45 is not invented if
+              r5py has not been run. Warehouse: <code>data/aequitas_ireland.duckdb</code> — the API
+              never falls back to England when <code>country=ireland</code>.
+            </p>
           </div>
         </section>
 
@@ -157,6 +210,65 @@ export default function MethodologyPage() {
               Machine learning: Random Forest coverage prediction (R²={m.rfR2}), clustering and
               anomaly models trained on Phase 0 audit features. SHAP explanations support feature
               importance narratives.
+            </p>
+          </div>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-lg font-semibold text-foreground mb-5">In-country score and r5py reach</h2>
+          <div className="app-glass-strong rounded-2xl border border-white/60 p-5 marketing-body space-y-3">
+            <p>
+              The quoteable England score is{" "}
+              <strong className="text-foreground">0–100 for the active filter</strong>, not a
+              Europe-wide index. Formula:{" "}
+              <code className="text-xs">
+                100 × (0.40 × people within 400 m + 0.25 × evening served + 0.20 × weekday
+                quality/100 + 0.15 × (1 − |coverage–deprivation r|))
+              </code>
+              . Each term is clipped to 0–1. If a term is missing for a cut, it is dropped, weights
+              are renormalised, and the UI says so. National evening 15.4% is never reused on a
+              filtered view.
+            </p>
+            <p>
+              15 / 30 / 45 minute job, GP, and school counts are precomputed with{" "}
+              <strong className="text-foreground">R5 + r5py</strong> (Java 17), Geofabrik OSM PBF,
+              and BODS GTFS. Unit: destinations reachable from the LSOA centroid — not Hansen, not
+              PTAL (Wave 4). Full England can take many hours; this pack only shows geographies that
+              exist in <code className="text-xs">processed/reach/lsoa_access_times.parquet</code>.
+              Missing ITL1s are named on the Access and Reach pages, not filled with invented bars.
+              This checkout has <strong className="text-foreground">no ITL1 with r5py times</strong>
+              until you place a Geofabrik PBF, BODS GTFS, destination Parquets, and run{" "}
+              <code className="text-xs">uv run aequitas reach --region E12000005</code>.
+            </p>
+            <p>
+              <strong className="text-foreground">Aequitas service / access bands</strong> are not
+              TfL PTAL and are never labelled official PTAL. Without travel times, every LSOA gets a
+              service band: 1 = no stop within 400 m or no weekday service; 2 = stop nearby but
+              evening and Sunday isolated; otherwise weekday SQI thresholds 30 / 50 / 70 for bands
+              3–6. When r5py job counts exist, that LSOA uses a travel-time band from nested
+              destination counts (not Hansen). Hansen would be{" "}
+              <code className="text-xs">sum dest × exp(−0.05 t)</code> and needs minutes, which this
+              parquet does not store.
+            </p>
+            <p>
+              The downloadable briefing pack (<code className="text-xs">/api/export/pack.csv</code>{" "}
+              and printable HTML) is a <strong className="text-foreground">research pack</strong>,
+              not a statutory BSIP submission.
+            </p>
+            <p>
+              Maps use MapLibre with free CARTO/OSM raster tiles. Attribution: OpenStreetMap
+              contributors and CARTO. No Mapbox token.
+            </p>
+            <p>
+              Studio walk-to-stop uses ONS Open Geography{" "}
+              <strong className="text-foreground">
+                LSOA (December 2021) England and Wales population-weighted centroids
+              </strong>{" "}
+              (item 32729e42d05e4e23bc7e43a36aa4ae8b; British National Grid converted to WGS84),
+              joined to Census 2021 LSOA codes in this pack. Adding or removing a stop measures
+              people newly inside or outside 400 m of a stop for the active filter, then the same
+              in-country score function. That is not 15/30/45-minute job access. Frequency and new
+              corridors still need r5py.
             </p>
           </div>
         </section>

@@ -34,7 +34,7 @@ describe("GaugeChart", () => {
     expect(screen.getByText("Very High")).toBeTruthy()
     expect(screen.getByText("London")).toBeTruthy()
     expect(screen.getByText("South East")).toBeTruthy()
-    expect(screen.getByText("1.6 BCR")).toBeTruthy()
+    expect(screen.getByText("2 BCR")).toBeTruthy()
     expect(screen.getAllByTestId("gauge-reference-line")).toHaveLength(2)
   })
 
@@ -57,7 +57,7 @@ describe("GaugeChart", () => {
     )
 
     expect(screen.getByText("Moderate")).toBeTruthy()
-    expect(screen.getByText("2000 HHI")).toBeTruthy()
+    expect(screen.getByText("2,000 HHI")).toBeTruthy()
     expect(screen.getAllByTestId("gauge-reference-line")).toHaveLength(2)
   })
 
@@ -68,5 +68,26 @@ describe("GaugeChart", () => {
       />,
     )
     expect(screen.getByText("No data available")).toBeTruthy()
+  })
+
+  it("synthesizes an HHI marker from value when markers were not persisted", () => {
+    render(
+      <GaugeChart
+        chartData={{
+          type: "gauge",
+          title: "OVapi operator HHI",
+          unit: "/ 10,000",
+          value: 1333,
+          bands: [
+            { label: "Low", min: 0, max: 1500, color_hint: "green" },
+            { label: "Moderate", min: 1500, max: 2500, color_hint: "orange" },
+            { label: "High", min: 2500, max: 10000, color_hint: "red" },
+          ],
+          markers: [],
+        }}
+      />,
+    )
+    expect(screen.getByText("HHI")).toBeTruthy()
+    expect(screen.getByText("1,333 / 10,000")).toBeTruthy()
   })
 })

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react"
-import { BrowserRouter, Routes, Route } from "react-router"
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router"
 import { HelmetProvider } from "react-helmet-async"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { AuthProvider } from "@/contexts/AuthContext"
@@ -8,6 +8,7 @@ import { AppShell } from "./components/layout/AppShell"
 import { HomePage } from "./components/home/HomePage"
 import { DimensionPage } from "./components/dimension/DimensionPage"
 import { GoogleAnalytics } from "@/components/GoogleAnalytics"
+import { appPath, legacyDashboardToApp, productSlugOrNull, withSearch } from "@/lib/appRoutes"
 
 const AuthPage = lazy(() => import("./pages/AuthPage"))
 const ProfilePage = lazy(() => import("./pages/ProfilePage"))
@@ -17,10 +18,11 @@ const DisclaimerPage = lazy(() => import("./pages/DisclaimerPage"))
 const ContactPage = lazy(() => import("./pages/ContactPage"))
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"))
 const TermsPage = lazy(() => import("./pages/TermsPage"))
-const RefundsPage = lazy(() => import("./pages/RefundsPage"))
 const MethodologyPage = lazy(() => import("./pages/MethodologyPage"))
 const AccessibilityPage = lazy(() => import("./pages/AccessibilityPage"))
 const ComparePage = lazy(() => import("./pages/ComparePage"))
+const StudioPage = lazy(() => import("./pages/StudioPage"))
+const ReachPage = lazy(() => import("./pages/ReachPage"))
 const InviteAcceptPage = lazy(() => import("./pages/InviteAcceptPage"))
 
 // Saved sub-pages rendered inside a simple wrapper
@@ -54,6 +56,24 @@ const fallback = (
   </div>
 )
 
+function LegacyDashboardRedirect() {
+  const location = useLocation()
+  return <Navigate to={legacyDashboardToApp(location.pathname, location.search)} replace />
+}
+
+function WarehouseSlugRedirect() {
+  const location = useLocation()
+  const parts = location.pathname.split("/").filter(Boolean)
+  const country = parts[1] ?? "england"
+  const slug = parts[2] ?? ""
+  const product = productSlugOrNull(slug)
+  if (product && product !== slug) {
+    const next = withSearch(appPath(country, product), location.search)
+    return <Navigate to={`${next.pathname}${next.search}`} replace />
+  }
+  return <DimensionPage />
+}
+
 export default function App() {
   return (
     <HelmetProvider>
@@ -69,17 +89,22 @@ export default function App() {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/terms" element={<TermsPage />} />
-              <Route path="/refunds" element={<RefundsPage />} />
+              <Route path="/refunds" element={<Navigate to="/about" replace />} />
               <Route path="/methodology" element={<MethodologyPage />} />
               <Route path="/accessibility" element={<AccessibilityPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/invite/:token" element={<InviteAcceptPage />} />
 
-              {/* Public analytics shell — open data; chat/save still need session */}
-              <Route path="/dashboard" element={<AppShell />}>
-                <Route index element={<HomePage />} />
-                <Route path="compare" element={<ComparePage />} />
-                <Route path=":dimensionSlug" element={<DimensionPage />} />
+              <Route path="/dashboard/*" element={<LegacyDashboardRedirect />} />
+              <Route path="/dashboard" element={<LegacyDashboardRedirect />} />
+
+              {/* Pathless layout + absolute children — matches reliably on react-router 8 */}
+              <Route element={<AppShell />}>
+                <Route path="/app/:country" element={<HomePage />} />
+                <Route path="/app/:country/compare" element={<ComparePage />} />
+                <Route path="/app/:country/studio" element={<StudioPage />} />
+                <Route path="/app/:country/reach" element={<ReachPage />} />
+                <Route path="/app/:country/:dimensionSlug" element={<WarehouseSlugRedirect />} />
               </Route>
 
               {/* Protected — personal / tenant data */}
@@ -87,6 +112,17 @@ export default function App() {
               <Route path="/saved" element={<ProtectedRoute><SavedPage /></ProtectedRoute>} />
               <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
               <Route path="/regions" element={<ProtectedRoute><RegionsPage /></ProtectedRoute>} />
+              <Route
+                path="*"
+                element={
+                  <main className="min-h-screen p-8 text-foreground bg-background">
+                    <h1 className="text-xl font-semibold mb-2">Page not found</h1>
+                    <a className="text-primary underline" href="/app/england">
+                      Open the England briefing
+                    </a>
+                  </main>
+                }
+              />
             </Routes>
           </Suspense>
         </BrowserRouter>

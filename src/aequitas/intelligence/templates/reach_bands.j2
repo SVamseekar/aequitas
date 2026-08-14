@@ -1,0 +1,7 @@
+{% if empty %}
+{{ empty_reason }}
+{% else %}
+In {{ place }}, {{ n_areas }} LSOAs are assigned an Aequitas {{ band_kind }} band.
+{{ people_worst }} people ({{ pct_worst_two | round(1) }}% of {{ people }}) live in the worst two bands.
+{% if mode == "service" %}This is a service band (no travel-time model) — not 45-minute job access, not official PTAL.{% endif %}
+{% endif %}

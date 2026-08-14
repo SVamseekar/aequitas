@@ -53,7 +53,7 @@ export function LandingNav() {
           </Link>
           <button
             type="button"
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate(user ? "/app/england" : "/auth")}
             className="landing-btn-primary !py-2 !px-4 text-sm"
           >
             {user ? "Open platform" : "Sign in"}

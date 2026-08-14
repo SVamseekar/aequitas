@@ -18,26 +18,33 @@ export function LandingCta() {
             id="landing-cta-heading"
             className="font-display text-3xl sm:text-4xl text-[#f7f4ef] leading-[1.1] max-w-lg mx-auto"
           >
-            Ready to see your region&apos;s data?
+            England and Ireland are live. The Netherlands and France follow the same method.
           </h2>
           <p className="mt-4 text-base sm:text-lg text-white/60 max-w-md mx-auto leading-relaxed">
-            Open the platform for evidence-graded analytics across eight policy dimensions — or
-            request access for your team.
+            Map-first briefing, unique exhibits, and filter-specific prose. Free government data
+            and open-source routing only.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/app/england")}
               className="landing-btn-primary"
             >
-              Explore the platform
+              Explore England
               <ArrowRight className="w-4 h-4" aria-hidden />
             </button>
-            <Link
-              to="/contact"
+            <button
+              type="button"
+              onClick={() => navigate("/app/ireland")}
               className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-[#f7f4ef] hover:bg-white/15 transition-colors backdrop-blur-md"
             >
-              Request access
+              Explore Ireland
+            </button>
+            <Link
+              to="/methodology"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-[#f7f4ef] hover:bg-white/15 transition-colors backdrop-blur-md"
+            >
+              Methodology
             </Link>
           </div>
         </div>

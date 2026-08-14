@@ -30,7 +30,7 @@ export function LandingDimensions() {
             <li key={dimension.title}>
               <button
                 type="button"
-                onClick={() => navigate(`/dashboard${dimension.route}`)}
+                onClick={() => navigate(`/app/england${dimension.route}`)}
                 className="landing-card group w-full text-left p-4 sm:p-5 flex gap-3.5 items-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--l-rust)]"
               >
                 <span className="font-display text-2xl text-[var(--l-rust)]/45 tabular-nums w-8 shrink-0">

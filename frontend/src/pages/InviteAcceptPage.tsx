@@ -40,7 +40,7 @@ export default function InviteAcceptPage() {
     try {
       await apiPost(`/invites/${token}/accept`)
       await refresh()
-      navigate("/dashboard")
+      navigate("/app/england")
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not accept invite")
       setAccepting(false)

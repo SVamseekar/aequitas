@@ -31,6 +31,14 @@ export function ChartRenderer({ chartData }: Props) {
   if (!chartData || Object.keys(chartData).length === 0) {
     return null
   }
+  const emptyReason = chartData.empty_reason
+  if (typeof emptyReason === "string" && emptyReason.trim()) {
+    return (
+      <p className="text-sm text-muted-foreground py-3" data-testid="chart-honest-empty">
+        {emptyReason}
+      </p>
+    )
+  }
   const type = chartData.type as string | undefined
   const fallback = <div className="h-64 bg-muted animate-pulse rounded" />
 

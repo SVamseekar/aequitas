@@ -1,31 +1,44 @@
 import { useQuery } from "@tanstack/react-query"
 import { tickerFallbackMetrics } from "@/lib/metricsCanon"
+import { tickerForUnknownPack, type TickerChip } from "@/lib/tickerCountry"
+import { useFilters } from "@/api/hooks"
 
-interface TickerMetric {
-  key: string
-  label: string
-  value: string
-  sub: string
-}
+const ENGLAND_FALLBACK: TickerChip[] = [...tickerFallbackMetrics()]
 
-const FALLBACK: TickerMetric[] = [...tickerFallbackMetrics()]
+const LIVE_TICKER = new Set(["england", "ireland", "netherlands"])
 
 function useTickerMetrics() {
-  return useQuery<TickerMetric[]>({
-    queryKey: ["metrics", "ticker"],
+  const { country, region, urbanRural, pack, mode } = useFilters()
+  return useQuery<TickerChip[]>({
+    queryKey: ["metrics", "ticker", country, region, urbanRural, pack, mode],
     queryFn: async () => {
-      const res = await fetch("/api/metrics/ticker")
-      if (!res.ok) return FALLBACK
-      return res.json() as Promise<TickerMetric[]>
+      if (!LIVE_TICKER.has(country)) return tickerForUnknownPack(country)
+      const qs = new URLSearchParams({ region, urban_rural: urbanRural, country })
+      if (pack) qs.set("pack", pack)
+      if (country === "netherlands") qs.set("mode", mode)
+      const res = await fetch(`/api/metrics/ticker?${qs}`)
+      if (!res.ok) return tickerForUnknownPack(country)
+      return res.json() as Promise<TickerChip[]>
     },
-    staleTime: 60_000,
-    initialData: FALLBACK,
+    staleTime: 30_000,
   })
 }
 
 export function MetricsTicker() {
-  const { data: metrics } = useTickerMetrics()
-  const doubled = [...metrics, ...metrics]
+  const { country, pack } = useFilters()
+  const { data: metrics, isError } = useTickerMetrics()
+  const unknownPack = Boolean(pack) && (isError || !metrics)
+  const list: TickerChip[] =
+    !LIVE_TICKER.has(country)
+      ? tickerForUnknownPack(country)
+      : unknownPack
+        ? tickerForUnknownPack(country)
+        : Array.isArray(metrics) && metrics.length > 0
+          ? metrics
+          : country === "ireland" || country === "netherlands"
+            ? [{ key: "pack", label: country === "ireland" ? "Ireland" : "Netherlands", value: "…", sub: "loading filter" }]
+            : ENGLAND_FALLBACK
+  const doubled = [...list, ...list]
 
   return (
     <div className="border-b border-white/50 bg-white/20 backdrop-blur-2xl overflow-hidden h-9 flex items-center">

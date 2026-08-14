@@ -1,0 +1,7 @@
+{% if available %}
+In {{ place }}, the median {{ dest_type }} reachable in {{ cutoff }} minutes is {{ median | round(0) }}
+across {{ n_areas }} LSOAs (walk + bus, r5py counts).
+{% else %}
+{{ cutoff }}-minute {{ dest_type }} is not precomputed for {{ place }} in this pack.
+{% if note %}{{ note }}{% endif %}
+{% endif %}

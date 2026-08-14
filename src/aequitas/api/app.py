@@ -50,6 +50,65 @@ def create_app() -> FastAPI:
         finally:
             generator.close()
 
+    @app.get("/api/packs")
+    def packs() -> dict:
+        from pathlib import Path
+
+        from aequitas.api.deps import _state
+
+        ie = _state.get("ie_db_path")
+        nl = _state.get("nl_db_path")
+        en = _state.get("db_path")
+        regions: list[dict] = []
+        nl_regions: list[dict] = []
+        if ie is not None:
+            import duckdb
+
+            conn = duckdb.connect(str(ie), read_only=True)
+            try:
+                row = conn.execute(
+                    "SELECT value FROM metadata WHERE key = 'regions_json'"
+                ).fetchone()
+                if row:
+                    import json
+
+                    regions = json.loads(row[0])
+            except Exception:
+                regions = []
+            finally:
+                conn.close()
+        if nl is not None:
+            import duckdb
+
+            conn = duckdb.connect(str(nl), read_only=True)
+            try:
+                row = conn.execute(
+                    "SELECT value FROM metadata WHERE key = 'regions_json'"
+                ).fetchone()
+                if row:
+                    import json
+
+                    nl_regions = json.loads(row[0])
+            except Exception:
+                nl_regions = []
+            finally:
+                conn.close()
+        return {
+            "england": {
+                "packReady": Path(en).exists() if en else False,
+                "regions": None,
+            },
+            "ireland": {
+                "packReady": Path(ie).exists() if ie else False,
+                "regions": regions or None,
+            },
+            "netherlands": {
+                "packReady": Path(nl).exists() if nl else False,
+                "regions": nl_regions or None,
+            },
+            "france": {"packReady": False, "regions": None},
+        }
+
     # Register routers
     from aequitas.api.routers import (
         auth as auth_router,
@@ -58,16 +117,24 @@ def create_app() -> FastAPI:
         export,
         lsoa,
         metrics,
+        map_data,
         overview,
         policy_notes,
         profiles,
         provenance,
+        reach,
         saved_analyses,
         saved_regions,
+        score,
         sections,
+        studio,
     )
 
     app.include_router(overview.router, prefix="/api")
+    app.include_router(score.router, prefix="/api")
+    app.include_router(map_data.router, prefix="/api")
+    app.include_router(reach.router, prefix="/api")
+    app.include_router(studio.router, prefix="/api")
     app.include_router(sections.router, prefix="/api")
     app.include_router(lsoa.router, prefix="/api")
     app.include_router(provenance.router, prefix="/api")

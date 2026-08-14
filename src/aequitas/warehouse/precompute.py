@@ -220,12 +220,19 @@ def _build_correlation_df(policy_df: pd.DataFrame, master_lsoa_path, service_lev
     return df
 
 
+def _prefer(cfg: PipelineConfig, name: str):
+    processed = cfg.processed_dir / name
+    if processed.exists():
+        return processed
+    return cfg.audit_dir / name
+
+
 def _load_sources(cfg: PipelineConfig) -> _Sources | None:
     audit = cfg.audit_dir
-    policy_path = audit / "lsoa_policy_synthesis.parquet"
-    equity_path = audit / "lsoa_equity_metrics.parquet"
+    policy_path = _prefer(cfg, "lsoa_policy_synthesis.parquet")
+    equity_path = _prefer(cfg, "lsoa_equity_metrics.parquet")
     if not policy_path.exists() or not equity_path.exists():
-        logger.warning("Audit Parquets not found — precompute returning empty results")
+        logger.warning("Processed/audit Parquets not found — precompute returning empty results")
         return None
 
     policy_df = pd.read_parquet(policy_path)

@@ -49,6 +49,13 @@ CORE_TABLES: dict[str, str] = {
             disability_pct DOUBLE
         )
     """,
+    "lsoa_centroids": """
+        CREATE TABLE IF NOT EXISTS lsoa_centroids (
+            lsoa_code VARCHAR PRIMARY KEY,
+            lat DOUBLE,
+            lon DOUBLE
+        )
+    """,
     "section_results": """
         CREATE TABLE IF NOT EXISTS section_results (
             region VARCHAR,
@@ -96,6 +103,8 @@ ANALYTICS_PARQUET_SOURCES: dict[str, str] = {
     "anomalies": "data/audit/anomalies.parquet",
     "modal_shift_scenarios": "data/audit/modal_shift_scenarios.parquet",
     "policy_scenarios": "data/audit/policy_scenarios.parquet",
+    "lsoa_reach": "data/processed/reach/lsoa_access_times.parquet",
+    "lsoa_access_bands": "data/processed/reach/lsoa_access_bands.parquet",
 }
 
 # Combined: all table names in the warehouse

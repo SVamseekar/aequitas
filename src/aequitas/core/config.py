@@ -28,6 +28,12 @@ class PipelineConfig:
     stop_times_chunk_size: int = 1_000_000
     shapes_chunk_size: int = 500_000
 
+    # When True, ignore cached audit headways and re-stream GTFS (refresh).
+    force_full_network: bool = field(
+        default_factory=lambda: os.environ.get("AEQUITAS_FORCE_FULL_NETWORK", "").lower()
+        in {"1", "true", "yes"}
+    )
+
     # RAG / API
     faiss_index_path: Path = field(default_factory=lambda: Path("data/faiss_index.bin"))
     faiss_metadata_path: Path = field(default_factory=lambda: Path("data/faiss_metadata.json"))

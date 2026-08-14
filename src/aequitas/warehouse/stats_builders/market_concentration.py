@@ -12,7 +12,10 @@ import pandas as pd
 
 
 def _hhi_from_shares(shares_pct: pd.Series) -> float:
-    """HHI = sum of squared market shares (in percentage points)."""
+    """HHI on the 0–10,000 scale (sum of squared percentage-point shares).
+
+    10,000 = one operator. Never mix with a 0–1 Herfindahl.
+    """
     return float((shares_pct ** 2).sum())
 
 

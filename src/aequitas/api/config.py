@@ -11,11 +11,31 @@ class ApiConfig:
     db_path: Path = field(
         default_factory=lambda: Path(os.environ.get("AEQUITAS_DB_PATH", "data/aequitas.duckdb"))
     )
+    ireland_db_path: Path = field(
+        default_factory=lambda: Path(
+            os.environ.get("AEQUITAS_IE_DB_PATH", "data/aequitas_ireland.duckdb")
+        )
+    )
+    netherlands_db_path: Path = field(
+        default_factory=lambda: Path(
+            os.environ.get("AEQUITAS_NL_DB_PATH", "data/aequitas_netherlands.duckdb")
+        )
+    )
     faiss_index_path: Path = field(
         default_factory=lambda: Path(os.environ.get("AEQUITAS_FAISS_INDEX", "data/faiss_index.bin"))
     )
     faiss_metadata_path: Path = field(
         default_factory=lambda: Path(os.environ.get("AEQUITAS_FAISS_METADATA", "data/faiss_metadata.json"))
+    )
+    ireland_faiss_index_path: Path = field(
+        default_factory=lambda: Path(
+            os.environ.get("AEQUITAS_IE_FAISS_INDEX", "data/ireland/faiss_index.bin")
+        )
+    )
+    ireland_faiss_metadata_path: Path = field(
+        default_factory=lambda: Path(
+            os.environ.get("AEQUITAS_IE_FAISS_METADATA", "data/ireland/faiss_metadata.json")
+        )
     )
     gemini_api_key: str = field(
         default_factory=lambda: os.environ.get("GEMINI_API_KEY", "")

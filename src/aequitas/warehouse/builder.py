@@ -39,6 +39,7 @@ def load_core_tables(conn: duckdb.DuckDBPyConnection, cfg: PipelineConfig) -> No
         "lsoa_demographics": "master_lsoa_table.parquet",
         "lsoa_service_quality": "lsoa_service_quality.parquet",
         "lsoa_equity_metrics": "lsoa_equity_metrics.parquet",
+        "lsoa_centroids": "lsoa_centroids.parquet",
     }
     for table_name, filename in parquet_map.items():
         path = _p(filename)
@@ -110,26 +111,27 @@ def build_warehouse(
             )
             logger.info(f"Inserted {len(section_results)} section results")
 
-        # Step 2.5: Insert provenance data
+        # Step 2.5: Insert provenance — values computed from national equity section
         conn.execute("DELETE FROM provenance")
+        gini_v, palma_v, ci_v = _equity_from_sections(section_results)
         provenance_rows = [
             (
                 "gini_national",
-                0.5741,
+                gini_v,
                 "1 - 2 * trapezoid(cum_service, cum_pop)",
                 {},
                 ["lsoa_service_quality.parquet", "master_lsoa_table.parquet"],
             ),
             (
                 "palma_ratio",
-                5.702,
+                palma_v,
                 "mean_service_top10pct / mean_service_bottom40pct",
                 {},
                 ["lsoa_service_quality.parquet", "master_lsoa_table.parquet"],
             ),
             (
                 "concentration_index",
-                0.1358,
+                ci_v,
                 "2 * cov(service, fractional_rank) / mean_service",
                 {},
                 ["lsoa_service_quality.parquet", "imd2025_all_ranks_scores_deciles.csv"],
@@ -182,6 +184,26 @@ def build_warehouse(
                     "creating placeholder (run pipeline first)"
                 )
 
+        # Optional r5py reach table (may live under processed/reach/)
+        reach_path = cfg.processed_dir / "reach" / "lsoa_access_times.parquet"
+        if overwrite:
+            conn.execute("DROP TABLE IF EXISTS lsoa_reach")
+        if reach_path.exists():
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS lsoa_reach AS SELECT * FROM read_parquet('{reach_path}')"
+            )
+            n = conn.execute("SELECT COUNT(*) FROM lsoa_reach").fetchone()[0]
+            logger.info(f"Loaded lsoa_reach: {n:,} rows")
+        bands_path = cfg.processed_dir / "reach" / "lsoa_access_bands.parquet"
+        if overwrite:
+            conn.execute("DROP TABLE IF EXISTS lsoa_access_bands")
+        if bands_path.exists():
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS lsoa_access_bands AS SELECT * FROM read_parquet('{bands_path}')"
+            )
+            n = conn.execute("SELECT COUNT(*) FROM lsoa_access_bands").fetchone()[0]
+            logger.info(f"Loaded lsoa_access_bands: {n:,} rows")
+
         conn.execute("CHECKPOINT")
         logger.info("Warehouse build complete")
 
@@ -199,3 +221,28 @@ def get_connection(cfg: PipelineConfig) -> duckdb.DuckDBPyConnection:
         DuckDB connection (read_only=True).
     """
     return duckdb.connect(str(cfg.warehouse_path), read_only=True)
+
+
+def _equity_from_sections(
+    section_results: list[dict] | None,
+) -> tuple[float, float, float]:
+    """Read national Gini/Palma/CI from precomputed sections; no hardcoded pack."""
+    if not section_results:
+        return (0.0, 0.0, 0.0)
+    for row in section_results:
+        if (
+            row.get("section_id") == "f1_gini"
+            and row.get("region") == "all"
+            and row.get("urban_rural") == "all"
+        ):
+            stats = row.get("stats") or {}
+            if isinstance(stats, str):
+                import json as _json_mod
+
+                stats = _json_mod.loads(stats)
+            return (
+                float(stats.get("gini") or 0.0),
+                float(stats.get("palma") or 0.0),
+                float(stats.get("concentration_index") or 0.0),
+            )
+    return (0.0, 0.0, 0.0)
