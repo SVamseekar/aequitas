@@ -39,6 +39,11 @@ def test_entity_count_fails_bad_stops():
     assert not check_entity_counts(stops=1_000_000, routes=13_099)
 
 
+def test_entity_count_allows_stops_drift():
+    # NaPTAN is a live register — allow ±10%
+    assert check_entity_counts(stops=280_000, routes=13_099)
+
+
 def test_entity_count_allows_routes_drift():
     # BODS is a live feed — allow ±10%
     assert check_entity_counts(stops=274_719, routes=13_500)  # within 10%
