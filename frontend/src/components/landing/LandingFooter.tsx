@@ -25,8 +25,8 @@ export function LandingFooter() {
               <span className="font-semibold text-[var(--l-ink)]">Aequitas</span>
             </div>
             <p className="text-sm text-[var(--l-slate)] leading-relaxed mb-4">
-              Free, multi-country bus × deprivation briefing. England and Ireland are live; the
-              Netherlands and France use the same method.
+              Bus × deprivation briefing. England, Ireland, and the Netherlands are live. France
+              uses the same doors; the pack is not built.
             </p>
             <p className="inline-flex items-center gap-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-full px-3 py-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-600" aria-hidden />

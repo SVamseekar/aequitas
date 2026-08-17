@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router"
 import { ArrowRight, ArrowUpRight } from "lucide-react"
-import { METRICS_CANON, formatGini } from "@/lib/metricsCanon"
 import { LandingHeroVisual } from "./LandingHeroVisual"
 
 export function LandingHero() {
@@ -20,7 +19,7 @@ export function LandingHero() {
           <div className="min-w-0">
             <p className="landing-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-[var(--l-slate)] mb-5">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--l-rust)] shadow-[0_0_0_3px_rgb(184_78_31_/_0.15)]" aria-hidden />
-              England · Ireland · Netherlands · France · £0 stack
+              Three countries live · France next · No licence fee
             </p>
 
             <h1
@@ -29,12 +28,12 @@ export function LandingHero() {
             >
               See where the bus{" "}
               <span className="text-[var(--l-rust)]">fails people</span>
-              <span className="text-[var(--l-slate)]"> — in England, Ireland, the Netherlands, and France.</span>
             </h1>
 
             <p className="mt-5 text-lg text-[var(--l-slate)] leading-relaxed max-w-xl">
-              Open timetables joined to official deprivation at small-area level. Same method, four
-              countries. No licence fee. Deprivation ranks stay inside each country.
+              Open timetables joined to official deprivation. Same method in England, Ireland, and
+              the Netherlands. Ranks stay inside each country. We do not invent travel times or a
+              Europe-wide index.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -43,7 +42,7 @@ export function LandingHero() {
                 onClick={() => navigate("/app/england")}
                 className="landing-btn-primary"
               >
-                Explore England
+                Open England
                 <ArrowRight className="w-4 h-4" aria-hidden />
               </button>
               <button
@@ -52,40 +51,38 @@ export function LandingHero() {
                 className="landing-btn-secondary"
                 data-testid="landing-ireland"
               >
-                Explore Ireland
+                Ireland
                 <ArrowUpRight className="w-4 h-4 opacity-70" aria-hidden />
               </button>
-              <Link to="/methodology" className="landing-btn-secondary">
-                Methodology
+              <button
+                type="button"
+                onClick={() => navigate("/app/netherlands")}
+                className="landing-btn-secondary"
+                data-testid="landing-netherlands"
+              >
+                Netherlands
                 <ArrowUpRight className="w-4 h-4 opacity-70" aria-hidden />
+              </button>
+              <Link to="/methodology" className="text-sm font-medium text-[var(--l-slate)] hover:text-[var(--l-ink)] px-2">
+                Methodology
               </Link>
             </div>
 
-            <dl className="mt-8 grid grid-cols-3 gap-4 max-w-md border-t border-[var(--l-rule)] pt-5">
+            <dl className="mt-8 grid grid-cols-3 gap-4 max-w-lg border-t border-[var(--l-rule)] pt-5">
               <div>
-                <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">
-                  Inequality
-                </dt>
-                <dd className="font-display text-2xl sm:text-3xl text-[var(--l-ink)] tabular-nums mt-1">
-                  {formatGini(METRICS_CANON.gini)}
-                </dd>
-                <dd className="text-xs text-[var(--l-slate)] mt-0.5">National Gini</dd>
+                <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">Live packs</dt>
+                <dd className="font-display text-2xl sm:text-3xl text-[var(--l-ink)] tabular-nums mt-1">3</dd>
+                <dd className="text-xs text-[var(--l-slate)] mt-0.5">EN · IE · NL</dd>
               </div>
               <div>
-                <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">
-                  Sections
-                </dt>
-                <dd className="font-display text-2xl sm:text-3xl text-[var(--l-ink)] tabular-nums mt-1">
-                  {METRICS_CANON.sections}
-                </dd>
-                <dd className="text-xs text-[var(--l-slate)] mt-0.5">Pre-computed</dd>
+                <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">Score</dt>
+                <dd className="font-display text-2xl sm:text-3xl text-[var(--l-ink)] mt-1">0–100</dd>
+                <dd className="text-xs text-[var(--l-slate)] mt-0.5">One formula</dd>
               </div>
               <div>
-                <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">Scope</dt>
-                <dd className="font-display text-2xl sm:text-3xl text-[var(--l-ink)] mt-1">
-                  {METRICS_CANON.dimensions}
-                </dd>
-                <dd className="text-xs text-[var(--l-slate)] mt-0.5">Policy dims</dd>
+                <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">Licence</dt>
+                <dd className="font-display text-2xl sm:text-3xl text-[var(--l-ink)] mt-1">£0</dd>
+                <dd className="text-xs text-[var(--l-slate)] mt-0.5">No Mapbox bill</dd>
               </div>
             </dl>
           </div>

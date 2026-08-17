@@ -11,17 +11,17 @@ export function LandingDimensions() {
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-8">
           <div className="max-w-xl">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--l-rust)] mb-3">
-              8 policy dimensions
+              The briefing
             </p>
             <h2
               id="landing-dimensions-heading"
               className="font-display text-3xl sm:text-4xl leading-[1.12] text-[var(--l-ink)]"
             >
-              The full policy lifecycle — equity to scenarios.
+              Ten doors. Local statutes. Same questions.
             </h2>
           </div>
           <p className="text-base text-[var(--l-slate)] leading-relaxed max-w-sm lg:text-right">
-            Each dimension opens into pre-computed sections with charts, maps, and narrative.
+            Open any live country. Policy and economy titles change; the questions do not.
           </p>
         </div>
 

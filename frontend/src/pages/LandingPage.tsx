@@ -1,6 +1,7 @@
 import { Seo } from "@/components/shared/Seo"
 import { LandingAudience } from "@/components/landing/LandingAudience"
 import { LandingCta } from "@/components/landing/LandingCta"
+import { LandingCoverage } from "@/components/landing/LandingCoverage"
 import { LandingDataSources } from "@/components/landing/LandingDataSources"
 import { LandingDimensions } from "@/components/landing/LandingDimensions"
 import { LandingFaq } from "@/components/landing/LandingFaq"
@@ -35,6 +36,7 @@ export default function LandingPage() {
       <main id="main-content">
         <LandingHero />
         <LandingDataSources />
+        <LandingCoverage />
         <LandingStats />
         <LandingProblemSolution />
         <LandingDimensions />

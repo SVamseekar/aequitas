@@ -1,11 +1,11 @@
 export const SITE_NAME = "Aequitas"
-export const SITE_TAGLINE = "Where the bus fails people — four countries, one method"
+export const SITE_TAGLINE = "Where the bus fails people — one method, in-country ranks"
 export const SITE_URL =
   (import.meta.env.VITE_SITE_URL as string | undefined)?.trim() ??
   "https://aequitas.souravamseekar.com"
 
 export const DEFAULT_DESCRIPTION =
-  "See where the bus fails people in England, Ireland, the Netherlands, and France. Open timetables joined to official deprivation. Same method, four countries. No licence fee."
+  "See where the bus fails people in England, Ireland, and the Netherlands. Open timetables joined to official deprivation. Same method. Ranks stay inside each country. No licence fee."
 
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
 /** og-image.png is 1024×1024 (JPEG data in a .png path). */
