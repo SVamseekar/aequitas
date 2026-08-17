@@ -4,7 +4,7 @@
 
 Aequitas joins published timetables to census geography and the national deprivation index, then pre-computes a briefing: a quoteable score, a map, and a fixed set of exhibits. England, Ireland, and the Netherlands are live. France uses the same method; its warehouse is not built.
 
-There is no licence fee and no proprietary accessibility engine. Scores are **in-country only**. IMD, Pobal HP, and CBS SES-WOA are never plotted on one axis.
+Scores are **in-country only**. IMD, Pobal HP, and CBS SES-WOA are never plotted on one axis. Travel times and benefit–cost ratios are not invented.
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -24,7 +24,7 @@ There is no licence fee and no proprietary accessibility engine. Scores are **in
 
 ## Problem
 
-Transport authorities already publish GTFS, small-area geographies, and a national deprivation measure. What they rarely have is a **reproducible briefing** that answers the same questions in every region — without a consultancy model run or a per-seat licence.
+Transport authorities already publish GTFS, small-area geographies, and a national deprivation measure. What they rarely have is a **reproducible briefing** that answers the same questions in every region.
 
 Aequitas is that briefing. It does not invent travel times, benefit–cost ratios, or a Europe-wide deprivation index.
 
@@ -158,10 +158,9 @@ Aequitas **does not**:
 
 ## Audience
 
-**Transport authorities** — evidence for route reviews and funding, without a consultancy model run.  
+**Transport authorities** — evidence for route reviews and funding.  
 **Ministries and regulators** — comparable equity metrics **within** one country.  
-**Researchers** — reproducible writers, cited sources, computed Gini (not a locked demonstration number).  
-**Civic technologists** — replace the ingest module; keep the score, exhibits, and maps.
+**Researchers** — reproducible writers, cited sources, computed Gini (not a locked demonstration number).
 
 To add a country: implement ingest for GTFS, small-area geography, and that country’s official deprivation file. Deprivation ranks must not be labelled IMD unless they are IMD.
 
@@ -173,4 +172,4 @@ To add a country: implement ingest for GTFS, small-area geography, and that coun
 
 Issues: [github.com/SVamseekar/aequitas/issues](https://github.com/SVamseekar/aequitas/issues)
 
-Use or adaptation for a live authority — write first. Research collaboration and method forks are welcome.
+See [LICENSE](LICENSE). All rights reserved. Write before adapting the product for an authority or research programme.

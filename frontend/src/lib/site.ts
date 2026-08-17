@@ -5,7 +5,7 @@ export const SITE_URL =
   "https://aequitas.souravamseekar.com"
 
 export const DEFAULT_DESCRIPTION =
-  "See where the bus fails people in England, Ireland, and the Netherlands. Open timetables joined to official deprivation. Same method. Ranks stay inside each country. No licence fee."
+  "See where the bus fails people in England, Ireland, and the Netherlands. Open timetables joined to official deprivation. Same method. Ranks stay inside each country."
 
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
 /** og-image.png is 1024×1024 (JPEG data in a .png path). */

@@ -19,7 +19,7 @@ export function LandingHero() {
           <div className="min-w-0">
             <p className="landing-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium text-[var(--l-slate)] mb-5">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--l-rust)] shadow-[0_0_0_3px_rgb(184_78_31_/_0.15)]" aria-hidden />
-              Three countries live · France next · No licence fee
+              Three countries live · France next
             </p>
 
             <h1
@@ -80,9 +80,9 @@ export function LandingHero() {
                 <dd className="text-xs text-[var(--l-slate)] mt-0.5">One formula</dd>
               </div>
               <div>
-                <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">Licence</dt>
-                <dd className="font-display text-2xl sm:text-3xl text-[var(--l-ink)] mt-1">£0</dd>
-                <dd className="text-xs text-[var(--l-slate)] mt-0.5">No Mapbox bill</dd>
+                <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">Doors</dt>
+                <dd className="font-display text-2xl sm:text-3xl text-[var(--l-ink)] mt-1">10</dd>
+                <dd className="text-xs text-[var(--l-slate)] mt-0.5">Same questions</dd>
               </div>
             </dl>
           </div>
