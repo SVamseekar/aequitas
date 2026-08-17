@@ -6,6 +6,7 @@ Aequitas joins published timetables to census geography and the national depriva
 
 Scores are **in-country only**. IMD, Pobal HP, and CBS SES-WOA are never plotted on one axis. Travel times and benefit–cost ratios are not invented.
 
+[![Tests](https://github.com/SVamseekar/aequitas/actions/workflows/test.yml/badge.svg)](https://github.com/SVamseekar/aequitas/actions/workflows/test.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/UI-React_19-087EA4?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
@@ -168,10 +169,15 @@ To add a country: implement ingest for GTFS, small-area geography, and that coun
 
 ---
 
+## Contributing, security, and licence
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) — local setup, `uv` / `./scripts/dev.sh`, test markers, commit style.
+- [SECURITY.md](SECURITY.md) — private reports to martisoura@gmail.com. Do not file public 0-days.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- [LICENSE](LICENSE) — all rights reserved. Write before adapting the product for an authority or research programme.
+
+Support: [GitHub Issues](https://github.com/SVamseekar/aequitas/issues). Method work lives on [issue #17](https://github.com/SVamseekar/aequitas/issues/17).
+
 ## Contact
 
 **Marti Soura Vamseekar** · [martisoura@gmail.com](mailto:martisoura@gmail.com) · [souravamseekar.com](https://souravamseekar.com)
-
-Issues: [github.com/SVamseekar/aequitas/issues](https://github.com/SVamseekar/aequitas/issues)
-
-See [LICENSE](LICENSE). All rights reserved. Write before adapting the product for an authority or research programme.

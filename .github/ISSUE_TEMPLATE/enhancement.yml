@@ -1,0 +1,46 @@
+name: Enhancement
+description: Propose a change that stays inside the published method
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is missing or hard today? Do not propose invented travel times or a Europe-wide deprivation index.
+    validations:
+      required: true
+  - type: dropdown
+    id: country
+    attributes:
+      label: Country
+      options:
+        - England
+        - Ireland
+        - Netherlands
+        - France
+        - Cross-cutting (must stay in-country at score time)
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Official source URL
+      description: GTFS, census, or national deprivation publication this would rest on
+    validations:
+      required: true
+  - type: checkboxes
+    id: honesty
+    attributes:
+      label: Honesty
+      options:
+        - label: I am not asking for invented 15 / 30 / 45 minute access figures
+          required: true
+        - label: I am not asking for a Europe-wide IMD / HP / SES / F-EDI mash-up
+          required: true
+        - label: I am not asking for a benefit–cost ratio without a cited official unit cost
+          required: true
+  - type: markdown
+    attributes:
+      value: |
+        Larger method work belongs on [issue #17](https://github.com/SVamseekar/aequitas/issues/17).

@@ -1,0 +1,50 @@
+name: Bug
+description: Something in the briefing, map, or API is wrong
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: country
+    attributes:
+      label: Country
+      options:
+        - England
+        - Ireland
+        - Netherlands
+        - France
+        - Not country-specific
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: URL
+      description: Page or API path (for example `/app/england` or `/api/overview?country=england`)
+      placeholder: https://aequitas.souravamseekar.com/…
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+    validations:
+      required: true
+  - type: input
+    id: score
+    attributes:
+      label: Score (if relevant)
+      description: Quoteable in-country score shown on the page, if the bug is about a number
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
