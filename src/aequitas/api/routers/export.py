@@ -81,12 +81,12 @@ def _build_pdf(dimension: str, sections: list[dict], region: str, urban_rural: s
 
 def _pack_country_or_404(country: str) -> str:
     key = (country or "england").strip().lower()
-    if key in {"netherlands", "france"}:
+    if key == "netherlands":
         raise HTTPException(
             status_code=404,
-            detail=f"The {key.title()} research pack is not built yet.",
+            detail="The Netherlands research pack is not built yet.",
         )
-    if key not in {"england", "ireland"}:
+    if key not in {"england", "ireland", "france"}:
         raise HTTPException(status_code=404, detail=f"Unknown country {key!r}.")
     return key
 

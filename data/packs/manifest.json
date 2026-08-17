@@ -29,7 +29,7 @@
       "note": "Registered live checkout as first network date (Census/IMD/HP frozen)."
     }
   ],
-  "updated_at": "2026-08-13T18:35:09.282142+00:00",
+  "updated_at": "2026-08-17T05:26:33.719810+00:00",
   "netherlands": [
     {
       "pack_id": "2026-08-13",
@@ -42,6 +42,21 @@
       "n_areas": 13827,
       "warehouse": "/Users/souravamseekarmarti/Projects/aequitas/data/aequitas_netherlands.duckdb",
       "metrics": "data/packs/netherlands/2026-08-13/metrics.json",
+      "note": "Registered live checkout as first network date (Census/IMD/HP frozen)."
+    }
+  ],
+  "france": [
+    {
+      "pack_id": "2026-08-17",
+      "as_of": "2026-08-17",
+      "current": true,
+      "score": 47.7,
+      "pct_400m": 56.3,
+      "evening_isolated_pct": 70.86,
+      "mean_sqi": 18.1,
+      "n_areas": 48522,
+      "warehouse": "data/aequitas_france.duckdb",
+      "metrics": "data/packs/france/2026-08-17/metrics.json",
       "note": "Registered live checkout as first network date (Census/IMD/HP frozen)."
     }
   ]

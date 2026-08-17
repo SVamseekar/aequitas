@@ -35,6 +35,17 @@ _DIMENSION_META_NL = {
     "scenarios": ("Scenarios (OV)", "People affected", "/scenarios"),
 }
 
+_DIMENSION_META_FR = {
+    "equity": ("Equity & Deprivation", "Gini (NAP trips/capita)", "/equity"),
+    "accessibility": ("Access", "400m coverage %", "/access"),
+    "service_quality": ("Service", "Mean SQI (NAP)", "/service"),
+    "route_network": ("Network", "NAP operator HHI", "/network"),
+    "correlations": ("Correlations", "F-EDI–service r", "/correlations"),
+    "economic": ("Economy", "People-gap", "/economy"),
+    "bus_services_act": ("AOM / SPC", "400m coverage %", "/policy"),
+    "scenarios": ("Scenarios (SPC)", "People affected", "/scenarios"),
+}
+
 _DIMENSION_META_IE = {
     "equity": ("Equity & Deprivation", "Gini (TFI trips/capita)", "/equity"),
     "accessibility": ("Access", "400m coverage %", "/access"),
@@ -162,6 +173,8 @@ def get_overview(
             if country == "ireland"
             else _DIMENSION_META_NL
             if country == "netherlands"
+            else _DIMENSION_META_FR
+            if country == "france"
             else _DIMENSION_META
         )
         name, label, route = meta.get(dim_id, (dim_id, "", f"/{dim_id}"))

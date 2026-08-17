@@ -37,7 +37,8 @@ def query_reach(
     country: str = "england",
 ) -> dict[str, Any]:
     _ = urban_rural  # LSOA-level reach is not yet split by RUC in the writer
-    if country == "netherlands":
+    if country in {"netherlands", "france"}:
+        label = "Netherlands" if country == "netherlands" else "France"
         return {
             "available": False,
             "geographies": [],
@@ -48,10 +49,10 @@ def query_reach(
             "histogram": [],
             "ranked": [],
             "note": (
-                "15/30/45 destination counts are not in the Netherlands pack. "
+                f"15/30/45 destination counts are not in the {label} pack. "
                 "We do not invent them or copy another country's travel times."
             ),
-            "region_name": "Netherlands" if region == "all" else region,
+            "region_name": label if region == "all" else region,
         }
     df = load_reach_frame()
     if df.empty:
@@ -102,7 +103,7 @@ def load_bands_frame(cfg: PipelineConfig | None = None, country: str = "england"
 
         written = write_ireland_bands(cfg)
         return pd.read_parquet(written) if written is not None and written.exists() else pd.DataFrame()
-    if country == "netherlands":
+    if country == "netherlands" or country == "france":
         return pd.DataFrame()
     path = bands_output_path(cfg.processed_dir)
     if path.exists():
@@ -124,7 +125,12 @@ def query_bands(region: str, urban_rural: str, country: str = "england") -> dict
                 "Aequitas service bands are not built for the Netherlands in this checkout. "
                 "15/30/45 has not been run. We do not copy another country's bands here."
                 if country == "netherlands"
-                else "Access bands are not built yet — need LSOA demographics."
+                else (
+                    "Aequitas service bands are not built for France in this checkout. "
+                    "15/30/45 has not been run. We do not copy another country's bands here."
+                    if country == "france"
+                    else "Access bands are not built yet — need LSOA demographics."
+                )
             ),
             "mode": "service",
             "not_tfl_ptal": True,

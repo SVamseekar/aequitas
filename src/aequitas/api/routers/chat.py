@@ -86,6 +86,8 @@ async def chat(
             raise HTTPException(503, "Ireland chat index is not built")
         if country == "netherlands":
             raise HTTPException(503, "Netherlands index not built.")
+        if country == "france":
+            raise HTTPException(503, "France index not built.")
         raise HTTPException(503, "Chat is unavailable — FAISS index not loaded")
 
     cfg = ApiConfig()
@@ -94,6 +96,8 @@ async def chat(
     chunks = retrieve_chunks(
         req.query, embedding_model, faiss_index, faiss_metadata, context=req.context
     )
+    if country == "france":
+        chunks = [c for c in chunks if not _mentions_foreign_statute(c.get("text") or "")]
     source_sections = list({c["section_id"] for c in chunks if "section_id" in c})
 
     has_gemini = bool(cfg.gemini_api_key and str(cfg.gemini_api_key).strip())
@@ -101,7 +105,7 @@ async def chat(
 
     async def event_generator():
         if not has_gemini:
-            text = _honest_retrieval_reply(country, chunks)
+            text = _honest_retrieval_reply(country, chunks, req.query)
             yield {"event": "chunk", "data": json.dumps({"text": text})}
             yield {
                 "event": "done",
@@ -120,7 +124,7 @@ async def chat(
         ):
             if event.get("event") == "error":
                 gemini_failed = True
-                text = _honest_retrieval_reply(country, chunks)
+                text = _honest_retrieval_reply(country, chunks, req.query)
                 extra = " Generation failed; showing retrieved chunks instead of another country’s warehouse."
                 yield {"event": "chunk", "data": json.dumps({"text": text + extra})}
                 yield {
@@ -144,8 +148,32 @@ async def chat(
     return EventSourceResponse(event_generator())
 
 
-def _honest_retrieval_reply(country: str, chunks: list[dict]) -> str:
-    place = "Republic of Ireland" if country == "ireland" else "England"
+_FOREIGN_STATUTE = (
+    "bsa 2025",
+    "bus services act",
+    "imd decile",
+    "imd 2025",
+    "pobal hp",
+    "pobal",
+)
+
+
+def _mentions_foreign_statute(text: str) -> bool:
+    blob = text.lower()
+    return any(tok in blob for tok in _FOREIGN_STATUTE)
+
+
+def _honest_retrieval_reply(country: str, chunks: list[dict], query: str = "") -> str:
+    place = {
+        "ireland": "Republic of Ireland",
+        "netherlands": "Netherlands",
+        "france": "France",
+    }.get(country, "England")
+    if country == "france" and _mentions_foreign_statute(query):
+        return (
+            "Those statutes (BSA 2025 / IMD / Pobal HP) are not the France pack. "
+            "This index only holds NAP × F-EDI × IRIS narratives."
+        )
     if not chunks:
         return (
             f"Retrieval ran on the {place} index and found no matching briefing chunks. "

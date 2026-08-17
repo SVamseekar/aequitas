@@ -44,7 +44,7 @@ def _live_path(country: str):
     if key == "netherlands":
         return _state.get("nl_db_path")
     if key == "france":
-        return None
+        return _state.get("fr_db_path")
     return _state.get("db_path")
 
 
@@ -58,9 +58,6 @@ def get_country_db(
     `Depends(country_warehouse)`.
     """
     key = (country or "england").strip().lower()
-    if key == "france":
-        yield None
-        return
     live = _live_path(key)
     requested = (pack or "").strip()
     if requested and requested.lower() not in {"current", "latest"}:
@@ -98,8 +95,6 @@ def country_warehouse(
 
 def resolve_country_db(country: str, pack: str | None = None) -> duckdb.DuckDBPyConnection | None:
     key = (country or "england").strip().lower()
-    if key == "france":
-        return None
     live = _live_path(key)
     if pack and pack.lower() not in {"current", "latest"}:
         from aequitas.warehouse.packs import warehouse_for_pack
@@ -172,6 +167,13 @@ async def lifespan(app: Any):  # type: ignore[type-arg]
     else:
         logger.info(f"Netherlands warehouse not found at {nl_path} — /api/*?country=netherlands stays empty.")
 
+    fr_path = cfg.france_db_path
+    if fr_path.exists():
+        logger.info(f"France warehouse found: {fr_path}")
+        _state["fr_db_path"] = fr_path
+    else:
+        logger.info(f"France warehouse not found at {fr_path} — /api/*?country=france stays empty.")
+
     if not os.environ.get("PYTEST_CURRENT_TEST"):
         try:
             from aequitas.warehouse.packs import ensure_current_registered
@@ -182,6 +184,8 @@ async def lifespan(app: Any):  # type: ignore[type-arg]
                 ensure_current_registered("ireland", ie_path, pack_id="2026-08-13")
             if nl_path.exists():
                 ensure_current_registered("netherlands", nl_path)
+            if fr_path.exists():
+                ensure_current_registered("france", fr_path)
         except Exception as exc:
             logger.warning("Pack registry: {}", exc)
 
@@ -209,6 +213,16 @@ async def lifespan(app: Any):  # type: ignore[type-arg]
     else:
         logger.warning(
             f"Ireland FAISS not found at {cfg.ireland_faiss_index_path} — Ireland chat retrieval disabled"
+        )
+
+    if cfg.france_faiss_index_path.exists() and cfg.france_faiss_metadata_path.exists():
+        logger.info(f"Loading France FAISS index: {cfg.france_faiss_index_path}")
+        fr_idx = faiss.read_index(str(cfg.france_faiss_index_path))
+        fr_meta = json.loads(cfg.france_faiss_metadata_path.read_text())
+        by_country["france"] = (fr_idx, fr_meta)
+    else:
+        logger.warning(
+            f"France FAISS not found at {cfg.france_faiss_index_path} — France chat retrieval disabled"
         )
 
     _state["faiss_by_country"] = by_country

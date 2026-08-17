@@ -33,4 +33,6 @@ def get_map(
         payload["geography"] = "ireland_county"
     if country == "netherlands" and not payload.get("empty"):
         payload["geography"] = "netherlands_provincie"
+    if country == "france" and not payload.get("empty"):
+        payload["geography"] = "france_region"
     return payload

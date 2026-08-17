@@ -25,7 +25,7 @@ def main() -> None:
 
 
 @main.command()
-@click.option("--country", default="england", help="england | ireland | netherlands")
+@click.option("--country", default="england", help="england | ireland | netherlands | france")
 def ingest(country: str) -> None:
     """Stage 1: Load and filter raw data sources."""
     if country == "ireland":
@@ -35,6 +35,10 @@ def ingest(country: str) -> None:
     if country == "netherlands":
         from aequitas.netherlands.pipeline import run_netherlands_pack
         run_netherlands_pack()
+        return
+    if country == "france":
+        from aequitas.france.pipeline import run_france_pack
+        run_france_pack()
         return
     from aequitas.pipeline._stages import run_ingestion
     run_ingestion()
@@ -51,6 +55,10 @@ def process(country: str) -> None:
     if country == "netherlands":
         from aequitas.netherlands.pipeline import run_netherlands_pack
         run_netherlands_pack()
+        return
+    if country == "france":
+        from aequitas.france.pipeline import run_france_pack
+        run_france_pack()
         return
     from aequitas.pipeline._stages import run_processing
     run_processing()
@@ -139,6 +147,18 @@ def netherlands(skip_download: bool) -> None:
     dest = run_netherlands_pack(skip_download=skip_download)
     write_netherlands_bands()
     logger.info("Netherlands pack ready: {}", dest)
+
+
+@main.command()
+@click.option("--skip-download", is_flag=True)
+def france(skip_download: bool) -> None:
+    """Build the France pack (NAP × F-EDI × IRIS). Never touches EN/IE/NL warehouses."""
+    from aequitas.france.bands import write_france_bands
+    from aequitas.france.pipeline import run_france_pack
+
+    dest = run_france_pack(skip_download=skip_download)
+    write_france_bands()
+    logger.info("France pack written: {}", dest)
 
 
 @main.command("run")
