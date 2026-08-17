@@ -1,36 +1,35 @@
 import { useState } from "react"
-import { Plus, Minus } from "lucide-react"
-import { METRICS_CANON, formatGini, formatPalma } from "@/lib/metricsCanon"
-
-const m = METRICS_CANON
 
 export const FAQ_ITEMS = [
   {
-    question: "What geography is covered?",
-    answer: `England only — all ${m.lsoas.toLocaleString("en-GB")} Lower Super Output Areas (LSOAs), covering ${m.populationDisplay} population. Filters cover 9 English regions and urban/rural area types (${m.filterCombos} national/regional combos in the warehouse).`,
-  },
-  {
-    question: "What data sources power Aequitas?",
-    answer: `National open data: NaPTAN (${m.stops.toLocaleString("en-GB")} active bus stops), BODS GTFS (${m.routes.toLocaleString("en-GB")} routes, ${m.tripsDisplay} trips), ONS Census 2021, MHCLG IMD 2025, NOMIS BRES, NHS ODS, GIAS schools, DfT TAG, and DESNZ emission factors. Full detail is on the Methodology page.`,
-  },
-  {
-    question: "Is this official Department for Transport guidance?",
+    question: "Which countries are live?",
     answer:
-      "No. Aequitas is an independent policy analysis tool. It is not affiliated with, endorsed by, or produced by DfT, ONS, or any UK government body. Outputs are for exploration and evidence-building — not formal scheme appraisal.",
+      "England, Ireland (Republic), and the Netherlands. France uses the same ten doors; the warehouse is not built, so the app says so. Deprivation ranks stay inside each country.",
   },
   {
-    question: "How is equity measured?",
-    answer: `Service distribution inequality uses Gini (${formatGini(m.gini)}), Palma ratio (${formatPalma(m.palma)}), and concentration index on bus service levels across LSOAs, cross-referenced with IMD deprivation. National figures are locked to the warehouse audit pack (as of ${m.asOf}).`,
-  },
-  {
-    question: "Can Local Transport Authorities filter to their region?",
+    question: "What is the in-country score?",
     answer:
-      "Yes. The platform filters by nine English regions and urban/rural classification so LTAs can focus on their geography. Some combos (for example London × rural) have no matching LSOAs under the rural-urban classification — the UI explains that explicitly.",
+      "A 0–100 figure: people within 400 m, evening service, weekday quality, and an inverted deprivation–service correlation. Missing terms are dropped and the weights renormalised. London rural is empty under the official classification.",
   },
   {
-    question: "How do scenarios relate to the Bus Services Act 2025?",
+    question: "Do you sell 15 / 30 / 45 minute job access?",
     answer:
-      "The Bus Services Act dimension scores franchising readiness and operator concentration. Policy Scenarios model interventions such as frequency restoration, evening extension, and DRT rural coverage so authorities can explore evidence ahead of franchising or enhanced partnership decisions.",
+      "Only after a local r5py run with a Geofabrik extract. Until then Reach shows Aequitas service bands and an honest empty sentence. We do not invent job counts.",
+  },
+  {
+    question: "Is this official government guidance?",
+    answer:
+      "No. Aequitas is an independent briefing. It is not NTA, CBS, DfT, or ministerial guidance. Outputs are for exploration — not statutory appraisal.",
+  },
+  {
+    question: "How do network dates relate to the census?",
+    answer:
+      "Time moves timetable-derived metrics (BODS, TFI, OVapi). Census geographies and IMD / HP / SES-WOA stay frozen. One pack date is one point, not a fabricated monthly series.",
+  },
+  {
+    question: "Can I run it locally?",
+    answer:
+      "Yes. Clone the repo, copy .env.example, and run ./scripts/dev.sh. Warehouses are local DuckDB files and are not in git. Analytics work with DEV_AUTH_BYPASS in development.",
   },
 ] as const
 
@@ -53,7 +52,7 @@ export function LandingFaq() {
               id="landing-faq-heading"
               className="font-display text-3xl sm:text-4xl leading-[1.12] text-[var(--l-ink)]"
             >
-              Questions authorities ask first.
+              What a serious buyer asks first.
             </h2>
           </div>
 
@@ -73,12 +72,8 @@ export function LandingFaq() {
                         <span className="text-base sm:text-lg font-semibold text-[var(--l-ink)] pr-2">
                           {item.question}
                         </span>
-                        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--l-rule)] bg-[var(--l-paper)]">
-                          {isOpen ? (
-                            <Minus className="w-3.5 h-3.5" aria-hidden />
-                          ) : (
-                            <Plus className="w-3.5 h-3.5" aria-hidden />
-                          )}
+                        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--l-rule)] bg-[var(--l-paper)] text-sm tabular-nums text-[var(--l-slate)]">
+                          {isOpen ? "–" : "+"}
                         </span>
                       </button>
                     </dt>

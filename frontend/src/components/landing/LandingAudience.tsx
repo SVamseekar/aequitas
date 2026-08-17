@@ -11,7 +11,7 @@ export function LandingAudience() {
           id="landing-audience-heading"
           className="font-display text-3xl sm:text-4xl leading-[1.12] text-[var(--l-ink)] max-w-lg mb-8"
         >
-          Who opens Aequitas on a Tuesday morning.
+          Who opens it when a funding paper is due.
         </h2>
 
         <ul className="grid md:grid-cols-3 gap-3 sm:gap-4">

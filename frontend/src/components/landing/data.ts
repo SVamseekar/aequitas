@@ -1,54 +1,91 @@
 import type { LucideIcon } from "lucide-react"
 import {
   Bus,
+  Clock,
   Database,
   FileSearch,
   FileText,
+  Map,
   Network,
-  PoundSterling,
   Scale,
   Sliders,
   SlidersHorizontal,
   MapPin,
-  Brain,
+  GitCompare,
 } from "lucide-react"
-import {
-  METRICS_CANON,
-  headlineInequalityStats,
-  scaleStats,
-} from "@/lib/metricsCanon"
 
-export const HEADLINE_STATS = headlineInequalityStats()
-
-/** Scale strip: trips / stops / routes / LSOAs from metrics canon. */
-export const SCALE_STATS = scaleStats()
+export const COUNTRY_COVERAGE = [
+  {
+    code: "england",
+    name: "England",
+    status: "live" as const,
+    network: "BODS GTFS + NaPTAN",
+    deprivation: "IMD 2025",
+    geography: "LSOA 2021",
+    note: "Score, map, Studio, Reach, Time",
+    href: "/app/england",
+  },
+  {
+    code: "ireland",
+    name: "Ireland",
+    status: "live" as const,
+    network: "TFI GTFS_All.zip",
+    deprivation: "Pobal HP 2022",
+    geography: "CSO Small Areas 2022 · Republic",
+    note: "Same doors. Ranks stay in the Republic.",
+    href: "/app/ireland",
+  },
+  {
+    code: "netherlands",
+    name: "Netherlands",
+    status: "live" as const,
+    network: "OVapi GTFS",
+    deprivation: "CBS SES-WOA 2023",
+    geography: "Buurten 2024",
+    note: "Bus is the default. All-PT is a labelled mode.",
+    href: "/app/netherlands",
+  },
+  {
+    code: "france",
+    name: "France",
+    status: "planned" as const,
+    network: "NAP GTFS harvest",
+    deprivation: "F-EDI or Filosofi proxy",
+    geography: "IRIS",
+    note: "Same doors. Pack not built — no invented figures.",
+    href: "/app/france",
+  },
+] as const
 
 export const AUDIENCES = [
   {
-    title: "Local Transport Authorities",
+    title: "Transport authorities",
     description:
-      "Prioritise interventions, model scenarios, and build franchising evidence under the Bus Services Act 2025.",
+      "Prioritise routes and funding with a quoteable score, a map, and exhibits that name the filter — without a proprietary access engine.",
   },
   {
-    title: "Central government & DfT",
+    title: "Ministries and regulators",
     description:
-      "Compare regional equity gaps, service quality deserts, and investment returns using national open data.",
+      "Compare equity inside one country. IMD, HP, and SES-WOA never share an axis.",
   },
   {
-    title: "Researchers & analysts",
-    description: `Explore pre-computed metrics across ${METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs with traceable formulas and exportable findings.`,
+    title: "Researchers",
+    description:
+      "Computed Gini, cited sources, dated network packs. Travel times stay empty until r5py has actually run.",
   },
 ] as const
 
 export const DATA_SOURCES = [
-  "NaPTAN",
   "BODS GTFS",
-  "ONS Census 2021",
+  "NaPTAN",
   "IMD 2025",
-  "NOMIS BRES",
-  "NHS ODS",
-  "DfT TAG",
-  "DESNZ 2025",
+  "ONS Census 2021",
+  "TFI GTFS",
+  "Pobal HP 2022",
+  "CSO Small Areas",
+  "OVapi",
+  "CBS SES-WOA",
+  "CBS buurten",
 ] as const
 
 export interface DimensionCard {
@@ -59,83 +96,96 @@ export interface DimensionCard {
   route: string
 }
 
-/** Aligns with frontend/src/lib/constants.ts DIMENSIONS (routes + titles). */
 export const DIMENSIONS: DimensionCard[] = [
   {
     icon: Scale,
-    title: "Equity & Deprivation",
-    question: "Which areas get the least bus service relative to need?",
-    grounded: `Gini, Lorenz, Palma ratio across ${METRICS_CANON.lsoas.toLocaleString("en-GB")} LSOAs`,
+    title: "Equity",
+    question: "Who gets the least service relative to need?",
+    grounded: "Lorenz, Gini, Palma, in-country deprivation slope",
     route: "/equity",
   },
   {
     icon: MapPin,
-    title: "Accessibility",
-    question: "Can residents reach jobs, healthcare, and schools by bus?",
-    grounded: "2SFCA 400m catchment analysis",
+    title: "Access",
+    question: "How many people live beyond 400 m of a stop?",
+    grounded: "Coverage, deserts, urban–rural gap — people in the title",
     route: "/access",
   },
   {
     icon: Bus,
-    title: "Service Quality",
-    question: "Where do evening and weekend services disappear?",
-    grounded: "Headway, isolation, and peak ratio metrics",
+    title: "Service",
+    question: "Where do evenings and Sundays disappear?",
+    grounded: "Weekday quality, evening isolation, Sunday deserts",
     route: "/service",
   },
   {
     icon: Network,
-    title: "Route Network",
-    question: "Is the network fragmented across operators and boundaries?",
-    grounded: `${METRICS_CANON.routes.toLocaleString("en-GB")} routes, operator concentration analysis`,
+    title: "Network",
+    question: "How concentrated are the operators?",
+    grounded: "One HHI on a 0–10,000 scale",
     route: "/network",
   },
   {
-    icon: Brain,
-    title: "Socio-Economic & ML",
-    question: "What drives coverage gaps — deprivation, car ownership, or both?",
-    grounded: `Deprivation correlations, SHAP, RF R²=${METRICS_CANON.rfR2}`,
+    icon: GitCompare,
+    title: "Correlations",
+    question: "Does coverage track deprivation — or something else?",
+    grounded: "One matrix + one scatter, not a wall of bars",
     route: "/correlations",
   },
   {
-    icon: PoundSterling,
-    title: "Economic Appraisal",
-    question: "Does this investment pass a benefit-cost test?",
-    grounded: "BCR via Green Book / TAG methodology; carbon under j3",
+    icon: FileText,
+    title: "Economy",
+    question: "Who is in the people-gap — and is there a published unit cost?",
+    grounded: "People-gap first. Official € / TAG only when cited.",
     route: "/economy",
   },
   {
-    icon: FileText,
-    title: "Bus Services Act 2025",
-    question: "Is your authority ready for franchising under the new Act?",
-    grounded: "Franchising readiness and operator concentration tiers",
+    icon: Scale,
+    title: "Policy",
+    question: "Which programmes apply here?",
+    grounded: "BSA 2025 · NTA · Concession / OV-wet — local titles",
     route: "/policy",
   },
   {
     icon: Sliders,
-    title: "Policy Scenarios",
-    question: "What happens if we restore evening frequency or add on-demand transport?",
-    grounded: "Parameterised scenario modelling",
+    title: "Scenarios",
+    question: "Who moves if frequency or evenings change?",
+    grounded: "Listed interventions × people × deprivation",
     route: "/scenarios",
+  },
+  {
+    icon: Clock,
+    title: "Time",
+    question: "Did the network move while the census stayed still?",
+    grounded: "Dated packs. Census and deprivation stay frozen.",
+    route: "/time",
+  },
+  {
+    icon: Map,
+    title: "Reach & Studio",
+    question: "What does a walk-to-stop change do on this filter?",
+    grounded: "Service bands 1–6. 15/30/45 only after r5py.",
+    route: "/reach",
   },
 ]
 
 export const HOW_IT_WORKS = [
   {
     icon: Database,
-    step: "Select your region",
+    step: "Choose a country and filter",
     description:
-      "Pick a country, then region and urban/rural. The ticker and briefing recompute for that filter.",
+      "England, Ireland, or the Netherlands. Region, urban/rural, and — in the Netherlands — bus or all public transport.",
   },
   {
     icon: FileSearch,
-    step: "Review evidence-graded findings",
+    step: "Read the briefing",
     description:
-      "Every chart and number comes with a plain-English explanation of what it means and why it matters.",
+      "Every exhibit has a key finding, so what, and a caveat that names this filter. Weak evidence is suppressed, not filled in.",
   },
   {
     icon: SlidersHorizontal,
-    step: "Model scenarios and export",
+    step: "Patch, compare, export",
     description:
-      "Studio walk-to-stop, Reach service bands, and a research export pack are live on the free R5/OSM stack. Ireland is live (Wave 5). Monthly refresh, NL, and France remain later waves.",
+      "Studio is walk-to-stop. Compare stays inside the country. The research pack uses that country’s nouns.",
   },
 ] as const

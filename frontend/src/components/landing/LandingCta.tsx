@@ -18,11 +18,10 @@ export function LandingCta() {
             id="landing-cta-heading"
             className="font-display text-3xl sm:text-4xl text-[#f7f4ef] leading-[1.1] max-w-lg mx-auto"
           >
-            England and Ireland are live. The Netherlands and France follow the same method.
+            Three countries live. France keeps the empty sentence until the pack exists.
           </h2>
           <p className="mt-4 text-base sm:text-lg text-white/60 max-w-md mx-auto leading-relaxed">
-            Map-first briefing, unique exhibits, and filter-specific prose. Free government data
-            and open-source routing only.
+            Map, score, and exhibits on a £0 stack. No Mapbox. No invented 45-minute jobs.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <button
@@ -30,7 +29,7 @@ export function LandingCta() {
               onClick={() => navigate("/app/england")}
               className="landing-btn-primary"
             >
-              Explore England
+              Open England
               <ArrowRight className="w-4 h-4" aria-hidden />
             </button>
             <button
@@ -38,7 +37,14 @@ export function LandingCta() {
               onClick={() => navigate("/app/ireland")}
               className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-[#f7f4ef] hover:bg-white/15 transition-colors backdrop-blur-md"
             >
-              Explore Ireland
+              Ireland
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/app/netherlands")}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-[#f7f4ef] hover:bg-white/15 transition-colors backdrop-blur-md"
+            >
+              Netherlands
             </button>
             <Link
               to="/methodology"

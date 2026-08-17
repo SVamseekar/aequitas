@@ -30,11 +30,11 @@ export function LandingNav() {
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm text-[var(--l-slate)]">
-          <a href="#proof" className="hover:text-[var(--l-ink)] transition-colors">
-            Evidence
+          <a href="#coverage" className="hover:text-[var(--l-ink)] transition-colors">
+            Coverage
           </a>
           <a href="#dimensions" className="hover:text-[var(--l-ink)] transition-colors">
-            Dimensions
+            Briefing
           </a>
           <a href="#how" className="hover:text-[var(--l-ink)] transition-colors">
             How it works

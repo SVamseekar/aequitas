@@ -1,59 +1,47 @@
-import { HEADLINE_STATS, SCALE_STATS } from "./data"
-import { METRICS_CANON } from "@/lib/metricsCanon"
-import { LandingEquityViz } from "./LandingEquityViz"
-
 export function LandingStats() {
-  // Skip Gini (shown in viz); show the other three headline stats once
-  const sideStats = HEADLINE_STATS.slice(1)
-
   return (
     <section id="proof" aria-labelledby="landing-stats-heading" className="relative">
       <div className="landing-shell py-12 sm:py-14 lg:py-16">
-        <div className="grid lg:grid-cols-2 gap-6 lg:gap-10 mb-8 lg:mb-10">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-10 mb-8">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--l-rust)] mb-3">
-              The evidence already exists
+              What we will not claim
             </p>
             <h2
               id="landing-stats-heading"
-              className="font-display text-3xl sm:text-4xl lg:text-[2.75rem] leading-[1.12] text-[var(--l-ink)] max-w-md"
+              className="font-display text-3xl sm:text-4xl leading-[1.12] text-[var(--l-ink)] max-w-md"
             >
-              A full England warehouse — not a demo spreadsheet.
+              A briefing is only useful if the holes stay holes.
             </h2>
           </div>
           <p className="text-lg text-[var(--l-slate)] leading-relaxed max-w-xl lg:pt-8">
-            Stops, timetables, deprivation, and route geometry joined once offline. The product is a
-            lookup layer over audited analytics across {METRICS_CANON.lsoas.toLocaleString("en-GB")}{" "}
-            LSOAs.
+            Analytics are pre-computed into a DuckDB warehouse. The app is a lookup. Gini is
+            computed on each build — not a locked demo number.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-4 lg:gap-5">
-          <div className="lg:col-span-7">
-            <LandingEquityViz />
-          </div>
-          <div className="lg:col-span-5 grid gap-4">
-            {sideStats.map((stat) => (
-              <div key={stat.label} className="landing-card p-6 sm:p-7">
-                <p className="text-sm text-[var(--l-slate)]">{stat.label}</p>
-                <p className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 tabular-nums">
-                  {stat.value}
-                </p>
-                <p className="text-sm text-[var(--l-slate)] mt-2">{stat.sub}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <ul className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {SCALE_STATS.map((stat) => (
-            <li
-              key={stat.label}
-              className="landing-glass rounded-2xl px-4 py-4 sm:px-5 sm:py-5"
-            >
-              <p className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">{stat.label}</p>
-              <p className="font-display text-2xl text-[var(--l-ink)] mt-1 tabular-nums">{stat.value}</p>
-              <p className="text-xs text-[var(--l-slate)] mt-1">{stat.sub}</p>
+        <ul className="grid sm:grid-cols-2 gap-3">
+          {[
+            {
+              title: "No Europe-wide IMD",
+              body: "England uses IMD, Ireland Pobal HP, the Netherlands SES-WOA. They never share an axis.",
+            },
+            {
+              title: "No invented 15 / 30 / 45",
+              body: "Job counts appear only after a local r5py run. Until then Reach is service bands, honestly empty on travel time.",
+            },
+            {
+              title: "No euro BCR without a source",
+              body: "People-gap first. TAG, CAF, or PBL money only when a free official unit cost exists.",
+            },
+            {
+              title: "Network dates ≠ census dates",
+              body: "Time moves BODS / TFI / OVapi. Census, IMD, HP, and SES-WOA stay frozen on the pack.",
+            },
+          ].map((item) => (
+            <li key={item.title} className="landing-card p-5 sm:p-6">
+              <h3 className="text-base font-semibold text-[var(--l-ink)]">{item.title}</h3>
+              <p className="mt-2 text-sm text-[var(--l-slate)] leading-relaxed">{item.body}</p>
             </li>
           ))}
         </ul>
