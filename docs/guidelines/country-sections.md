@@ -18,8 +18,8 @@ on one axis. £0 sources only.
 Ireland FAISS stamped after PNG pass. Read **§ Ireland mistakes — do not
 repeat (NL / FR)** before Wave 7 or 9.
 
-Netherlands warehouse is on disk (Wave 7). France is still catalogue-only.
-Do not start France until you have read **§ Ireland mistakes**.
+Netherlands warehouse is on disk (Wave 7). France warehouse is on disk (Wave 9);
+read **§ Ireland mistakes** before treating leftovers or chat as Done.
 
 ## Ten doors (every country)
 
@@ -189,7 +189,7 @@ correlations, unique exhibits).
 | England | 55 computed | — | — | `section_registry.py` | `aequitas.duckdb` live |
 | Ireland | 36 | 12 | 7 | `ireland/sections.py` | **18,919 SA** warehouse live; d2–d4 from CSO SAPS |
 | Netherlands | **41** | **12** | **2** | `netherlands/sections.py` | **13,827** buurten live; d2–d5/f3/d9a/d9b/d9e from CBS 85984NED; omit d9c crime + d9d environment |
-| France | TBD at Wave 9 | policy/economy/scenarios | rural / DOM holes honest | not started | empty |
+| France | **35** | **12** | **8** | `france/sections.py` | **48,522** IRIS live; F-EDI 2021; NAP harvest 441/111 |
 
 A seed with Gini/SQI/HHI = 0 and BSA dashes does **not** satisfy this file.
 Wave 5 / 7 / 9 is done only when the warehouse is full-scale **and** the

@@ -44,7 +44,8 @@ export function DimensionCard({ dim }: Props) {
   const { country } = useFilters()
   const [params] = useSearchParams()
   const Icon =
-    dim.id === "economic" && (country === "ireland" || country === "netherlands")
+    dim.id === "economic" &&
+    (country === "ireland" || country === "netherlands" || country === "france")
       ? Euro
       : (DIMENSION_ICONS[dim.id] ?? Scale)
   const severityColor =

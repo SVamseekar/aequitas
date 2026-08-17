@@ -41,6 +41,24 @@ const NETHERLANDS_QUICK_ACTIONS = [
   },
 ]
 
+const FRANCE_QUICK_ACTIONS = [
+  {
+    icon: TrendingDown,
+    label: "F-EDI × NAP",
+    prompt: "How does F-EDI 2021 line up with NAP weekday service in this filter?",
+  },
+  {
+    icon: MapPin,
+    label: "IDF vs Occitanie",
+    prompt: "How does Île-de-France compare with Occitanie on Sunday deserts and Gini?",
+  },
+  {
+    icon: FileText,
+    label: "AOM / SPC",
+    prompt: "What do AOM and SPC programmes cover against NAP coverage in this filter?",
+  },
+]
+
 const IRELAND_QUICK_ACTIONS = [
   {
     icon: TrendingDown,
@@ -66,7 +84,9 @@ export function QuickActions({ onSelect, country }: Props) {
       ? IRELAND_QUICK_ACTIONS
       : country === "netherlands"
         ? NETHERLANDS_QUICK_ACTIONS
-        : ENGLAND_QUICK_ACTIONS
+        : country === "france"
+          ? FRANCE_QUICK_ACTIONS
+          : ENGLAND_QUICK_ACTIONS
   return (
     <div className="space-y-2">
       <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground mb-3">

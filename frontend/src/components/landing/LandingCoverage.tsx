@@ -19,8 +19,8 @@ export function LandingCoverage() {
             </h2>
           </div>
           <p className="text-base text-[var(--l-slate)] leading-relaxed max-w-sm lg:text-right">
-            IMD, Pobal HP, and SES-WOA are never plotted on one axis. France keeps the same
-            method; the warehouse is not built yet.
+            IMD, Pobal HP, SES-WOA, and F-EDI are never plotted on one axis. France briefing and
+            chat are live; 15/30/45 stay honest-empty.
           </p>
         </div>
 

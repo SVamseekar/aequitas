@@ -48,11 +48,11 @@ export const COUNTRY_COVERAGE = [
   {
     code: "france",
     name: "France",
-    status: "planned" as const,
-    network: "NAP GTFS harvest",
-    deprivation: "F-EDI or Filosofi proxy",
-    geography: "IRIS",
-    note: "Same doors. Pack not built — no invented figures.",
+    status: "live" as const,
+    network: "NAP GTFS harvest (441 merged / 111 skipped)",
+    deprivation: "F-EDI 2021",
+    geography: "IRIS (metropolitan)",
+    note: "National score 47.7. Same doors. Chat on FAISS[france]. 15/30/45 still empty.",
     href: "/app/france",
   },
 ] as const
@@ -86,6 +86,8 @@ export const DATA_SOURCES = [
   "OVapi",
   "CBS SES-WOA",
   "CBS buurten",
+  "NAP GTFS",
+  "F-EDI 2021",
 ] as const
 
 export interface DimensionCard {
@@ -174,7 +176,7 @@ export const HOW_IT_WORKS = [
     icon: Database,
     step: "Choose a country and filter",
     description:
-      "England, Ireland, or the Netherlands. Region, urban/rural, and — in the Netherlands — bus or all public transport.",
+      "England, Ireland, the Netherlands, or France. Region, urban/rural, and — in NL/FR — bus or all public transport.",
   },
   {
     icon: FileSearch,

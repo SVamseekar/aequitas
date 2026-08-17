@@ -9,7 +9,7 @@ export function LandingDataSources() {
       className="relative border-y border-white/40 py-5 overflow-hidden bg-white/20 backdrop-blur-xl"
     >
       <p className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--l-slate)] mb-3 px-4">
-        Official files only — BODS, TFI, OVapi, IMD, HP, SES-WOA
+        Official files only — BODS, TFI, OVapi, NAP, IMD, HP, SES-WOA, F-EDI
       </p>
       <div className="relative">
         <div

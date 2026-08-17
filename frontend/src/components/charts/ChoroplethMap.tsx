@@ -94,14 +94,23 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
 
     const inferredIreland = looksLikeIrelandCounties(data)
     const inferredNl = looksLikeNetherlandsProvinces(data)
+    const inferredFr = looksLikeFranceRegions(data)
     const geography =
       (chartData.geography as string | undefined) ??
-      (inferredIreland ? "ireland_county" : inferredNl ? "netherlands_provincie" : "region")
+      (inferredIreland
+        ? "ireland_county"
+        : inferredNl
+          ? "netherlands_provincie"
+          : inferredFr
+            ? "france_region"
+            : "region")
     const boundaryFile =
       geography === "ireland_county"
         ? "/boundaries/ireland_counties.geojson"
         : geography === "netherlands_provincie"
           ? "/boundaries/netherlands_provincies.geojson"
+        : geography === "france_region"
+          ? "/boundaries/france_regions.geojson"
         : geography === "lad"
           ? "/boundaries/lad.geojson"
           : "/boundaries/regions.geojson"
@@ -110,6 +119,8 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
         ? ["COUNTY_SLUG", "county_slug", "COUNTY", "county", "NAME", "name"]
         : geography === "netherlands_provincie"
           ? ["name", "NAME", "statcode", "statnaam", "prov_naam", "PV_NAAM"]
+        : geography === "france_region"
+          ? ["name", "NAME", "nom", "code", "CODE"]
         : geography === "lad"
           ? ["LAD22CD", "lad22cd"]
           : ["RGN22CD", "rgn22cd"]
@@ -118,6 +129,8 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
         ? ["COUNTY", "county", "NAME", "name"]
         : geography === "netherlands_provincie"
           ? ["statnaam", "name", "NAME", "PV_NAAM", "prov_naam"]
+        : geography === "france_region"
+          ? ["nom", "name", "NAME"]
         : geography === "lad"
           ? ["LAD22NM", "lad22nm"]
           : ["RGN22NM", "rgn22nm"]
@@ -139,10 +152,19 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
             f.properties["area_code"] = valueKey
             if (hovers.get(valueKey)) f.properties["hover"] = hovers.get(valueKey)
             matched.push(f)
+          } else if (geography === "france_region") {
+            const insee = String(f.properties["code"] ?? "")
+            const slug = FR_INSEE_TO_SLUG[insee] ?? frBoundarySlug(String(firstProp(f.properties, nameKeys) ?? ""))
+            const vk = [...choroplethLookupKeys(slug)].find((k) => values.has(k))
+            f.properties["value"] = vk !== undefined ? (values.get(vk) ?? 0) : 0
+            f.properties["area_name"] = firstProp(f.properties, nameKeys) ?? slug
+            f.properties["area_code"] = slug
+            matched.push(f)
           } else if (
             geography !== "lad" &&
             geography !== "ireland_county" &&
             geography !== "netherlands_provincie" &&
+            geography !== "france_region" &&
             regionAllowsOutline(chartData)
           ) {
             f.properties["value"] = 0
@@ -169,6 +191,7 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
         if (
           geography === "ireland_county" ||
           geography === "netherlands_provincie" ||
+          geography === "france_region" ||
           geography === "region" ||
           geography === "lad"
         ) {
@@ -390,9 +413,64 @@ function nlBoundarySlug(value: string): string {
   return NL_SLUG_ALIASES[folded] ?? NL_SLUG_ALIASES[normalizeCountyKey(value)] ?? normalizeCountyKey(value)
 }
 
+const FR_INSEE_TO_SLUG: Record<string, string> = {
+  "11": "ile-de-france",
+  "24": "centre-val-de-loire",
+  "27": "bourgogne-franche-comte",
+  "28": "normandie",
+  "32": "hauts-de-france",
+  "44": "grand-est",
+  "52": "pays-de-la-loire",
+  "53": "bretagne",
+  "75": "nouvelle-aquitaine",
+  "76": "occitanie",
+  "84": "auvergne-rhone-alpes",
+  "93": "provence-alpes-cote-dazur",
+  "94": "corse",
+}
+
+function compactGeoKey(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[^a-z0-9]/g, "")
+}
+
+function frBoundarySlug(value: string): string {
+  const folded = value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/['’]/g, "")
+    .replace(/\s+/g, "-")
+  const compact = compactGeoKey(value)
+  return (
+    FR_INSEE_TO_SLUG[folded] ??
+    FR_INSEE_TO_SLUG[compact] ??
+    (compact === "centrevaldeloire" ? "centre-val-de-loire" : folded)
+  )
+}
+
 function choroplethLookupKeys(areaCode: string, areaName?: string): string[] {
-  const keys = [areaCode, normalizeCountyKey(areaCode), nlBoundarySlug(areaCode)]
-  if (areaName) keys.push(areaName, normalizeCountyKey(areaName), nlBoundarySlug(areaName))
+  const keys = [
+    areaCode,
+    normalizeCountyKey(areaCode),
+    nlBoundarySlug(areaCode),
+    frBoundarySlug(areaCode),
+    compactGeoKey(areaCode),
+  ]
+  if (areaName) {
+    keys.push(
+      areaName,
+      normalizeCountyKey(areaName),
+      nlBoundarySlug(areaName),
+      frBoundarySlug(areaName),
+      compactGeoKey(areaName),
+    )
+  }
   return [...new Set(keys.filter(Boolean))]
 }
 
@@ -433,6 +511,28 @@ const NL_PROV_SLUGS = new Set([
 function looksLikeNetherlandsProvinces(data: AreaDatum[]): boolean {
   if (!data.length) return false
   const hits = data.filter((d) => NL_PROV_SLUGS.has(normalizeCountyKey(d.area_code)))
+  return hits.length >= Math.min(3, data.length)
+}
+
+const FR_REGION_SLUGS = new Set([
+  "ile-de-france",
+  "centre-val-de-loire",
+  "bourgogne-franche-comte",
+  "normandie",
+  "hauts-de-france",
+  "grand-est",
+  "pays-de-la-loire",
+  "bretagne",
+  "nouvelle-aquitaine",
+  "occitanie",
+  "auvergne-rhone-alpes",
+  "provence-alpes-cote-dazur",
+  "corse",
+])
+
+function looksLikeFranceRegions(data: AreaDatum[]): boolean {
+  if (!data.length) return false
+  const hits = data.filter((d) => FR_REGION_SLUGS.has(frBoundarySlug(d.area_code)))
   return hits.length >= Math.min(3, data.length)
 }
 
@@ -485,7 +585,7 @@ function svgFromFeatures(
       return bands[value] ?? "#d9d3c7"
     }
     const t = maxVal > 0 ? value / maxVal : 0
-    if (t < 0.25) return "#f7f1e8"
+    if (t < 0.25) return "#edd3a4"
     if (t < 0.5) return "#e8b86d"
     if (t < 0.75) return "#c45c26"
     if (t < 0.9) return "#8b3a1a"

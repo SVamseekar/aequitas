@@ -21,7 +21,13 @@ export default function TimePage() {
   const place = filterSentence(regionName, areaName)
   const packReady = COUNTRIES.find((c) => c.code === country)?.packReady ?? false
   const areaNoun =
-    country === "ireland" ? "Small Areas" : country === "netherlands" ? "buurten" : "LSOAs"
+    country === "ireland"
+      ? "Small Areas"
+      : country === "netherlands"
+        ? "buurten"
+        : country === "france"
+          ? "IRIS"
+          : "LSOAs"
   const [metric, setMetric] = useState<(typeof METRICS)[number]["id"]>("score")
   const series = useTimeSeries(country, region, urbanRural, metric, pack)
   const londonRural = isLondonRural(region, urbanRural)
@@ -73,6 +79,8 @@ export default function TimePage() {
           ? "CSO Small Areas 2022 and Pobal HP 2022 stay frozen. Only TFI network dates time-travel."
           : country === "netherlands"
             ? "CBS buurten / SES-WOA stay frozen. Only OVapi network dates time-travel."
+            : country === "france"
+              ? "IGN IRIS / F-EDI 2021 stay frozen. Only the NAP harvest date time-travels."
             : "Census 2021 and IMD 2025 stay frozen. Only BODS-derived metrics time-travel."}
       </p>
 

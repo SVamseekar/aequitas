@@ -12,7 +12,7 @@ export const COUNTRIES = [
   { code: "england", name: "England", packReady: true },
   { code: "ireland", name: "Ireland", packReady: true },
   { code: "netherlands", name: "Netherlands", packReady: true },
-  { code: "france", name: "France", packReady: false },
+  { code: "france", name: "France", packReady: true },
 ] as const
 
 export type CountryCode = (typeof COUNTRIES)[number]["code"]
@@ -50,9 +50,21 @@ export const NETHERLANDS_DIMENSIONS: DimensionDef[] = [
   { id: "scenarios", name: "Scenarios", route: "/scenarios", prefixes: ["ps"], headlineSection: "ps1_freq_restoration", headlineStatKey: "population_affected", description: "OV / flex × people / SES. € only if cited." },
 ]
 
+export const FRANCE_DIMENSIONS: DimensionDef[] = [
+  { id: "equity", name: "Equity & Deprivation", route: "/equity", prefixes: ["f"], headlineSection: "f2_disparity_ratio", headlineStatKey: "ratio", description: "Lorenz, F-EDI 2021 decile slope, rural penalty — metropolitan ranks only" },
+  { id: "access", name: "Access", route: "/access", prefixes: ["a"], headlineSection: "a3_walking_distance", headlineStatKey: "pct_covered", description: "400 m NAP coverage, deserts, service bands (15/30/45 when r5py ran)" },
+  { id: "service", name: "Service", route: "/service", prefixes: ["b"], headlineSection: "b1_frequency", headlineStatKey: "national_avg", description: "NAP weekday quality, evening after 19:00, Sunday deserts" },
+  { id: "network", name: "Network", route: "/network", prefixes: ["c"], headlineSection: "c3_operator_hhi", headlineStatKey: "hhi", description: "NAP operators, one HHI (0–10,000), archetypes" },
+  { id: "correlations", name: "Correlations", route: "/correlations", prefixes: ["d", "g"], headlineSection: "d1_coverage_deprivation", headlineStatKey: "r", description: "One F-EDI matrix plus one scatter" },
+  { id: "economy", name: "Economy", route: "/economy", prefixes: ["j"], headlineSection: "j3_carbon", headlineStatKey: "co2_saving_tonnes", description: "People-gap; no invented ADEME euro" },
+  { id: "policy", name: "AOM / SPC", route: "/policy", prefixes: ["bsa"], headlineSection: "bsa1_franchising_readiness", headlineStatKey: "national_avg", description: "AOM organising authorities and SPC programmes" },
+  { id: "scenarios", name: "Scenarios", route: "/scenarios", prefixes: ["ps"], headlineSection: "ps1_freq_restoration", headlineStatKey: "population_affected", description: "SPC / rural holes × people / F-EDI. € only if cited." },
+]
+
 export function dimensionsForCountry(country: string): DimensionDef[] {
   if (country === "ireland") return IRELAND_DIMENSIONS
   if (country === "netherlands") return NETHERLANDS_DIMENSIONS
+  if (country === "france") return FRANCE_DIMENSIONS
   return DIMENSIONS
 }
 
@@ -153,13 +165,23 @@ export const NETHERLANDS_STAT_LABELS: Record<string, string> = {
   n_lsoas: "Buurten",
 }
 
+export const FRANCE_STAT_LABELS: Record<string, string> = {
+  ...STAT_LABELS,
+  n_zero_access: "IRIS with no stop",
+  pct_zero_access: "Share of IRIS with no stop",
+  n_sas: "IRIS",
+  n_lsoas: "IRIS",
+}
+
 export function statLabel(key: string, country?: string): string {
   const table =
     country === "ireland"
       ? IRELAND_STAT_LABELS
       : country === "netherlands"
         ? NETHERLANDS_STAT_LABELS
-        : STAT_LABELS
+        : country === "france"
+          ? FRANCE_STAT_LABELS
+          : STAT_LABELS
   if (table[key]) return table[key]
   return key
     .replace(/_/g, " ")
@@ -233,10 +255,28 @@ export const NETHERLANDS_REGIONS = [
   { code: "zuid-holland", name: "Zuid-Holland" },
 ] as const
 
+export const FRANCE_REGIONS = [
+  { code: "all", name: "All France" },
+  { code: "auvergne-rhone-alpes", name: "Auvergne-Rhône-Alpes" },
+  { code: "bourgogne-franche-comte", name: "Bourgogne-Franche-Comté" },
+  { code: "bretagne", name: "Bretagne" },
+  { code: "centre-val-de-loire", name: "Centre-Val de Loire" },
+  { code: "corse", name: "Corse" },
+  { code: "grand-est", name: "Grand Est" },
+  { code: "hauts-de-france", name: "Hauts-de-France" },
+  { code: "ile-de-france", name: "Île-de-France" },
+  { code: "normandie", name: "Normandie" },
+  { code: "nouvelle-aquitaine", name: "Nouvelle-Aquitaine" },
+  { code: "occitanie", name: "Occitanie" },
+  { code: "pays-de-la-loire", name: "Pays de la Loire" },
+  { code: "provence-alpes-cote-dazur", name: "Provence-Alpes-Côte d'Azur" },
+] as const
+
 export function regionsForCountry(country: string): readonly { code: string; name: string }[] {
   if (country === "ireland") return IRELAND_REGIONS
   if (country === "england") return REGIONS
   if (country === "netherlands") return NETHERLANDS_REGIONS
+  if (country === "france") return FRANCE_REGIONS
   const label = country.charAt(0).toUpperCase() + country.slice(1)
   return [{ code: "all", name: `All ${label}` }]
 }
@@ -366,10 +406,42 @@ export const SECTION_TITLES: Record<string, string> = {
   ps5_scenario_comparison: "Scenario comparison",
 } as const
 
+export const FRANCE_SECTION_TITLES: Record<string, string> = {
+  a1_route_density: "Route density by région",
+  a2_stop_density: "Stop density by région",
+  a3_walking_distance: "Population within 400 m of a NAP stop",
+  a5_service_deserts: "Service deserts (people beyond 400 m)",
+  a6_urban_rural_gap: "Urban vs rural coverage (INSEE density)",
+  b1_frequency: "Average weekday service quality by région",
+  b3_weekend_penalty: "Sunday NAP penalty",
+  b5_frequency_deprivation: "Frequency vs F-EDI 2021",
+  c3_operator_hhi: "NAP operator HHI (0–10,000)",
+  d1_coverage_deprivation: "Coverage vs F-EDI 2021",
+  f1_gini: "Gini of NAP weekday trips per capita",
+  f2_disparity_ratio: "Disparity by F-EDI decile",
+  f6_equitable_regions: "Most equitable régions",
+  j1_economic_value: "People beyond 400 m by région",
+  j2_bcr: "People-gap (no ADEME euro BCR)",
+  j4_investment_priority: "Région × F-EDI coverage gap",
+  d2_coverage_unemployment: "Coverage vs chômage (omit — no IRIS series)",
+  d3_coverage_car: "Coverage vs no-car (omit — no IRIS series)",
+  d5_coverage_income: "Coverage vs income (omit — Filosofi IRIS not joined)",
+  d6_transport_poverty: "Transport poverty clusters (F-EDI × service)",
+  f3_ethnic_access: "Access by immigrés share (origin, not ethnicity)",
+  bsa1_franchising_readiness: "AOM / SPC coverage by région",
+  bsa3_tier_distribution: "AOM / SPC / rural-hole tiers",
+  ps1_freq_restoration: "Restore NAP weekday frequency",
+  ps2_evening_extension: "Evening NAP",
+  ps3_drt_rural: "Rural holes / SPC",
+  ps4_franchise: "Combined SPC package",
+  ps5_scenario_comparison: "French intervention comparison",
+}
+
 export function sectionTitle(sectionId: string, country: string): string | undefined {
   if (country === "ireland" && IRELAND_SECTION_TITLES[sectionId]) return IRELAND_SECTION_TITLES[sectionId]
   if (country === "netherlands" && NETHERLANDS_SECTION_TITLES[sectionId]) {
     return NETHERLANDS_SECTION_TITLES[sectionId]
   }
+  if (country === "france" && FRANCE_SECTION_TITLES[sectionId]) return FRANCE_SECTION_TITLES[sectionId]
   return SECTION_TITLES[sectionId]
 }

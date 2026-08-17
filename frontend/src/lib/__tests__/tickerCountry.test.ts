@@ -18,6 +18,14 @@ describe("tickerForUnknownPack", () => {
     expect(blob).not.toMatch(/Small Area/)
   })
 
+  it("France unknown pack never names England or LSOA", () => {
+    const blob = JSON.stringify(tickerForUnknownPack("france"))
+    expect(blob).toMatch(/France/)
+    expect(blob).toMatch(/unknown network date/)
+    expect(blob).not.toMatch(/England is live/)
+    expect(blob).not.toMatch(/LSOA/)
+  })
+
   it("Netherlands unknown pack never names England", () => {
     const blob = JSON.stringify(tickerForUnknownPack("netherlands"))
     expect(blob).toMatch(/Netherlands/)

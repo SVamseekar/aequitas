@@ -46,7 +46,7 @@ export function selectUniqueSections(
   sections: SectionItem[],
   country = "england",
 ): SectionItem[] {
-  const ireland = country === "ireland" || country === "netherlands"
+  const ireland = country === "ireland" || country === "netherlands" || country === "france"
   if (dimensionId === "correlations") {
     if (ireland) {
       const matrix = sections.filter((s) => s.section_id === "d7_deprivation_urban_rural")
@@ -68,12 +68,27 @@ export function selectUniqueSections(
     return sections.filter((s) => (ireland ? IRELAND_EQUITY_KEEP : EQUITY_KEEP).has(s.section_id))
   }
   if (dimensionId === "accessibility") {
-    return sections.filter((s) => (ireland ? IRELAND_ACCESS_KEEP : ACCESS_KEEP).has(s.section_id))
+    const filtered = sections.filter((s) => (ireland ? IRELAND_ACCESS_KEEP : ACCESS_KEEP).has(s.section_id))
+    if (country === "france") {
+      const order = [
+        "a3_walking_distance",
+        "a5_service_deserts",
+        "a4_coverage_equity",
+        "a6_urban_rural_gap",
+        "a1_route_density",
+        "a2_stop_density",
+        "a7_investment_gap",
+        "a8_coverage_prediction",
+      ]
+      const byId = new Map(filtered.map((s) => [s.section_id, s]))
+      return order.map((id) => byId.get(id)).filter((s): s is SectionItem => Boolean(s))
+    }
+    return filtered
   }
   if (dimensionId === "route_network") {
     const keep = ireland ? IRELAND_NETWORK_KEEP : NETWORK_KEEP
     const filtered = sections.filter((s) => keep.has(s.section_id))
-    if (country === "netherlands") {
+    if (country === "netherlands" || country === "france") {
       const order = [
         "c3_operator_hhi",
         "c1_route_length",
@@ -88,7 +103,18 @@ export function selectUniqueSections(
     }
     return filtered
   }
-  if (country === "netherlands" && dimensionId === "scenarios") {
+  if (country === "france" && dimensionId === "service_quality") {
+    const order = [
+      "b3_weekend_penalty",
+      "b1_frequency",
+      "b2_operating_hours",
+      "b4_route_frequency",
+      "b5_frequency_deprivation",
+    ]
+    const byId = new Map(sections.map((s) => [s.section_id, s]))
+    return order.map((id) => byId.get(id)).filter((s): s is SectionItem => Boolean(s))
+  }
+  if ((country === "netherlands" || country === "france") && dimensionId === "scenarios") {
     const order = [
       "ps5_scenario_comparison",
       "ps1_freq_restoration",
