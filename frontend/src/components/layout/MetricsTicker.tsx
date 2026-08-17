@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { tickerFallbackMetrics } from "@/lib/metricsCanon"
 import { tickerForUnknownPack, type TickerChip } from "@/lib/tickerCountry"
-import { useFilters } from "@/api/hooks"
+import { useFilters, useOps } from "@/api/hooks"
 
 const ENGLAND_FALLBACK: TickerChip[] = [...tickerFallbackMetrics()]
 
@@ -28,8 +28,9 @@ function useTickerMetrics() {
 export function MetricsTicker() {
   const { country, pack } = useFilters()
   const { data: metrics, isError } = useTickerMetrics()
+  const ops = useOps(country, pack)
   const unknownPack = Boolean(pack) && isError
-  const list: TickerChip[] =
+  const base: TickerChip[] =
     !LIVE_TICKER.has(country)
       ? tickerForUnknownPack(country)
       : unknownPack
@@ -45,6 +46,30 @@ export function MetricsTicker() {
                 sub: "loading filter",
               }]
             : ENGLAND_FALLBACK
+  const opsChip: TickerChip | null =
+    unknownPack || !ops.data
+      ? null
+      : ops.data.empty
+        ? {
+            key: "ops",
+            label: "Ops",
+            value: "empty",
+            sub:
+              country === "ireland"
+                ? "NTA RT not in rollup"
+                : country === "netherlands"
+                  ? "OVapi RT empty"
+                  : country === "france"
+                    ? "NAP RT incomplete"
+                    : "BODS RT empty",
+          }
+        : {
+            key: "ops",
+            label: "Ops",
+            value: ops.data.pct_late == null ? `${ops.data.n_updates}` : `${ops.data.pct_late.toFixed(0)}% late`,
+            sub: "rollup snapshot",
+          }
+  const list = opsChip ? [...base, opsChip] : base
   const doubled = [...list, ...list]
 
   return (

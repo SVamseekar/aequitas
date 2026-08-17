@@ -27,6 +27,11 @@ export const FAQ_ITEMS = [
       "Time moves timetable-derived metrics (BODS, TFI, OVapi). Census geographies and IMD / HP / SES-WOA stay frozen. One pack date is one point, not a fabricated monthly series.",
   },
   {
+    question: "Do you show live punctuality?",
+    answer:
+      "Only where a collector wrote a rollup from an official free GTFS-RT or SIRI feed. England uses BODS when the feed answers; Ireland names NTA’s three operators and stays empty without a key; the Netherlands uses OVapi RT if it exists; France’s NAP union is incomplete. No invented national on-time figure.",
+  },
+  {
     question: "Can I run it locally?",
     answer:
       "Yes. Clone the repo, copy .env.example, and run ./scripts/dev.sh. Warehouses are local DuckDB files and are not in git. Analytics work with DEV_AUTH_BYPASS in development.",

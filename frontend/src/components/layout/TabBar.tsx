@@ -41,6 +41,18 @@ export function TabBar() {
           </NavLink>
         ))}
         <NavLink
+          to={link(appPath(country, "ops"))}
+          className={({ isActive }) =>
+            `px-3 py-2.5 text-sm whitespace-nowrap border-b-2 transition-colors ${
+              isActive
+                ? "border-primary text-primary font-semibold"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+            }`
+          }
+        >
+          Ops
+        </NavLink>
+        <NavLink
           to={link(appPath(country, "time"))}
           className={({ isActive }) =>
             `px-3 py-2.5 text-sm whitespace-nowrap border-b-2 transition-colors ${

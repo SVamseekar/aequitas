@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router"
-import { useFilters, useMapLayer, useOverview } from "@/api/hooks"
+import { useFilters, useMapLayer, useOps, useOverview } from "@/api/hooks"
 import { AREA_TYPES, COUNTRIES, regionsForCountry } from "@/lib/constants"
 import { appPath, withSearch } from "@/lib/appRoutes"
 import { filterSentence, formatInCountryScore } from "@/lib/scoreFormat"
@@ -156,6 +156,7 @@ export function HomePage() {
             Same score across monthly snapshots — Census / deprivation frozen
           </p>
         </Link>
+        <OpsDoor />
         <Link
           to={withSearch(appPath(country, "studio"), params.toString())}
           className="app-glass-strong group block text-left p-5 rounded-2xl hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5"
@@ -181,5 +182,39 @@ export function HomePage() {
             : "Network / GTFS: BODS bulk (pack vintage, not the warehouse clock). Census 2021 LSOAs. IMD 2025 ranks. These are three dates — not one “data as of warehouse build.”"}
       </p>
     </div>
+  )
+}
+
+function OpsDoor() {
+  const { country } = useFilters()
+  const [params] = useSearchParams()
+  const ops = useOps(country, params.get("pack") ?? "")
+  const headline = ops.data?.empty
+    ? "Empty"
+    : ops.data?.pct_late != null
+      ? `${ops.data.pct_late.toFixed(0)}% late`
+      : ops.isError
+        ? "No rollup"
+        : "Snapshot"
+  const blurb =
+    country === "ireland"
+      ? "NTA GTFS-RT for three operators — honest empty without a key"
+      : country === "netherlands"
+        ? "OVapi RT if a rollup exists — not a second score"
+        : country === "france"
+          ? "NAP gtfs-rt union, incomplete by design"
+          : "BODS GTFS-RT / SIRI where the timetable is not what ran"
+  return (
+    <Link
+      to={withSearch(appPath(country, "ops"), params.toString())}
+      className="app-glass-strong group block text-left p-5 rounded-2xl hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5"
+      data-testid="ops-door"
+    >
+      <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+        Ops
+      </h3>
+      <p className="text-2xl font-bold tabular-nums mt-2">{headline}</p>
+      <p className="text-sm text-muted-foreground mt-1 leading-snug">{blurb}</p>
+    </Link>
   )
 }

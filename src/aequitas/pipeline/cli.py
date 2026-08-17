@@ -11,6 +11,7 @@ Usage::
     aequitas run         — Run all stages end-to-end
     aequitas reach       — r5py 15/30/45 destination counts (after process)
     aequitas studio      — apply a StudioPatch (walk-to-stop; r5py if present)
+    aequitas ops         — collect GTFS-RT / SIRI snapshot → data/ops/{country}/latest.json
     aequitas refresh     — Unattended NaPTAN+BODS download + rebuild
     aequitas schedule-refresh — Install monthly macOS launchd job
 """
@@ -159,6 +160,20 @@ def france(skip_download: bool) -> None:
     dest = run_france_pack(skip_download=skip_download)
     write_france_bands()
     logger.info("France pack written: {}", dest)
+
+
+@main.command()
+@click.option("--country", default="england", help="england | ireland | netherlands | france")
+def ops(country: str) -> None:
+    """Collect a GTFS-RT / SIRI snapshot and write data/ops/{country}/latest.json.
+
+    Does not write into static DuckDB warehouses. Without BODS_API_KEY / NTA_API_KEY
+    those portals stay honest-empty (except public URLs that already 200).
+    """
+    from aequitas.ops.collect import run_ops
+
+    dest = run_ops(country)
+    logger.info("Ops rollup: {}", dest)
 
 
 @main.command("run")

@@ -24,6 +24,7 @@ const ComparePage = lazy(() => import("./pages/ComparePage"))
 const StudioPage = lazy(() => import("./pages/StudioPage"))
 const ReachPage = lazy(() => import("./pages/ReachPage"))
 const TimePage = lazy(() => import("./pages/TimePage"))
+const OpsPage = lazy(() => import("./pages/OpsPage"))
 const InviteAcceptPage = lazy(() => import("./pages/InviteAcceptPage"))
 
 // Saved sub-pages rendered inside a simple wrapper
@@ -106,6 +107,7 @@ export default function App() {
                 <Route path="/app/:country/studio" element={<StudioPage />} />
                 <Route path="/app/:country/reach" element={<ReachPage />} />
                 <Route path="/app/:country/time" element={<TimePage />} />
+                <Route path="/app/:country/ops" element={<OpsPage />} />
                 <Route path="/app/:country/:dimensionSlug" element={<WarehouseSlugRedirect />} />
               </Route>
 

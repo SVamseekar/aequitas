@@ -21,6 +21,7 @@ frontend/scripts/.auth-state.json
 # Data — never commit raw or processed data
 data/raw/
 data/processed/
+data/ops/
 data/audit/*.json
 data/audit/*.png
 data/audit/figures/

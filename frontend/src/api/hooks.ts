@@ -12,6 +12,7 @@ import type {
   ReachBandsResponse,
   TimeSeriesResponse,
   PacksResponse,
+  OpsResponse,
 } from "./types"
 import { COUNTRIES } from "@/lib/constants"
 import { appPath } from "@/lib/appRoutes"
@@ -215,6 +216,23 @@ export function useTimeSeries(
         ...packParams(pack),
       }),
     staleTime: Infinity,
+    retry: (count, err) => {
+      const status = (err as { status?: number })?.status
+      if (status === 404) return false
+      return count < 1
+    },
+  })
+}
+
+export function useOps(country: string, pack = "") {
+  return useQuery({
+    queryKey: ["ops", country, pack],
+    queryFn: () =>
+      fetchJson<OpsResponse>("/ops", {
+        country,
+        ...packParams(pack),
+      }),
+    staleTime: 60_000,
     retry: (count, err) => {
       const status = (err as { status?: number })?.status
       if (status === 404) return false
