@@ -36,11 +36,15 @@ def get_ticker_metrics(
 ) -> list[dict]:
     """Return headline stats for the metrics ticker for the active filters."""
     if db is None:
-        if country in {"ireland", "netherlands"}:
+        if country in {"ireland", "netherlands", "france"}:
             return [
                 {
                     "key": "pack",
-                    "label": "Ireland pack" if country == "ireland" else "Netherlands pack",
+                    "label": {
+                        "ireland": "Ireland pack",
+                        "netherlands": "Netherlands pack",
+                        "france": "France pack",
+                    }[country],
                     "value": "—",
                     "sub": "warehouse not built",
                 }
@@ -65,7 +69,7 @@ def get_ticker_metrics(
         rows = db.execute(sql, params).fetchall()
     except duckdb.CatalogException:
         logger.warning("section_results table not found — returning fallback ticker")
-        if country in {"ireland", "netherlands"}:
+        if country in {"ireland", "netherlands", "france"}:
             return [
                 {
                     "key": "pack",
@@ -78,11 +82,14 @@ def get_ticker_metrics(
 
     if not rows:
         logger.info("No ticker rows in warehouse — returning fallback")
-        if country in {"ireland", "netherlands"}:
+        if country in {"ireland", "netherlands", "france"}:
             return [
                 {
                     "key": "pack",
-                    "label": "Netherlands" if country == "netherlands" else "Ireland",
+                    "label": {
+                        "netherlands": "Netherlands",
+                        "france": "France",
+                    }.get(country, "Ireland"),
                     "value": "—",
                     "sub": "no ticker rows for this filter",
                 }
@@ -114,6 +121,8 @@ def get_ticker_metrics(
         if country == "ireland"
         else "buurten"
         if country == "netherlands"
+        else "IRIS"
+        if country == "france"
         else "LSOAs"
     )
     metrics = _build_live_ticker(
@@ -126,7 +135,7 @@ def get_ticker_metrics(
         from aequitas.api.services.score import score_for_filter
 
         scored = score_for_filter(
-            db, region, urban_rural, mode=mode if country == "netherlands" else None
+            db, region, urban_rural, mode=mode if country in {"netherlands", "france"} else None
         )
         if scored.score is None:
             score_chip = {
@@ -146,9 +155,36 @@ def get_ticker_metrics(
                 ),
                 "sub": scored.note or "0–100, this filter",
             }
-        return [score_chip, *metrics]
+        dated = _network_date_chip(country)
+        return [score_chip, *([dated] if dated else []), *metrics]
     except Exception:
-        return metrics
+        dated = _network_date_chip(country)
+        return [*([dated] if dated else []), *metrics]
+
+
+def _network_date_chip(country: str) -> dict | None:
+    """Live pack shows the harvest / as_of date. Unknown pack= never reaches here."""
+    try:
+        from aequitas.warehouse.packs import current_pack
+
+        rec = current_pack(country) or {}
+        as_of = rec.get("as_of") or rec.get("pack_id")
+        if not as_of:
+            return None
+        label = {
+            "england": "BODS pack",
+            "ireland": "TFI pack",
+            "netherlands": "OVapi pack",
+            "france": "NAP harvest",
+        }.get(country, "Network")
+        return {
+            "key": "network_date",
+            "label": label,
+            "value": str(as_of),
+            "sub": "network date",
+        }
+    except Exception:
+        return None
 
 
 def _filter_sqi(
@@ -227,7 +263,9 @@ def _build_live_ticker(
     if "palma" in provenance_equity:
         p = provenance_equity["palma"]
         palma_sub = (
-            "bottom 40% have no weekday trips"
+            "bottom 40% have no weekday NAP trips"
+            if p == 0.0 and entity == "IRIS"
+            else "bottom 40% have no weekday trips"
             if p == 0.0 and entity == "Small Areas"
             else "top 10% vs bottom 40%"
         )

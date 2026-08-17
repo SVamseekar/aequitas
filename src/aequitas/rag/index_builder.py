@@ -82,6 +82,11 @@ def ireland_index_paths(project_root: Path) -> tuple[Path, Path]:
     return folder / "faiss_index.bin", folder / "faiss_metadata.json"
 
 
+def france_index_paths(project_root: Path) -> tuple[Path, Path]:
+    folder = project_root / "data" / "france"
+    return folder / "faiss_index.bin", folder / "faiss_metadata.json"
+
+
 def build_faiss_index(
     cfg: PipelineConfig,
     *,
@@ -134,6 +139,8 @@ def build_faiss_index(
     if index_path is None or metadata_path is None:
         if country == "ireland":
             index_path, metadata_path = ireland_index_paths(cfg.project_root)
+        elif country == "france":
+            index_path, metadata_path = france_index_paths(cfg.project_root)
         else:
             index_path = cfg.project_root / cfg.faiss_index_path
             metadata_path = cfg.project_root / cfg.faiss_metadata_path

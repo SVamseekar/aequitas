@@ -32,19 +32,6 @@ def get_time_series(
                 status_code=404,
                 detail=f"Unknown pack {requested!r} for {key}. Not falling back to the current point.",
             )
-    if key == "france":
-        return {
-            "country": key,
-            "region": region,
-            "urban_rural": urban_rural,
-            "metric": metric,
-            "area_noun": "areas",
-            "points": [],
-            "one_date": True,
-            "empty": True,
-            "empty_reason": f"The {key.title()} pack is not built yet.",
-            "note": "Network dates; Census / deprivation frozen. NL/FR not started.",
-        }
     if metric not in _METRICS:
         raise HTTPException(status_code=422, detail=f"metric must be one of {sorted(_METRICS)}")
 
@@ -97,7 +84,13 @@ def get_time_series(
         )
 
     area_noun = (
-        "Small Areas" if key == "ireland" else "buurten" if key == "netherlands" else "LSOAs"
+        "Small Areas"
+        if key == "ireland"
+        else "buurten"
+        if key == "netherlands"
+        else "IRIS"
+        if key == "france"
+        else "LSOAs"
     )
     frozen = (
         "Network dates; Census 2021 / IMD 2025 frozen."
@@ -106,6 +99,8 @@ def get_time_series(
         if key == "ireland"
         else "Network dates; CBS buurten / SES-WOA frozen."
         if key == "netherlands"
+        else "Network dates; IGN IRIS / F-EDI 2021 frozen. Only NAP harvest dates time-travel."
+        if key == "france"
         else "Network dates; pack not built."
     )
     one_date = len(points) <= 1

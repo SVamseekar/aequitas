@@ -5,7 +5,7 @@ visual pass). England Waves 1–4 remain live. Ireland **TFI × Pobal HP 2022 ×
 CSO SA 2022** is on disk at CSO scale (**18,919** Small Areas). Ireland FAISS
 is country-keyed (`data/ireland/faiss_index.bin`, 4,457 chunks). Wave 7
 Netherlands warehouse is live (not stamped Done — PNG pass outstanding).
-France is not built. **15/30/45 still unavailable** without r5py. One network
+France warehouse + briefing + `FAISS[france]` are live; 15/30/45 stay honest-empty. **15/30/45 still unavailable** without r5py. One network
 date per country — do not invent a second.
 
 **Git:** no commits **mid-wave**. When we open git, PRs are **split logically**
@@ -36,7 +36,7 @@ Not a SaaS clone of Remix/TRACC. Not a 55-bar factory. Not a lock on Gini 0.5741
 | 6 | Monthly snapshots / refresh | **Done** (one real date each). `/time` one point + “only one network date.” Unknown pack 404s time, score, ticker. Methodology names frozen Census/HP/IMD vs monthly GTFS. |
 | 7 | Netherlands + bus \| all-PT | **Done** (warehouse + briefing PNG 2026-08-14). Chat still honest empty (`FAISS[netherlands]` not built). Sunday 49.6%. National **69.6** bus / **71.1** all-PT. Home SVG provincies paint. |
 | 8 | Ops GTFS-RT/SIRI | Later |
-| 9 | France NAP harvest + F-EDI or proxy | Later |
+| 9 | France NAP harvest + F-EDI or proxy | **Done** (warehouse + briefing + chat). 15/30/45 still honest-empty. IRIS 48,522; F-EDI join 99.88%; NAP 441/111. National **47.7**. Catalogue **35/12/8**. `FAISS[france]` 4,664 chunks. |
 
 ## 3. What works where
 
@@ -46,7 +46,7 @@ Not a SaaS clone of Remix/TRACC. Not a 55-bar factory. Not a lock on Gini 0.5741
 | `/app/england` | **Map home** + in-country score + 8 doors (legacy `/dashboard/*` redirects here) |
 | `/app/ireland` | Map + score + 10 doors; 18,919 SA pack; county SVG; Ireland FAISS chat. Mistakes already paid for stay in `docs/guidelines/country-sections.md` § Ireland mistakes — **do not repeat on NL/FR.** |
 | `/app/netherlands` | Warehouse + briefing live; map + 10 doors; `?mode=bus` (default) or `?mode=all`. Chat: index not built. |
-| `/app/france` | Honest empty: pack not built yet |
+| `/app/france` | Warehouse + briefing live; SVG régions; F-EDI nouns. `FAISS[france]` chat. 15/30/45 empty. |
 | Vercel marketing | Static pages; analytics need local API |
 | Pipeline Stage 3 | **Writes** equity Parquet (and mirrors policy/SHAP if present) |
 | Validation | Sanity (LSOA, pop, join). Historical Gini is WARN only |
@@ -204,7 +204,7 @@ Ireland warehouse: `uv run aequitas ireland` overwrites **only** `data/aequitas_
 | SAPS | `https://www.cso.ie/en/media/csoie/census/census2022/SAPS_2022_Small_Area_UR_171024.csv` — GUID ↔ `SA_GUID_2022`, pop = **T1_1AGETT** |
 | Chat | **Ireland FAISS** `data/ireland/faiss_index.bin` (4,457 chunks from Ireland `section_results` only). Drawer on `/app/ireland` sends `context.country=ireland`. Retrieval returns TFI / Pobal HP / Small Area chunks. Invalid/missing Gemini → retrieval-only text, not England BSA. Irish Quick Actions + suggestions (no BSA/IMD). |
 
-Wave 7 warehouse + briefing PNG pass are on disk. France is not built. `FAISS[netherlands]` is not built.
+Wave 7 warehouse + briefing PNG pass are on disk. France warehouse + briefing are on disk (`data/aequitas_france.duckdb`, 48,522 IRIS, score 47.7). `FAISS[netherlands]` is not built.
 
 ## 10. Wave 6 — dated packs + `/time`
 
@@ -348,7 +348,7 @@ Full narrative: `docs/guidelines/country-sections.md` § Ireland mistakes.
 - **7 omits** remain (no free SA income / HP domain / crime / ethnicity).
 - Economy has **no published CAF unit cost** — people-gap only.
 - Gemini in this environment may be invalid; generation then retrieval-only.
-- Waves **8–9** not started. France must re-check INSEE; do not copy Irish or Dutch omits.
+- Wave **8** (GTFS-RT/SIRI) not started. France warehouse + briefing exist; chat is a local FAISS index (not in git).
 
 ## 13. Wave 7 — Netherlands warehouse (2026-08-14)
 
@@ -384,7 +384,7 @@ SVG-first choropleth (EN ITL1 + IE counties + NL provincies) so MapLibre abort i
 | England London rural | E12000007 | rural | — | en-london-rural | empty sentence; score — | — | Pass |
 | Ireland home | — | — | — | ie-home | 26-county SVG **filled**; 55.5 | 55.5 | Pass |
 | Ireland Dublin / Cork | dublin / cork | — | — | notes + scores | Dublin **88.2** ≠ Cork **51.6** | — | Pass scores |
-| France home | — | — | — | fr-home | pack not built | — | Pass |
+| France home | — | — | — | fr-home | warehouse + briefing live (47.7); leftovers closed in leftover-close/ | 47.7 | Pass |
 | Unknown pack | pack=2099-01-01 | — | bus | nl-unknown-pack | ticker empty + 404 overview/map/ticker | 404 | Pass |
 
 Eight-filter door matrix (Home Equity Access Service Network Correlations Economy Policy Scenarios Reach Studio Compare Time) × (nat-bus, nat-all, nh-bus, gr-bus, ze-bus, zh-bus, nat-rural, nh-urban) is on disk in `qa-visual/wave7-finish/` (104 door PNGs + provincie homes + time chips). Scores on those homes move.

@@ -26,6 +26,10 @@ const NETHERLANDS: [[number, number], [number, number]] = [
   [3.2, 50.75],
   [7.22, 53.7],
 ]
+const FRANCE: [[number, number], [number, number]] = [
+  [-5.2, 41.3],
+  [9.7, 51.2],
+]
 
 function inEngland(lat: number, lon: number): boolean {
   return lat >= 49.8 && lat <= 55.9 && lon >= -6.5 && lon <= 2.0
@@ -38,6 +42,10 @@ function inRepublic(lat: number, lon: number): boolean {
 
 function inNetherlands(lat: number, lon: number): boolean {
   return lat >= 50.75 && lat <= 53.7 && lon >= 3.2 && lon <= 7.22
+}
+
+function inMetropolitanFrance(lat: number, lon: number): boolean {
+  return lat >= 41.3 && lat <= 51.2 && lon >= -5.2 && lon <= 9.7
 }
 
 function pointInRing(lon: number, lat: number, ring: number[][]): boolean {
@@ -120,8 +128,15 @@ export default function StudioEditorMap({ ops, region, country = "england", onAd
     const map = new maplibregl.Map({
       container: ref.current,
       style: STYLE,
-      center: country === "ireland" ? [-8.0, 53.3] : country === "netherlands" ? [5.3, 52.2] : [-1.5, 52.8],
-      zoom: country === "ireland" ? 6 : country === "netherlands" ? 6.2 : 5.4,
+      center:
+        country === "ireland"
+          ? [-8.0, 53.3]
+          : country === "netherlands"
+            ? [5.3, 52.2]
+            : country === "france"
+              ? [2.4, 46.6]
+              : [-1.5, 52.8],
+      zoom: country === "ireland" ? 6 : country === "netherlands" ? 6.2 : country === "france" ? 5.2 : 5.4,
       attributionControl: true,
       maxBounds:
         country === "ireland"
@@ -134,6 +149,11 @@ export default function StudioEditorMap({ ops, region, country = "england", onAd
                 [NETHERLANDS[0][0] - 0.4, NETHERLANDS[0][1] - 0.3],
                 [NETHERLANDS[1][0] + 0.4, NETHERLANDS[1][1] + 0.3],
               ]
+            : country === "france"
+              ? [
+                  [FRANCE[0][0] - 0.4, FRANCE[0][1] - 0.3],
+                  [FRANCE[1][0] + 0.4, FRANCE[1][1] + 0.3],
+                ]
           : [
               [ENGLAND[0][0] - 1, ENGLAND[0][1] - 1],
               [ENGLAND[1][0] + 1, ENGLAND[1][1] + 1],
@@ -154,6 +174,13 @@ export default function StudioEditorMap({ ops, region, country = "england", onAd
         if (!inNetherlands(lat, lon)) {
           warnRef.current?.(
             "That click is outside the Netherlands. Studio does not apply England or Ireland clicks.",
+          )
+          return
+        }
+      } else if (countryRef.current === "france") {
+        if (!inMetropolitanFrance(lat, lon)) {
+          warnRef.current?.(
+            "That click is outside metropolitan France. Studio does not apply England, Ireland, or DOM clicks.",
           )
           return
         }
@@ -192,6 +219,8 @@ export default function StudioEditorMap({ ops, region, country = "england", onAd
         ? "/boundaries/ireland_counties.geojson"
         : country === "netherlands"
           ? "/boundaries/netherlands_provincies.geojson"
+          : country === "france"
+            ? "/boundaries/france_regions.geojson"
           : "/boundaries/regions.geojson"
     fetch(boundaryFile)
       .then((r) => r.json())
@@ -217,6 +246,8 @@ export default function StudioEditorMap({ ops, region, country = "england", onAd
             ? IRELAND
             : country === "netherlands"
               ? NETHERLANDS
+              : country === "france"
+                ? FRANCE
               : ENGLAND
         if (bounds) map.fitBounds(bounds, { padding: 28, animate: false, maxZoom: 9 })
       })

@@ -24,8 +24,8 @@ export function HomePage() {
   if (!packReady) {
     return (
       <p className="text-sm text-muted-foreground py-8 max-w-xl">
-        The {countryName} pack is not built yet. England and Ireland are live; the Netherlands and
-        France use the same method (waves 7 and 9).
+        The {countryName} pack is not built yet. England, Ireland, the Netherlands, and France
+        use the same method.
       </p>
     )
   }
@@ -98,19 +98,20 @@ export function HomePage() {
             chartData={{
               type: "choropleth",
               geography:
-                mapQ.data.geography ??
-                (country === "ireland"
+                country === "ireland"
                   ? "ireland_county"
                   : country === "netherlands"
                     ? "netherlands_provincie"
-                    : "region"),
+                    : country === "france"
+                      ? "france_region"
+                      : (mapQ.data.geography ?? "region"),
               metric_label: mapQ.data.metric_label ?? "People with no nearby stop",
               data: mapQ.data.data,
               title: `Deserts — ${place}`,
             }}
             onAreaClick={(code) => {
               const next = new URLSearchParams(params)
-              if (code.startsWith("E12") || country === "ireland" || country === "netherlands") {
+              if (code.startsWith("E12") || country === "ireland" || country === "netherlands" || country === "france") {
                 next.set("region", code)
               }
               navigate(withSearch(appPath(country, "access"), next.toString()))
@@ -175,6 +176,8 @@ export function HomePage() {
           ? "Network / GTFS: TFI GTFS_All.zip. CSO Small Areas 2022. Pobal HP Deprivation Index 2022. Republic only — Northern Ireland is out of scope."
           : country === "netherlands"
             ? "Network / GTFS: OVapi gtfs-nl.zip. CBS buurten 2024. SES-WOA 2023 (voorlopig). Bus-only is the default; mode=all adds rail/tram/metro. SES join is 70.5% at buurt — remaining SES scores are null."
+            : country === "france"
+              ? "Network / GTFS: NAP harvest (441 merged / 111 skipped). IGN IRIS. F-EDI 2021. Metropolitan France only — DOM out. 58 unmatched IRIS have no région slug and are excluded from région bars."
             : "Network / GTFS: BODS bulk (pack vintage, not the warehouse clock). Census 2021 LSOAs. IMD 2025 ranks. These are three dates — not one “data as of warehouse build.”"}
       </p>
     </div>

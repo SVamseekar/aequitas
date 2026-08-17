@@ -40,14 +40,15 @@ def manifest_path(root: Path | None = None) -> Path:
 def load_manifest(root: Path | None = None) -> dict[str, Any]:
     path = manifest_path(root)
     if not path.exists():
-        return {"england": [], "ireland": [], "netherlands": [], "updated_at": None}
+        return {"england": [], "ireland": [], "netherlands": [], "france": [], "updated_at": None}
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
-        return {"england": [], "ireland": [], "netherlands": [], "updated_at": None}
+        return {"england": [], "ireland": [], "netherlands": [], "france": [], "updated_at": None}
     data.setdefault("england", [])
     data.setdefault("ireland", [])
     data.setdefault("netherlands", [])
+    data.setdefault("france", [])
     return data
 
 

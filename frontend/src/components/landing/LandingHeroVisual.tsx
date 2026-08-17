@@ -3,6 +3,7 @@ const PACKS = [
   { name: "England", score: "80.0", unit: "IMD × BODS", href: "LSOA" },
   { name: "Ireland", score: "55.5", unit: "HP × TFI", href: "Small Areas" },
   { name: "Netherlands", score: "69.6", unit: "SES × OVapi bus", href: "Buurten" },
+  { name: "France", score: "47.7", unit: "F-EDI 2021 × NAP", href: "IRIS" },
 ] as const
 
 export function LandingHeroVisual() {
@@ -36,7 +37,7 @@ export function LandingHeroVisual() {
       </div>
 
       <div className="border-t border-white/35 bg-white/20 px-3.5 py-2.5 text-[11px] text-[var(--l-slate)]">
-        France uses the same doors. Pack not built — no invented score.
+        France briefing live. Chat and 15/30/45 stay honest-empty.
       </div>
     </div>
   )

@@ -163,12 +163,16 @@ export function ChatDrawer({ open, onClose }: Props) {
                   chunks.
                 </p>
               ) : null}
-              <QuickActions country={country} onSelect={handleSelect} />
-              <SuggestedQuestions
-                dimension={currentDimension}
-                country={country}
-                onSelect={handleSelect}
-              />
+              {country === "netherlands" ? null : (
+                <>
+                  <QuickActions country={country} onSelect={handleSelect} />
+                  <SuggestedQuestions
+                    dimension={currentDimension}
+                    country={country}
+                    onSelect={handleSelect}
+                  />
+                </>
+              )}
             </div>
           ) : (
             <>

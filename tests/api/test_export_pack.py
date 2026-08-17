@@ -65,9 +65,11 @@ def test_ireland_pack_html_names_tfi_not_england():
     assert "Pobal HP" in body or "Small Areas" in body
 
 
-def test_nl_fr_pack_404(api_client):
+def test_nl_pack_404_france_pack_ok(api_client):
     assert api_client.get("/api/export/pack.csv?country=netherlands").status_code == 404
-    assert api_client.get("/api/export/pack.html?country=france").status_code == 404
+    fr = api_client.get("/api/export/pack.html?country=france")
+    assert fr.status_code == 200
+    assert "F-EDI" in fr.text or "IRIS" in fr.text or "NAP" in fr.text
 
 
 def test_bands_london_rural_empty(api_client):

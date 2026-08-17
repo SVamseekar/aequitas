@@ -5,7 +5,7 @@ import { useFilters } from "@/api/hooks"
 
 const ENGLAND_FALLBACK: TickerChip[] = [...tickerFallbackMetrics()]
 
-const LIVE_TICKER = new Set(["england", "ireland", "netherlands"])
+const LIVE_TICKER = new Set(["england", "ireland", "netherlands", "france"])
 
 function useTickerMetrics() {
   const { country, region, urbanRural, pack, mode } = useFilters()
@@ -15,9 +15,10 @@ function useTickerMetrics() {
       if (!LIVE_TICKER.has(country)) return tickerForUnknownPack(country)
       const qs = new URLSearchParams({ region, urban_rural: urbanRural, country })
       if (pack) qs.set("pack", pack)
-      if (country === "netherlands") qs.set("mode", mode)
+      if (country === "netherlands" || country === "france") qs.set("mode", mode)
       const res = await fetch(`/api/metrics/ticker?${qs}`)
-      if (!res.ok) return tickerForUnknownPack(country)
+      if (res.status === 404 && pack) return tickerForUnknownPack(country)
+      if (!res.ok) throw new Error(`ticker ${res.status}`)
       return res.json() as Promise<TickerChip[]>
     },
     staleTime: 30_000,
@@ -27,7 +28,7 @@ function useTickerMetrics() {
 export function MetricsTicker() {
   const { country, pack } = useFilters()
   const { data: metrics, isError } = useTickerMetrics()
-  const unknownPack = Boolean(pack) && (isError || !metrics)
+  const unknownPack = Boolean(pack) && isError
   const list: TickerChip[] =
     !LIVE_TICKER.has(country)
       ? tickerForUnknownPack(country)
@@ -35,8 +36,14 @@ export function MetricsTicker() {
         ? tickerForUnknownPack(country)
         : Array.isArray(metrics) && metrics.length > 0
           ? metrics
-          : country === "ireland" || country === "netherlands"
-            ? [{ key: "pack", label: country === "ireland" ? "Ireland" : "Netherlands", value: "…", sub: "loading filter" }]
+          : country === "ireland" || country === "netherlands" || country === "france"
+            ? [{
+                key: "pack",
+                label:
+                  country === "ireland" ? "Ireland" : country === "netherlands" ? "Netherlands" : "France",
+                value: "…",
+                sub: "loading filter",
+              }]
             : ENGLAND_FALLBACK
   const doubled = [...list, ...list]
 

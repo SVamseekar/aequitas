@@ -6,7 +6,7 @@ describe("country switcher", () => {
   it("marks Ireland pack ready and NL/FR empty", () => {
     expect(COUNTRIES.find((c) => c.code === "ireland")?.packReady).toBe(true)
     expect(COUNTRIES.find((c) => c.code === "netherlands")?.packReady).toBe(true)
-    expect(COUNTRIES.find((c) => c.code === "france")?.packReady).toBe(false)
+    expect(COUNTRIES.find((c) => c.code === "france")?.packReady).toBe(true)
   })
 
   it("Ireland region list is counties, All Ireland, no E12", () => {

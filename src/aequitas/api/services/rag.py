@@ -27,6 +27,10 @@ def retrieve_chunks(
         if idx < 0 or idx >= len(faiss_metadata):
             continue
         chunk = faiss_metadata[idx].copy()
+        want = str((context or {}).get("country") or "").lower()
+        have = str(chunk.get("country") or "").lower()
+        if want and have and have != want:
+            continue
         chunk["score"] = float(scores[0][i])
         results.append(chunk)
     return results
@@ -58,6 +62,14 @@ def build_prompt(
             "Answer ONLY from Dutch evidence (OVapi, CBS buurten, SES-WOA). "
             "Do not mention England or Ireland statutes, BODS, IMD, LSOA, TFI, or BSA. "
             "If the Netherlands index is missing, say the Netherlands index is not built."
+        )
+    elif str(country).lower() == "france":
+        system = (
+            "You are a metropolitan France NAP / AOM briefing analyst for Aequitas. "
+            "Answer ONLY from French evidence (NAP GTFS, IGN IRIS, F-EDI 2021). "
+            "Do not mention BSA 2025, IMD deciles, Pobal HP, BODS, LSOA, SES-WOA, or OV-wet. "
+            "If those statutes appear in the question, say they are not the France pack. "
+            "Omit chômage if the warehouse omitted it."
         )
     else:
         system = (

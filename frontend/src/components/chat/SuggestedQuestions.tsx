@@ -68,6 +68,13 @@ export const NETHERLANDS_SUGGESTIONS = [
   "What does OVapi operator HHI say about concentration (bus vs all-PT)?",
 ]
 
+export const FRANCE_SUGGESTIONS = [
+  "What is the Gini of NAP weekday trips per IRIS?",
+  "How does Île-de-France compare with Occitanie on Sunday deserts?",
+  "What does F-EDI 2021 say about weekday service in this filter?",
+  "How do AOM / SPC programmes sit against NAP coverage?",
+]
+
 export const IRELAND_SUGGESTIONS = [
   "Which Republic counties sit farthest from a TFI stop on the 400 m map?",
   "How does Pobal HP 2022 line up with TFI weekday service in this filter?",
@@ -81,7 +88,9 @@ export function SuggestedQuestions({ dimension, country, onSelect }: Props) {
       ? IRELAND_SUGGESTIONS
       : country === "netherlands"
         ? NETHERLANDS_SUGGESTIONS
-        : (SUGGESTIONS[dimension] ?? SUGGESTIONS.default)
+        : country === "france"
+          ? FRANCE_SUGGESTIONS
+          : (SUGGESTIONS[dimension] ?? SUGGESTIONS.default)
 
   return (
     <div className="space-y-2">

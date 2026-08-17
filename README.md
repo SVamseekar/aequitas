@@ -2,7 +2,7 @@
 
 **Public transport briefings against official deprivation — one method, ranks that never leave the country.**
 
-Aequitas joins published timetables to census geography and the national deprivation index, then pre-computes a briefing: a quoteable score, a map, and a fixed set of exhibits. England, Ireland, and the Netherlands are live. France uses the same method; its warehouse is not built.
+Aequitas joins published timetables to census geography and the national deprivation index, then pre-computes a briefing: a quoteable score, a map, and a fixed set of exhibits. England, Ireland, the Netherlands, and France are live.
 
 Scores are **in-country only**. IMD, Pobal HP, and CBS SES-WOA are never plotted on one axis. Travel times and benefit–cost ratios are not invented.
 
@@ -37,7 +37,7 @@ Aequitas is that briefing. It does not invent travel times, benefit–cost ratio
 | **England** | BODS GTFS + NaPTAN | IMD 2025 | LSOA 2021 | Live |
 | **Ireland** | Transport for Ireland `GTFS_All.zip` | Pobal HP 2022 | CSO Small Areas 2022 (Republic) | Live |
 | **Netherlands** | [OVapi](https://gtfs.ovapi.nl/) | CBS SES-WOA 2023 | Buurten 2024 | Live — bus is the default; `?mode=all` includes rail, tram, and metro |
-| **France** | NAP GTFS (planned) | F-EDI or Filosofi proxy | IRIS | Method reserved; pack not built |
+| **France** | NAP GTFS (metropolitan harvest) | F-EDI 2021 | IGN IRIS | Live — 15/30/45 empty until a local r5py run |
 
 ### In-country score (0–100)
 
@@ -52,7 +52,7 @@ One function, applied inside each country:
 
 Missing terms are dropped and the remaining weights are renormalised. London has no rural LSOAs, so that filter is empty. Netherlands scores use SES–service correlation, never IMD.
 
-National scores on the current warehouses: **England 80.0**, **Ireland 55.5**, **Netherlands (bus) 69.6**.
+National scores on the current warehouses: **England 80.0**, **Ireland 55.5**, **Netherlands (bus) 69.6**, **France 47.7**.
 
 ---
 
@@ -67,14 +67,14 @@ National scores on the current warehouses: **England 80.0**, **Ireland 55.5**, *
 | **Network** | Single-operator HHI on a 0–10,000 scale |
 | **Correlations** | One matrix and one scatter |
 | **Economy** | People-gap; official € / TAG unit costs only where a published source exists |
-| **Policy** | BSA 2025 (England) · NTA / national policy (Ireland) · concession / OV-wet (Netherlands) |
+| **Policy** | BSA 2025 (England) · NTA / national policy (Ireland) · concession / OV-wet (Netherlands) · AOM / SPC (France) |
 | **Scenarios** | Listed interventions × people × deprivation |
 | **Time** | The same network metric across dated snapshots. Census and deprivation stay frozen. |
 | **Reach** | Service bands 1–6. 15 / 30 / 45 minute jobs appear only after a local r5py run |
 | **Studio** | Walk-to-stop patch on the live filter (not a 45-minute job) |
 | **Compare** | Two regions **inside** the same country |
 
-Chat retrieves from a country-specific index where one exists (England, Ireland). The Netherlands drawer reports that the index is not built. The interface does not invent figures.
+Chat retrieves from a country-specific index where one exists (England, Ireland, France). The France index is local FAISS (not in git). The Netherlands drawer reports that the index is not built. The interface does not invent figures.
 
 ---
 
@@ -96,6 +96,7 @@ cp .env.example .env
 | England | http://localhost:5173/app/england |
 | Ireland | http://localhost:5173/app/ireland |
 | Netherlands | http://localhost:5173/app/netherlands |
+| France | http://localhost:5173/app/france |
 | API health | http://127.0.0.1:8000/api/health |
 | Smoke test | `uv run python scripts/smoke_local.py` |
 
@@ -107,6 +108,7 @@ Rebuild a warehouse from official sources (slow; downloads public files):
 uv run aequitas run            # England
 uv run aequitas ireland
 uv run aequitas netherlands
+uv run aequitas france
 ```
 
 Optional 15 / 30 / 45 minute layers require Java 17, r5py, and a Geofabrik PBF. If those are absent, Access and Reach stay empty rather than estimated.

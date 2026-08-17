@@ -34,9 +34,16 @@ function renderAt(path: string) {
 }
 
 describe("HomePage empty packs", () => {
-  it("shows honest empty copy for France", () => {
+  it("treats France as a live pack, not an empty-pack banner", () => {
+    overviewState.isLoading = false
+    overviewState.error = null
+    overviewState.data = { score: 47.7, score_note: "ok", dimensions: [] }
+    mapState.isLoading = false
+    mapState.data = { empty: false, features: [] }
+    mapState.error = null
     renderAt("/app/france")
-    expect(screen.getByText(/France pack is not built yet/i)).toBeTruthy()
+    expect(screen.queryByText(/France pack is not built yet/i)).toBeNull()
+    expect(screen.getByText(/Where the bus fails people/i)).toBeTruthy()
   })
 })
 

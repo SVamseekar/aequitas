@@ -121,8 +121,10 @@ export default function ReachPage() {
   const place = filterSentence(regionName, areaName)
   const ireland = country === "ireland"
   const netherlands = country === "netherlands"
-  const areaNoun = ireland ? "Small Areas" : netherlands ? "buurten" : "LSOAs"
-  const indexLabel = ireland ? "HP" : netherlands ? "SES-WOA" : "IMD"
+  const areaNoun =
+    ireland ? "Small Areas" : netherlands ? "buurten" : country === "france" ? "IRIS" : "LSOAs"
+  const indexLabel =
+    ireland ? "HP" : netherlands ? "SES-WOA" : country === "france" ? "F-EDI" : "IMD"
   const londonRural = isLondonRural(region, urbanRural)
   const dest = params.get("dest") ?? "jobs"
   const cutoff = Number(params.get("cutoff") ?? "45")
@@ -178,6 +180,8 @@ export default function ReachPage() {
           ? " Not 45-minute jobs unless a Republic travel-time parquet exists (it does not in this pack)."
           : netherlands
             ? " 15/30/45 is not run for the Netherlands in this checkout — honest empty, not England bands."
+            : country === "france"
+              ? " 15/30/45 is not run for France in this checkout — honest empty, not England bands."
             : " Not TfL. Not 45-minute jobs unless r5py has written destination counts for this ITL1."}
       </p>
       <p className="text-sm mt-2">
@@ -268,6 +272,8 @@ export default function ReachPage() {
         <p className="text-xs text-muted-foreground mt-2 max-w-2xl">
           {netherlands
             ? "15/30/45 has not been run for the Netherlands (no r5py / Geofabrik parquet)."
+            : country === "france"
+              ? "15/30/45 has not been run for France (no r5py / Geofabrik parquet)."
             : `ITL1s with 15/30/45 in this pack: ${
                 reachQ.data.geographies.length ? reachQ.data.geographies.join(", ") : "none"
               }.`}

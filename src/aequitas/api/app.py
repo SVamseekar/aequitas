@@ -58,9 +58,11 @@ def create_app() -> FastAPI:
 
         ie = _state.get("ie_db_path")
         nl = _state.get("nl_db_path")
+        fr = _state.get("fr_db_path")
         en = _state.get("db_path")
         regions: list[dict] = []
         nl_regions: list[dict] = []
+        fr_regions: list[dict] = []
         if ie is not None:
             import duckdb
 
@@ -95,10 +97,27 @@ def create_app() -> FastAPI:
                 nl_regions = []
             finally:
                 conn.close()
+        if fr is not None:
+            import duckdb
+
+            conn = duckdb.connect(str(fr), read_only=True)
+            try:
+                row = conn.execute(
+                    "SELECT value FROM metadata WHERE key = 'regions_json'"
+                ).fetchone()
+                if row:
+                    import json
+
+                    fr_regions = json.loads(row[0])
+            except Exception:
+                fr_regions = []
+            finally:
+                conn.close()
         dated = {
             "england": list_packs("england"),
             "ireland": list_packs("ireland"),
             "netherlands": list_packs("netherlands"),
+            "france": list_packs("france"),
         }
         return {
             "england": {
@@ -116,7 +135,11 @@ def create_app() -> FastAPI:
                 "regions": nl_regions or None,
                 "dates": dated["netherlands"],
             },
-            "france": {"packReady": False, "regions": None},
+            "france": {
+                "packReady": Path(fr).exists() if fr else False,
+                "regions": fr_regions or None,
+                "dates": dated["france"],
+            },
         }
 
     # Register routers

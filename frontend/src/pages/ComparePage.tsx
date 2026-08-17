@@ -136,10 +136,10 @@ export default function ComparePage() {
   const regions = regionsForCountry(country).filter((r) => r.code !== "all")
   const regionA =
     params.get("a") ??
-    (country === "ireland" ? "cork" : country === "netherlands" ? "groningen" : "E12000002")
+    (country === "ireland" ? "cork" : country === "netherlands" ? "groningen" : country === "france" ? "ile-de-france" : "E12000002")
   const regionB =
     params.get("b") ??
-    (country === "ireland" ? "dublin" : country === "netherlands" ? "noord-holland" : "E12000007")
+    (country === "ireland" ? "dublin" : country === "netherlands" ? "noord-holland" : country === "france" ? "occitanie" : "E12000007")
 
   const set = (key: string, value: string) => {
     const next = new URLSearchParams(params)

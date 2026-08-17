@@ -68,6 +68,10 @@ def _place(region: str, urban_rural: str, country: str = "england") -> str:
         from aequitas.netherlands.constants import PROVINCE_NAME_BY_SLUG
 
         name = "Netherlands" if region == "all" else PROVINCE_NAME_BY_SLUG.get(region, region.replace("-", " ").title())
+    elif country == "france":
+        from aequitas.france.constants import REGION_NAME_BY_SLUG
+
+        name = "France" if region == "all" else REGION_NAME_BY_SLUG.get(region, region.replace("-", " ").title())
     else:
         name = ITL1_NAMES.get(region, "England") if region != "all" else "England"
     if urban_rural and urban_rural != "all":
@@ -146,6 +150,27 @@ def pack_payload(
         ]
         area_noun = "buurten"
         decile_noun = "SES-WOA"
+    elif key == "france":
+        vintages = {
+            "network": "NAP GTFS harvest (metropolitan France, pack vintage)",
+            "census": "IGN CONTOURS-IRIS + INSEE recensement 2018",
+            "fedi": "F-EDI 2021 (IRIS). Never labelled IMD.",
+            "centroids": "IGN WFS IRIS centroids",
+            "reach": (
+                "r5py destination counts"
+                if reach.get("available")
+                else "not computed for France in this checkout"
+            ),
+        }
+        caveats = [
+            "Research pack for metropolitan France. Not a statutory INSEE, ADEME, or AOM submission.",
+            "Not official SPC guidance and not an official ADEME appraisal.",
+            "Deprivation ranks and the quoteable score stay inside France (F-EDI).",
+            "15/30/45 destination counts appear only when r5py has written them for this country.",
+            "NAP harvest logs skipped resources (timeout / 403 / 404). DOM out.",
+        ]
+        area_noun = "IRIS"
+        decile_noun = "F-EDI"
     else:
         vintages = {
             "network": "BODS GTFS bulk (pack vintage)",

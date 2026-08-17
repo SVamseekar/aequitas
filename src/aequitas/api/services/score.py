@@ -16,6 +16,10 @@ try:
     from aequitas.netherlands.constants import PROVINCE_NAME_BY_SLUG
 except ImportError:
     PROVINCE_NAME_BY_SLUG: dict[str, str] = {}
+try:
+    from aequitas.france.constants import REGION_NAME_BY_SLUG
+except ImportError:
+    REGION_NAME_BY_SLUG: dict[str, str] = {}
 
 _SECTIONS = (
     "a3_walking_distance",
@@ -200,6 +204,7 @@ def map_areas_for_filter(
 _REGION_NAMES: dict[str, str] = {
     **COUNTY_NAME_BY_SLUG,
     **PROVINCE_NAME_BY_SLUG,
+    **REGION_NAME_BY_SLUG,
     "E12000001": "North East",
     "E12000002": "North West",
     "E12000003": "Yorkshire and The Humber",

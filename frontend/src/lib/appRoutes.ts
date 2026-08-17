@@ -21,21 +21,23 @@ export function withSearch(pathname: string, search: string): { pathname: string
   const src = new URLSearchParams(raw)
   const ireland = pathname.includes("/ireland")
   const netherlands = pathname.includes("/netherlands")
+  const france = pathname.includes("/france")
   const next = new URLSearchParams()
   let region = src.get("region") ?? "all"
-  if ((ireland || netherlands) && region.startsWith("E12")) region = "all"
-  if (!ireland && !netherlands && !region.startsWith("E12") && region !== "all") {
+  if ((ireland || netherlands || france) && region.startsWith("E12")) region = "all"
+  if (!ireland && !netherlands && !france && !region.startsWith("E12") && region !== "all") {
     const looksCounty = !/^E\d/.test(region)
     if (looksCounty && region !== "all") region = "all"
   }
-  if (ireland && ["groningen", "noord-holland", "zeeland", "utrecht"].includes(region)) region = "all"
-  if (netherlands && ["dublin", "cork"].includes(region)) region = "all"
+  if (ireland && ["groningen", "noord-holland", "zeeland", "utrecht", "ile-de-france", "occitanie"].includes(region)) region = "all"
+  if (netherlands && ["dublin", "cork", "ile-de-france", "occitanie"].includes(region)) region = "all"
+  if (france && ["dublin", "cork", "groningen", "noord-holland"].includes(region)) region = "all"
   next.set("region", region)
   const ur = src.get("urban_rural") ?? "all"
   next.set("urban_rural", ur === "urban" || ur === "rural" ? ur : "all")
   const pack = src.get("pack") ?? src.get("as_of")
   if (pack) next.set("pack", pack)
-  if (netherlands) {
+  if (netherlands || france) {
     const mode = (src.get("mode") ?? "bus").toLowerCase()
     next.set("mode", mode === "all" ? "all" : "bus")
   }
