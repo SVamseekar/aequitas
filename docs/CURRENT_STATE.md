@@ -35,7 +35,7 @@ Not a SaaS clone of Remix/TRACC. Not a 55-bar factory. Not a lock on Gini 0.5741
 | 5 | Ireland pack + country switcher data | **Done** (warehouse + briefing + chat). 18,919 SA. Catalogue **36 same / 12 replace / 7 omit** after CSO SAPS Theme 8 / T15 / 65+ implemented. Distinct exhibits + Insight Engine on SAME/REPLACE. FAISS[ireland] retrieves Republic narratives. |
 | 6 | Monthly snapshots / refresh | **Done** (one real date each). `/time` one point + “only one network date.” Unknown pack 404s time, score, ticker. Methodology names frozen Census/HP/IMD vs monthly GTFS. |
 | 7 | Netherlands + bus \| all-PT | **Done** (warehouse + briefing PNG 2026-08-14). Chat still honest empty (`FAISS[netherlands]` not built). Sunday 49.6%. National **69.6** bus / **71.1** all-PT. Home SVG provincies paint. |
-| 8 | Ops GTFS-RT/SIRI | Later |
+| 8 | Ops GTFS-RT/SIRI | Warehouse-style honesty: `/app/:country/ops` reads `data/ops/{country}/latest.json`. England from BODS public AVL / API (OGL). Ireland NTA three operators only — empty without `NTA_API_KEY`. NL OVapi RT if the feed 200s. France NAP union incomplete (holes logged). No invented national on-time. Static scores unchanged. |
 | 9 | France NAP harvest + F-EDI or proxy | **Done** (warehouse + briefing + chat). 15/30/45 still honest-empty. IRIS 48,522; F-EDI join 99.88%; NAP 441/111. National **47.7**. Catalogue **35/12/8**. `FAISS[france]` 4,664 chunks. |
 
 ## 3. What works where
@@ -348,7 +348,8 @@ Full narrative: `docs/guidelines/country-sections.md` § Ireland mistakes.
 - **7 omits** remain (no free SA income / HP domain / crime / ethnicity).
 - Economy has **no published CAF unit cost** — people-gap only.
 - Gemini in this environment may be invalid; generation then retrieval-only.
-- Wave **8** (GTFS-RT/SIRI) not started. France warehouse + briefing exist; chat is a local FAISS index (not in git).
+- Wave **8** ops is warehouse-style honesty (rollups on disk). Ireland empty without NTA key. France NAP union incomplete (380 listed / 12 sampled). Chat does not retrieve ops %.
+- France warehouse + briefing exist; chat is a local FAISS index (not in git).
 
 ## 13. Wave 7 — Netherlands warehouse (2026-08-14)
 
@@ -434,3 +435,16 @@ SES: rematch without imputing 0. Join **74.3%** (10,275) — earlier 70.5% + fil
 | Pack date | `2026-08-14` first register. One date only |
 
 CLI: `uv run aequitas netherlands`. API: `?country=netherlands&mode=bus\|all`. Unknown pack **404**.
+
+## 14. Wave 8 — Ops (GTFS-RT / SIRI)
+
+Door: `/app/:country/ops`. API: `GET /api/ops?country=` reads **last rollup only** (D01). Collector: `uv run aequitas ops --country {england,ireland,netherlands,france}` → `data/ops/{country}/latest.json`. Does not write DuckDB.
+
+| Country | Rollup | Honesty |
+|---------|--------|---------|
+| England | Live (BODS AVL zip 200; API/SIRI 401 without key). ~25k vehicle updates, **39%** of static routes saw ≥1 update. Delay field absent on this zip → `pct_late` null, not 0. | OGL. Not a national punctuality KPI. |
+| Ireland | **Empty.** NTA TripUpdates 401, VehiclePositions 404 without `NTA_API_KEY`. | Names Dublin Bus / Bus Éireann / Go-Ahead only. No Republic-wide %. |
+| Netherlands | Live (OVapi TripUpdates + VehiclePositions 200). ~15k updates; delay present; skipped trips counted. | Mixed-mode RT; static default stays bus. |
+| France | Partial union. Catalog lists **380** gtfs-rt; this wave sampled 12 (370 logged skipped). | Incomplete expected. Not a national AOM index. DOM out. |
+
+Unknown pack still 404. Chat does not retrieve ops %. Static scores unchanged (EN 80.0 / IE 55.5 / NL 69.6 bus / FR 47.7). Source log: `docs/guidelines/ops-sources.md`.

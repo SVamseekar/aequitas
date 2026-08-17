@@ -162,11 +162,13 @@ def create_app() -> FastAPI:
         sections,
         studio,
         time_series,
+        ops,
     )
 
     app.include_router(overview.router, prefix="/api")
     app.include_router(score.router, prefix="/api")
     app.include_router(time_series.router, prefix="/api")
+    app.include_router(ops.router, prefix="/api")
     app.include_router(map_data.router, prefix="/api")
     app.include_router(reach.router, prefix="/api")
     app.include_router(studio.router, prefix="/api")
