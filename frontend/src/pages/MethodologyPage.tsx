@@ -278,8 +278,9 @@ export default function MethodologyPage() {
           <div className="app-glass-strong rounded-2xl border border-white/60 p-5 marketing-body">
             <ul className="list-disc pl-5 space-y-2.5">
               <li>
-                Point-in-time snapshots (timetables, Census, IMD, BRES) — not a live operational
-                network monitor.
+                Point-in-time snapshots (timetables, Census, IMD, BRES). Ops is a collector
+                rollup of official GTFS-RT / SIRI where a feed exists — not live-to-the-second,
+                not a national punctuality index.
               </li>
               <li>
                 England-only LSOA coverage; Scotland, Wales, and Northern Ireland are out of scope.

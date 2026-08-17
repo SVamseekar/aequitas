@@ -22,7 +22,7 @@ export const COUNTRY_COVERAGE = [
     network: "BODS GTFS + NaPTAN",
     deprivation: "IMD 2025",
     geography: "LSOA 2021",
-    note: "Score, map, Studio, Reach, Time",
+    note: "Score, map, Studio, Reach, Time. Ops when a BODS RT rollup exists.",
     href: "/app/england",
   },
   {

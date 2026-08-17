@@ -38,6 +38,53 @@ export interface TimePoint {
   current?: boolean
 }
 
+export interface OpsRegionRow {
+  code: string
+  name: string
+  n_updates: number
+  n_with_delay: number
+  n_late: number
+  n_skipped: number
+  pct_late: number | null
+}
+
+export interface OpsImdRow {
+  imd_decile: number
+  n_updates: number
+  n_with_delay: number
+  n_late: number
+  pct_late: number | null
+}
+
+export interface OpsResponse {
+  country: string
+  empty: boolean
+  empty_reason: string | null
+  window_start: string
+  window_end: string
+  window_note: string
+  late_threshold_seconds: number
+  late_threshold_note: string
+  n_entities: number
+  n_updates: number
+  n_with_delay: number
+  n_late: number
+  n_early: number
+  n_on_time: number
+  pct_late: number | null
+  pct_early: number | null
+  n_skipped: number
+  n_cancelled: number
+  n_static_routes: number | null
+  n_routes_with_update: number
+  coverage_pct: number | null
+  coverage_sentence: string
+  vintage: string
+  feeds: Record<string, unknown>[]
+  by_region: OpsRegionRow[]
+  by_imd_decile: OpsImdRow[]
+}
+
 export interface TimeSeriesResponse {
   country: string
   region: string
