@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security report
+    url: https://github.com/SVamseekar/aequitas/blob/main/SECURITY.md
+    about: Email martisoura@gmail.com — do not file a public 0-day
+  - name: Method / pipeline epic
+    url: https://github.com/SVamseekar/aequitas/issues/17
+    about: Country ingest, reach, and ops work already tracked here
