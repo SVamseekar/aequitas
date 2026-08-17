@@ -5,7 +5,8 @@ build-backend = "hatchling.build"
 [project]
 name = "aequitas"
 version = "0.1.0"
-description = "UK bus transport policy intelligence platform"
+description = "Public transport briefings against official deprivation"
+license = { file = "LICENSE" }
 requires-python = ">=3.12"
 dependencies = [
     "pandas>=2.2.0",

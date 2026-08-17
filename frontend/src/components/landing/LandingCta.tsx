@@ -21,7 +21,7 @@ export function LandingCta() {
             Three countries live. France keeps the empty sentence until the pack exists.
           </h2>
           <p className="mt-4 text-base sm:text-lg text-white/60 max-w-md mx-auto leading-relaxed">
-            Map, score, and exhibits on a £0 stack. No Mapbox. No invented 45-minute jobs.
+            Map, score, and exhibits from published timetables. No invented 45-minute jobs.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <button
