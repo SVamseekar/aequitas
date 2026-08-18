@@ -48,9 +48,8 @@ export function LandingDimensions({ embed = false }: { embed?: boolean }) {
           >
             Same questions in every country
           </h2>
-          <p className="mt-3 text-base text-[var(--l-slate)] leading-relaxed text-pretty max-w-xl">
-            Titles change with the statute. The doors do not. Open a door for the
-            method in England, Ireland, the Netherlands, and France.
+          <p className="mt-3 text-sm text-[var(--l-slate)] text-pretty max-w-xl">
+            Statute titles change. The doors do not.
           </p>
         </header>
 

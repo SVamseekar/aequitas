@@ -183,20 +183,17 @@ export const DIMENSIONS: DimensionCard[] = [
 export const HOW_IT_WORKS = [
   {
     icon: Database,
-    step: "Choose a country and filter",
-    description:
-      "England, Ireland, the Netherlands, or France. Region, urban/rural, and — in NL/FR — bus or all public transport.",
+    step: "Pick a country",
+    description: "England, Ireland, the Netherlands, or France. One pack, one rank.",
   },
   {
     icon: FileSearch,
-    step: "Read the briefing",
-    description:
-      "Every exhibit has a key finding, so what, and a caveat that names this filter. Weak evidence is suppressed, not filled in.",
+    step: "Read the door",
+    description: "Finding, so-what, caveat. Empty stays empty.",
   },
   {
     icon: SlidersHorizontal,
-    step: "Patch, compare, export",
-    description:
-      "Studio is walk-to-stop. Compare stays inside the country. The research pack uses that country’s nouns.",
+    step: "Compare in-country",
+    description: "Studio, compare, export — never across deprivation indices.",
   },
 ] as const

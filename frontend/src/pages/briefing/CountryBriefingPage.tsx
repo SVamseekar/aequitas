@@ -19,6 +19,15 @@ export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
     )
   }
 
+  const rows = [
+    ["Network", country.network],
+    ["Deprivation", country.deprivation],
+    ["Geography", country.geography],
+    ["Policy", country.policyTitle],
+    ["Appraisal", country.appraisal],
+    ["Real-time", country.realtime],
+  ] as const
+
   return (
     <BriefingLayout>
       <Seo
@@ -31,70 +40,45 @@ export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
         ])}
       />
       <p className="text-xs font-medium uppercase tracking-wide text-[var(--l-rust)]">
-        {country.name} · pack {country.packAsOf} · {AUTHOR_NAME}
+        {country.name} · {country.packAsOf} · score {country.score}
       </p>
-      <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-3">
-        {country.name}: official timetables × official deprivation
+      <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-6 text-balance">
+        {country.name}
       </h1>
-      <p className="text-[var(--l-slate)] max-w-2xl leading-relaxed mb-8">
-        {country.description} In-country score {country.score} from the dated pack. Built by{" "}
-        {AUTHOR_NAME}.
-      </p>
 
-      <dl className="grid sm:grid-cols-2 gap-4 mb-10 text-sm">
-        <div>
-          <dt className="text-[var(--l-slate)]">Network</dt>
-          <dd className="font-medium text-[var(--l-ink)]">{country.network}</dd>
-        </div>
-        <div>
-          <dt className="text-[var(--l-slate)]">Deprivation</dt>
-          <dd className="font-medium text-[var(--l-ink)]">{country.deprivation}</dd>
-        </div>
-        <div>
-          <dt className="text-[var(--l-slate)]">Geography</dt>
-          <dd className="font-medium text-[var(--l-ink)]">{country.geography}</dd>
-        </div>
-        <div>
-          <dt className="text-[var(--l-slate)]">Policy</dt>
-          <dd className="font-medium text-[var(--l-ink)]">{country.policyTitle}</dd>
-        </div>
-        <div>
-          <dt className="text-[var(--l-slate)]">Destinations</dt>
-          <dd className="font-medium text-[var(--l-ink)]">{country.destinations}</dd>
-        </div>
-        <div>
-          <dt className="text-[var(--l-slate)]">Appraisal</dt>
-          <dd className="font-medium text-[var(--l-ink)]">{country.appraisal}</dd>
-        </div>
-        <div>
-          <dt className="text-[var(--l-slate)]">Real-time</dt>
-          <dd className="font-medium text-[var(--l-ink)]">{country.realtime}</dd>
-        </div>
-        <div>
-          <dt className="text-[var(--l-slate)]">Chat</dt>
-          <dd className="font-medium text-[var(--l-ink)]">{country.chat}</dd>
-        </div>
+      <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-3 mb-10 text-sm">
+        {rows.map(([k, v]) => (
+          <div key={k} className="border-b border-[var(--l-rule)] pb-2">
+            <dt className="text-[11px] uppercase tracking-wide text-[var(--l-slate)]">{k}</dt>
+            <dd className="mt-0.5 text-[var(--l-ink)]">{v}</dd>
+          </div>
+        ))}
       </dl>
 
-      <h2 className="text-lg font-semibold mb-3">Doors in {country.name}</h2>
-      <ul className="space-y-2 mb-8">
-        {TOPIC_BRIEFS.map((t) => (
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--l-slate)] mb-3">
+        Doors
+      </h2>
+      <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-2 mb-10 text-sm">
+        {TOPIC_BRIEFS.filter((t) =>
+          !["destinations", "appraisal", "realtime", "chat"].includes(t.slug),
+        ).map((t) => (
           <li key={t.slug}>
-            <Link to={t.path} className="text-[var(--l-ink)] hover:text-[var(--l-rust)]">
+            <Link to={t.path} className="font-medium text-[var(--l-ink)] hover:text-[var(--l-rust)]">
               {t.title}
             </Link>
-            <span className="text-sm text-[var(--l-slate)]"> — {t.perCountry[country.code]}</span>
           </li>
         ))}
       </ul>
 
-      <p className="text-sm text-[var(--l-slate)]">
+      <p className="text-xs text-[var(--l-slate)]">
+        {AUTHOR_NAME}
+        {" · "}
         <Link to="/topics" className="underline">
-          All countries and topics
+          All topics
         </Link>
         {" · "}
         <Link to="/methodology" className="underline">
-          How it is computed
+          Method
         </Link>
       </p>
     </BriefingLayout>

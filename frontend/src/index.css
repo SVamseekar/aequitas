@@ -648,6 +648,12 @@ body {
   color: color-mix(in srgb, var(--l-slate) 82%, var(--l-ink));
 }
 
+@media (max-width: 39.99rem) {
+  .landing-root .briefing-row-meta {
+    display: none;
+  }
+}
+
 .landing-root .briefing-chevron {
   margin-top: 0.35rem;
   color: var(--l-slate);
