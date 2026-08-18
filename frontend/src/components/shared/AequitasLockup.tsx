@@ -3,14 +3,14 @@ import { AequitasLogo } from "./AequitasLogo"
 type Size = "nav" | "footer" | "auth"
 
 const SIZES: Record<Size, { mark: string; name: string; line: string }> = {
-  nav: { mark: "w-7 h-7", name: "text-[1.35rem] leading-none", line: "text-[0.62rem]" },
-  footer: { mark: "w-8 h-8", name: "text-[1.5rem] leading-none", line: "text-[0.65rem]" },
-  auth: { mark: "w-8 h-8", name: "text-[1.5rem] leading-none", line: "text-[0.65rem]" },
+  nav: { mark: "w-8 h-8", name: "text-[1.375rem] leading-none", line: "text-[0.6rem]" },
+  footer: { mark: "w-9 h-9", name: "text-[1.55rem] leading-none", line: "text-[0.62rem]" },
+  auth: { mark: "w-9 h-9", name: "text-[1.55rem] leading-none", line: "text-[0.62rem]" },
 }
 
 export function AequitasLockup({
   size = "nav",
-  showLine = true,
+  showLine,
   className = "",
 }: {
   size?: Size
@@ -18,12 +18,13 @@ export function AequitasLockup({
   className?: string
 }) {
   const s = SIZES[size]
+  const line = showLine ?? size !== "nav"
   return (
     <span className={`aequitas-lockup ${className}`}>
       <AequitasLogo className={`${s.mark} aequitas-lockup-mark`} />
       <span className="aequitas-lockup-type">
-        <span className={`aequitas-lockup-name ${s.name}`}>aequitas</span>
-        {showLine && <span className={`aequitas-lockup-line ${s.line}`}>In-country briefings</span>}
+        <span className={`aequitas-lockup-name ${s.name}`}>Aequitas</span>
+        {line && <span className={`aequitas-lockup-line ${s.line}`}>In-country briefings</span>}
       </span>
     </span>
   )
