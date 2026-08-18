@@ -136,8 +136,8 @@ export default function MethodologyPage() {
           Disclaimer
         </Link>
         {" · "}
-        <Link to="/topics" className="underline">
-          All topics
+        <Link to="/briefings" className="underline">
+          All briefings
         </Link>
       </p>
     </BriefingLayout>

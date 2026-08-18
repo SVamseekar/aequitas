@@ -11,8 +11,8 @@ export default function TopicBriefingPage({ slug: slugProp }: { slug?: string })
     return (
       <BriefingLayout>
         <h1 className="text-2xl font-semibold">Topic not found</h1>
-        <Link to="/topics" className="text-[var(--l-rust)] text-sm">
-          All topics
+        <Link to="/briefings" className="text-[var(--l-rust)] text-sm">
+          All briefings
         </Link>
       </BriefingLayout>
     )
@@ -25,7 +25,7 @@ export default function TopicBriefingPage({ slug: slugProp }: { slug?: string })
         description={`${topic.question} ${topic.body[0]}`}
         path={topic.path}
         jsonLd={breadcrumbJsonLd([
-          { name: "Topics", path: "/topics" },
+          { name: "Briefings", path: "/briefings" },
           { name: topic.title, path: topic.path },
         ])}
       />
@@ -48,8 +48,8 @@ export default function TopicBriefingPage({ slug: slugProp }: { slug?: string })
         ))}
       </ul>
 
-      <Link to="/topics" className="text-sm underline text-[var(--l-ink)]">
-        All topics
+      <Link to="/briefings" className="text-sm underline text-[var(--l-ink)]">
+        All briefings
       </Link>
     </BriefingLayout>
   )

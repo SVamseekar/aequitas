@@ -23,7 +23,7 @@ export function LandingCta() {
             jobs.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/topics" className="landing-btn-primary">
+            <Link to="/briefings" className="landing-btn-primary">
               Read the briefings
               <ArrowRight className="w-4 h-4" aria-hidden />
             </Link>

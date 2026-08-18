@@ -4,6 +4,12 @@ import { ArrowRight } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { AequitasLogo } from "@/components/shared/AequitasLogo"
 
+const LINKS = [
+  { to: "/briefings", label: "Briefings" },
+  { to: "/methodology", label: "Method" },
+  { to: "/about", label: "About" },
+] as const
+
 export function LandingNav() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -30,21 +36,11 @@ export function LandingNav() {
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm text-[var(--l-slate)]">
-          <a href="#coverage" className="hover:text-[var(--l-ink)] transition-colors">
-            Coverage
-          </a>
-          <a href="#dimensions" className="hover:text-[var(--l-ink)] transition-colors">
-            Briefing
-          </a>
-          <a href="#how" className="hover:text-[var(--l-ink)] transition-colors">
-            How it works
-          </a>
-          <Link to="/topics" className="hover:text-[var(--l-ink)] transition-colors">
-            Topics
-          </Link>
-          <Link to="/about" className="hover:text-[var(--l-ink)] transition-colors">
-            About
-          </Link>
+          {LINKS.map((l) => (
+            <Link key={l.to} to={l.to} className="hover:text-[var(--l-ink)] transition-colors">
+              {l.label}
+            </Link>
+          ))}
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">

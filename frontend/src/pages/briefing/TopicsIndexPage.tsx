@@ -16,8 +16,8 @@ export default function TopicsIndexPage() {
       <Seo
         title="Aequitas briefing topics — GTFS × official deprivation, four countries"
         description="Public index of Aequitas: England IMD/LSOA, Ireland Pobal HP/CSO, Netherlands SES-WOA/buurten, France F-EDI/IRIS. Equity, access, service, network, appraisal, GTFS-RT, r5py, chat."
-        path="/topics"
-        jsonLd={breadcrumbJsonLd([{ name: "Topics", path: "/topics" }])}
+        path="/briefings"
+        jsonLd={breadcrumbJsonLd([{ name: "Briefings", path: "/briefings" }])}
       />
       <p className="text-xs font-medium uppercase tracking-wide text-[var(--l-rust)]">
         Field map · {AUTHOR_NAME}

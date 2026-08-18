@@ -35,8 +35,8 @@ export default function AboutPage() {
         ))}
       </ul>
       <p className="text-sm">
-        <Link to="/topics" className="underline">
-          Topics
+        <Link to="/briefings" className="underline">
+          Briefings
         </Link>
         {" · "}
         <Link to="/methodology" className="underline">

@@ -41,14 +41,9 @@ export function LandingFooter() {
               </h2>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/topics" className={linkClass}>
-                    Topics
+                  <Link to="/briefings" className={linkClass}>
+                    Briefings
                   </Link>
-                </li>
-                <li>
-                  <a href="/#dimensions" className={linkClass}>
-                    Dimensions
-                  </a>
                 </li>
                 <li>
                   <Link to={user ? "/app/england" : "/auth"} className={linkClass}>

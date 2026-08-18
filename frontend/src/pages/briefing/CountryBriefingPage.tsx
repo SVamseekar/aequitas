@@ -12,8 +12,8 @@ export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
     return (
       <BriefingLayout>
         <h1 className="text-2xl font-semibold">Country not found</h1>
-        <Link to="/topics" className="text-[var(--l-rust)] text-sm">
-          All topics
+        <Link to="/briefings" className="text-[var(--l-rust)] text-sm">
+          All briefings
         </Link>
       </BriefingLayout>
     )
@@ -35,7 +35,7 @@ export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
         description={country.description}
         path={country.path}
         jsonLd={breadcrumbJsonLd([
-          { name: "Topics", path: "/topics" },
+          { name: "Briefings", path: "/briefings" },
           { name: country.name, path: country.path },
         ])}
       />
@@ -73,8 +73,8 @@ export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
       <p className="text-xs text-[var(--l-slate)]">
         {AUTHOR_NAME}
         {" · "}
-        <Link to="/topics" className="underline">
-          All topics
+        <Link to="/briefings" className="underline">
+          All briefings
         </Link>
         {" · "}
         <Link to="/methodology" className="underline">

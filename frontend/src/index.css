@@ -527,6 +527,82 @@ body {
   animation-play-state: paused;
 }
 
+.landing-root .landing-hero-photo {
+  min-height: min(88svh, 760px);
+  display: grid;
+  align-items: end;
+}
+
+.landing-root .landing-hero-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #1a1612;
+}
+
+.landing-root .landing-hero-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  opacity: 0;
+  animation: landing-hero-xfade 24s ease-in-out infinite;
+}
+
+.landing-root .landing-hero-slide-1 { animation-delay: 0s; }
+.landing-root .landing-hero-slide-2 { animation-delay: 8s; }
+.landing-root .landing-hero-slide-3 { animation-delay: 16s; }
+
+@keyframes landing-hero-xfade {
+  0% { opacity: 0; transform: scale(1.04); }
+  6% { opacity: 1; }
+  30% { opacity: 1; transform: scale(1.1); }
+  38%, 100% { opacity: 0; transform: scale(1.12); }
+}
+
+.landing-root .landing-hero-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(12 10 8 / 0.28) 0%, rgb(12 10 8 / 0.15) 38%, rgb(12 10 8 / 0.72) 100%),
+    linear-gradient(90deg, rgb(12 10 8 / 0.45) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.landing-root .landing-hero-copy {
+  position: relative;
+  z-index: 1;
+  padding-top: 7rem;
+  padding-bottom: 3.25rem;
+}
+
+.landing-root .landing-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgb(255 255 255 / 0.88);
+  font-size: 0.9rem;
+  font-weight: 550;
+  padding: 0.8rem 0.6rem;
+}
+
+.landing-root .landing-btn-ghost:hover {
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .landing-hero-slide {
+    animation: none;
+    transform: none;
+    opacity: 0;
+  }
+  .landing-root .landing-hero-slide-1 {
+    opacity: 1;
+  }
+}
+
 /* Briefing dossier — grouped doors, container-aware rows */
 .landing-root .briefing-board {
   container-type: inline-size;

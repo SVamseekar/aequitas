@@ -30,7 +30,7 @@ export const COUNTRY_BRIEFS: CountryBrief[] = [
   {
     code: "england",
     name: "England",
-    path: "/england",
+    path: "/briefings/england",
     score: 80.0,
     packAsOf: "2026-08-01",
     network: "BODS GTFS + NaPTAN",
@@ -49,7 +49,7 @@ export const COUNTRY_BRIEFS: CountryBrief[] = [
   {
     code: "ireland",
     name: "Ireland",
-    path: "/ireland",
+    path: "/briefings/ireland",
     score: 55.5,
     packAsOf: "2026-08-13",
     network: "TFI GTFS_All.zip",
@@ -68,7 +68,7 @@ export const COUNTRY_BRIEFS: CountryBrief[] = [
   {
     code: "netherlands",
     name: "Netherlands",
-    path: "/netherlands",
+    path: "/briefings/netherlands",
     score: 70.6,
     packAsOf: "2026-08-13",
     network: "OVapi GTFS (bus default; all-PT labelled)",
@@ -87,7 +87,7 @@ export const COUNTRY_BRIEFS: CountryBrief[] = [
   {
     code: "france",
     name: "France",
-    path: "/france",
+    path: "/briefings/france",
     score: 47.7,
     packAsOf: "2026-08-17",
     network: "NAP / transport.data.gouv.fr GTFS harvest (metropolitan)",
@@ -118,7 +118,7 @@ export type TopicBrief = {
 export const TOPIC_BRIEFS: TopicBrief[] = [
   {
     slug: "equity",
-    path: "/equity",
+    path: "/briefings/equity",
     title: "Equity & deprivation",
     question: "Who gets the least service relative to need?",
     keywords: [
@@ -145,7 +145,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "access",
-    path: "/access",
+    path: "/briefings/access",
     title: "Access & coverage",
     question: "How many people live beyond 400 m of a stop?",
     keywords: ["400 m", "2SFCA", "transport desert", "coverage", "r5py", "15 30 45"],
@@ -163,7 +163,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "service",
-    path: "/service",
+    path: "/briefings/service",
     title: "Service quality",
     question: "Where do evenings and Sundays disappear?",
     keywords: ["headway", "evening isolation", "Sunday desert", "SQI", "frequency"],
@@ -180,7 +180,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "network",
-    path: "/network",
+    path: "/briefings/network",
     title: "Network & operators",
     question: "How concentrated are the operators?",
     keywords: ["HHI", "route length", "stops per route", "operator concentration", "cross-LA"],
@@ -197,7 +197,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "correlations",
-    path: "/correlations",
+    path: "/briefings/correlations",
     title: "Correlations & ML",
     question: "Does coverage track deprivation — or something else?",
     keywords: ["Pearson", "Random Forest", "SHAP", "HDBSCAN", "nocar_pct"],
@@ -214,7 +214,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "economy",
-    path: "/economy",
+    path: "/briefings/economy",
     title: "Economy & carbon",
     question: "Who is in the people-gap — and is there a published unit cost?",
     keywords: ["people-gap", "DESNZ", "CO2", "carbon", "modal shift"],
@@ -231,7 +231,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "policy",
-    path: "/policy",
+    path: "/briefings/policy",
     title: "Policy programmes",
     question: "Which programmes apply here?",
     keywords: [
@@ -254,7 +254,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "scenarios",
-    path: "/scenarios",
+    path: "/briefings/scenarios",
     title: "Scenarios",
     question: "Who moves if frequency or evenings change?",
     keywords: ["frequency restoration", "DRT", "last bus", "franchise scope"],
@@ -270,7 +270,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "time",
-    path: "/time",
+    path: "/briefings/time",
     title: "Time series",
     question: "Did the network move while the census stayed still?",
     keywords: ["dated pack", "GTFS vintage", "census frozen"],
@@ -286,7 +286,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "reach",
-    path: "/reach",
+    path: "/briefings/reach",
     title: "Reach & Studio",
     question: "What does a walk-to-stop change do on this filter?",
     keywords: ["service bands", "Studio", "r5py", "isochrone"],
@@ -302,7 +302,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "ops",
-    path: "/ops",
+    path: "/briefings/ops",
     title: "Ops & real-time",
     question: "What did the last official real-time feed actually say?",
     keywords: ["GTFS-RT", "SIRI", "TripUpdates", "AVL", "punctuality"],
@@ -319,7 +319,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "destinations",
-    path: "/topics/destinations",
+    path: "/briefings/destinations",
     title: "Jobs, GPs, and schools",
     question: "Which official destinations sit inside the catchment?",
     keywords: ["BRES", "NHS ODS", "GIAS", "huisarts", "2SFCA"],
@@ -335,7 +335,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "appraisal",
-    path: "/topics/appraisal",
+    path: "/briefings/appraisal",
     title: "In-country appraisal",
     question: "Which official economic method applies?",
     keywords: ["TAG", "Green Book", "CAF", "PAG", "MKBA", "BCR"],
@@ -351,7 +351,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "realtime",
-    path: "/topics/realtime",
+    path: "/briefings/realtime",
     title: "GTFS-RT and SIRI",
     question: "What did the last official real-time file contain?",
     keywords: ["GTFS-RT", "SIRI", "TripUpdates", "NTA", "NAP", "OVapi", "BODS"],
@@ -367,7 +367,7 @@ export const TOPIC_BRIEFS: TopicBrief[] = [
   },
   {
     slug: "chat",
-    path: "/topics/chat",
+    path: "/briefings/chat",
     title: "Country-indexed chat",
     question: "Which narratives can the assistant cite?",
     keywords: ["FAISS", "RAG", "Gemini", "country-indexed"],
@@ -391,9 +391,11 @@ export function topicBySlug(slug: string | undefined): TopicBrief | undefined {
   return TOPIC_BRIEFS.find((t) => t.slug === slug)
 }
 
+export const BRIEFINGS_INDEX = "/briefings"
+
 export const PUBLIC_BRIEFING_PATHS: string[] = [
   "/",
-  "/topics",
+  BRIEFINGS_INDEX,
   ...COUNTRY_BRIEFS.map((c) => c.path),
   ...TOPIC_BRIEFS.map((t) => t.path),
   "/methodology",
