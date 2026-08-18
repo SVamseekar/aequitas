@@ -635,10 +635,10 @@ body {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
-  object-position: top center;
-  background: var(--l-paper);
+  aspect-ratio: 8 / 5;
+  object-fit: contain;
+  background: #ece8e1;
+  vertical-align: middle;
 }
 
 .landing-root .landing-hero-caption {

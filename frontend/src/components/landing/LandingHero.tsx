@@ -25,13 +25,19 @@ export function LandingHero() {
             <span />
             <p>England briefing</p>
           </div>
-          <img
-            src="/landing/product-home.jpg"
-            alt="Aequitas England briefing: in-country score and map of the bus network against official deprivation"
-            width={1440}
-            height={900}
+          <video
             className="landing-product-shot"
-          />
+            poster="/landing/product-home.jpg"
+            autoPlay
+            muted
+            loop
+            playsInline
+            controls
+            preload="metadata"
+          >
+            <source src="/landing/product-demo.mp4" type="video/mp4" />
+            Your browser cannot play this walkthrough.
+          </video>
         </figure>
 
         <p className="landing-hero-caption">
