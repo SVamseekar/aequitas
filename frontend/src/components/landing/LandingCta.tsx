@@ -1,9 +1,7 @@
-import { Link, useNavigate } from "react-router"
+import { Link } from "react-router"
 import { ArrowRight } from "lucide-react"
 
 export function LandingCta() {
-  const navigate = useNavigate()
-
   return (
     <section aria-labelledby="landing-cta-heading" className="bg-[var(--l-paper)]">
       <div className="landing-shell py-12 sm:py-14">
@@ -18,39 +16,22 @@ export function LandingCta() {
             id="landing-cta-heading"
             className="font-display text-3xl sm:text-4xl text-[#f7f4ef] leading-[1.1] max-w-lg mx-auto"
           >
-            Three countries live. France keeps the empty sentence until the pack exists.
+            Four countries. One method. Ranks stay in-country.
           </h2>
           <p className="mt-4 text-base sm:text-lg text-white/60 max-w-md mx-auto leading-relaxed">
-            Map, score, and exhibits from published timetables. No invented 45-minute jobs.
+            Dated packs from official timetables and official deprivation. No invented 45-minute
+            jobs.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => navigate("/app/england")}
-              className="landing-btn-primary"
-            >
-              Open England
+            <Link to="/topics" className="landing-btn-primary">
+              Read the briefings
               <ArrowRight className="w-4 h-4" aria-hidden />
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/app/ireland")}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-[#f7f4ef] hover:bg-white/15 transition-colors backdrop-blur-md"
-            >
-              Ireland
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/app/netherlands")}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-[#f7f4ef] hover:bg-white/15 transition-colors backdrop-blur-md"
-            >
-              Netherlands
-            </button>
+            </Link>
             <Link
               to="/methodology"
               className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-[#f7f4ef] hover:bg-white/15 transition-colors backdrop-blur-md"
             >
-              Methodology
+              How it is computed
             </Link>
           </div>
         </div>

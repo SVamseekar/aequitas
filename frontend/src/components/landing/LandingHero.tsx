@@ -1,9 +1,8 @@
-import { Link, useNavigate } from "react-router"
-import { ArrowRight, ArrowUpRight } from "lucide-react"
+import { Link } from "react-router"
+import { ArrowRight } from "lucide-react"
 import { LandingHeroVisual } from "./LandingHeroVisual"
 
 export function LandingHero() {
-  const navigate = useNavigate()
 
   return (
     <section
@@ -37,43 +36,15 @@ export function LandingHero() {
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => navigate("/app/england")}
-                className="landing-btn-primary"
-              >
-                Open England
+              <Link to="/topics" className="landing-btn-primary">
+                Read the briefings
                 <ArrowRight className="w-4 h-4" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/app/ireland")}
-                className="landing-btn-secondary"
-                data-testid="landing-ireland"
+              </Link>
+              <Link
+                to="/methodology"
+                className="text-sm font-medium text-[var(--l-slate)] hover:text-[var(--l-ink)] px-2"
               >
-                Ireland
-                <ArrowUpRight className="w-4 h-4 opacity-70" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/app/netherlands")}
-                className="landing-btn-secondary"
-                data-testid="landing-netherlands"
-              >
-                Netherlands
-                <ArrowUpRight className="w-4 h-4 opacity-70" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/app/france")}
-                className="landing-btn-secondary"
-                data-testid="landing-france"
-              >
-                France
-                <ArrowUpRight className="w-4 h-4 opacity-70" aria-hidden />
-              </button>
-              <Link to="/methodology" className="text-sm font-medium text-[var(--l-slate)] hover:text-[var(--l-ink)] px-2">
-                Methodology
+                How it is computed
               </Link>
             </div>
 

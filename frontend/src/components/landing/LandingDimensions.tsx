@@ -1,9 +1,8 @@
-import { useNavigate } from "react-router"
+import { Link } from "react-router"
 import { ArrowUpRight } from "lucide-react"
 import { DIMENSIONS } from "./data"
 
 export function LandingDimensions() {
-  const navigate = useNavigate()
 
   return (
     <section id="dimensions" aria-labelledby="landing-dimensions-heading" className="bg-[var(--l-paper)]">
@@ -21,16 +20,15 @@ export function LandingDimensions() {
             </h2>
           </div>
           <p className="text-base text-[var(--l-slate)] leading-relaxed max-w-sm lg:text-right">
-            Open any live country. Policy and economy titles change; the questions do not.
+            Policy and economy titles change by country; the questions do not.
           </p>
         </div>
 
         <ul className="grid sm:grid-cols-2 gap-3">
           {DIMENSIONS.map((dimension, index) => (
             <li key={dimension.title}>
-              <button
-                type="button"
-                onClick={() => navigate(`/app/england${dimension.route}`)}
+              <Link
+                to={dimension.route}
                 className="landing-card group w-full text-left p-4 sm:p-5 flex gap-3.5 items-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--l-rust)]"
               >
                 <span className="font-display text-2xl text-[var(--l-rust)]/45 tabular-nums w-8 shrink-0">
@@ -53,7 +51,7 @@ export function LandingDimensions() {
                     {dimension.grounded}
                   </p>
                 </div>
-              </button>
+              </Link>
             </li>
           ))}
         </ul>

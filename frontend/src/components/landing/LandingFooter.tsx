@@ -41,8 +41,8 @@ export function LandingFooter() {
               </h2>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/app/england" className={linkClass}>
-                    Explore
+                  <Link to="/topics" className={linkClass}>
+                    Topics
                   </Link>
                 </li>
                 <li>
@@ -63,13 +63,8 @@ export function LandingFooter() {
               </h2>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/topics" className={linkClass}>
-                    Topics
-                  </Link>
-                </li>
-                <li>
                   <Link to="/methodology" className={linkClass}>
-                    Methodology
+                    How it is computed
                   </Link>
                 </li>
                 <li>

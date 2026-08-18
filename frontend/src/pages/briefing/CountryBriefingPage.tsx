@@ -94,11 +94,7 @@ export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
         </Link>
         {" · "}
         <Link to="/methodology" className="underline">
-          Methodology
-        </Link>
-        {" · "}
-        <Link to={`/app/${country.code}`} className="underline">
-          Open {country.name} in the app
+          How it is computed
         </Link>
       </p>
     </BriefingLayout>
