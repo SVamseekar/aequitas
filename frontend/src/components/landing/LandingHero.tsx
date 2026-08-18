@@ -2,21 +2,28 @@ import { Link } from "react-router"
 
 export function LandingHero() {
   return (
-    <section
-      aria-labelledby="landing-hero-heading"
-      className="border-b border-[var(--l-rule)] bg-[var(--l-paper)]"
-    >
-      <div className="landing-shell py-16 sm:py-20 lg:py-24">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--l-rust)] mb-4">
+    <section aria-labelledby="landing-hero-heading" className="landing-hero-photo">
+      <img
+        src="/landing/hero-street.jpg"
+        alt="A city street at dusk — the kind of network a briefing is built for"
+        className="landing-hero-bg"
+        width={1920}
+        height={1080}
+        fetchPriority="high"
+      />
+      <div className="landing-hero-bg-veil" aria-hidden />
+
+      <div className="landing-shell landing-hero-copy">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/75 mb-4">
           For authorities, agencies, and ministries
         </p>
         <h1
           id="landing-hero-heading"
-          className="font-display text-4xl sm:text-5xl lg:text-[3.4rem] leading-[1.06] text-[var(--l-ink)] text-balance max-w-3xl"
+          className="font-display text-4xl sm:text-5xl lg:text-[3.4rem] leading-[1.06] text-white text-balance max-w-3xl"
         >
           A briefing method you can commission for your country
         </h1>
-        <p className="mt-5 text-lg text-[var(--l-slate)] leading-relaxed max-w-xl text-pretty">
+        <p className="mt-5 text-lg text-white/80 leading-relaxed max-w-xl text-pretty">
           Official timetables joined to official need. Same doors everywhere. Ranks stay
           in-country. We build the pack for your geography, your index, your statute.
         </p>
@@ -24,7 +31,7 @@ export function LandingHero() {
           <Link to="/contact" className="landing-btn-primary">
             Work with us
           </Link>
-          <Link to="/briefings" className="landing-btn-secondary">
+          <Link to="/briefings" className="landing-btn-on-photo">
             Read the briefings
           </Link>
         </div>

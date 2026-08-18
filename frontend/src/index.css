@@ -691,9 +691,30 @@ body {
 }
 
 .landing-root .landing-hero-photo {
+  position: relative;
   min-height: min(88svh, 760px);
   display: grid;
   align-items: end;
+  overflow: hidden;
+  background: #1a1612;
+}
+
+.landing-root .landing-btn-on-photo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.15rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #fff;
+  border: 1px solid rgb(255 255 255 / 0.85);
+  border-radius: 0.2rem;
+  background: transparent;
+}
+
+.landing-root .landing-btn-on-photo:hover {
+  background: #fff;
+  color: var(--l-ink);
 }
 
 .landing-root .landing-hero-stage {
