@@ -592,6 +592,33 @@ body {
   color: #fff;
 }
 
+.landing-root .learn-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  margin: 0 0 2rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--l-rule);
+  border-bottom: 1px solid var(--l-rule);
+  position: sticky;
+  top: 4.25rem;
+  z-index: 20;
+  background: color-mix(in srgb, var(--l-paper) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.landing-root .learn-nav a {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--l-slate);
+}
+
+.landing-root .learn-nav a:hover {
+  color: var(--l-ink);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-root .landing-hero-slide {
     animation: none;

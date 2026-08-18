@@ -13,28 +13,38 @@ import { BriefingLayout } from "./briefing/BriefingLayout"
 
 const m = METRICS_CANON
 
-const RULES = [
+const SECTIONS = [
   {
-    title: "One method, four countries",
-    body: "Official GTFS × official small areas × that country’s deprivation index. Ranks never leave the country.",
+    id: "join",
+    title: "Join",
+    body: "Official GTFS is joined to official small areas and that country’s deprivation index. England BODS × IMD. Ireland TFI × Pobal HP. Netherlands OVapi × SES-WOA. France NAP × F-EDI.",
   },
   {
-    title: "No Europe-wide index",
-    body: "IMD, Pobal HP, SES-WOA, and F-EDI are never plotted on one axis.",
+    id: "rank",
+    title: "Rank",
+    body: "The 0–100 score uses 400 m coverage, evening service, weekday quality, and inverted coverage–deprivation correlation. Missing terms drop out. IMD, HP, SES-WOA, and F-EDI never share an axis.",
   },
   {
-    title: "Dated packs",
-    body: "Only the network timetable time-travels. Census and deprivation stay frozen.",
+    id: "time",
+    title: "Time",
+    body: "Only the timetable pack time-travels. Census and deprivation stay frozen. A second dated GTFS pack is a real harvest — not a cloned warehouse.",
   },
   {
-    title: "Empty stays empty",
-    body: "15 / 30 / 45 minutes appear only after r5py. Missing GTFS-RT delay is not filled in.",
+    id: "destinations",
+    title: "Destinations",
+    body: "Jobs, GPs, and schools use in-country point files. 15 / 30 / 45 minute reach appears only after r5py. Otherwise Reach shows service bands and an empty travel-time line.",
   },
   {
-    title: "Local appraisal",
+    id: "appraisal",
+    title: "Appraisal",
     body: "England TAG / Green Book. Ireland CAF / PAG. Netherlands MKBA. France French socio-economic method. No EU-wide BCR.",
   },
-]
+  {
+    id: "open",
+    title: "Open",
+    body: "The routing family is r5 / r5py. Warehouses stay on disk. These pages are the public briefing. Sign in is unchanged.",
+  },
+] as const
 
 export default function MethodologyPage() {
   return (
@@ -43,7 +53,7 @@ export default function MethodologyPage() {
         title="How Aequitas is computed — four-country method"
         description="Official GTFS joined to official deprivation. Same score formula. Ranks stay in-country. England Gini 0.5741. No Europe-wide index."
         path="/methodology"
-        jsonLd={breadcrumbJsonLd([{ name: "Methodology", path: "/methodology" }])}
+        jsonLd={breadcrumbJsonLd([{ name: "Method", path: "/methodology" }])}
       />
 
       <p className="text-xs font-medium uppercase tracking-wide text-[var(--l-rust)]">
@@ -52,21 +62,37 @@ export default function MethodologyPage() {
       <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-3">
         How it is computed
       </h1>
-      <p className="text-[var(--l-slate)] max-w-2xl leading-relaxed mb-10">
+      <p className="text-[var(--l-slate)] max-w-2xl leading-relaxed mb-8 text-pretty">
         The warehouse is a dated lookup. These pages describe the method. The engine runs
         locally from official feeds.
       </p>
 
-      <ol className="space-y-4 mb-12 max-w-2xl">
-        {RULES.map((rule, i) => (
-          <li key={rule.title} className="flex gap-4">
-            <span className="font-display text-xl text-[var(--l-rust)]/50 tabular-nums w-7 shrink-0">
-              {String(i + 1).padStart(2, "0")}
-            </span>
-            <div>
-              <h2 className="font-semibold text-[var(--l-ink)]">{rule.title}</h2>
-              <p className="text-sm text-[var(--l-slate)] mt-1 leading-relaxed">{rule.body}</p>
-            </div>
+      <nav aria-label="Method sections" className="learn-nav">
+        {SECTIONS.map((s) => (
+          <a key={s.id} href={`#${s.id}`}>
+            {s.title}
+          </a>
+        ))}
+      </nav>
+
+      <div className="grid lg:grid-cols-2 gap-8 items-center mb-14">
+        <img
+          src="/landing/feat-desk.jpg"
+          alt="A planning desk with a city map on the laptop"
+          width={1600}
+          height={1000}
+          className="rounded-2xl w-full aspect-[16/10] object-cover"
+        />
+        <p className="text-[var(--l-slate)] leading-relaxed text-pretty">
+          One claim per section. The stack table is the source of truth for names and scores.
+        </p>
+      </div>
+
+      <ol className="space-y-10 mb-14 max-w-2xl">
+        {SECTIONS.map((section) => (
+          <li key={section.id} id={section.id} className="scroll-mt-24">
+            <h2 className="font-display text-2xl text-[var(--l-ink)]">{section.title}</h2>
+            <p className="text-[var(--l-slate)] mt-2 leading-relaxed text-pretty">{section.body}</p>
           </li>
         ))}
       </ol>
@@ -104,8 +130,7 @@ export default function MethodologyPage() {
       <h2 className="text-lg font-semibold text-[var(--l-ink)] mb-3">England reference pack</h2>
       <p className="text-sm text-[var(--l-slate)] mb-4 max-w-2xl">
         Warehouse {m.warehouseBuiltAt}, pack {m.asOf}. {m.qualityChecks} quality checks,{" "}
-        {m.qualityFails} failures. Score = 100 × (0.40 × people within 400 m + 0.25 × evening
-        served + 0.20 × weekday quality + 0.15 × (1 − |coverage–deprivation r|)).
+        {m.qualityFails} failures.
       </p>
       <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12 text-sm">
         <div>

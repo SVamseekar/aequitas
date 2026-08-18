@@ -24,6 +24,13 @@ export default function AboutPage() {
         Same doors in four countries. Official timetables × official deprivation. The engine
         runs locally; these pages name the field.
       </p>
+      <img
+        src="/landing/hero-studio.jpg"
+        alt="Planners around a printed bus-network map"
+        className="w-full rounded-2xl aspect-[21/8] object-cover mb-10"
+        width={1920}
+        height={730}
+      />
       <ul className="grid sm:grid-cols-2 gap-2 mb-10 text-sm">
         {COUNTRY_BRIEFS.map((c) => (
           <li key={c.code}>

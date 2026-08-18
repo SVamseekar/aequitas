@@ -45,6 +45,13 @@ export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
       <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-6 text-balance">
         {country.name}
       </h1>
+      <img
+        src="/landing/hero-stop.jpg"
+        alt=""
+        className="w-full rounded-2xl aspect-[21/8] object-cover object-center mb-8"
+        width={1920}
+        height={730}
+      />
 
       <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-3 mb-10 text-sm">
         {rows.map(([k, v]) => (

@@ -13,20 +13,20 @@ const GROUPS: ReadonlyArray<{
     label: "Measure",
     hint: "Need, coverage, service, operators",
     match: (d) =>
-      ["/equity", "/access", "/service", "/network"].includes(d.route),
+      ["/briefings/equity", "/briefings/access", "/briefings/service", "/briefings/network"].includes(d.route),
   },
   {
     id: "interpret",
     label: "Interpret",
     hint: "Correlations, cost, statute, scenarios",
     match: (d) =>
-      ["/correlations", "/economy", "/policy", "/scenarios"].includes(d.route),
+      ["/briefings/correlations", "/briefings/economy", "/briefings/policy", "/briefings/scenarios"].includes(d.route),
   },
   {
     id: "observe",
     label: "Observe",
     hint: "Dated packs, reach, last official RT",
-    match: (d) => ["/time", "/reach", "/ops"].includes(d.route),
+    match: (d) => ["/briefings/time", "/briefings/reach", "/briefings/ops"].includes(d.route),
   },
 ]
 

@@ -19,29 +19,41 @@ export default function TopicsIndexPage() {
         path="/briefings"
         jsonLd={breadcrumbJsonLd([{ name: "Briefings", path: "/briefings" }])}
       />
+
       <p className="text-xs font-medium uppercase tracking-wide text-[var(--l-rust)]">
-        Field map · {AUTHOR_NAME}
+        Briefings · {AUTHOR_NAME}
       </p>
       <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-3 text-balance">
-        Everything the briefing covers
+        Four countries. Same doors.
       </h1>
-      <p className="text-[var(--l-slate)] max-w-2xl leading-relaxed text-pretty mb-8">
-        Same method in England, Ireland, the Netherlands, and France. Official
-        timetables joined to official deprivation. Ranks never leave the country.
+      <p className="text-[var(--l-slate)] max-w-2xl leading-relaxed text-pretty mb-10">
+        Official timetables joined to official deprivation. Ranks never leave the country.
       </p>
 
-      <h2 className="text-lg font-semibold text-[var(--l-ink)] mb-3">Countries</h2>
-      <ul className="grid sm:grid-cols-2 gap-3 mb-4">
+      <div className="overflow-hidden rounded-2xl mb-12 aspect-[21/8] bg-[#1a1612]">
+        <img
+          src="/landing/hero-street.jpg"
+          alt="A European tram street at blue hour"
+          className="h-full w-full object-cover"
+          width={1920}
+          height={730}
+        />
+      </div>
+
+      <h2 className="text-lg font-semibold text-[var(--l-ink)] mb-4">Countries</h2>
+      <ul className="divide-y divide-[var(--l-rule)] border-y border-[var(--l-rule)] mb-12">
         {COUNTRY_BRIEFS.map((c) => (
           <li key={c.code}>
             <Link
               to={c.path}
-              className="landing-card block p-4 hover:border-[var(--l-rust)]/40 transition-colors"
+              className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 py-4 group"
             >
-              <p className="font-semibold text-[var(--l-ink)]">{c.name}</p>
-              <p className="text-sm text-[var(--l-slate)] mt-1 text-pretty">
-                {c.network} · {c.deprivation} · score {c.score}
-              </p>
+              <span className="font-display text-xl text-[var(--l-ink)] group-hover:text-[var(--l-rust)]">
+                {c.name}
+              </span>
+              <span className="text-sm text-[var(--l-slate)]">
+                {c.deprivation} · score {c.score}
+              </span>
             </Link>
           </li>
         ))}
@@ -49,7 +61,7 @@ export default function TopicsIndexPage() {
 
       <LandingDimensions embed />
 
-      <h2 className="text-lg font-semibold text-[var(--l-ink)] mb-3">Also in the method</h2>
+      <h2 className="text-lg font-semibold text-[var(--l-ink)] mt-10 mb-4">Also in the method</h2>
       <ul className="grid sm:grid-cols-2 gap-3">
         {extra.map((t) => (
           <li key={t.slug}>

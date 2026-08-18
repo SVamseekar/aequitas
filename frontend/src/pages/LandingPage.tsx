@@ -1,12 +1,10 @@
 import { Seo } from "@/components/shared/Seo"
-import { LandingCta } from "@/components/landing/LandingCta"
+import { LandingCapabilities } from "@/components/landing/LandingCapabilities"
 import { LandingCoverage } from "@/components/landing/LandingCoverage"
+import { LandingCta } from "@/components/landing/LandingCta"
 import { LandingDataSources } from "@/components/landing/LandingDataSources"
-import { LandingDimensions } from "@/components/landing/LandingDimensions"
-import { LandingFaq } from "@/components/landing/LandingFaq"
 import { LandingFooter } from "@/components/landing/LandingFooter"
 import { LandingHero } from "@/components/landing/LandingHero"
-import { LandingHowItWorks } from "@/components/landing/LandingHowItWorks"
 import { LandingNav } from "@/components/landing/LandingNav"
 import { landingPageJsonLd } from "@/lib/structuredData"
 import { DEFAULT_DESCRIPTION } from "@/lib/site"
@@ -33,10 +31,8 @@ export default function LandingPage() {
       <main id="main-content">
         <LandingHero />
         <LandingDataSources />
+        <LandingCapabilities />
         <LandingCoverage />
-        <LandingDimensions />
-        <LandingHowItWorks />
-        <LandingFaq />
         <LandingCta />
       </main>
 
