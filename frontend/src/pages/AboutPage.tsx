@@ -87,8 +87,8 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen app-atmosphere text-foreground">
       <Seo
-        title="About Aequitas — Public Sector Transport Intelligence"
-        description={`Aequitas pre-computes evidence-graded transport equity analytics across ${m.dimensions} policy dimensions and ${m.sections} analytical sections, drawing on national open data sources.`}
+        title="About Aequitas — England, Ireland, Netherlands, France | Marti Soura Vamseekar"
+        description={`Aequitas joins official GTFS to official deprivation in four countries (IMD, Pobal HP, SES-WOA, F-EDI). ${m.sections} sections. Built by Marti Soura Vamseekar.`}
         path="/about"
         jsonLd={breadcrumbJsonLd([{ name: "About", path: "/about" }])}
       />
@@ -109,14 +109,14 @@ export default function AboutPage() {
         <div className="h-px bg-primary/40 mb-8 max-w-xs" />
         <p className="marketing-eyebrow text-primary">About Aequitas</p>
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-4 text-foreground">
-          UK Bus Transport Policy Intelligence
+          Official timetables × official deprivation, four countries
         </h1>
         <p className="marketing-lede mb-12">
-          Aequitas is a policy intelligence platform for UK government, Local Transport Authorities
-          (LTAs), and transport researchers. It pre-computes evidence-graded analytics across{" "}
-          {m.dimensions} policy dimensions and {m.sections} analytical sections, covering all{" "}
-          {m.lsoas.toLocaleString("en-GB")} LSOAs in England, and provides a Gemini-powered natural
-          language interface for policy Q&A grounded in the pre-computed data.
+          Aequitas is a briefing method by Marti Soura Vamseekar: the same doors in England
+          (BODS, IMD, LSOA), Ireland (TFI, Pobal HP, CSO Small Areas), the Netherlands (OVapi,
+          SES-WOA, buurten), and France (NAP, F-EDI, IRIS). Ranks never leave the country.{" "}
+          {m.sections} analytical sections on the England reference warehouse; country packs
+          carry the same doors. Chat is country-indexed (FAISS).
         </p>
 
         <section className="mb-12">

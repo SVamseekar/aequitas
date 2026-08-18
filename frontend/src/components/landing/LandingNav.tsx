@@ -39,6 +39,9 @@ export function LandingNav() {
           <a href="#how" className="hover:text-[var(--l-ink)] transition-colors">
             How it works
           </a>
+          <Link to="/topics" className="hover:text-[var(--l-ink)] transition-colors">
+            Topics
+          </Link>
           <Link to="/about" className="hover:text-[var(--l-ink)] transition-colors">
             About
           </Link>

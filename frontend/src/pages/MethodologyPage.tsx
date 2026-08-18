@@ -78,6 +78,12 @@ export default function MethodologyPage() {
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-4 text-foreground">
           Methodology &amp; data quality
         </h1>
+        <p className="marketing-lede mb-8">
+          Same method in four countries. England uses BODS + IMD + LSOA. Ireland uses TFI +
+          Pobal HP + CSO Small Areas. The Netherlands uses OVapi + SES-WOA + buurten. France
+          uses NAP + F-EDI + IGN IRIS. Appraisal is TAG, CAF/PAG, MKBA, or French method —
+          never one EU BCR. 15/30/45 come from r5py. Chat is FAISS per country.
+        </p>
         <p className="text-sm text-muted-foreground mb-6">
           Four countries, one method: GTFS × official small areas × in-country deprivation ranks.
           Never plot IMD, Pobal HP, SES-WOA, and F-EDI as one number. Router: R5/r5py + Geofabrik OSM

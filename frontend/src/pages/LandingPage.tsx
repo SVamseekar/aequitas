@@ -12,13 +12,13 @@ import { LandingNav } from "@/components/landing/LandingNav"
 import { LandingProblemSolution } from "@/components/landing/LandingProblemSolution"
 import { LandingStats } from "@/components/landing/LandingStats"
 import { landingPageJsonLd } from "@/lib/structuredData"
-import { DEFAULT_DESCRIPTION, SITE_TAGLINE } from "@/lib/site"
+import { DEFAULT_DESCRIPTION } from "@/lib/site"
 
 export default function LandingPage() {
   return (
     <div className="landing-root min-h-screen">
       <Seo
-        title={`Aequitas — ${SITE_TAGLINE}`}
+        title={`Aequitas — GTFS × deprivation in England, Ireland, Netherlands, France`}
         description={DEFAULT_DESCRIPTION}
         path="/"
         jsonLd={landingPageJsonLd()}
