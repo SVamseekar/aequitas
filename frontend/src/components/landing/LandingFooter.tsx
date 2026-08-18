@@ -7,7 +7,7 @@ import {
   isAnalyticsConfigured,
 } from "@/lib/site"
 import { useAuth } from "@/contexts/AuthContext"
-import { AequitasLogo } from "@/components/shared/AequitasLogo"
+import { AequitasLockup } from "@/components/shared/AequitasLockup"
 
 const year = new Date().getFullYear()
 const linkClass = "text-sm text-[var(--l-slate)] hover:text-[var(--l-ink)] transition-colors"
@@ -20,9 +20,8 @@ export function LandingFooter() {
       <div className="landing-shell py-10 sm:py-12">
         <div className="flex flex-col lg:flex-row lg:justify-between gap-8 mb-8">
           <div className="max-w-sm">
-            <div className="flex items-center gap-2.5 mb-3">
-              <AequitasLogo className="w-5 h-5 text-[var(--l-rust)]" aria-hidden />
-              <span className="font-semibold text-[var(--l-ink)]">Aequitas</span>
+            <div className="mb-4">
+              <AequitasLockup size="footer" />
             </div>
             <p className="text-sm text-[var(--l-slate)] leading-relaxed mb-4">
               Bus × official deprivation. England, Ireland, the Netherlands, and France. Same

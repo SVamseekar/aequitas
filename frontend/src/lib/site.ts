@@ -1,5 +1,5 @@
 export const SITE_NAME = "Aequitas"
-export const SITE_TAGLINE = "Where the bus fails people — one method, in-country ranks"
+export const SITE_TAGLINE = "In-country briefings"
 export const SITE_URL =
   (import.meta.env.VITE_SITE_URL as string | undefined)?.trim() ??
   "https://aequitas.souravamseekar.com"

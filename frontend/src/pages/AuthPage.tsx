@@ -1,7 +1,7 @@
 import { Navigate, useNavigate } from "react-router"
 import { useAuth } from "@/contexts/AuthContext"
 import { Toaster, toast } from "sonner"
-import { AequitasLogo } from "@/components/shared/AequitasLogo"
+import { AequitasLockup } from "@/components/shared/AequitasLockup"
 import { Seo } from "@/components/shared/Seo"
 import { METRICS_CANON, authHeadlineStats } from "@/lib/metricsCanon"
 
@@ -65,20 +65,17 @@ export default function AuthPage() {
           <div className="relative z-10 p-10">
             <button
               onClick={() => navigate("/")}
-              className="flex items-center gap-2.5 text-sm font-semibold text-foreground hover:text-primary transition-colors"
+              className="hover:opacity-80 transition-opacity"
             >
-              <span className="app-glass flex h-9 w-9 items-center justify-center rounded-xl">
-                <AequitasLogo className="w-4 h-4 text-primary" />
-              </span>
-              Aequitas
+              <AequitasLockup size="auth" />
             </button>
           </div>
 
           <div className="relative z-10 p-10 pb-16">
-            <h1 className="text-4xl xl:text-5xl font-semibold leading-[1.1] tracking-tight mb-5 text-foreground">
-              Policy intelligence
+            <h1 className="text-4xl xl:text-5xl font-display leading-[1.1] tracking-tight mb-5 text-foreground">
+              Official evidence.
               <br />
-              <span className="text-primary">with evidence.</span>
+              <span className="text-primary">In-country ranks.</span>
             </h1>
             <p className="text-base text-muted-foreground max-w-md leading-relaxed">
               Evidence-graded analytics for UK bus transport policy.{" "}
@@ -107,14 +104,13 @@ export default function AuthPage() {
 
         <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
           <div className="w-full max-w-sm app-glass-strong rounded-3xl p-8">
-            <div className="lg:hidden mb-8 flex items-center gap-2">
-              <AequitasLogo className="w-5 h-5 text-primary" />
-              <span className="text-sm font-semibold">Aequitas</span>
+            <div className="lg:hidden mb-8">
+              <AequitasLockup size="auth" />
             </div>
 
             <h2 className="text-xl font-bold tracking-tight mb-2 text-foreground">Welcome</h2>
             <p className="text-base text-muted-foreground mb-8 leading-relaxed">
-              Sign in with Google to access the policy intelligence platform
+              Sign in with Google to open the briefing.
             </p>
 
             <button

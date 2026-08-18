@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router"
 import { useAuth } from "@/contexts/AuthContext"
-import { AequitasLogo } from "@/components/shared/AequitasLogo"
+import { AequitasLockup } from "@/components/shared/AequitasLockup"
 
 const LINKS = [
   { to: "/briefings", label: "Briefings" },
@@ -26,11 +26,8 @@ export function LandingNav() {
         aria-label="Primary"
         className="landing-shell flex items-center justify-between h-16 sm:h-[4.25rem]"
       >
-        <Link to="/" className="flex items-center gap-2.5" aria-label="Aequitas home">
-          <AequitasLogo className="w-5 h-5 text-[var(--l-ink)]" aria-hidden />
-          <span className="text-[17px] font-semibold tracking-tight text-[var(--l-ink)]">
-            aequitas
-          </span>
+        <Link to="/" aria-label="Aequitas home">
+          <AequitasLockup size="nav" />
         </Link>
 
         <div className="flex items-center gap-5 lg:gap-7">

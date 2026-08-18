@@ -367,6 +367,42 @@ body {
   box-shadow: 0 8px 24px rgb(20 19 17 / 0.06);
 }
 
+.aequitas-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.aequitas-lockup-mark {
+  color: var(--l-ink);
+  flex-shrink: 0;
+}
+
+.landing-root .aequitas-lockup-mark {
+  color: var(--l-ink);
+}
+
+.aequitas-lockup-type {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.aequitas-lockup-name {
+  font-family: "Instrument Serif", "Times New Roman", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--l-ink);
+}
+
+.aequitas-lockup-line {
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--l-slate);
+}
+
 .landing-root .landing-nav-link {
   font-size: 0.72rem;
   font-weight: 650;
