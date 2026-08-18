@@ -29,6 +29,7 @@ const ReachPage = lazy(() => import("./pages/ReachPage"))
 const TimePage = lazy(() => import("./pages/TimePage"))
 const OpsPage = lazy(() => import("./pages/OpsPage"))
 const InviteAcceptPage = lazy(() => import("./pages/InviteAcceptPage"))
+const RefundsPage = lazy(() => import("./pages/RefundsPage"))
 
 // Saved sub-pages rendered inside a simple wrapper
 const SavedPage = lazy(() =>
@@ -100,7 +101,7 @@ export default function App() {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/terms" element={<TermsPage />} />
-              <Route path="/refunds" element={<Navigate to="/about" replace />} />
+              <Route path="/refunds" element={<RefundsPage />} />
               <Route path="/methodology" element={<MethodologyPage />} />
               <Route path="/accessibility" element={<AccessibilityPage />} />
               <Route path="/briefings" element={<TopicsIndexPage />} />

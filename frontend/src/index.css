@@ -637,6 +637,10 @@ body {
     0 28px 80px rgb(0 0 0 / 0.45);
 }
 
+.landing-root .landing-product-window-plain {
+  box-shadow: 0 0 0 1px var(--l-rule), 0 18px 48px rgb(20 19 17 / 0.1);
+}
+
 .landing-root .landing-product-chrome {
   display: flex;
   align-items: center;

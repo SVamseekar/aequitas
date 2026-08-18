@@ -45,7 +45,7 @@ export function LandingNav() {
             {user ? "Open" : "Log in"}
           </Link>
           <Link to="/contact" className="landing-btn-outline">
-            Contact
+            Work with us
           </Link>
         </div>
       </nav>

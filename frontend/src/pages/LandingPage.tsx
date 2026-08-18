@@ -3,6 +3,8 @@ import { LandingCapabilities } from "@/components/landing/LandingCapabilities"
 import { LandingCoverage } from "@/components/landing/LandingCoverage"
 import { LandingCta } from "@/components/landing/LandingCta"
 import { LandingDataSources } from "@/components/landing/LandingDataSources"
+import { LandingDemo } from "@/components/landing/LandingDemo"
+import { LandingEngage } from "@/components/landing/LandingEngage"
 import { LandingFooter } from "@/components/landing/LandingFooter"
 import { LandingHero } from "@/components/landing/LandingHero"
 import { LandingNav } from "@/components/landing/LandingNav"
@@ -13,7 +15,7 @@ export default function LandingPage() {
   return (
     <div className="landing-root min-h-screen">
       <Seo
-        title={`Aequitas — GTFS × deprivation in England, Ireland, Netherlands, France`}
+        title={`Aequitas — in-country transport briefings`}
         description={DEFAULT_DESCRIPTION}
         path="/"
         jsonLd={landingPageJsonLd()}
@@ -31,8 +33,10 @@ export default function LandingPage() {
       <main id="main-content">
         <LandingHero />
         <LandingDataSources />
+        <LandingDemo />
         <LandingCapabilities />
         <LandingCoverage />
+        <LandingEngage />
         <LandingCta />
       </main>
 

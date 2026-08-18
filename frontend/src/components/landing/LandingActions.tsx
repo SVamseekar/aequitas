@@ -2,10 +2,10 @@ import { Link } from "react-router"
 
 /** Conveyal pair: outline Learn more + filled primary. One pair per page close. */
 export function LandingActions({
-  primaryTo = "/briefings",
-  primary = "Read the briefings",
-  secondaryTo = "/methodology",
-  secondary = "Learn more",
+  primaryTo = "/contact",
+  primary = "Work with us",
+  secondaryTo = "/briefings",
+  secondary = "Read the briefings",
 }: {
   primaryTo?: string
   primary?: string

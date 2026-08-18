@@ -8,10 +8,10 @@ export function LandingCta() {
           id="landing-cta-heading"
           className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] leading-[1.12] max-w-xl mx-auto text-balance"
         >
-          See what the briefing covers
+          Commission a pack
         </h2>
         <p className="mt-4 text-[var(--l-slate)] max-w-md mx-auto leading-relaxed text-pretty">
-          Four official stacks. One method. Ranks stay in-country.
+          Authorities, agencies, and ministries. Same method. Your country.
         </p>
         <div className="mt-8 flex justify-center">
           <LandingActions />
