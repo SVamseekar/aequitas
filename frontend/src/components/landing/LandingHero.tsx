@@ -14,20 +14,21 @@ export function LandingHero() {
       <div className="landing-hero-bg-veil" aria-hidden />
 
       <div className="landing-shell landing-hero-copy">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white mb-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white mb-3">
           For authorities, agencies, and ministries
         </p>
         <h1
           id="landing-hero-heading"
-          className="font-display text-4xl sm:text-5xl lg:text-[3.4rem] leading-[1.06] text-white text-balance"
+          className="font-display text-4xl sm:text-5xl lg:text-[3.15rem] leading-[1.08] text-white text-balance"
         >
-          A briefing method you can commission for your country
+          Commission a briefing
+          <br />
+          for your country
         </h1>
-        <p className="mt-5 text-lg text-white leading-relaxed text-pretty">
-          Official timetables joined to official need. Same doors everywhere. Ranks stay
-          in-country. We build the pack for your geography, your index, your statute.
+        <p className="mt-4 text-base sm:text-[1.05rem] text-white leading-relaxed text-pretty">
+          Official timetables × official need. Ranks stay in-country.
         </p>
-        <div className="mt-8 flex flex-wrap items-center gap-3">
+        <div className="mt-6 flex flex-wrap items-center gap-3">
           <Link to="/contact" className="landing-btn-primary">
             Work with us
           </Link>
