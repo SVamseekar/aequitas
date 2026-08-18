@@ -4,6 +4,7 @@ import { breadcrumbJsonLd } from "@/lib/structuredData"
 import { AUTHOR_NAME } from "@/lib/site"
 import { COUNTRY_BRIEFS } from "@/lib/briefingCatalog"
 import { BriefingLayout } from "./briefing/BriefingLayout"
+import { LandingActions } from "@/components/landing/LandingActions"
 
 export default function AboutPage() {
   return (
@@ -41,19 +42,7 @@ export default function AboutPage() {
           </li>
         ))}
       </ul>
-      <p className="text-sm">
-        <Link to="/briefings" className="underline">
-          Briefings
-        </Link>
-        {" · "}
-        <Link to="/methodology" className="underline">
-          Method
-        </Link>
-        {" · "}
-        <Link to="/contact" className="underline">
-          Contact
-        </Link>
-      </p>
+      <LandingActions />
     </BriefingLayout>
   )
 }

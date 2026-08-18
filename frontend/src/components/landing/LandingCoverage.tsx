@@ -22,10 +22,7 @@ export function LandingCoverage() {
               Four official stacks
             </h2>
           </div>
-          <Link
-            to="/briefings"
-            className="text-sm font-semibold text-[var(--l-rust)] hover:text-[var(--l-rust-deep)]"
-          >
+          <Link to="/briefings" className="landing-btn-text">
             Read more →
           </Link>
         </div>

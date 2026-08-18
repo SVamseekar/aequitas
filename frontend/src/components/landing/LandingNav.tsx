@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router"
-import { ArrowRight } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { AequitasLogo } from "@/components/shared/AequitasLogo"
 
@@ -53,10 +52,9 @@ export function LandingNav() {
           <button
             type="button"
             onClick={() => navigate(user ? "/app/england" : "/auth")}
-            className="landing-btn-primary !py-2 !px-4 text-sm"
+            className="landing-btn-primary !py-2 !px-3.5 text-sm"
           >
             {user ? "Open platform" : "Sign in"}
-            <ArrowRight className="w-3.5 h-3.5" aria-hidden />
           </button>
         </div>
       </nav>

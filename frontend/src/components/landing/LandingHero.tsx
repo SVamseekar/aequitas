@@ -1,5 +1,4 @@
 import { Link } from "react-router"
-import { ArrowRight } from "lucide-react"
 import { LandingHeroVisual } from "./LandingHeroVisual"
 
 export function LandingHero() {
@@ -27,13 +26,12 @@ export function LandingHero() {
           Official timetables × official deprivation. Same method. Ranks stay in-country.
         </p>
 
-        <div className="mt-7 flex flex-wrap items-center gap-3">
-          <Link to="/briefings" className="landing-btn-primary">
-            Read the briefings
-            <ArrowRight className="w-4 h-4" aria-hidden />
+        <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <Link to="/briefings" className="landing-btn-ghost">
+            Read the briefings →
           </Link>
           <Link to="/methodology" className="landing-btn-ghost">
-            How it is computed
+            How it is computed →
           </Link>
         </div>
       </div>

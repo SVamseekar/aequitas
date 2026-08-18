@@ -458,49 +458,63 @@ body {
 .landing-root .landing-btn-primary {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(180deg, #d46830 0%, var(--l-rust) 100%);
+  justify-content: center;
+  gap: 0.45rem;
+  background: var(--l-ink);
   color: #fff;
   font-weight: 600;
-  border-radius: 9999px;
-  padding: 0.8rem 1.5rem;
+  border-radius: 0.2rem;
+  padding: 0.7rem 1.15rem;
   font-size: 0.9375rem;
-  border: 1px solid rgb(255 255 255 / 0.2);
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.25) inset,
-    0 10px 28px rgb(184 78 31 / 0.32);
-  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  border: 1px solid var(--l-ink);
+  box-shadow: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .landing-root .landing-btn-primary:hover {
-  background: linear-gradient(180deg, #c45c26 0%, var(--l-rust-deep) 100%);
-  transform: translateY(-1px);
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.2) inset,
-    0 14px 32px rgb(184 78 31 / 0.38);
+  background: var(--l-rust);
+  border-color: var(--l-rust);
+  color: #fff;
+}
+
+.landing-root .landing-btn-primary:focus-visible,
+.landing-root .landing-btn-secondary:focus-visible {
+  outline: 2px solid var(--l-rust);
+  outline-offset: 2px;
 }
 
 .landing-root .landing-btn-secondary {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background: rgb(255 255 255 / 0.28);
+  justify-content: center;
+  gap: 0.45rem;
+  background: transparent;
   color: var(--l-ink);
   font-weight: 600;
-  border: 1px solid rgb(255 255 255 / 0.75);
-  border-radius: 9999px;
-  padding: 0.8rem 1.5rem;
+  border: 1px solid var(--l-ink);
+  border-radius: 0.2rem;
+  padding: 0.7rem 1.15rem;
   font-size: 0.9375rem;
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 10px 28px rgb(20 19 17 / 0.08);
-  backdrop-filter: blur(22px) saturate(1.6);
-  -webkit-backdrop-filter: blur(22px) saturate(1.6);
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  box-shadow: none;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .landing-root .landing-btn-secondary:hover {
-  background: rgb(255 255 255 / 0.45);
-  border-color: rgb(255 255 255 / 0.9);
-  transform: translateY(-1px);
+  background: var(--l-ink);
+  color: #fff;
+}
+
+.landing-root .landing-btn-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--l-ink);
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.landing-root .landing-btn-text:hover {
+  color: var(--l-rust);
 }
 
 /* Frosted chip / pill */
@@ -581,11 +595,11 @@ body {
 .landing-root .landing-btn-ghost {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  color: rgb(255 255 255 / 0.88);
-  font-size: 0.9rem;
-  font-weight: 550;
-  padding: 0.8rem 0.6rem;
+  gap: 0.35rem;
+  color: rgb(255 255 255 / 0.92);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: 0.2rem 0;
 }
 
 .landing-root .landing-btn-ghost:hover {

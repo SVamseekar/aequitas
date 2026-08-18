@@ -5,6 +5,7 @@ import { COUNTRY_BRIEFS, TOPIC_BRIEFS } from "@/lib/briefingCatalog"
 import { AUTHOR_NAME } from "@/lib/site"
 import { BriefingLayout } from "./BriefingLayout"
 import { LandingDimensions } from "@/components/landing/LandingDimensions"
+import { LandingActions } from "@/components/landing/LandingActions"
 
 export default function TopicsIndexPage() {
   const extra = TOPIC_BRIEFS.filter((t) =>
@@ -75,6 +76,10 @@ export default function TopicsIndexPage() {
           </li>
         ))}
       </ul>
+
+      <div className="mt-12 pt-10 border-t border-[var(--l-rule)]">
+        <LandingActions />
+      </div>
     </BriefingLayout>
   )
 }

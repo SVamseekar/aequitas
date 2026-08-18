@@ -10,6 +10,7 @@ import {
   formatConcentrationIndex,
 } from "@/lib/metricsCanon"
 import { BriefingLayout } from "./briefing/BriefingLayout"
+import { LandingActions } from "@/components/landing/LandingActions"
 
 const m = METRICS_CANON
 
@@ -155,16 +156,13 @@ export default function MethodologyPage() {
         </div>
       </dl>
 
-      <p className="text-sm text-[var(--l-slate)]">
+      <p className="text-sm text-[var(--l-slate)] mb-8">
         Not official government guidance.{" "}
         <Link to="/disclaimer" className="underline">
           Disclaimer
         </Link>
-        {" · "}
-        <Link to="/briefings" className="underline">
-          All briefings
-        </Link>
       </p>
+      <LandingActions />
     </BriefingLayout>
   )
 }

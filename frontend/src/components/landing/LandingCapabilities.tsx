@@ -67,10 +67,7 @@ export function LandingCapabilities() {
                 <p className="mt-4 text-[var(--l-slate)] leading-relaxed text-pretty max-w-md">
                   {cap.body}
                 </p>
-                <Link
-                  to={cap.href}
-                  className="mt-5 inline-flex text-sm font-semibold text-[var(--l-rust)] hover:text-[var(--l-rust-deep)]"
-                >
+                <Link to={cap.href} className="landing-btn-text mt-5">
                   Learn more →
                 </Link>
               </div>

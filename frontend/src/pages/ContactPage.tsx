@@ -172,7 +172,7 @@ export default function ContactPage() {
               <button
                 type="submit"
                 disabled={status === "submitting"}
-                className="flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-60 text-white rounded-md px-5 py-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="landing-btn-primary disabled:opacity-60"
               >
                 {status === "submitting" ? (
                   <>
