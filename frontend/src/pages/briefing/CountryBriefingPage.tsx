@@ -3,6 +3,7 @@ import { Seo } from "@/components/shared/Seo"
 import { breadcrumbJsonLd } from "@/lib/structuredData"
 import { AUTHOR_NAME } from "@/lib/site"
 import { countryByCode, TOPIC_BRIEFS, type CountryCode } from "@/lib/briefingCatalog"
+import { COUNTRY_PHOTO } from "@/lib/publicPhotos"
 import { BriefingLayout } from "./BriefingLayout"
 
 export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
@@ -46,8 +47,8 @@ export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
         {country.name}
       </h1>
       <img
-        src="/landing/hero-stop.jpg"
-        alt=""
+        src={COUNTRY_PHOTO[country.code].src}
+        alt={COUNTRY_PHOTO[country.code].alt}
         className="w-full rounded-2xl aspect-[21/8] object-cover object-center mb-8"
         width={1920}
         height={730}

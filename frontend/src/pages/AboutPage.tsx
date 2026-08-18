@@ -25,8 +25,8 @@ export default function AboutPage() {
         runs locally; these pages name the field.
       </p>
       <img
-        src="/landing/hero-studio.jpg"
-        alt="Planners around a printed bus-network map"
+        src="/landing/about.jpg"
+        alt="An independent studio facing the city"
         className="w-full rounded-2xl aspect-[21/8] object-cover mb-10"
         width={1920}
         height={730}

@@ -1,76 +1,51 @@
-import { useNavigate } from "react-router"
-import { ArrowLeft } from "lucide-react"
 import { Seo } from "@/components/shared/Seo"
+import { BriefingLayout } from "./briefing/BriefingLayout"
 
 export default function DisclaimerPage() {
-  const navigate = useNavigate()
-
   return (
-    <div className="min-h-screen app-atmosphere text-foreground">
+    <BriefingLayout>
       <Seo
         title="Disclaimer — Aequitas"
-        description="Aequitas is a policy analysis tool, not official government guidance. Read about data limitations and intended use."
+        description="Aequitas is an independent briefing, not official government guidance."
         path="/disclaimer"
       />
-      <div className="border-b border-white/50 bg-white/20 backdrop-blur-2xl">
-        <div className="max-w-3xl mx-auto px-6 flex items-center min-h-11">
-          <span className="text-sm text-muted-foreground">Disclaimer</span>
-        </div>
+      <p className="text-xs font-medium uppercase tracking-wide text-[var(--l-rust)]">Disclaimer</p>
+      <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-4">
+        Not official government guidance
+      </h1>
+      <p className="text-[var(--l-slate)] max-w-2xl mb-10 text-pretty">
+        Independent briefing. Not affiliated with DfT, NTA, CBS, or a French ministry.
+      </p>
+
+      <div className="space-y-6 max-w-2xl">
+        {[
+          {
+            title: "Data accuracy",
+            body: "Analytics come from official public datasets. No warranty of completeness or fitness for a funding decision.",
+          },
+          {
+            title: "Appraisal is local",
+            body: "England TAG / Green Book figures are not DfT-accredited scheme appraisal. Ireland CAF/PAG, Netherlands MKBA, France French method — never an EU-wide BCR.",
+          },
+          {
+            title: "Chat",
+            body: "Country-indexed assistant. Cite the briefing. Verify before a policy document.",
+          },
+          {
+            title: "Dated packs",
+            body: "Each country pack is a dated harvest. Do not treat outputs as live operations data.",
+          },
+          {
+            title: "Liability",
+            body: "Authors accept no liability for decisions made on these pages.",
+          },
+        ].map((s) => (
+          <section key={s.title} className="border-b border-[var(--l-rule)] pb-6">
+            <h2 className="font-semibold text-[var(--l-ink)] mb-2">{s.title}</h2>
+            <p className="text-sm text-[var(--l-slate)] leading-relaxed">{s.body}</p>
+          </section>
+        ))}
       </div>
-
-      <div className="max-w-3xl mx-auto px-6 py-12 sm:py-14">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
-
-        <div className="h-px bg-primary/40 mb-8 max-w-xs" />
-        <p className="marketing-eyebrow text-primary">Legal Disclaimer</p>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-4 text-foreground">
-          Not Official Government Guidance
-        </h1>
-        <p className="marketing-lede mb-12">
-          Aequitas is an independent policy intelligence tool. It is not affiliated with, endorsed
-          by, or produced by the Department for Transport (DfT), the Office for National Statistics
-          (ONS), or any other UK government body.
-        </p>
-
-        <div className="space-y-4">
-          {[
-            {
-              title: "Data Accuracy",
-              body: "All analytics are derived from publicly available government datasets (NaPTAN, BODS GTFS, ONS Census 2021, MHCLG IMD 2025, NOMIS BRES 2023, NHS ODS, GIAS, DfT TAG v2.03fc, DESNZ 2025). While every effort has been made to process these datasets accurately, Aequitas makes no warranty as to the completeness, accuracy, or fitness for purpose of the analytics presented.",
-            },
-            {
-              title: "Not Official DfT Guidance",
-              body: "The economic appraisal figures (BCR, NPV, GDP multipliers) use TAG v2.03fc methodology but have not been validated by DfT. They are indicative estimates for policy exploration, not formal scheme appraisal outputs. Any investment decisions should use DfT-accredited appraisal processes.",
-            },
-            {
-              title: "AI-Generated Content",
-              body: "The chatbot uses Gemini Flash grounded in pre-computed narratives. Responses may contain errors, omissions, or misinterpretations. All AI responses should be independently verified against primary data sources before use in policy documents.",
-            },
-            {
-              title: "Temporal Limitations",
-              body: "Data reflects the point-in-time snapshots of each source dataset: BODS GTFS (2024–25 timetables), ONS Census 2021, IMD 2025, BRES 2023. Bus network conditions, operator patterns, and deprivation indices change over time. Do not treat outputs as current operational data.",
-            },
-            {
-              title: "Liability",
-              body: "The authors accept no liability for decisions made on the basis of Aequitas outputs. Users assume full responsibility for how analytics are interpreted and applied.",
-            },
-            {
-              title: "Open Data Licences",
-              body: "Underlying datasets are licensed under the Open Government Licence v3.0 (OGL3), the Open Data Commons Open Database Licence (ODbL), and other open licences as specified by each originating body. Aequitas does not redistribute raw source data.",
-            },
-          ].map((s) => (
-            <div key={s.title} className="app-glass-strong rounded-2xl border border-white/60 p-5">
-              <p className="marketing-card-title mb-2">{s.title}</p>
-              <p className="marketing-body">{s.body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    </BriefingLayout>
   )
 }

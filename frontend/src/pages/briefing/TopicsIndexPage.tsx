@@ -32,8 +32,8 @@ export default function TopicsIndexPage() {
 
       <div className="overflow-hidden rounded-2xl mb-12 aspect-[21/8] bg-[#1a1612]">
         <img
-          src="/landing/hero-street.jpg"
-          alt="A European tram street at blue hour"
+          src="/landing/briefings.jpg"
+          alt="A map archive drawer being opened"
           className="h-full w-full object-cover"
           width={1920}
           height={730}

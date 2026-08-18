@@ -1,5 +1,6 @@
 import { Link } from "react-router"
 import { COUNTRY_COVERAGE } from "./data"
+import { COUNTRY_PHOTO } from "@/lib/publicPhotos"
 
 export function LandingCoverage() {
   return (
@@ -30,20 +31,33 @@ export function LandingCoverage() {
         </div>
 
         <ul className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {COUNTRY_COVERAGE.map((c) => (
-            <li key={c.code}>
-              <Link
-                to={c.href}
-                className="landing-card block h-full p-4 sm:p-5 hover:border-[var(--l-rust)]/35"
-              >
-                <h3 className="font-display text-xl text-[var(--l-ink)]">{c.name}</h3>
-                <p className="mt-2 text-xs text-[var(--l-slate)] leading-snug">
-                  {c.deprivation}
-                </p>
-                <p className="mt-1 text-xs text-[var(--l-slate)] leading-snug">{c.network}</p>
-              </Link>
-            </li>
-          ))}
+          {COUNTRY_COVERAGE.map((c) => {
+            const photo = COUNTRY_PHOTO[c.code]
+            return (
+              <li key={c.code}>
+                <Link
+                  to={c.href}
+                  className="landing-card block h-full overflow-hidden hover:border-[var(--l-rust)]/35"
+                >
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    className="aspect-[16/10] w-full object-cover"
+                    width={800}
+                    height={500}
+                    loading="lazy"
+                  />
+                  <div className="p-4 sm:p-5">
+                    <h3 className="font-display text-xl text-[var(--l-ink)]">{c.name}</h3>
+                    <p className="mt-2 text-xs text-[var(--l-slate)] leading-snug">
+                      {c.deprivation}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--l-slate)] leading-snug">{c.network}</p>
+                  </div>
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       </div>
     </section>

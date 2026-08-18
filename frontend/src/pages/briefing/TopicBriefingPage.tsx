@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router"
 import { Seo } from "@/components/shared/Seo"
 import { breadcrumbJsonLd } from "@/lib/structuredData"
 import { COUNTRY_BRIEFS, topicBySlug } from "@/lib/briefingCatalog"
+import { COUNTRY_PHOTO } from "@/lib/publicPhotos"
 import { BriefingLayout } from "./BriefingLayout"
 
 export default function TopicBriefingPage({ slug: slugProp }: { slug?: string }) {
@@ -36,6 +37,24 @@ export default function TopicBriefingPage({ slug: slugProp }: { slug?: string })
         {topic.title}
       </h1>
       <p className="text-[var(--l-slate)] mb-8 text-pretty">{topic.question}</p>
+
+      <ul className="grid grid-cols-4 gap-2 mb-8">
+        {COUNTRY_BRIEFS.map((c) => (
+          <li key={c.code}>
+            <Link to={c.path} className="block overflow-hidden rounded-lg">
+              <img
+                src={COUNTRY_PHOTO[c.code].src}
+                alt={COUNTRY_PHOTO[c.code].alt}
+                className="aspect-[4/3] w-full object-cover"
+                width={400}
+                height={300}
+                loading="lazy"
+              />
+              <span className="sr-only">{c.name}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
 
       <ul className="space-y-3 mb-10">
         {COUNTRY_BRIEFS.map((c) => (

@@ -77,8 +77,8 @@ export default function MethodologyPage() {
 
       <div className="grid lg:grid-cols-2 gap-8 items-center mb-14">
         <img
-          src="/landing/feat-desk.jpg"
-          alt="A planning desk with a city map on the laptop"
+          src="/landing/method.jpg"
+          alt="Maps, a clock, and a network sketch on a desk"
           width={1600}
           height={1000}
           className="rounded-2xl w-full aspect-[16/10] object-cover"

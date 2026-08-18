@@ -1,8 +1,8 @@
-import { useNavigate } from "react-router"
 import { useState } from "react"
-import { ArrowLeft, GitBranch, Mail, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
+import { GitBranch, Mail, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
 import { Seo } from "@/components/shared/Seo"
 import { SUPPORT_EMAIL } from "@/lib/site"
+import { BriefingLayout } from "./briefing/BriefingLayout"
 
 type FormStatus = "idle" | "submitting" | "success" | "error"
 
@@ -10,7 +10,6 @@ const inputClass =
   "w-full text-base app-glass border border-white/60 rounded-xl px-3.5 py-2.5 text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary"
 
 export default function ContactPage() {
-  const navigate = useNavigate()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [org, setOrg] = useState("")
@@ -42,35 +41,19 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen app-atmosphere text-foreground">
+    <BriefingLayout>
       <Seo
         title="Contact Aequitas — Feedback & Research Enquiries"
-        description="Get in touch with the Aequitas team for bug reports, data accuracy issues, research collaboration, or institutional use cases."
+        description="Get in touch for briefings, data issues, or research."
         path="/contact"
       />
-      <div className="border-b border-white/50 bg-white/20 backdrop-blur-2xl">
-        <div className="max-w-3xl mx-auto px-6 flex items-center min-h-11">
-          <span className="text-sm text-muted-foreground">Contact</span>
-        </div>
-      </div>
-
-      <div className="max-w-3xl mx-auto px-6 py-12 sm:py-14">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
-
-        <div className="h-px bg-primary/40 mb-8 max-w-xs" />
-        <p className="marketing-eyebrow text-primary">Contact & Feedback</p>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-4 text-foreground">
-          Get in Touch
-        </h1>
-        <p className="marketing-lede mb-12">
-          Aequitas is an open research project. Feedback from transport researchers, LTA planners,
-          and policy analysts is welcome.
-        </p>
+      <p className="text-xs font-medium uppercase tracking-wide text-[var(--l-rust)]">Contact</p>
+      <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-4">
+        Get in touch
+      </h1>
+      <p className="text-[var(--l-slate)] max-w-xl mb-10 text-pretty">
+        Briefings, data issues, or research. A form — not an essay.
+      </p>
 
         <div className="grid sm:grid-cols-2 gap-4 mb-12">
           <div className="app-glass-strong rounded-2xl border border-white/60 p-5">
@@ -203,25 +186,6 @@ export default function ContactPage() {
           )}
         </section>
 
-        <section>
-          <h2 className="text-lg font-semibold text-foreground mb-5">Known Limitations</h2>
-          <div className="app-glass-strong rounded-2xl border border-white/60 p-5 marketing-body space-y-3">
-            <p>
-              The 400m Euclidean catchment for accessibility metrics underestimates true walking
-              distances in areas with physical barriers (rivers, railways, motorways).
-              Network-distance catchments are planned for Phase 3.
-            </p>
-            <p>
-              BODS GTFS feeds cover 2024–25 timetables. Rural operators with fewer than 5 vehicles
-              may be underrepresented. Demand-responsive transport (DRT) services are not captured.
-            </p>
-            <p>
-              Modal shift estimates use DfT aggregate elasticities, not revealed-preference data.
-              Local elasticity variation is not modelled.
-            </p>
-          </div>
-        </section>
-      </div>
-    </div>
+    </BriefingLayout>
   )
 }
