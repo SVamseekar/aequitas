@@ -8,6 +8,7 @@ import { AppShell } from "./components/layout/AppShell"
 import { HomePage } from "./components/home/HomePage"
 import { DimensionPage } from "./components/dimension/DimensionPage"
 import { GoogleAnalytics } from "@/components/GoogleAnalytics"
+import { ScrollToTop } from "@/components/shared/ScrollToTop"
 import { appPath, legacyDashboardToApp, productSlugOrNull, withSearch } from "@/lib/appRoutes"
 
 const AuthPage = lazy(() => import("./pages/AuthPage"))
@@ -89,6 +90,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <Suspense fallback={fallback}>
             <Routes>
               {/* Public */}
