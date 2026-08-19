@@ -1,5 +1,8 @@
 import {
+  AUTHOR_NAME,
   DEFAULT_DESCRIPTION,
+  GITHUB_URL,
+  PORTFOLIO_URL,
   SITE_NAME,
   SITE_TAGLINE,
   SITE_URL,
@@ -24,8 +27,10 @@ export function landingPageJsonLd() {
       description: DEFAULT_DESCRIPTION,
       inLanguage: "en-GB",
       publisher: {
-        "@type": "Organization",
-        name: SITE_NAME,
+        "@type": "Person",
+        name: AUTHOR_NAME,
+        url: PORTFOLIO_URL,
+        sameAs: [GITHUB_URL, PORTFOLIO_URL],
       },
     },
     {

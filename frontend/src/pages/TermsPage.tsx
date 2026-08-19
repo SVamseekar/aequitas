@@ -1,7 +1,6 @@
-import { Link, useNavigate } from "react-router"
-import { ArrowLeft } from "lucide-react"
+import { Link } from "react-router"
 import { Seo } from "@/components/shared/Seo"
-import { SUPPORT_EMAIL } from "@/lib/site"
+import { BriefingLayout } from "./briefing/BriefingLayout"
 
 const SECTIONS = [
   {
@@ -35,64 +34,37 @@ const SECTIONS = [
 ]
 
 export default function TermsPage() {
-  const navigate = useNavigate()
-
   return (
-    <div className="min-h-screen app-atmosphere text-foreground">
+    <BriefingLayout>
       <Seo
         title="Terms of Use — Aequitas"
-        description="Terms governing access to the Aequitas platform, accounts, and transport policy analytics."
+        description="Terms governing access to the Aequitas website, accounts, and briefings."
         path="/terms"
       />
-      <div className="border-b border-white/50 bg-white/20 backdrop-blur-2xl">
-        <div className="max-w-3xl mx-auto px-6 flex items-center min-h-11">
-          <span className="text-sm text-muted-foreground">Terms of Use</span>
-        </div>
+      <p className="text-xs font-medium uppercase tracking-wide text-[var(--l-rust)]">Terms</p>
+      <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-2">
+        Terms of use
+      </h1>
+      <p className="text-sm text-[var(--l-slate)] mb-8">Last updated: 2 July 2026</p>
+
+      <div className="space-y-6 max-w-2xl">
+        {SECTIONS.map((s) => (
+          <section key={s.title} className="border-b border-[var(--l-rule)] pb-6">
+            <h2 className="font-semibold text-[var(--l-ink)] mb-2">{s.title}</h2>
+            <p className="text-sm text-[var(--l-slate)] leading-relaxed">{s.body}</p>
+          </section>
+        ))}
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-12 sm:py-14">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
-
-        <div className="h-px bg-primary/40 mb-8 max-w-xs" />
-        <p className="marketing-eyebrow text-primary">Terms of Use</p>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-2 text-foreground">
-          Terms Governing Use of Aequitas
-        </h1>
-        <p className="marketing-meta mb-6">Last updated: 2 July 2026</p>
-        <p className="marketing-lede mb-12">
-          These Terms govern your use of the Aequitas website and platform. By creating an account
-          or using the service, you agree to these Terms.
-        </p>
-
-        <div className="space-y-4">
-          {SECTIONS.map((s) => (
-            <div key={s.title} className="app-glass-strong rounded-2xl border border-white/60 p-5">
-              <p className="marketing-card-title mb-2">{s.title}</p>
-              <p className="marketing-body">{s.body}</p>
-            </div>
-          ))}
-        </div>
-
-        <p className="text-base text-muted-foreground leading-relaxed mt-10">
-          See also our{" "}
-          <Link to="/disclaimer" className="text-primary hover:underline font-medium">
-            Disclaimer
-          </Link>{" "}
-          and{" "}
-          <Link to="/privacy" className="text-primary hover:underline font-medium">
-            Privacy Policy
-          </Link>
-          . Questions about these Terms:{" "}
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline font-medium">
-            {SUPPORT_EMAIL}
-          </a>
-        </p>
-      </div>
-    </div>
+      <p className="text-sm text-[var(--l-slate)] mt-10">
+        <Link to="/disclaimer" className="underline">
+          Disclaimer
+        </Link>
+        {" · "}
+        <Link to="/privacy" className="underline">
+          Privacy
+        </Link>
+      </p>
+    </BriefingLayout>
   )
 }
