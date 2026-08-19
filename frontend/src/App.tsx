@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react"
-import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router"
+import { BrowserRouter, Navigate, Routes, Route, useLocation, useParams } from "react-router"
 import { HelmetProvider } from "react-helmet-async"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { AuthProvider } from "@/contexts/AuthContext"
@@ -8,6 +8,7 @@ import { AppShell } from "./components/layout/AppShell"
 import { HomePage } from "./components/home/HomePage"
 import { DimensionPage } from "./components/dimension/DimensionPage"
 import { GoogleAnalytics } from "@/components/GoogleAnalytics"
+import { ScrollToTop } from "@/components/shared/ScrollToTop"
 import { appPath, legacyDashboardToApp, productSlugOrNull, withSearch } from "@/lib/appRoutes"
 
 const AuthPage = lazy(() => import("./pages/AuthPage"))
@@ -20,12 +21,15 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage"))
 const TermsPage = lazy(() => import("./pages/TermsPage"))
 const MethodologyPage = lazy(() => import("./pages/MethodologyPage"))
 const AccessibilityPage = lazy(() => import("./pages/AccessibilityPage"))
+const TopicsIndexPage = lazy(() => import("./pages/briefing/TopicsIndexPage"))
+const BriefingSlugPage = lazy(() => import("./pages/briefing/BriefingSlugPage"))
 const ComparePage = lazy(() => import("./pages/ComparePage"))
 const StudioPage = lazy(() => import("./pages/StudioPage"))
 const ReachPage = lazy(() => import("./pages/ReachPage"))
 const TimePage = lazy(() => import("./pages/TimePage"))
 const OpsPage = lazy(() => import("./pages/OpsPage"))
 const InviteAcceptPage = lazy(() => import("./pages/InviteAcceptPage"))
+const RefundsPage = lazy(() => import("./pages/RefundsPage"))
 
 // Saved sub-pages rendered inside a simple wrapper
 const SavedPage = lazy(() =>
@@ -63,6 +67,11 @@ function LegacyDashboardRedirect() {
   return <Navigate to={legacyDashboardToApp(location.pathname, location.search)} replace />
 }
 
+function LegacyTopicRedirect() {
+  const { slug } = useParams()
+  return <Navigate to={`/briefings/${slug ?? ""}`} replace />
+}
+
 function WarehouseSlugRedirect() {
   const location = useLocation()
   const parts = location.pathname.split("/").filter(Boolean)
@@ -82,6 +91,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <Suspense fallback={fallback}>
             <Routes>
               {/* Public */}
@@ -91,9 +101,28 @@ export default function App() {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/terms" element={<TermsPage />} />
-              <Route path="/refunds" element={<Navigate to="/about" replace />} />
+              <Route path="/refunds" element={<RefundsPage />} />
               <Route path="/methodology" element={<MethodologyPage />} />
               <Route path="/accessibility" element={<AccessibilityPage />} />
+              <Route path="/briefings" element={<TopicsIndexPage />} />
+              <Route path="/briefings/:slug" element={<BriefingSlugPage />} />
+              <Route path="/topics" element={<Navigate to="/briefings" replace />} />
+              <Route path="/topics/:slug" element={<LegacyTopicRedirect />} />
+              <Route path="/england" element={<Navigate to="/briefings/england" replace />} />
+              <Route path="/ireland" element={<Navigate to="/briefings/ireland" replace />} />
+              <Route path="/netherlands" element={<Navigate to="/briefings/netherlands" replace />} />
+              <Route path="/france" element={<Navigate to="/briefings/france" replace />} />
+              <Route path="/equity" element={<Navigate to="/briefings/equity" replace />} />
+              <Route path="/access" element={<Navigate to="/briefings/access" replace />} />
+              <Route path="/service" element={<Navigate to="/briefings/service" replace />} />
+              <Route path="/network" element={<Navigate to="/briefings/network" replace />} />
+              <Route path="/correlations" element={<Navigate to="/briefings/correlations" replace />} />
+              <Route path="/economy" element={<Navigate to="/briefings/economy" replace />} />
+              <Route path="/policy" element={<Navigate to="/briefings/policy" replace />} />
+              <Route path="/scenarios" element={<Navigate to="/briefings/scenarios" replace />} />
+              <Route path="/time" element={<Navigate to="/briefings/time" replace />} />
+              <Route path="/reach" element={<Navigate to="/briefings/reach" replace />} />
+              <Route path="/ops" element={<Navigate to="/briefings/ops" replace />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/invite/:token" element={<InviteAcceptPage />} />
 
@@ -121,8 +150,8 @@ export default function App() {
                 element={
                   <main className="min-h-screen p-8 text-foreground bg-background">
                     <h1 className="text-xl font-semibold mb-2">Page not found</h1>
-                    <a className="text-primary underline" href="/app/england">
-                      Open the England briefing
+                    <a className="text-primary underline" href="/briefings">
+                      Browse briefings
                     </a>
                   </main>
                 }

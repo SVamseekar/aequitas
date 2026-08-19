@@ -1,24 +1,35 @@
 import type { SVGProps } from "react"
 
-export function AequitasLogo({ className = "w-5 h-5", ...props }: SVGProps<SVGSVGElement>) {
+/**
+ * One-colour mark: a ring, an A, three nodes.
+ * Reads as a network and as equity (a balanced A). Works at 16px.
+ */
+export function AequitasLogo({ className = "w-8 h-8", ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="0 0 24 24"
+      viewBox="0 0 48 48"
       fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
       className={className}
+      aria-hidden
       {...props}
     >
-      {/* Flat geometric 'A' monogram representing a transit network / route lines */}
-      <path d="M4 20L12 4l8 16" />
-      <path d="M8 13h8" />
-      {/* Node connectors representing stops */}
-      <circle cx="12" cy="4" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="4" cy="20" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="20" cy="20" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="24" cy="24" r="20.25" stroke="currentColor" strokeWidth="1.75" />
+      <path
+        d="M24 12.5 14.2 35.25M24 12.5 33.8 35.25"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M17.4 25.75h13.2"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+      <circle cx="24" cy="12.5" r="2.15" fill="currentColor" />
+      <circle cx="14.2" cy="35.25" r="2.15" fill="currentColor" />
+      <circle cx="33.8" cy="35.25" r="2.15" fill="currentColor" />
     </svg>
   )
 }
