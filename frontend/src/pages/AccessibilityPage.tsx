@@ -1,42 +1,27 @@
-import { Link, useNavigate } from "react-router"
-import { ArrowLeft } from "lucide-react"
+import { Link } from "react-router"
 import { Seo } from "@/components/shared/Seo"
 import { SUPPORT_EMAIL } from "@/lib/site"
 import { breadcrumbJsonLd } from "@/lib/structuredData"
+import { BriefingLayout } from "./briefing/BriefingLayout"
 
 export default function AccessibilityPage() {
-  const navigate = useNavigate()
   const description =
     "Aequitas accessibility statement: WCAG 2.2 AA target, known gaps, and how to report issues."
 
   return (
-    <div className="min-h-screen app-atmosphere text-foreground">
+    <BriefingLayout>
       <Seo
         title="Accessibility Statement — Aequitas"
         description={description}
         path="/accessibility"
         jsonLd={breadcrumbJsonLd([{ name: "Accessibility", path: "/accessibility" }])}
       />
-      <div className="border-b border-white/50 bg-white/20 backdrop-blur-2xl">
-        <div className="max-w-3xl mx-auto px-6 flex items-center min-h-11">
-          <span className="text-sm text-muted-foreground">Accessibility</span>
-        </div>
-      </div>
-
-      <div className="max-w-3xl mx-auto px-6 py-12 sm:py-14">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
-
-        <div className="h-px bg-primary/40 mb-8 max-w-xs" />
-        <p className="marketing-eyebrow text-primary">Inclusive design</p>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 mb-4 text-foreground">
-          Accessibility statement
-        </h1>
+      <p className="text-xs font-medium uppercase tracking-wide text-[var(--l-rust)]">
+        Inclusive design
+      </p>
+      <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-4">
+        Accessibility statement
+      </h1>
         <p className="marketing-lede mb-12">
           Aequitas aims to be usable by as many people as possible, including disabled users and
           those using assistive technologies. This statement describes our target standard, what we
@@ -125,21 +110,16 @@ export default function AccessibilityPage() {
           </div>
         </section>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-[var(--l-slate)]">
           Related:{" "}
-          <Link to="/methodology" className="text-primary hover:underline">
-            Methodology
+          <Link to="/methodology" className="underline">
+            Method
           </Link>
           {" · "}
-          <Link to="/privacy" className="text-primary hover:underline">
+          <Link to="/privacy" className="underline">
             Privacy
           </Link>
-          {" · "}
-          <Link to="/" className="text-primary hover:underline">
-            Home
-          </Link>
         </p>
-      </div>
-    </div>
+    </BriefingLayout>
   )
 }
