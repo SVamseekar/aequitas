@@ -64,8 +64,8 @@ function pointInFeature(lon: number, lat: number, feature: GeoJSON.Feature): boo
   if (!geom) return false
   const check = (coords: number[][][]) =>
     coords.some((poly) => {
-      if (!poly[0] || !pointInRing(lon, lat, poly[0] as number[][])) return false
-      return poly.slice(1).every((hole) => !pointInRing(lon, lat, hole as number[][]))
+      if (!poly[0] || !pointInRing(lon, lat, poly[0] as unknown as number[][])) return false
+      return poly.slice(1).every((hole) => !pointInRing(lon, lat, hole as unknown as number[][]))
     })
   if (geom.type === "Polygon") return check(geom.coordinates as number[][][])
   if (geom.type === "MultiPolygon") return (geom.coordinates as number[][][][]).some((p) => check(p))
@@ -137,7 +137,7 @@ export default function StudioEditorMap({ ops, region, country = "england", onAd
               ? [2.4, 46.6]
               : [-1.5, 52.8],
       zoom: country === "ireland" ? 6 : country === "netherlands" ? 6.2 : country === "france" ? 5.2 : 5.4,
-      attributionControl: true,
+      attributionControl: { compact: true },
       maxBounds:
         country === "ireland"
           ? [

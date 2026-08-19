@@ -179,7 +179,7 @@ export function SectionCard({ section }: Props) {
         {/* Chart */}
         {hasChart && (
           <div className="px-4 pb-3">
-            <ChartRenderer chartData={chartData} />
+            <ChartRenderer chartData={chartData ?? {}} />
           </div>
         )}
 
