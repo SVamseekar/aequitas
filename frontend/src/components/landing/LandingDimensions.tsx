@@ -1,62 +1,105 @@
-import { useNavigate } from "react-router"
+import { Link } from "react-router"
 import { ArrowUpRight } from "lucide-react"
-import { DIMENSIONS } from "./data"
+import { DIMENSIONS, type DimensionCard } from "./data"
 
-export function LandingDimensions() {
-  const navigate = useNavigate()
+const GROUPS: ReadonlyArray<{
+  id: string
+  label: string
+  hint: string
+  match: (d: DimensionCard) => boolean
+}> = [
+  {
+    id: "measure",
+    label: "Measure",
+    hint: "Need, coverage, service, operators",
+    match: (d) =>
+      ["/briefings/equity", "/briefings/access", "/briefings/service", "/briefings/network"].includes(d.route),
+  },
+  {
+    id: "interpret",
+    label: "Interpret",
+    hint: "Correlations, cost, statute, scenarios",
+    match: (d) =>
+      ["/briefings/correlations", "/briefings/economy", "/briefings/policy", "/briefings/scenarios"].includes(d.route),
+  },
+  {
+    id: "observe",
+    label: "Observe",
+    hint: "Dated packs, reach, last official RT",
+    match: (d) => ["/briefings/time", "/briefings/reach", "/briefings/ops"].includes(d.route),
+  },
+]
 
+export function LandingDimensions({ embed = false }: { embed?: boolean }) {
   return (
-    <section id="dimensions" aria-labelledby="landing-dimensions-heading" className="bg-[var(--l-paper)]">
-      <div className="landing-shell py-12 sm:py-14 lg:py-16">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-8">
-          <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--l-rust)] mb-3">
-              The briefing
-            </p>
-            <h2
-              id="landing-dimensions-heading"
-              className="font-display text-3xl sm:text-4xl leading-[1.12] text-[var(--l-ink)]"
-            >
-              Ten doors. Local statutes. Same questions.
-            </h2>
-          </div>
-          <p className="text-base text-[var(--l-slate)] leading-relaxed max-w-sm lg:text-right">
-            Open any live country. Policy and economy titles change; the questions do not.
+    <section
+      id={embed ? undefined : "dimensions"}
+      aria-labelledby="landing-dimensions-heading"
+      className={embed ? undefined : "bg-[var(--l-paper)]"}
+    >
+      <div className={embed ? "py-4" : "landing-shell py-12 sm:py-14 lg:py-16"}>
+        <header className={embed ? "sr-only" : "mb-8 max-w-2xl"}>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--l-rust)] mb-3">
+            The briefing
           </p>
-        </div>
+          <h2
+            id="landing-dimensions-heading"
+            className="font-display text-3xl sm:text-4xl leading-[1.12] text-[var(--l-ink)] text-balance"
+          >
+            Same questions in every country
+          </h2>
+          <p className="mt-3 text-sm text-[var(--l-slate)] text-pretty max-w-xl">
+            Statute titles change. The doors do not.
+          </p>
+        </header>
 
-        <ul className="grid sm:grid-cols-2 gap-3">
-          {DIMENSIONS.map((dimension, index) => (
-            <li key={dimension.title}>
-              <button
-                type="button"
-                onClick={() => navigate(`/app/england${dimension.route}`)}
-                className="landing-card group w-full text-left p-4 sm:p-5 flex gap-3.5 items-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--l-rust)]"
-              >
-                <span className="font-display text-2xl text-[var(--l-rust)]/45 tabular-nums w-8 shrink-0">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-base font-semibold text-[var(--l-ink)] group-hover:text-[var(--l-rust)] transition-colors">
-                      {dimension.title}
+        <div className="briefing-board">
+          <div className="briefing-cols">
+            {GROUPS.map((group) => {
+              const items = DIMENSIONS.filter(group.match)
+              return (
+                <section
+                  key={group.id}
+                  className="briefing-col"
+                  aria-labelledby={`briefing-${group.id}`}
+                >
+                  <header className="briefing-col-head">
+                    <h3 id={`briefing-${group.id}`} className="briefing-col-kicker">
+                      {group.label}
                     </h3>
-                    <ArrowUpRight
-                      className="w-4 h-4 text-[var(--l-slate)] opacity-40 group-hover:opacity-100 shrink-0 mt-0.5 transition-opacity"
-                      aria-hidden
-                    />
-                  </div>
-                  <p className="text-sm text-[var(--l-slate)] leading-relaxed mt-1.5">
-                    {dimension.question}
-                  </p>
-                  <p className="text-xs text-[var(--l-slate)] mt-3 pt-3 border-t border-[var(--l-rule)]">
-                    {dimension.grounded}
-                  </p>
-                </div>
-              </button>
-            </li>
-          ))}
-        </ul>
+                    <p className="briefing-col-hint">{group.hint}</p>
+                  </header>
+                  <ul>
+                    {items.map((dimension) => {
+                      const Icon = dimension.icon
+                      return (
+                        <li key={dimension.route}>
+                          <Link
+                            to={dimension.route}
+                            className="briefing-row"
+                          >
+                            <span className="briefing-ico" aria-hidden>
+                              <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
+                            </span>
+                            <span>
+                              <span className="briefing-row-title">{dimension.title}</span>
+                              <p className="briefing-row-q">{dimension.question}</p>
+                              <p className="briefing-row-meta">{dimension.grounded}</p>
+                            </span>
+                            <ArrowUpRight
+                              className="briefing-chevron w-4 h-4 shrink-0"
+                              aria-hidden
+                            />
+                          </Link>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              )
+            })}
+          </div>
+        </div>
       </div>
     </section>
   )

@@ -6,7 +6,7 @@ describe("Netherlands switcher", () => {
   it("lists 12 provincies and local dimension titles", () => {
     expect(regionsForCountry("netherlands")).toEqual(NETHERLANDS_REGIONS)
     expect(NETHERLANDS_REGIONS.some((r) => r.code === "noord-holland")).toBe(true)
-    expect(NETHERLANDS_REGIONS.some((r) => r.code === "E12000007")).toBe(false)
+    expect(NETHERLANDS_REGIONS.some((r) => (r.code as string) === "E12000007")).toBe(false)
     const dims = dimensionsForCountry("netherlands")
     expect(dims).toBe(NETHERLANDS_DIMENSIONS)
     expect(dims.find((d) => d.id === "policy")?.name).toMatch(/OV-wet|Concession/)

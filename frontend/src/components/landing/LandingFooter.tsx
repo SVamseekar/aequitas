@@ -7,7 +7,7 @@ import {
   isAnalyticsConfigured,
 } from "@/lib/site"
 import { useAuth } from "@/contexts/AuthContext"
-import { AequitasLogo } from "@/components/shared/AequitasLogo"
+import { AequitasLockup } from "@/components/shared/AequitasLockup"
 
 const year = new Date().getFullYear()
 const linkClass = "text-sm text-[var(--l-slate)] hover:text-[var(--l-ink)] transition-colors"
@@ -20,13 +20,12 @@ export function LandingFooter() {
       <div className="landing-shell py-10 sm:py-12">
         <div className="flex flex-col lg:flex-row lg:justify-between gap-8 mb-8">
           <div className="max-w-sm">
-            <div className="flex items-center gap-2.5 mb-3">
-              <AequitasLogo className="w-5 h-5 text-[var(--l-rust)]" aria-hidden />
-              <span className="font-semibold text-[var(--l-ink)]">Aequitas</span>
+            <div className="mb-4">
+              <AequitasLockup size="footer" />
             </div>
             <p className="text-sm text-[var(--l-slate)] leading-relaxed mb-4">
-              Bus × deprivation briefing. England, Ireland, and the Netherlands are live. France
-              uses the same doors; the pack is not built.
+              Bus × official deprivation. England, Ireland, the Netherlands, and France. Same
+              method. Ranks stay in-country.
             </p>
             <p className="inline-flex items-center gap-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-full px-3 py-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-600" aria-hidden />
@@ -41,14 +40,9 @@ export function LandingFooter() {
               </h2>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/app/england" className={linkClass}>
-                    Explore
+                  <Link to="/briefings" className={linkClass}>
+                    Briefings
                   </Link>
-                </li>
-                <li>
-                  <a href="/#dimensions" className={linkClass}>
-                    Dimensions
-                  </a>
                 </li>
                 <li>
                   <Link to={user ? "/app/england" : "/auth"} className={linkClass}>
@@ -64,7 +58,7 @@ export function LandingFooter() {
               <ul className="space-y-2">
                 <li>
                   <Link to="/methodology" className={linkClass}>
-                    Methodology
+                    How it is computed
                   </Link>
                 </li>
                 <li>
