@@ -1,70 +1,56 @@
 import { Link } from "react-router"
-import { ArrowUpRight } from "lucide-react"
 import { COUNTRY_COVERAGE } from "./data"
+import { COUNTRY_PHOTO } from "@/lib/publicPhotos"
 
 export function LandingCoverage() {
   return (
-    <section id="coverage" aria-labelledby="landing-coverage-heading" className="bg-[var(--l-paper)]">
-      <div className="landing-shell py-12 sm:py-14 lg:py-16">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-8">
-          <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--l-rust)] mb-3">
+    <section
+      id="coverage"
+      aria-labelledby="landing-coverage-heading"
+      className="border-y border-[var(--l-rule)] bg-[var(--l-surface)]"
+    >
+      <div className="landing-shell py-14 sm:py-16">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-8">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--l-rust)] mb-2">
               Coverage
             </p>
             <h2
               id="landing-coverage-heading"
-              className="font-display text-3xl sm:text-4xl leading-[1.12] text-[var(--l-ink)]"
+              className="font-display text-2xl sm:text-3xl text-[var(--l-ink)]"
             >
-              Same doors. Local evidence. In-country ranks.
+              Four official stacks
             </h2>
           </div>
-          <p className="text-base text-[var(--l-slate)] leading-relaxed max-w-sm lg:text-right">
-            IMD, Pobal HP, SES-WOA, and F-EDI are never plotted on one axis. France briefing and
-            chat are live; 15/30/45 stay honest-empty.
-          </p>
+          <Link to="/briefings" className="landing-btn-text">
+            Read more →
+          </Link>
         </div>
 
-        <ul className="grid sm:grid-cols-2 gap-3">
+        <ul className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {COUNTRY_COVERAGE.map((c) => {
-            const live = c.status === "live"
+            const photo = COUNTRY_PHOTO[c.code]
             return (
               <li key={c.code}>
                 <Link
                   to={c.href}
-                  className="landing-card group flex h-full flex-col p-5 sm:p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--l-rust)]"
+                  className="landing-card block h-full overflow-hidden hover:border-[var(--l-rust)]/35"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="font-display text-2xl text-[var(--l-ink)] group-hover:text-[var(--l-rust)] transition-colors">
-                      {c.name}
-                    </h3>
-                    <span
-                      className={
-                        live
-                          ? "rounded-full bg-[var(--l-rust)]/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--l-rust)]"
-                          : "rounded-full border border-[var(--l-rule)] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--l-slate)]"
-                      }
-                    >
-                      {live ? "Live" : "Pack not built"}
-                    </span>
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    className="aspect-[16/10] w-full object-cover"
+                    width={800}
+                    height={500}
+                    loading="lazy"
+                  />
+                  <div className="p-4 sm:p-5">
+                    <h3 className="font-display text-xl text-[var(--l-ink)]">{c.name}</h3>
+                    <p className="mt-2 text-xs text-[var(--l-slate)] leading-snug">
+                      {c.deprivation}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--l-slate)] leading-snug">{c.network}</p>
                   </div>
-                  <dl className="mt-4 grid gap-2 text-sm">
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-[var(--l-slate)]">Network</dt>
-                      <dd className="text-right text-[var(--l-ink)]">{c.network}</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-[var(--l-slate)]">Deprivation</dt>
-                      <dd className="text-right text-[var(--l-ink)]">{c.deprivation}</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-[var(--l-slate)]">Geography</dt>
-                      <dd className="text-right text-[var(--l-ink)]">{c.geography}</dd>
-                    </div>
-                  </dl>
-                  <p className="mt-4 flex items-center justify-between gap-2 border-t border-[var(--l-rule)] pt-3 text-sm text-[var(--l-slate)]">
-                    <span>{c.note}</span>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 opacity-40 group-hover:opacity-100" aria-hidden />
-                  </p>
                 </Link>
               </li>
             )

@@ -23,7 +23,7 @@ export const COUNTRY_COVERAGE = [
     deprivation: "IMD 2025",
     geography: "LSOA 2021",
     note: "Score, map, Studio, Reach, Time. Ops when a BODS RT rollup exists.",
-    href: "/app/england",
+    href: "/briefings/england",
   },
   {
     code: "ireland",
@@ -32,8 +32,8 @@ export const COUNTRY_COVERAGE = [
     network: "TFI GTFS_All.zip",
     deprivation: "Pobal HP 2022",
     geography: "CSO Small Areas 2022 · Republic",
-    note: "Same doors. Ranks stay in the Republic.",
-    href: "/app/ireland",
+    note: "Same doors. Ranks stay in the Republic. Ops empty without an NTA key (three operators only).",
+    href: "/briefings/ireland",
   },
   {
     code: "netherlands",
@@ -42,8 +42,8 @@ export const COUNTRY_COVERAGE = [
     network: "OVapi GTFS",
     deprivation: "CBS SES-WOA 2023",
     geography: "Buurten 2024",
-    note: "Bus is the default. All-PT is a labelled mode.",
-    href: "/app/netherlands",
+    note: "Bus is the default. All-PT is a labelled mode. Ops from OVapi RT if a rollup exists.",
+    href: "/briefings/netherlands",
   },
   {
     code: "france",
@@ -52,8 +52,8 @@ export const COUNTRY_COVERAGE = [
     network: "NAP GTFS harvest (441 merged / 111 skipped)",
     deprivation: "F-EDI 2021",
     geography: "IRIS (metropolitan)",
-    note: "National score 47.7. Same doors. Chat on FAISS[france]. 15/30/45 still empty.",
-    href: "/app/france",
+    note: "National score 47.7. Same doors. Chat on FAISS[france]. 15/30/45 empty. Ops is a NAP sample, not a national AOM %.",
+    href: "/briefings/france",
   },
 ] as const
 
@@ -87,7 +87,9 @@ export const DATA_SOURCES = [
   "CBS SES-WOA",
   "CBS buurten",
   "NAP GTFS",
+  "IGN IRIS",
   "F-EDI 2021",
+  "BODS AVL / GTFS-RT",
 ] as const
 
 export interface DimensionCard {
@@ -104,90 +106,94 @@ export const DIMENSIONS: DimensionCard[] = [
     title: "Equity",
     question: "Who gets the least service relative to need?",
     grounded: "Lorenz, Gini, Palma, in-country deprivation slope",
-    route: "/equity",
+    route: "/briefings/equity",
   },
   {
     icon: MapPin,
     title: "Access",
     question: "How many people live beyond 400 m of a stop?",
     grounded: "Coverage, deserts, urban–rural gap — people in the title",
-    route: "/access",
+    route: "/briefings/access",
   },
   {
     icon: Bus,
     title: "Service",
     question: "Where do evenings and Sundays disappear?",
     grounded: "Weekday quality, evening isolation, Sunday deserts",
-    route: "/service",
+    route: "/briefings/service",
   },
   {
     icon: Network,
     title: "Network",
     question: "How concentrated are the operators?",
     grounded: "One HHI on a 0–10,000 scale",
-    route: "/network",
+    route: "/briefings/network",
   },
   {
     icon: GitCompare,
     title: "Correlations",
     question: "Does coverage track deprivation — or something else?",
     grounded: "One matrix + one scatter, not a wall of bars",
-    route: "/correlations",
+    route: "/briefings/correlations",
   },
   {
     icon: FileText,
     title: "Economy",
     question: "Who is in the people-gap — and is there a published unit cost?",
     grounded: "People-gap first. Official € / TAG only when cited.",
-    route: "/economy",
+    route: "/briefings/economy",
   },
   {
     icon: Scale,
     title: "Policy",
     question: "Which programmes apply here?",
-    grounded: "BSA 2025 · NTA · Concession / OV-wet — local titles",
-    route: "/policy",
+    grounded: "BSA 2025 · NTA · Concession / OV-wet · AOM / SPC — local titles",
+    route: "/briefings/policy",
   },
   {
     icon: Sliders,
     title: "Scenarios",
     question: "Who moves if frequency or evenings change?",
     grounded: "Listed interventions × people × deprivation",
-    route: "/scenarios",
+    route: "/briefings/scenarios",
   },
   {
     icon: Clock,
     title: "Time",
     question: "Did the network move while the census stayed still?",
     grounded: "Dated packs. Census and deprivation stay frozen.",
-    route: "/time",
+    route: "/briefings/time",
   },
   {
     icon: Map,
     title: "Reach & Studio",
     question: "What does a walk-to-stop change do on this filter?",
     grounded: "Service bands 1–6. 15/30/45 only after r5py.",
-    route: "/reach",
+    route: "/briefings/reach",
+  },
+  {
+    icon: Clock,
+    title: "Ops",
+    question: "What did the last official real-time feed actually say?",
+    grounded: "Last GTFS-RT / SIRI rollup only. No invented national on-time.",
+    route: "/briefings/ops",
   },
 ]
 
 export const HOW_IT_WORKS = [
   {
     icon: Database,
-    step: "Choose a country and filter",
-    description:
-      "England, Ireland, the Netherlands, or France. Region, urban/rural, and — in NL/FR — bus or all public transport.",
+    step: "Pick a country",
+    description: "England, Ireland, the Netherlands, or France. One pack, one rank.",
   },
   {
     icon: FileSearch,
-    step: "Read the briefing",
-    description:
-      "Every exhibit has a key finding, so what, and a caveat that names this filter. Weak evidence is suppressed, not filled in.",
+    step: "Read the door",
+    description: "Finding, so-what, caveat. Empty stays empty.",
   },
   {
     icon: SlidersHorizontal,
-    step: "Patch, compare, export",
-    description:
-      "Studio is walk-to-stop. Compare stays inside the country. The research pack uses that country’s nouns.",
+    step: "Compare in-country",
+    description: "Studio, compare, export — never across deprivation indices.",
   },
 ] as const
