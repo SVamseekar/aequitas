@@ -1,24 +1,21 @@
 import { Seo } from "@/components/shared/Seo"
-import { LandingAudience } from "@/components/landing/LandingAudience"
-import { LandingCta } from "@/components/landing/LandingCta"
+import { LandingCapabilities } from "@/components/landing/LandingCapabilities"
 import { LandingCoverage } from "@/components/landing/LandingCoverage"
+import { LandingCta } from "@/components/landing/LandingCta"
 import { LandingDataSources } from "@/components/landing/LandingDataSources"
-import { LandingDimensions } from "@/components/landing/LandingDimensions"
-import { LandingFaq } from "@/components/landing/LandingFaq"
+import { LandingDemo } from "@/components/landing/LandingDemo"
+import { LandingEngage } from "@/components/landing/LandingEngage"
 import { LandingFooter } from "@/components/landing/LandingFooter"
 import { LandingHero } from "@/components/landing/LandingHero"
-import { LandingHowItWorks } from "@/components/landing/LandingHowItWorks"
 import { LandingNav } from "@/components/landing/LandingNav"
-import { LandingProblemSolution } from "@/components/landing/LandingProblemSolution"
-import { LandingStats } from "@/components/landing/LandingStats"
 import { landingPageJsonLd } from "@/lib/structuredData"
-import { DEFAULT_DESCRIPTION, SITE_TAGLINE } from "@/lib/site"
+import { DEFAULT_DESCRIPTION } from "@/lib/site"
 
 export default function LandingPage() {
   return (
     <div className="landing-root min-h-screen">
       <Seo
-        title={`Aequitas — ${SITE_TAGLINE}`}
+        title={`Aequitas — in-country transport briefings`}
         description={DEFAULT_DESCRIPTION}
         path="/"
         jsonLd={landingPageJsonLd()}
@@ -36,13 +33,10 @@ export default function LandingPage() {
       <main id="main-content">
         <LandingHero />
         <LandingDataSources />
+        <LandingDemo />
+        <LandingCapabilities />
         <LandingCoverage />
-        <LandingStats />
-        <LandingProblemSolution />
-        <LandingDimensions />
-        <LandingHowItWorks />
-        <LandingAudience />
-        <LandingFaq />
+        <LandingEngage />
         <LandingCta />
       </main>
 
