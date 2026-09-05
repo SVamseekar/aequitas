@@ -18,9 +18,8 @@ export function LandingCoverage() {
               Same doors. Local evidence. In-country ranks.
             </h2>
           </div>
-          <p className="text-base text-[var(--l-slate)] leading-relaxed max-w-sm lg:text-right">
-            IMD, Pobal HP, SES-WOA, and F-EDI are never plotted on one axis. France briefing and
-            chat are live; 15/30/45 stay honest-empty.
+          <p className="text-sm text-[var(--l-slate)] max-w-xs lg:text-right text-pretty">
+            Four official stacks. Never one Europe-wide rank.
           </p>
         </div>
 
@@ -61,8 +60,7 @@ export function LandingCoverage() {
                       <dd className="text-right text-[var(--l-ink)]">{c.geography}</dd>
                     </div>
                   </dl>
-                  <p className="mt-4 flex items-center justify-between gap-2 border-t border-[var(--l-rule)] pt-3 text-sm text-[var(--l-slate)]">
-                    <span>{c.note}</span>
+                  <p className="mt-4 flex items-center justify-end border-t border-[var(--l-rule)] pt-3">
                     <ArrowUpRight className="h-4 w-4 shrink-0 opacity-40 group-hover:opacity-100" aria-hidden />
                   </p>
                 </Link>

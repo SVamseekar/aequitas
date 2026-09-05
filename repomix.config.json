@@ -1,0 +1,60 @@
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "input": {
+    "maxFileSize": 1000000
+  },
+  "output": {
+    "filePath": "docs/notebooklm/repomix-output.xml",
+    "style": "xml",
+    "parsableStyle": true,
+    "compress": false,
+    "showLineNumbers": false,
+    "copyToClipboard": false,
+    "removeComments": false,
+    "removeEmptyLines": false,
+    "topFilesLength": 20
+  },
+  "include": [
+    "src/**",
+    "frontend/src/**",
+    "frontend/api/**",
+    "scripts/**",
+    "tests/**",
+    "notebooks/**/*.md",
+    "docs/**/*.md",
+    "AGENTS.md",
+    "README.md",
+    "pyproject.toml",
+    "package.json",
+    "frontend/package.json"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "**/*.ipynb",
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/venv/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/.vercel/**",
+      "**/*.duckdb*",
+      "data/**",
+      "**/*.pkl",
+      "**/*.joblib",
+      "**/*.faiss",
+      "**/.env*",
+      "**/*.lock",
+      "**/package-lock.json",
+      "frontend/screenshots/**",
+      "docs/screenshots/**",
+      "**/.serena/**",
+      "**/.superpowers/**",
+      "**/.claude/**"
+    ]
+  },
+  "security": {
+    "enableSecurityCheck": true
+  }
+}

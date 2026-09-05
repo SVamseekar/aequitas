@@ -24,7 +24,7 @@ export function LandingStats() {
           {[
             {
               title: "No Europe-wide IMD",
-              body: "England uses IMD, Ireland Pobal HP, the Netherlands SES-WOA. They never share an axis.",
+              body: "England uses IMD, Ireland Pobal HP, the Netherlands SES-WOA, France F-EDI. They never share an axis.",
             },
             {
               title: "No invented 15 / 30 / 45",
@@ -36,7 +36,7 @@ export function LandingStats() {
             },
             {
               title: "Network dates ≠ census dates",
-              body: "Time moves BODS / TFI / OVapi. Census, IMD, HP, and SES-WOA stay frozen on the pack.",
+              body: "Time moves BODS / TFI / OVapi / NAP. Census, IMD, HP, SES-WOA, and F-EDI stay frozen on the pack.",
             },
           ].map((item) => (
             <li key={item.title} className="landing-card p-5 sm:p-6">

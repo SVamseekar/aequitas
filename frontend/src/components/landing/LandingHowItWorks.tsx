@@ -19,7 +19,7 @@ export function LandingHowItWorks() {
           id="landing-how-heading"
           className="font-display text-3xl sm:text-4xl leading-[1.12] max-w-lg"
         >
-          Filter. Read. Patch. Export. Never invent.
+          Filter. Read. Do not invent.
         </h2>
 
         <ol className="mt-8 sm:mt-10 grid md:grid-cols-3 gap-4 md:gap-5">

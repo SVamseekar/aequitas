@@ -527,9 +527,154 @@ body {
   animation-play-state: paused;
 }
 
+/* Briefing dossier — grouped doors, container-aware rows */
+.landing-root .briefing-board {
+  container-type: inline-size;
+  container-name: briefing;
+}
+
+.landing-root .briefing-cols {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@container briefing (min-width: 40rem) {
+  .landing-root .briefing-cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1.75rem;
+  }
+}
+
+@container briefing (min-width: 56rem) {
+  .landing-root .briefing-cols {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.landing-root .briefing-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 1.1rem 1.15rem 0.65rem;
+  background: color-mix(in srgb, var(--l-surface) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--l-rule) 80%, transparent);
+  border-radius: 1.1rem;
+}
+
+.landing-root .briefing-col-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.7rem;
+  margin-bottom: 0.15rem;
+  border-bottom: 1px solid var(--l-rule);
+}
+
+.landing-root .briefing-col-kicker {
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--l-rust);
+}
+
+.landing-root .briefing-col-hint {
+  font-size: 0.75rem;
+  color: var(--l-slate);
+  text-wrap: pretty;
+}
+
+.landing-root .briefing-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.7rem 0.75rem;
+  align-items: start;
+  padding: 0.85rem 0.15rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--l-rule) 70%, transparent);
+  color: inherit;
+  text-decoration: none;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 4.5rem;
+}
+
+.landing-root .briefing-row:last-child {
+  border-bottom: 0;
+}
+
+.landing-root .briefing-row:hover .briefing-row-title,
+.landing-root .briefing-row:focus-visible .briefing-row-title {
+  color: var(--l-rust-deep);
+}
+
+.landing-root .briefing-row:focus-visible {
+  outline: 2px solid var(--l-rust);
+  outline-offset: 3px;
+  border-radius: 0.35rem;
+}
+
+.landing-root .briefing-ico {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  margin-top: 0.1rem;
+  border-radius: 0.45rem;
+  color: var(--l-rust);
+  background: color-mix(in srgb, var(--l-rust) 9%, transparent);
+}
+
+.landing-root .briefing-row-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--l-ink);
+  text-wrap: balance;
+  transition: color 0.15s ease;
+}
+
+.landing-root .briefing-row-q {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--l-slate);
+  text-wrap: pretty;
+}
+
+.landing-root .briefing-row-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--l-slate) 82%, var(--l-ink));
+}
+
+@media (max-width: 39.99rem) {
+  .landing-root .briefing-row-meta {
+    display: none;
+  }
+}
+
+.landing-root .briefing-chevron {
+  margin-top: 0.35rem;
+  color: var(--l-slate);
+  opacity: 0.35;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.landing-root .briefing-row:hover .briefing-chevron,
+.landing-root .briefing-row:focus-visible .briefing-chevron {
+  opacity: 1;
+  transform: translate(2px, -2px);
+  color: var(--l-rust);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-root .landing-marquee-track {
     animation: none;
+  }
+  .landing-root .briefing-row:hover .briefing-chevron,
+  .landing-root .briefing-row:focus-visible .briefing-chevron {
+    transform: none;
   }
   .landing-root .landing-card:hover,
   .landing-root .landing-btn-primary:hover,

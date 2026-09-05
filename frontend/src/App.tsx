@@ -20,6 +20,9 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage"))
 const TermsPage = lazy(() => import("./pages/TermsPage"))
 const MethodologyPage = lazy(() => import("./pages/MethodologyPage"))
 const AccessibilityPage = lazy(() => import("./pages/AccessibilityPage"))
+const TopicsIndexPage = lazy(() => import("./pages/briefing/TopicsIndexPage"))
+const CountryBriefingPage = lazy(() => import("./pages/briefing/CountryBriefingPage"))
+const TopicBriefingPage = lazy(() => import("./pages/briefing/TopicBriefingPage"))
 const ComparePage = lazy(() => import("./pages/ComparePage"))
 const StudioPage = lazy(() => import("./pages/StudioPage"))
 const ReachPage = lazy(() => import("./pages/ReachPage"))
@@ -82,6 +85,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
+          <GoogleAnalytics />
           <Suspense fallback={fallback}>
             <Routes>
               {/* Public */}
@@ -94,6 +98,23 @@ export default function App() {
               <Route path="/refunds" element={<Navigate to="/about" replace />} />
               <Route path="/methodology" element={<MethodologyPage />} />
               <Route path="/accessibility" element={<AccessibilityPage />} />
+              <Route path="/topics" element={<TopicsIndexPage />} />
+              <Route path="/england" element={<CountryBriefingPage code="england" />} />
+              <Route path="/ireland" element={<CountryBriefingPage code="ireland" />} />
+              <Route path="/netherlands" element={<CountryBriefingPage code="netherlands" />} />
+              <Route path="/france" element={<CountryBriefingPage code="france" />} />
+              <Route path="/topics/:slug" element={<TopicBriefingPage />} />
+              <Route path="/equity" element={<TopicBriefingPage slug="equity" />} />
+              <Route path="/access" element={<TopicBriefingPage slug="access" />} />
+              <Route path="/service" element={<TopicBriefingPage slug="service" />} />
+              <Route path="/network" element={<TopicBriefingPage slug="network" />} />
+              <Route path="/correlations" element={<TopicBriefingPage slug="correlations" />} />
+              <Route path="/economy" element={<TopicBriefingPage slug="economy" />} />
+              <Route path="/policy" element={<TopicBriefingPage slug="policy" />} />
+              <Route path="/scenarios" element={<TopicBriefingPage slug="scenarios" />} />
+              <Route path="/time" element={<TopicBriefingPage slug="time" />} />
+              <Route path="/reach" element={<TopicBriefingPage slug="reach" />} />
+              <Route path="/ops" element={<TopicBriefingPage slug="ops" />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/invite/:token" element={<InviteAcceptPage />} />
 
@@ -131,7 +152,6 @@ export default function App() {
           </Suspense>
         </BrowserRouter>
       </AuthProvider>
-      <GoogleAnalytics />
     </QueryClientProvider>
     </HelmetProvider>
   )

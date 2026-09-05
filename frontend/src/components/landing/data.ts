@@ -23,7 +23,7 @@ export const COUNTRY_COVERAGE = [
     deprivation: "IMD 2025",
     geography: "LSOA 2021",
     note: "Score, map, Studio, Reach, Time. Ops when a BODS RT rollup exists.",
-    href: "/app/england",
+    href: "/england",
   },
   {
     code: "ireland",
@@ -32,8 +32,8 @@ export const COUNTRY_COVERAGE = [
     network: "TFI GTFS_All.zip",
     deprivation: "Pobal HP 2022",
     geography: "CSO Small Areas 2022 · Republic",
-    note: "Same doors. Ranks stay in the Republic.",
-    href: "/app/ireland",
+    note: "Same doors. Ranks stay in the Republic. Ops empty without an NTA key (three operators only).",
+    href: "/ireland",
   },
   {
     code: "netherlands",
@@ -42,8 +42,8 @@ export const COUNTRY_COVERAGE = [
     network: "OVapi GTFS",
     deprivation: "CBS SES-WOA 2023",
     geography: "Buurten 2024",
-    note: "Bus is the default. All-PT is a labelled mode.",
-    href: "/app/netherlands",
+    note: "Bus is the default. All-PT is a labelled mode. Ops from OVapi RT if a rollup exists.",
+    href: "/netherlands",
   },
   {
     code: "france",
@@ -52,8 +52,8 @@ export const COUNTRY_COVERAGE = [
     network: "NAP GTFS harvest (441 merged / 111 skipped)",
     deprivation: "F-EDI 2021",
     geography: "IRIS (metropolitan)",
-    note: "National score 47.7. Same doors. Chat on FAISS[france]. 15/30/45 still empty.",
-    href: "/app/france",
+    note: "National score 47.7. Same doors. Chat on FAISS[france]. 15/30/45 empty. Ops is a NAP sample, not a national AOM %.",
+    href: "/france",
   },
 ] as const
 
@@ -87,7 +87,9 @@ export const DATA_SOURCES = [
   "CBS SES-WOA",
   "CBS buurten",
   "NAP GTFS",
+  "IGN IRIS",
   "F-EDI 2021",
+  "BODS AVL / GTFS-RT",
 ] as const
 
 export interface DimensionCard {
@@ -145,7 +147,7 @@ export const DIMENSIONS: DimensionCard[] = [
     icon: Scale,
     title: "Policy",
     question: "Which programmes apply here?",
-    grounded: "BSA 2025 · NTA · Concession / OV-wet — local titles",
+    grounded: "BSA 2025 · NTA · Concession / OV-wet · AOM / SPC — local titles",
     route: "/policy",
   },
   {
@@ -169,25 +171,29 @@ export const DIMENSIONS: DimensionCard[] = [
     grounded: "Service bands 1–6. 15/30/45 only after r5py.",
     route: "/reach",
   },
+  {
+    icon: Clock,
+    title: "Ops",
+    question: "What did the last official real-time feed actually say?",
+    grounded: "Last GTFS-RT / SIRI rollup only. No invented national on-time.",
+    route: "/ops",
+  },
 ]
 
 export const HOW_IT_WORKS = [
   {
     icon: Database,
-    step: "Choose a country and filter",
-    description:
-      "England, Ireland, the Netherlands, or France. Region, urban/rural, and — in NL/FR — bus or all public transport.",
+    step: "Pick a country",
+    description: "England, Ireland, the Netherlands, or France. One pack, one rank.",
   },
   {
     icon: FileSearch,
-    step: "Read the briefing",
-    description:
-      "Every exhibit has a key finding, so what, and a caveat that names this filter. Weak evidence is suppressed, not filled in.",
+    step: "Read the door",
+    description: "Finding, so-what, caveat. Empty stays empty.",
   },
   {
     icon: SlidersHorizontal,
-    step: "Patch, compare, export",
-    description:
-      "Studio is walk-to-stop. Compare stays inside the country. The research pack uses that country’s nouns.",
+    step: "Compare in-country",
+    description: "Studio, compare, export — never across deprivation indices.",
   },
 ] as const

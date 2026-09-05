@@ -13,6 +13,23 @@ if _trapezoid is None:
     raise ImportError("NumPy has neither 'trapezoid' nor 'trapz' — unsupported version")
 
 
+def _validate_weighted_input(
+    values: np.ndarray, weights: np.ndarray, *, allow_negative_values: bool = False
+) -> None:
+    if values.shape != weights.shape:
+        raise ValueError("values and weights must have the same shape")
+    if values.size == 0:
+        raise ValueError("values and weights must not be empty")
+    if not np.all(np.isfinite(values)) or not np.all(np.isfinite(weights)):
+        raise ValueError("values and weights must be finite")
+    if np.any(weights < 0):
+        raise ValueError("weights must be non-negative")
+    if weights.sum() <= 0:
+        raise ValueError("total weight must be positive")
+    if not allow_negative_values and np.any(values < 0):
+        raise ValueError("values must be non-negative")
+
+
 def compute_gini(values: np.ndarray, weights: np.ndarray) -> float:
     """Population-weighted Gini coefficient via Lorenz curve area.
 
@@ -21,16 +38,26 @@ def compute_gini(values: np.ndarray, weights: np.ndarray) -> float:
         weights: Population weights per unit.
 
     Returns:
-        Gini coefficient in [0, 1]. 0 = perfect equality, 1 = maximum inequality.
+        Gini coefficient in [0, 1]. 0 = perfect equality, 1 = maximum
+        inequality. By convention, zero total service (nothing to
+        distribute) is treated as perfect equality and returns 0.0.
     """
+    values = np.asarray(values, dtype=float)
+    weights = np.asarray(weights, dtype=float)
+    _validate_weighted_input(values, weights)
+
+    total_service = (values * weights).sum()
+    if total_service == 0:
+        return 0.0
+
     # Sort by values ascending
-    order = np.argsort(values)
+    order = np.argsort(values, kind="stable")
     values = values[order]
     weights = weights[order]
 
     # Cumulative population and service shares
     cum_pop = np.cumsum(weights) / weights.sum()
-    cum_service = np.cumsum(values * weights) / (values * weights).sum()
+    cum_service = np.cumsum(values * weights) / total_service
 
     # Insert origin (0, 0)
     cum_pop = np.concatenate([[0], cum_pop])
@@ -44,6 +71,10 @@ def compute_gini(values: np.ndarray, weights: np.ndarray) -> float:
 def compute_palma_ratio(values: np.ndarray, weights: np.ndarray) -> float:
     """Palma ratio: mean service in top 10% / mean service in bottom 40%.
 
+    Areas whose population straddles the 40%/90% cumulative-population cuts
+    are split proportionally, so the result doesn't depend on how finely the
+    input is divided into areas or on tie ordering.
+
     Args:
         values: Service levels per unit.
         weights: Population weights per unit.
@@ -51,18 +82,29 @@ def compute_palma_ratio(values: np.ndarray, weights: np.ndarray) -> float:
     Returns:
         Palma ratio. Higher = more unequal.
     """
-    order = np.argsort(values)
+    values = np.asarray(values, dtype=float)
+    weights = np.asarray(weights, dtype=float)
+    _validate_weighted_input(values, weights)
+
+    order = np.argsort(values, kind="stable")
     values = values[order]
     weights = weights[order]
 
-    cum_pop_frac = np.cumsum(weights) / weights.sum()
+    total = weights.sum()
+    cum_weight = np.cumsum(weights)
+    cum_before = cum_weight - weights
 
-    # Bottom 40%
-    bottom_mask = cum_pop_frac <= 0.40
-    top_mask = cum_pop_frac > 0.90
+    bottom_cut = 0.40 * total
+    top_cut = 0.90 * total
 
-    bottom_mean = np.average(values[bottom_mask], weights=weights[bottom_mask]) if bottom_mask.sum() > 0 else 0.0
-    top_mean = np.average(values[top_mask], weights=weights[top_mask]) if top_mask.sum() > 0 else 0.0
+    bottom_overlap = np.clip(np.minimum(cum_weight, bottom_cut) - cum_before, 0, None)
+    top_overlap = np.clip(cum_weight - np.maximum(cum_before, top_cut), 0, None)
+
+    bottom_weight = bottom_overlap.sum()
+    top_weight = top_overlap.sum()
+
+    bottom_mean = float(np.sum(values * bottom_overlap) / bottom_weight) if bottom_weight > 0 else 0.0
+    top_mean = float(np.sum(values * top_overlap) / top_weight) if top_weight > 0 else 0.0
 
     return float(top_mean / bottom_mean) if bottom_mean > 0 else float("inf")
 
@@ -73,6 +115,10 @@ def compute_concentration_index(service: np.ndarray, rank: np.ndarray, populatio
     Positive CI = service concentrated in richer (lower deprivation rank) areas.
     Negative CI = service concentrated in poorer areas.
 
+    Units that tie on ``rank`` share the population-weighted average
+    fractional rank of their tied group, so the result doesn't depend on
+    the arbitrary order ties happen to appear in.
+
     Args:
         service: Service level per LSOA.
         rank: Deprivation rank (1 = most deprived, higher = less deprived).
@@ -81,15 +127,30 @@ def compute_concentration_index(service: np.ndarray, rank: np.ndarray, populatio
     Returns:
         Concentration Index in [-1, 1].
     """
-    n = len(service)
-    # Fractional rank (0 to 1)
+    service = np.asarray(service, dtype=float)
+    rank = np.asarray(rank, dtype=float)
+    population = np.asarray(population, dtype=float)
+    _validate_weighted_input(service, population, allow_negative_values=True)
+    if rank.shape != service.shape:
+        raise ValueError("rank must have the same shape as service")
+    if not np.all(np.isfinite(rank)):
+        raise ValueError("rank must be finite")
+
     total_pop = population.sum()
-    order = np.argsort(rank)
+    order = np.argsort(rank, kind="stable")
+    rank_sorted = rank[order]
     pop_sorted = population[order]
+    service_sorted = service[order]
+
     frac_rank = (np.cumsum(pop_sorted) - 0.5 * pop_sorted) / total_pop
 
-    # Sort service and pop by rank order
-    service_sorted = service[order]
+    _, inverse, _ = np.unique(rank_sorted, return_inverse=True, return_counts=True)
+    inverse = inverse.reshape(-1)
+    group_pop_sum = np.zeros(inverse.max() + 1)
+    group_frac_sum = np.zeros(inverse.max() + 1)
+    np.add.at(group_pop_sum, inverse, pop_sorted)
+    np.add.at(group_frac_sum, inverse, frac_rank * pop_sorted)
+    frac_rank = (group_frac_sum / group_pop_sum)[inverse]
 
     mean_service = np.average(service_sorted, weights=pop_sorted)
     # CI = 2 * cov(service, fractional_rank) / mean_service
