@@ -113,3 +113,7 @@ AGENTS.md
 .serena/
 docs/superpowers/
 
+
+# Claude Code local context (not for git)
+CLAUDE.md
+AGENTS.md
