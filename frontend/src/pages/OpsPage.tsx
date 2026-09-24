@@ -10,7 +10,7 @@ function feedNoun(country: string): string {
     return "OVapi GTFS-RT (mixed mode; briefing default stays bus). SES / buurten stay on the static pack"
   }
   if (country === "france") {
-    return "NAP gtfs-rt union (incomplete; missing départements logged, not filled). F-EDI / IRIS / AOM stay on the static pack"
+    return "NAP gtfs-rt sample. Not a national AOM figure. DOM out. F-EDI / IRIS stay on the static pack"
   }
   return "BODS GTFS-RT / SIRI-VM (OGL). Joined to existing stop → LSOA only — no Census re-download"
 }
@@ -48,9 +48,12 @@ export default function OpsPage() {
           No ops rollup for {countryName} yet. {feedNoun(country)}. We do not invent 0% on-time.
         </p>
       ) : ops.data?.empty ? (
-        <p className="text-sm text-muted-foreground max-w-xl" data-testid="ops-empty">
-          {ops.data.empty_reason}
-        </p>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground max-w-xl" data-testid="ops-empty">
+            {ops.data.empty_reason}
+          </p>
+          {country === "france" ? <FranceSample data={ops.data} /> : null}
+        </div>
       ) : ops.data ? (
         <OpsExhibit data={ops.data} country={country} />
       ) : (
@@ -75,7 +78,11 @@ function OpsExhibit({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Stat label="Updates in window" value={data.n_updates.toLocaleString("en-GB")} />
         <Stat
-          label={`Late > ${(data.late_threshold_seconds ?? 300) / 60} min`}
+          label={
+            country === "france"
+              ? `Sample late > ${(data.late_threshold_seconds ?? 300) / 60} min`
+              : `Late > ${(data.late_threshold_seconds ?? 300) / 60} min`
+          }
           value={pct == null ? "—" : `${pct.toFixed(1)}%`}
         />
         <Stat label="Skipped / cancelled" value={`${data.n_skipped} / ${data.n_cancelled}`} />
@@ -145,6 +152,7 @@ function OpsExhibit({
           ? " This is AVL coverage, not a DfT punctuality statistic."
           : ""}
       </p>
+      {country === "france" ? <FranceSample data={data} /> : null}
       <p className="text-sm text-foreground max-w-2xl" data-testid="ops-coverage">
         {data.coverage_sentence}
       </p>
@@ -152,6 +160,19 @@ function OpsExhibit({
         Rollup vintage {data.vintage}. {data.window_note} {data.late_threshold_note}
       </p>
     </div>
+  )
+}
+
+function FranceSample({
+  data,
+}: {
+  data: NonNullable<ReturnType<typeof useOps>["data"]>
+}) {
+  return (
+    <p className="text-sm text-foreground max-w-2xl" data-testid="ops-france-sample">
+      {data.n_gtfs_rt_listed ?? "—"} listed / {data.n_sampled ?? "—"} sampled / {data.skipped_n ?? "—"} skipped.
+      Not a national AOM figure.
+    </p>
   )
 }
 

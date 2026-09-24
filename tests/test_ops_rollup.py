@@ -195,3 +195,116 @@ def test_empty_ireland_does_not_copy_england_pct(tmp_path: Path, monkeypatch) ->
     assert en["pct_late"] == 100.0
     assert "BODS" not in (ie["empty_reason"] or "")
     assert "IMD" not in (ie["empty_reason"] or "")
+
+
+def _fr_feed(trip_id: str, route_id: str) -> bytes:
+    from google.transit import gtfs_realtime_pb2
+
+    feed = gtfs_realtime_pb2.FeedMessage()
+    feed.header.gtfs_realtime_version = "2.0"
+    ent = feed.entity.add()
+    ent.id = trip_id
+    ent.trip_update.trip.trip_id = trip_id
+    ent.trip_update.trip.route_id = route_id
+    ent.trip_update.stop_time_update.add().arrival.delay = 301
+    return feed.SerializeToString()
+
+
+def test_france_cap_skips_the_rest_and_prefixes_dataset_id(monkeypatch) -> None:
+    from aequitas.ops import collect
+    from aequitas.ops.fetch import FetchHit
+
+    catalog = {
+        "data": [
+            {
+                "id": "ds-ok",
+                "title": "Metro bus",
+                "resources": [{"format": "gtfs-rt", "url": "https://example.test/ok", "title": "rt"}],
+            },
+            {
+                "id": "ds-cap",
+                "title": "Second metro",
+                "resources": [{"format": "gtfs-rt", "url": "https://example.test/capped", "title": "rt"}],
+            },
+            {
+                "id": "ds-dom",
+                "title": "Guadeloupe bus",
+                "resources": [{"format": "gtfs-rt", "url": "https://example.test/dom", "title": "rt"}],
+            },
+        ]
+    }
+    calls: list[str] = []
+
+    def fake_fetch(url, **kwargs):
+        calls.append(url)
+        if url == collect.NAP_DATASETS:
+            body = __import__("json").dumps(catalog).encode()
+            return FetchHit(url, 200, len(body), 5, "catalog", "none"), body
+        if url.endswith("/ok"):
+            body = _fr_feed("trip-1", "route-1")
+            return FetchHit(url, 200, len(body), 5, "rt", "none"), body
+        raise AssertionError(url)
+
+    prefixed: list[str] = []
+    real_prefix = collect._prefix_france_ids
+
+    def spy(obs, dataset_id):
+        real_prefix(obs, dataset_id)
+        prefixed.extend(o.trip_id or "" for o in obs)
+
+    monkeypatch.setattr(collect, "FR_RT_SAMPLE_CAP", 1)
+    monkeypatch.setattr(collect, "fetch_bytes", fake_fetch)
+    monkeypatch.setattr(collect, "_prefix_france_ids", spy)
+    body = collect.collect_france()
+    assert body["n_gtfs_rt_listed"] == 3
+    assert body["n_sampled"] == 1
+    assert body["skipped_reasons"]["not harvested this wave (cap)"] == 1
+    assert body["skipped_reasons"]["DOM out"] == 1
+    assert "3 listed / 1 sampled" in body["coverage_sentence"]
+    assert "not a national AOM" in body["coverage_sentence"].lower() or "Not a national AOM" in body["coverage_sentence"]
+    assert body["n_routes_with_update"] == 1
+    assert calls == [collect.NAP_DATASETS, "https://example.test/ok"]
+    assert prefixed == ["ds-ok:trip-1"]
+    assert body["coverage_pct"] is None
+    # The kept observation is inside the rollup only as a route count. Re-parse via a direct prefix check:
+    from aequitas.ops.collect import _prefix_france_ids
+    from aequitas.ops.proto import TripObs, parse_feed_message
+
+    obs, _n = parse_feed_message(_fr_feed("trip-1", "route-1"))
+    _prefix_france_ids(obs, "ds-ok")
+    assert obs[0].trip_id == "ds-ok:trip-1"
+    assert obs[0].route_id == "ds-ok:route-1"
+
+
+def test_france_403_is_not_retried(monkeypatch) -> None:
+    from aequitas.ops import collect
+    from aequitas.ops.fetch import FetchHit
+
+    catalog = {
+        "data": [
+            {
+                "id": "lio",
+                "title": "liO Occitanie",
+                "resources": [{"format": "gtfs-rt", "url": "https://example.test/lio", "title": "rt"}],
+            }
+        ]
+    }
+    calls: list[str] = []
+
+    def fake_fetch(url, **kwargs):
+        calls.append(url)
+        if url == collect.NAP_DATASETS:
+            body = __import__("json").dumps(catalog).encode()
+            return FetchHit(url, 200, len(body), 5, "catalog", "none"), body
+        return FetchHit(url, 403, 12, 5, "rt", "none", error="HTTP 403"), None
+
+    monkeypatch.setattr(collect, "fetch_bytes", fake_fetch)
+    body = collect.collect_france()
+    assert calls == [collect.NAP_DATASETS, "https://example.test/lio"]
+    assert body["n_sampled"] == 1
+    assert body["skipped_reasons"]["HTTP 403"] == 1
+    assert body["empty"] is True
+    assert "Not a national AOM figure" in body["coverage_sentence"]
+    assert "BODS" not in body["coverage_sentence"]
+    assert "IMD" not in body["coverage_sentence"]
+    assert "LSOA" not in body["coverage_sentence"]

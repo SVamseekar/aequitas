@@ -6,12 +6,14 @@ import io
 import json
 import re
 import zipfile
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
 import duckdb
 from loguru import logger
 
+from aequitas.france.constants import in_fr_bbox
 from aequitas.ops.fetch import FetchHit, env_key, fetch_bytes
 from aequitas.ops.proto import LATE_THRESHOLD_SECONDS, TripObs, parse_feed_message
 from aequitas.ops.rollup import build_rollup, imd_strip, region_strip
@@ -43,7 +45,24 @@ OVAPI_VP = "https://gtfs.ovapi.nl/nl/vehiclePositions.pb"
 
 NAP_DATASETS = "https://transport.data.gouv.fr/api/datasets"
 
-FR_RT_SAMPLE_CAP = 12
+FR_RT_SAMPLE_CAP = 50
+_FR_DOM_NAMES = (
+    "guadeloupe",
+    "martinique",
+    "guyane",
+    "réunion",
+    "reunion",
+    "mayotte",
+    "saint-pierre",
+    "saint-martin",
+    "saint-barthélemy",
+    "saint-barthelemy",
+    "wallis",
+    "polynésie",
+    "polynesie",
+    "nouvelle-calédonie",
+    "nouvelle-caledonie",
+)
 
 
 def run_ops(country: str, project_root: Path | None = None) -> Path:
@@ -469,7 +488,7 @@ def collect_france(project_root: Path | None = None) -> dict[str, Any]:
 
     hit, body = fetch_bytes(NAP_DATASETS, entity="NAP datasets catalog (gtfs-rt union)", auth="none", timeout=90)
     hits.append(hit)
-    resources: list[tuple[str, str]] = []
+    resources: list[dict[str, str | None]] = []
     if body:
         try:
             catalog = json.loads(body.decode("utf-8", errors="replace"))
@@ -478,73 +497,139 @@ def collect_france(project_root: Path | None = None) -> dict[str, Any]:
             hit.error = f"catalog parse: {exc}"
 
     sampled = 0
-    for url, title in resources:
-        if sampled >= FR_RT_SAMPLE_CAP:
-            skipped.append({"url": url, "title": title, "reason": "not harvested this wave (cap)"})
+    fetched_urls: set[str] = set()
+    for res in resources:
+        url = str(res["url"])
+        title = str(res["title"])
+        dataset_id = str(res["dataset_id"])
+        if res.get("skip_reason"):
+            skipped.append({"url": url, "title": title, "dataset_id": dataset_id, "reason": res["skip_reason"]})
             continue
+        if sampled >= FR_RT_SAMPLE_CAP:
+            skipped.append({"url": url, "title": title, "dataset_id": dataset_id, "reason": "not harvested this wave (cap)"})
+            continue
+        if url in fetched_urls:
+            continue
+        fetched_urls.add(url)
         rh, rbody = fetch_bytes(url, entity=f"gtfs-rt:{title[:80]}", auth="none", timeout=40)
         hits.append(rh)
         sampled += 1
-        if rbody is None:
-            skipped.append({"url": url, "title": title, "reason": rh.error or f"HTTP {rh.status}"})
+        if rh.status in {403, 404} or rbody is None:
+            skipped.append({"url": url, "title": title, "dataset_id": dataset_id, "reason": rh.error or f"HTTP {rh.status}"})
             continue
         payload = _maybe_unzip_gtfsrt(rbody)
         if not payload:
-            skipped.append({"url": url, "title": title, "reason": "empty body"})
+            skipped.append({"url": url, "title": title, "dataset_id": dataset_id, "reason": "empty body"})
             continue
         try:
             obs, n = parse_feed_message(payload)
         except Exception as exc:
-            skipped.append({"url": url, "title": title, "reason": f"parse: {exc}"})
+            skipped.append({"url": url, "title": title, "dataset_id": dataset_id, "reason": f"parse: {exc}"})
             continue
+        _prefix_france_ids(obs, dataset_id)
         observations.extend(obs)
         n_entities += n
 
     n_listed = len(resources)
+    logger.info(
+        "France NAP gtfs-rt listed={} sampled={} skipped={}",
+        n_listed,
+        sampled,
+        len(skipped),
+    )
+    extra = {
+        "n_gtfs_rt_listed": n_listed,
+        "n_sampled": sampled,
+        "skipped_n": len(skipped),
+        "skipped_reasons": dict(Counter(str(row["reason"]) for row in skipped)),
+    }
+    sentence = (
+        f"France NAP gtfs-rt: {n_listed} listed / {sampled} sampled / {len(skipped)} skipped. "
+        "Not a national AOM figure. The sample late share is not France-wide punctuality. "
+        "DOM out. Metropolitan bbox only. Coverage vs static NAP routes is — "
+        "(no honest route join on this rollup)."
+    )
     if not observations:
-        reason = (
-            f"France NAP lists {n_listed} gtfs-rt resources. This collector sampled "
-            f"{sampled} and logged the rest as skipped. No usable TripUpdates in the sample "
-            f"(HTTP statuses {[h.status for h in hits[:8]]}…). Incomplete is expected. "
-            "No invented national punctuality. DOM out. F-EDI/IRIS stay on the static pack."
-        )
         return build_rollup(
             country="france",
             observations=[],
             n_entities=0,
             feeds=_hits(hits),
             n_static_routes=None,
-            coverage_sentence=reason,
+            coverage_sentence=sentence,
             empty=True,
-            empty_reason=reason,
-            extra={"n_gtfs_rt_listed": n_listed, "n_sampled": sampled, "skipped_n": len(skipped)},
+            empty_reason=sentence,
+            extra=extra,
         )
-
-    cov = (
-        f"France NAP gtfs-rt union is incomplete. Listed {n_listed} resources; sampled "
-        f"{sampled}; parsed updates={len(observations)}. Prefix collisions on trip_id/route_id "
-        "already exist in the static harvest — coverage is not a national %. "
-        "Missing départements are not filled. DOM out. AOM/SPC nouns stay local."
-    )
     return build_rollup(
         country="france",
         observations=observations,
         n_entities=n_entities,
         feeds=_hits(hits),
         n_static_routes=None,
-        coverage_sentence=cov,
-        extra={"n_gtfs_rt_listed": n_listed, "n_sampled": sampled, "skipped_n": len(skipped)},
+        coverage_sentence=sentence,
+        extra=extra,
     )
 
 
-def _nap_gtfsrt_urls(catalog: Any) -> list[tuple[str, str]]:
+def _prefix_france_ids(observations: list[TripObs], dataset_id: str) -> None:
+    for obs in observations:
+        if obs.trip_id:
+            obs.trip_id = f"{dataset_id}:{obs.trip_id}"
+        if obs.route_id:
+            obs.route_id = f"{dataset_id}:{obs.route_id}"
+
+
+def _france_skip_reason(dataset: dict[str, Any]) -> str | None:
+    names: list[str] = [str(dataset.get("title") or "")]
+    aom = dataset.get("aom")
+    if isinstance(aom, dict):
+        names.append(str(aom.get("name") or ""))
+    covered = dataset.get("covered_area") or dataset.get("couverture")
+    if isinstance(covered, dict):
+        names.append(str(covered.get("name") or ""))
+        coords = _geo_points(covered.get("geometry") or covered)
+        if coords and not any(in_fr_bbox(lat, lon) for lon, lat in coords):
+            return "outside metropolitan bbox"
+    elif isinstance(covered, list):
+        for item in covered:
+            if isinstance(item, dict):
+                names.append(str(item.get("name") or ""))
+    blob = " ".join(names).casefold()
+    if any(name in blob for name in _FR_DOM_NAMES):
+        return "DOM out"
+    return None
+
+
+def _geo_points(node: Any) -> list[tuple[float, float]]:
+    points: list[tuple[float, float]] = []
+
+    def walk(value: Any) -> None:
+        if isinstance(value, (list, tuple)) and len(value) >= 2 and isinstance(value[0], (int, float)):
+            if isinstance(value[1], (int, float)):
+                points.append((float(value[0]), float(value[1])))
+            return
+        if isinstance(value, dict):
+            for child in value.values():
+                walk(child)
+        elif isinstance(value, (list, tuple)):
+            for child in value:
+                walk(child)
+
+    walk(node)
+    return points
+
+
+def _nap_gtfsrt_urls(catalog: Any) -> list[dict[str, str | None]]:
     datasets = catalog if isinstance(catalog, list) else catalog.get("data") or catalog.get("datasets") or []
-    out: list[tuple[str, str]] = []
+    out: list[dict[str, str | None]] = []
     seen: set[str] = set()
     for ds in datasets:
         if not isinstance(ds, dict):
             continue
-        title = str(ds.get("title") or ds.get("id") or "dataset")
+        dataset_id = str(ds.get("id") or ds.get("datagouv_id") or ds.get("slug") or "dataset")
+        title = str(ds.get("title") or dataset_id)
+        skip = _france_skip_reason(ds)
         for res in ds.get("resources") or []:
             if not isinstance(res, dict):
                 continue
@@ -555,5 +640,12 @@ def _nap_gtfsrt_urls(catalog: Any) -> list[tuple[str, str]]:
             if not url or url in seen:
                 continue
             seen.add(url)
-            out.append((url, f"{title} / {res.get('title') or res.get('id') or 'resource'}"))
+            out.append(
+                {
+                    "url": url,
+                    "title": f"{title} / {res.get('title') or res.get('id') or 'resource'}",
+                    "dataset_id": dataset_id,
+                    "skip_reason": skip,
+                }
+            )
     return out
