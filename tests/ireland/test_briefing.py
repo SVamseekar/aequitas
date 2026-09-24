@@ -61,7 +61,6 @@ REQUIRED_TYPES = {
     "ps5_scenario_comparison": "table",
     "bsa3_tier_distribution": "grouped_bar",
     "j2_bcr": "horizontal_bar",
-    "j3_carbon": "horizontal_bar",
 }
 
 

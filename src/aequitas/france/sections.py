@@ -124,10 +124,10 @@ TITLES: dict[str, str] = {
     "g4_shap": "Feature importance (F-EDI + INSEE density)",
     "g5_scenario_model": "SPC / rural holes intervention KPIs",
     "j1_economic_value": "Priority population by région",
-    "j2_bcr": "People-gap (no ADEME euro BCR)",
-    "j3_carbon": "Illustrative carbon (no free ADEME unit cost)",
+    "j2_bcr": "People-gap (no published Quinet €)",
+    "j3_carbon": "No published ADEME Base Carbone factor",
     "j4_investment_priority": "Région × F-EDI coverage gap",
-    "bsa1_franchising_readiness": "AOM / SPC coverage by région",
+    "bsa1_franchising_readiness": "LOM / AOM / SPC",
     "bsa2_operator_concentration": "NAP operator concentration",
     "bsa3_tier_distribution": "AOM / SPC / rural-hole tiers",
     "ps1_freq_restoration": "Restore NAP weekday frequency",
@@ -137,10 +137,7 @@ TITLES: dict[str, str] = {
     "ps5_scenario_comparison": "French intervention comparison",
 }
 
-_CAR_G_PER_KM = 164.0
-_CARBON_NOTE = (
-    "Illustrative only: 164 gCO₂/km passenger-car intensity. No free ADEME/INSEE unit cost applied."
-)
+_CARBON_NOTE = "No published ADEME Base Carbone table returned 200. Factor omitted."
 
 
 def catalogue_counts() -> dict[str, int]:
@@ -410,8 +407,6 @@ def _section_bundle(areas, all_areas, region, urban_rural, extras) -> list[dict[
     ps2_pop = float(eve["population"].sum()) if len(eve) else 0.0
     ps3_pop = float(rural_desert["population"].sum()) if len(rural_desert) else 0.0
     ps4_pop = float(areas.loc[~areas["within_400m"], "population"].sum()) if n else 0.0
-    carbon_t = pop_zero * 3.0 * 220.0 * _CAR_G_PER_KM / 1e6 if pop_zero else 0.0
-
     def has_col(col: str) -> bool:
         return bool(n and col in areas and areas[col].notna().sum() >= 3)
 
@@ -507,10 +502,10 @@ def _section_bundle(areas, all_areas, region, urban_rural, extras) -> list[dict[
         "g4_shap": {"features": [{"name": "fedi_score", "r": r_ses}, {"name": "INSEE density", "r": None}], "insufficient_data": r_ses is None},
         "g5_scenario_model": {"points_at": ["ps1_freq_restoration", "ps2_evening_extension", "ps3_drt_rural", "ps4_franchise"], "insufficient_data": empty},
         "j1_economic_value": {"unit": "people beyond 400 m (no € without a cited ADEME/INSEE unit cost)", "by_county": [{"name": r["name"], "value": r["pop_desert"]} for r in region_rows], "national": pop_zero, "insufficient_data": empty},
-        "j2_bcr": {"bcr": None, "omit_euro": True, "reason": "No free published ADEME/INSEE unit cost applied. People-gap only.", "people_gap": pop_zero, "insufficient_data": False},
-        "j3_carbon": {"co2_saving_tonnes": carbon_t, "factor_g_per_km": _CAR_G_PER_KM, "note": _CARBON_NOTE, "insufficient_data": empty},
+        "j2_bcr": {"bcr": None, "omit_euro": True, "reason": "No published Quinet €. People-gap only.", "people_gap": pop_zero, "insufficient_data": False},
+        "j3_carbon": {"co2_saving_tonnes": None, "factor_g_per_km": None, "omit": True, "reason": _CARBON_NOTE, "note": _CARBON_NOTE, "insufficient_data": True},
         "j4_investment_priority": {"ranking": sorted(region_rows, key=lambda r: (r["pop_desert"], -r["mean_fedi"]), reverse=True)[:12], "insufficient_data": not region_rows},
-        "bsa1_franchising_readiness": {"national_avg": pct_covered, "unit": "% people within 400 m (AOM / SPC proxy)", "programme": "AOM / SPC", "insufficient_data": empty},
+        "bsa1_franchising_readiness": {"national_avg": pct_covered, "unit": "% people within 400 m", "programme": "LOM / AOM / SPC", "insufficient_data": empty},
         "bsa2_operator_concentration": {"hhi": hhi, "scale": "0-10000", "same_as": "c3_operator_hhi", "insufficient_data": hhi is None},
         "bsa3_tier_distribution": {"tiers": tiers, "insufficient_data": empty},
         "ps1_freq_restoration": {"scenario": {"population_affected": ps1_pop, "who": "IRIS below median weekday NAP trips"}, "euro": None, "insufficient_data": empty},
@@ -588,10 +583,10 @@ def _section_bundle(areas, all_areas, region, urban_rural, extras) -> list[dict[
                 "g4_shap": _brief("F-EDI + INSEE density.", "French features only.", caveat_base),
                 "g5_scenario_model": _brief(f"KPIs for {place} point at the SPC / rural holes list.", "People only.", caveat_base),
                 "j1_economic_value": _brief(f"{int(pop_zero):,} people in {place} live beyond 400 m.", "People only — no invented euro.", caveat_base),
-                "j2_bcr": _brief(f"No free published ADEME/INSEE BCR for {place}. People-gap is {int(pop_zero):,}.", "People-gap only.", caveat_base),
-                "j3_carbon": _brief(f"{carbon_t:,.0f} t illustrative car-km CO₂ in {place}.", _CARBON_NOTE, caveat_base),
+                "j2_bcr": _brief(f"No published Quinet € for {place}. People-gap is {int(pop_zero):,}.", "People-gap only.", caveat_base),
+                "j3_carbon": _brief(_CARBON_NOTE, f"Carbon stays omitted for {place}.", caveat_base),
                 "j4_investment_priority": _brief(f"Régions ranked by people beyond 400 m and SES disadvantage ({place}).", "Priority is a people-gap.", caveat_base),
-                "bsa1_franchising_readiness": _brief(f"AOM / SPC coverage proxy in {place}: {pct_covered:.1f}% of people within 400 m.", "Concession programmes this filter can see.", caveat_base),
+                "bsa1_franchising_readiness": _brief(f"LOM / AOM / SPC in {place}: {pct_covered:.1f}% of people within 400 m.", "EU TEN-T / CEF is funding context, not this gap.", caveat_base),
                 "bsa2_operator_concentration": _brief(f"Same NAP HHI as Network: {hhi:.0f} / 10,000." if hhi is not None else "HHI unavailable.", "Hidden so HHI is not shown twice.", caveat_base),
                 "bsa3_tier_distribution": _brief(f"Concession tiers in {place}: urban concession, regional, rural flex, unserved.", "French concession tiers.", caveat_base),
                 "ps1_freq_restoration": _brief(f"{int(ps1_pop):,} people in {place} live in IRIS below median weekday trips.", "Restore NAP weekday frequency — people only.", caveat_base),
@@ -740,10 +735,10 @@ def _section_bundle(areas, all_areas, region, urban_rural, extras) -> list[dict[
             "f5_rural_penalty": {"type": "scatter_regression", "title": f"Urban vs rural 400 m by région — {place}", "data": [{"x": float(r.get("urban") or 0), "y": float(r.get("rural") or 0), "id": r["name"]} for r in paired_rows]},
             "f6_equitable_regions": _ranking_chart([{"label": r["name"], "value": r["pct_covered"]} for r in sorted(region_rows, key=lambda x: -x["pct_covered"])], title=f"400 m coverage by région — {place}", x_label="% within 400 m"),
             "j1_economic_value": _ranking_chart([{"label": r["name"], "value": r["pop_desert"]} for r in sorted(region_rows, key=lambda x: -x["pop_desert"])], title=f"People beyond 400 m — {place}", x_label="People"),
-            "j2_bcr": {"type": "horizontal_bar", "title": f"People-gap (no euro BCR) — {place}", "data": [{"label": "People beyond 400 m", "value": pop_zero}]},
-            "j3_carbon": {"type": "horizontal_bar", "title": f"Illustrative car-km CO₂ — {place}", "data": [{"label": "t CO₂", "value": carbon_t}]},
+            "j2_bcr": {"type": "horizontal_bar", "title": f"People-gap (no published Quinet €) — {place}", "data": [{"label": "People beyond 400 m", "value": pop_zero}]},
+            "j3_carbon": {},
             "j4_investment_priority": _ranking_chart([{"label": r["name"], "value": r["pop_desert"]} for r in sorted(region_rows, key=lambda x: -x["pop_desert"])], title=f"Priority people-gap — {place}", x_label="People"),
-            "bsa1_franchising_readiness": {"type": "choropleth", "geography": "france_region", "title": f"Concession coverage proxy — {place}", "data": [{"area_code": r["code"], "area_name": r["name"], "value": r["pct_covered"]} for r in region_rows]},
+            "bsa1_franchising_readiness": {"type": "choropleth", "geography": "france_region", "title": f"LOM / AOM / SPC — {place}", "data": [{"area_code": r["code"], "area_name": r["name"], "value": r["pct_covered"]} for r in region_rows]},
             "bsa3_tier_distribution": {"type": "horizontal_bar", "title": f"Concession tiers — {place}", "data": [{"label": k, "value": v} for k, v in tiers.items()]},
             "ps1_freq_restoration": {"type": "horizontal_bar", "title": f"Restore OV frequency — {place}", "data": [{"label": "People", "value": ps1_pop}]},
             "ps2_evening_extension": {"type": "horizontal_bar", "title": f"Evening NAP — {place}", "data": [{"label": "People", "value": ps2_pop}]},
