@@ -8,6 +8,7 @@ import type {
   LsoaResponse,
   ScoreResponse,
   MapResponse,
+  DestinationsResponse,
   ReachResponse,
   ReachBandsResponse,
   TimeSeriesResponse,
@@ -150,6 +151,14 @@ export function useReachBands(region: string, urbanRural: string, country = "eng
         urban_rural: urbanRural,
         country,
       }),
+    staleTime: Infinity,
+  })
+}
+
+export function useDestinations(country = "england") {
+  return useQuery({
+    queryKey: ["destinations", country],
+    queryFn: () => fetchJson<DestinationsResponse>("/destinations", { country }),
     staleTime: Infinity,
   })
 }

@@ -22,6 +22,16 @@ def get_reach(
     return query_reach(dest_type, cutoff, region, urban_rural, country=country)
 
 
+@router.get("/destinations")
+def get_destinations(country: str = Query("england")) -> dict:
+    from aequitas.analytics.destinations import COUNTRIES, destinations_inventory
+    from aequitas.core.config import PipelineConfig
+
+    if country not in COUNTRIES:
+        country = "england"
+    return destinations_inventory(PipelineConfig().processed_dir, country)
+
+
 @router.get("/reach/bands")
 def get_reach_bands(
     region: str = Query("all"),

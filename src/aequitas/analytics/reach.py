@@ -61,6 +61,7 @@ class ReachConfig:
     region: str | None = None
     dest_types: tuple[str, ...] = DEST_TYPES
     force: bool = False
+    country: str = "england"
 
 
 def count_within_cutoffs(minutes: pd.Series) -> dict[str, int]:
@@ -96,7 +97,10 @@ def validate_reach_frame(df: pd.DataFrame, expected_lsoas: int | None = None) ->
     return issues
 
 
-def reach_output_path(processed_dir: Path) -> Path:
+def reach_output_path(processed_dir: Path, country: str = "england") -> Path:
+    """England keeps the historical reach/ folder. Other countries stay keyed."""
+    if country and country != "england":
+        return processed_dir / country / "access_times.parquet"
     return processed_dir / "reach" / OUTPUT_NAME
 
 
@@ -237,9 +241,15 @@ def merge_reach_frames(existing: pd.DataFrame | None, incoming: pd.DataFrame) ->
     return pd.concat([keep, incoming], ignore_index=True)
 
 
-def write_reach(cfg: ReachConfig, engine: TravelTimeEngine | None = None) -> Path | None:
-    """Write processed/reach/lsoa_access_times.parquet. Returns path or None if skipped."""
-    out = reach_output_path(cfg.processed_dir)
+def write_reach(
+    cfg: ReachConfig,
+    engine: TravelTimeEngine | None = None,
+    departure: datetime | None = None,
+) -> Path | None:
+    """Write country-keyed access-time parquet. Returns path or None if skipped."""
+    from aequitas.analytics.destinations import load_destination_frames
+
+    out = reach_output_path(cfg.processed_dir, country=cfg.country)
     out.parent.mkdir(parents=True, exist_ok=True)
     pbf = _find_pbf(cfg.raw_dir)
     gtfs = _find_gtfs(cfg.raw_dir)
@@ -259,29 +269,44 @@ def write_reach(cfg: ReachConfig, engine: TravelTimeEngine | None = None) -> Pat
         engine = try_build_r5_engine(pbf, gtfs)
 
     origins_path = cfg.processed_dir / "master_lsoa_table.parquet"
+    if cfg.country == "ireland":
+        origins_path = cfg.processed_dir / "ireland" / "sa_table.parquet"
+        if not origins_path.exists():
+            origins_path = cfg.processed_dir / "master_lsoa_table.parquet"
+    elif cfg.country == "netherlands":
+        alt = cfg.processed_dir / "netherlands" / "buurt_table.parquet"
+        if alt.exists():
+            origins_path = alt
+    elif cfg.country == "france":
+        alt = cfg.processed_dir / "france" / "iris_table.parquet"
+        if alt.exists():
+            origins_path = alt
     if not origins_path.exists():
-        logger.warning("No master LSOA table — cannot compute reach")
+        logger.warning("No origin table — cannot compute reach")
         return None
 
     origins = pd.read_parquet(origins_path)
     if "lsoa_cd" in origins.columns and "lsoa" not in origins.columns:
         origins = origins.rename(columns={"lsoa_cd": "lsoa"})
+    if "lsoa" not in origins.columns:
+        for cand in ("sa", "sa_code", "buurt", "buurt_code", "iris", "code_iris", "area_id"):
+            if cand in origins.columns:
+                origins = origins.rename(columns={cand: "lsoa"})
+                break
     if cfg.region and cfg.region != "all" and "region_code" in origins.columns:
         origins = origins[origins["region_code"] == cfg.region]
         logger.info("Reach batch region={} rows={}", cfg.region, len(origins))
     elif cfg.region and cfg.region != "all" and "rgn22cd" in origins.columns:
         origins = origins[origins["rgn22cd"] == cfg.region]
 
-    dest_frames: dict[str, pd.DataFrame] = {}
-    for dest in cfg.dest_types:
-        cand = cfg.processed_dir / f"destinations_{dest}.parquet"
-        if cand.exists():
-            dest_frames[dest] = pd.read_parquet(cand)
+    dest_frames = load_destination_frames(cfg.processed_dir, cfg.country, dest_types=cfg.dest_types)
 
     if not dest_frames:
         logger.warning(
-            "No destination Parquets (processed/destinations_{{jobs,gp,school}}.parquet). "
-            "Writer is ready; place BRES / NHS ODS / GIAS points first."
+            "No destination Parquets for {} (processed/{}/destinations_{{jobs,gp,school}}.parquet). "
+            "Do not copy another country's points.",
+            cfg.country,
+            cfg.country if cfg.country != "england" else "england or processed/",
         )
         return out if out.exists() else None
 
@@ -296,6 +321,7 @@ def write_reach(cfg: ReachConfig, engine: TravelTimeEngine | None = None) -> Pat
                 engine,
                 dest_type=dest,
                 region=cfg.region,
+                departure=departure,
             )
         )
     incoming = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
