@@ -114,11 +114,18 @@ uv run aequitas france
 
 ### Reach (15 / 30 / 45)
 
-Optional. Not installed with the default test suite. r5py needs Java 17:
+Optional. Not installed with the default test suite.
 
 ```bash
 brew install openjdk@17
 uv pip install r5py
+```
+
+r5py 1.1.7 ships an R5 jar built for Java 21 (class file 65). Java 17 cannot import it. Use the Java 21 Homebrew JDK for the run:
+
+```bash
+brew install openjdk@21
+export JAVA_HOME="$(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home"
 ```
 
 Or `uv sync --extra reach`. Place a Geofabrik England PBF under `data/raw/osm/` and BODS GTFS under `data/raw/bods/` (both gitignored). Then:

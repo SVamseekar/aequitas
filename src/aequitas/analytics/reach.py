@@ -37,9 +37,10 @@ ITL1_NAMES: dict[str, str] = {
 }
 
 JAVA_HINT = (
-    "r5py needs a JDK (this machine documented Java 17). "
-    "Install: brew install openjdk@17 && uv pip install r5py. "
-    "Place a Geofabrik England/GB PBF under data/raw/osm/ and BODS GTFS under data/raw/bods/."
+    "r5py 1.1 needs Java 21 (class file 65). Java 17 cannot load it. "
+    "Install: brew install openjdk@21 && uv pip install r5py, "
+    "then set JAVA_HOME to that JDK. "
+    "Place a Geofabrik England PBF under data/raw/osm/ and BODS GTFS under data/raw/bods/."
 )
 
 
@@ -241,6 +242,39 @@ def merge_reach_frames(existing: pd.DataFrame | None, incoming: pd.DataFrame) ->
     return pd.concat([keep, incoming], ignore_index=True)
 
 
+def _england_origins_from_centroids(processed_dir: Path) -> Path | None:
+    """Centroids plus the warehouse region name. No invented coordinates."""
+    centroids = processed_dir / "lsoa_centroids.parquet"
+    if not centroids.exists():
+        logger.warning("Reach skipped. Missing master_lsoa_table.parquet and lsoa_centroids.parquet")
+        return None
+    warehouse = processed_dir.parent / "aequitas.duckdb"
+    if not warehouse.exists():
+        logger.warning(
+            "Reach skipped. Centroids have no ITL1 column and {} is missing.",
+            warehouse.name,
+        )
+        return None
+    import duckdb
+
+    origins = pd.read_parquet(centroids)
+    con = duckdb.connect(str(warehouse), read_only=True)
+    try:
+        demo = con.execute("SELECT lsoa_cd AS lsoa, region FROM lsoa_demographics").df()
+    finally:
+        con.close()
+    if "lsoa_code" in origins.columns and "lsoa" not in origins.columns:
+        origins = origins.rename(columns={"lsoa_code": "lsoa"})
+    origins["lsoa"] = origins["lsoa"].astype(str)
+    demo["lsoa"] = demo["lsoa"].astype(str)
+    merged = origins.merge(demo, on="lsoa", how="left")
+    out = processed_dir / "reach" / "_origins_england.parquet"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    merged.to_parquet(out, index=False)
+    logger.info("Reach origins from centroids + warehouse region ({})", len(merged))
+    return out
+
+
 def write_reach(
     cfg: ReachConfig,
     engine: TravelTimeEngine | None = None,
@@ -291,23 +325,41 @@ def write_reach(
         alt = cfg.processed_dir / "france" / "iris_table.parquet"
         if alt.exists():
             origins_path = alt
-    if not origins_path.exists():
+    if not origins_path.exists() and cfg.country == "england":
+        origins_path = _england_origins_from_centroids(cfg.processed_dir)
+    if origins_path is None or not origins_path.exists():
         logger.warning("No origin table — cannot compute reach")
         return None
 
     origins = pd.read_parquet(origins_path)
     if "lsoa_cd" in origins.columns and "lsoa" not in origins.columns:
         origins = origins.rename(columns={"lsoa_cd": "lsoa"})
+    if "lsoa_code" in origins.columns and "lsoa" not in origins.columns:
+        origins = origins.rename(columns={"lsoa_code": "lsoa"})
     if "lsoa" not in origins.columns:
         for cand in ("sa", "sa_code", "buurt", "buurt_code", "iris", "code_iris", "area_id"):
             if cand in origins.columns:
                 origins = origins.rename(columns={cand: "lsoa"})
                 break
-    if cfg.region and cfg.region != "all" and "region_code" in origins.columns:
-        origins = origins[origins["region_code"] == cfg.region]
-        logger.info("Reach batch region={} rows={}", cfg.region, len(origins))
-    elif cfg.region and cfg.region != "all" and "rgn22cd" in origins.columns:
-        origins = origins[origins["rgn22cd"] == cfg.region]
+    if cfg.region and cfg.region != "all":
+        before = len(origins)
+        if "region_code" in origins.columns:
+            origins = origins[origins["region_code"] == cfg.region]
+        elif "rgn22cd" in origins.columns:
+            origins = origins[origins["rgn22cd"] == cfg.region]
+        elif "region" in origins.columns:
+            name = ITL1_NAMES.get(cfg.region, cfg.region)
+            origins = origins[origins["region"].isin([cfg.region, name])]
+        else:
+            logger.warning(
+                "Reach skipped. Missing region column, so {} would cover every origin. Not writing.",
+                cfg.region,
+            )
+            return None
+        logger.info("Reach batch region={} rows={} (from {})", cfg.region, len(origins), before)
+        if origins.empty:
+            logger.warning("Reach skipped. No origins for region {}.", cfg.region)
+            return None
 
     dest_frames = load_destination_frames(cfg.processed_dir, cfg.country, dest_types=cfg.dest_types)
 

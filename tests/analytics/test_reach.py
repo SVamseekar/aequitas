@@ -61,6 +61,46 @@ def test_write_reach_tiny_fixture(tmp_path):
     assert path.exists()
 
 
+def test_itl1_code_filters_region_name(tmp_path):
+    """E12000005 is the West Midlands name in the warehouse, not a region_code column."""
+    from aequitas.analytics.reach import ReachConfig, StaticMinuteEngine, write_reach
+
+    origins = pd.DataFrame(
+        {
+            "lsoa": ["E01000001", "E01000002"],
+            "lat": [52.48, 51.50],
+            "lon": [-1.89, -0.12],
+            "region": ["West Midlands", "London"],
+        }
+    )
+    origins.to_parquet(tmp_path / "master_lsoa_table.parquet", index=False)
+    (tmp_path / "england").mkdir()
+    pd.DataFrame(
+        {"dest_id": ["j1"], "dest_type": ["jobs"], "lat": [52.49], "lon": [-1.90]}
+    ).to_parquet(tmp_path / "england" / "destinations_jobs.parquet", index=False)
+    matrix = pd.DataFrame(
+        {
+            "origin_id": ["E01000001", "E01000002"],
+            "dest_id": ["j1", "j1"],
+            "minutes": [10, 12],
+        }
+    )
+    out = write_reach(
+        ReachConfig(
+            processed_dir=tmp_path,
+            raw_dir=tmp_path / "raw",
+            region="E12000005",
+            country="england",
+            dest_types=("jobs",),
+            force=True,
+        ),
+        engine=StaticMinuteEngine(matrix),
+    )
+    assert out is not None
+    written = pd.read_parquet(out)
+    assert set(written["lsoa"]) == {"E01000001"}
+
+
 def test_missing_input_writes_no_parquet(tmp_path):
     """PBF, GTFS, or destinations absent: no parquet, no invented counts."""
     from aequitas.analytics.reach import ReachConfig, write_reach
