@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
+from aequitas.analytics.route_distributions import scan_zip_route_stats
 from aequitas.netherlands.constants import ALL_PT_ROUTE_TYPES, BUS_ROUTE_TYPES
 
 
@@ -19,11 +20,6 @@ def load_ovapi_network(gtfs_zip: Path, *, mode: str = "bus", include_stops_per_r
         names = {Path(n).name.lower(): n for n in zf.namelist()}
         agencies = pd.read_csv(BytesIO(zf.read(names["agency.txt"])))
         routes = pd.read_csv(BytesIO(zf.read(names["routes.txt"])), dtype=str)
-        trips = pd.read_csv(
-            BytesIO(zf.read(names["trips.txt"])),
-            dtype=str,
-            usecols=lambda c: c in {"trip_id", "route_id"},
-        )
     routes["route_type"] = pd.to_numeric(routes.get("route_type"), errors="coerce")
     routes = routes[routes["route_type"].isin(allowed)].copy()
     if "agency_id" not in routes.columns:
@@ -46,8 +42,6 @@ def load_ovapi_network(gtfs_zip: Path, *, mode: str = "bus", include_stops_per_r
         for aid, n in n_routes.sort_values(ascending=False).items()
     ]
     keep_routes = set(routes["route_id"].astype(str))
-    trips = trips[trips["route_id"].astype(str).isin(keep_routes)]
-    stops_per_route: list[int] = []
     if not include_stops_per_route:
         logger.info("OVapi network ({}): {} agencies, HHI {:.0f}, {} routes (stops-per-route skipped)", mode, len(n_routes), hhi, int(total))
         return {
@@ -56,22 +50,13 @@ def load_ovapi_network(gtfs_zip: Path, *, mode: str = "bus", include_stops_per_r
             "n_routes": int(total),
             "agencies": ranking,
             "stops_per_route": [],
+            "route_length_km": None,
             "mean_stops_per_route": None,
             "mode": mode,
         }
     with ZipFile(gtfs_zip) as zf:
         names = {Path(n).name.lower(): n for n in zf.namelist()}
-        st_name = names.get("stop_times.txt")
-        if st_name:
-            acc: dict[str, set[str]] = {}
-            with zf.open(st_name) as fh:
-                for chunk in pd.read_csv(
-                    fh, usecols=lambda c: c in ("trip_id", "stop_id"), dtype=str, chunksize=500_000
-                ):
-                    m = chunk.merge(trips, on="trip_id", how="inner")
-                    for rid, g in m.groupby("route_id"):
-                        acc.setdefault(str(rid), set()).update(g["stop_id"].astype(str))
-            stops_per_route = [len(v) for v in acc.values()]
+        stops_per_route, lengths = scan_zip_route_stats(zf, names, keep_routes, id_prefix="")
     logger.info("OVapi network ({}): {} agencies, HHI {:.0f}, {} routes", mode, len(n_routes), hhi, int(total))
     return {
         "hhi": hhi,
@@ -79,6 +64,7 @@ def load_ovapi_network(gtfs_zip: Path, *, mode: str = "bus", include_stops_per_r
         "n_routes": int(total),
         "agencies": ranking,
         "stops_per_route": stops_per_route,
+        "route_length_km": lengths,
         "mean_stops_per_route": float(np.mean(stops_per_route)) if stops_per_route else None,
         "mode": mode,
     }
