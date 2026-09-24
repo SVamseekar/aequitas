@@ -14,6 +14,16 @@ _ELDERLY = (
     "T1_1AGE80_84T",
     "T1_1AGEGE_85T",
 )
+# Census 2022 Theme 2 ethnic/cultural background, usually resident, total.
+# Counts stay null when GUID does not match — never filled with 0.
+_ETHNIC = (
+    ("T2_2WI", "eth_white_irish"),
+    ("T2_2WIT", "eth_traveller"),
+    ("T2_2OW", "eth_other_white"),
+    ("T2_2BBI", "eth_black"),
+    ("T2_2AAI", "eth_asian"),
+    ("T2_2OTH", "eth_other"),
+)
 # Census 2022 Theme 8: unemployed split into short-term (ST) and long-term (LTU).
 # T15_1_NC / T15_1_TC = households with no car / all households.
 
@@ -23,12 +33,24 @@ def default_saps_path(project_root: Path) -> Path:
 
 
 def attach_saps_theme_shares(areas: pd.DataFrame, saps_path: Path) -> pd.DataFrame:
-    """Add unemp_rate, no_car_share, elderly_share (0–1) from SAPS if the file exists."""
+    """Add unemployment, no-car, 65+, and Theme 2 ethnic counts from SAPS if the file exists."""
     out = areas.copy()
     if not saps_path.exists():
-        logger.warning("SAPS not on disk at {} — d2/d3/d4 stay omitted", saps_path)
+        logger.warning("SAPS not on disk at {} — d2/d3/d4/f3 stay omitted", saps_path)
         return out
-    want = ["GUID", "SA_GUID_2022", "T1_1AGETT", "T8_1_ST", "T8_1_LTUT", "T8_1_TT", "T15_1_NC", "T15_1_TC", *_ELDERLY]
+    want = [
+        "GUID",
+        "SA_GUID_2022",
+        "T1_1AGETT",
+        "T8_1_ST",
+        "T8_1_LTUT",
+        "T8_1_TT",
+        "T15_1_NC",
+        "T15_1_TC",
+        *_ELDERLY,
+        *[src for src, _dst in _ETHNIC],
+        "T2_2T",
+    ]
     try:
         sap = pd.read_csv(saps_path, usecols=lambda c: str(c) in want or str(c).lower() in {"guid", "sa_guid_2022"})
     except Exception as exc:  # noqa: BLE001
@@ -58,14 +80,22 @@ def attach_saps_theme_shares(areas: pd.DataFrame, saps_path: Path) -> pd.DataFra
         elder = sum(pd.to_numeric(sap[c], errors="coerce").fillna(0) for c in age_cols)
         denom = pd.to_numeric(sap[pop], errors="coerce")
         sap["elderly_share"] = (elder / denom.where(denom > 0)).clip(0, 1)
-    keep = ["sa_code"] + [c for c in ("unemp_rate", "no_car_share", "elderly_share") if c in sap.columns]
+    for src, dst in _ETHNIC:
+        orig = cols.get(src.lower())
+        if orig is not None:
+            sap[dst] = pd.to_numeric(sap[orig], errors="coerce")
+    total = cols.get("t2_2t")
+    if total is not None:
+        sap["eth_total"] = pd.to_numeric(sap[total], errors="coerce")
+    theme_cols = ("unemp_rate", "no_car_share", "elderly_share", "eth_total", *[dst for _src, dst in _ETHNIC])
+    keep = ["sa_code"] + [c for c in theme_cols if c in sap.columns]
     if len(keep) == 1:
         return out
-    drop = [c for c in ("unemp_rate", "no_car_share", "elderly_share") if c in out.columns]
+    drop = [c for c in theme_cols if c in out.columns]
     if drop:
         out = out.drop(columns=drop)
     merged = out.merge(sap[keep].drop_duplicates("sa_code"), on="sa_code", how="left")
-    for col in ("unemp_rate", "no_car_share", "elderly_share"):
+    for col in ("unemp_rate", "no_car_share", "elderly_share", "eth_total"):
         if col in merged:
             logger.info("SAPS {} non-null {:.1%}", col, float(merged[col].notna().mean()))
     return merged

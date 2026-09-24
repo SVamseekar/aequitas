@@ -8,14 +8,16 @@ from aequitas.ireland.sections import CATALOGUE, OMIT, REPLACE, SAME, catalogue_
 
 def test_catalogue_after_saps_recheck():
     c = catalogue_counts()
-    assert c["same"] == 36
+    assert c["same"] == 37
     assert c["replace"] == 12
-    assert c["omit"] == 7
+    assert c["omit"] == 6
     assert c["answers"] == 55
     assert CATALOGUE["d2_coverage_unemployment"] == SAME
     assert CATALOGUE["d3_coverage_car"] == SAME
     assert CATALOGUE["d4_coverage_elderly"] == SAME
     assert CATALOGUE["d5_coverage_income"] == OMIT
+    assert CATALOGUE["f3_ethnic_access"] == SAME
+    assert CATALOGUE["d9a_health_access"] == OMIT
     assert CATALOGUE["j2_bcr"] == REPLACE
 
 
@@ -31,4 +33,6 @@ def test_attach_saps_theme_shares_from_disk():
     assert out["unemp_rate"].notna().any()
     assert out["no_car_share"].notna().any()
     assert out["elderly_share"].notna().any()
+    assert out["eth_total"].notna().any()
+    assert out["eth_white_irish"].notna().any()
     assert (out["unemp_rate"] <= 1).all()

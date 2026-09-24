@@ -141,3 +141,27 @@ def test_empty_filter_is_one_sentence():
         a3 = next(r for r in empty if r["section_id"] == "a3_walking_distance")
         assert a3["chart_data"] == {}
         assert "No Small Areas" in a3["narrative"]
+
+
+def test_f3_ethnicity_exhibit_names_filter_and_n():
+    areas = _areas()
+    areas = areas.copy()
+    areas["eth_total"] = [100, 80, 120, 90, 40, 30]
+    areas["eth_white_irish"] = [70, 60, 40, 50, 30, 20]
+    areas["eth_traveller"] = [2, 1, 5, 1, 1, 1]
+    areas["eth_other_white"] = [10, 8, 30, 15, 4, 3]
+    areas["eth_black"] = [8, 4, 20, 10, 2, 2]
+    areas["eth_asian"] = [6, 4, 15, 8, 2, 2]
+    areas["eth_other"] = [4, 3, 10, 6, 1, 2]
+    rows = precompute_ireland(areas, {"hhi": 896.0, "n_agencies": 2, "n_routes": 10, "agencies": []})
+    f3 = next(r for r in rows if r["section_id"] == "f3_ethnic_access" and r["region"] == "all" and r["urban_rural"] == "all")
+    assert f3["chart_data"]["type"] == "horizontal_bar"
+    assert "n=6" in f3["chart_data"]["title"]
+    assert "Republic" in f3["narrative"]
+    assert "n=6" in f3["narrative"]
+    assert f3["stats"]["n_with"] == 6
+    assert f3["stats"]["n_without"] == 0
+    assert "HP" in f3["stats"]["score_r"]
+    text = f3["narrative"]
+    for word in ("BODS", "IMD", "LSOA", "TAG", "BSA"):
+        assert word not in text

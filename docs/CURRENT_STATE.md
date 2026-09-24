@@ -32,7 +32,7 @@ Not a SaaS clone of Remix/TRACC. Not a 55-bar factory. Not a lock on Gini 0.5741
 | 2 | Map home, MapLibre, r5py 15/30/45, quoteable score | Done (map race leftover fixed with Wave 3) |
 | 3 | Studio (walk-to-stop live; r5py still optional) | Done (walk-to-stop; r5py still optional) |
 | 4 | Reach / Aequitas bands + research export pack | Done (service bands live; r5py 15/30/45 still optional) |
-| 5 | Ireland pack + country switcher data | **Done** (warehouse + briefing + chat). 18,919 SA. Catalogue **36 same / 12 replace / 7 omit** after CSO SAPS Theme 8 / T15 / 65+ implemented. Distinct exhibits + Insight Engine on SAME/REPLACE. FAISS[ireland] retrieves Republic narratives. |
+| 5 | Ireland pack + country switcher data | **Done** (warehouse + briefing + chat). 18,919 SA. Catalogue **37 same / 12 replace / 6 omit** after CSO SAPS Theme 2 ethnicity (f3) joined at Small Area. Score r stays HP vs stops per 1,000. |
 | 6 | Monthly snapshots / refresh | **Done** (one real date each). `/time` one point + “only one network date.” Unknown pack 404s time, score, ticker. Methodology names frozen Census/HP/IMD vs monthly GTFS. |
 | 7 | Netherlands + bus \| all-PT | **Done** (warehouse + briefing PNG 2026-08-14). Chat still honest empty (`FAISS[netherlands]` not built). Sunday 49.6%. National **69.6** bus / **71.1** all-PT. Home SVG provincies paint. |
 | 8 | Ops GTFS-RT/SIRI | Warehouse-style honesty: `/app/:country/ops` reads `data/ops/{country}/latest.json`. England from BODS public AVL / API (OGL). Ireland NTA three operators only — empty without `NTA_API_KEY`. NL OVapi RT if the feed 200s. France NAP union incomplete (holes logged). No invented national on-time. Static scores unchanged. |
@@ -167,9 +167,9 @@ Ireland warehouse: `uv run aequitas ireland` overwrites **only** `data/aequitas_
 
 | Action | Count | Notes |
 |--------|------:|-------|
-| same | 36 | A/B/C plus HP-swapped D/F/G; d2–d4 from CSO SAPS; bsa2 = c3 HHI |
+| same | 37 | A/B/C plus HP-swapped D/F/G; d2–d4 and f3 from CSO SAPS; bsa2 = c3 HHI |
 | replace | 12 | J (CAF/PAG / EPA IE), BSA→NTA, PS Irish interventions, g5 |
-| omit | 7 | d5 income, d9a–e, f3 — one sentence, no free SA variable |
+| omit | 6 | d5 income, d9a–e — one sentence. f3 is SAPS Theme 2 at Small Area (2026-09-25) |
 | **answers** | **55** | Matches England `SECTION_REGISTRY` |
 
 - Deprivation: Pobal HP 2022 relative index / decile. Never labelled IMD.
@@ -278,8 +278,8 @@ Seed that almost shipped: **208** SA, score ~18.7 everywhere, Gini/SQI/HHI 0.
 | d3 no-car | T15_1_NC / T15_1_TC | 0.612 |
 | d4 65+ | T1 ages 65+ / T1_1AGETT | −0.089 |
 
-Catalogue moved **33/12/10 → 36/12/7**. Remaining omits (one sentence): d5
-income, d9a–e HP domains / crime, f3 ethnicity — **no free SA column**.
+Catalogue moved **33/12/10 → 36/12/7**, then **37/12/6** when Theme 2 ethnicity returned 200 at Small Area GUID (2026-09-25). Remaining omits (one sentence): d5
+income, d9a–e HP domains / crime — **no free SA column**. f3 does not enter the score r term.
 
 ### Wave 6 API (honest one-date)
 
@@ -345,7 +345,7 @@ Full narrative: `docs/guidelines/country-sections.md` § Ireland mistakes.
   not a monthly series. Do not invent a second date.
 - **c1** stops-per-route list was never persisted; exhibit stays empty until
   TFI `stop_times` is recomputed into that list.
-- **7 omits** remain (no free SA income / HP domain / crime / ethnicity).
+- **6 omits** remain (no free SA income / HP domain / crime). Ethnicity is SAPS Theme 2, not an omit.
 - Economy has **no published CAF unit cost** — people-gap only.
 - Gemini in this environment may be invalid; generation then retrieval-only.
 - Wave **8** ops is warehouse-style honesty (rollups on disk). Ireland empty without NTA key. France NAP union incomplete (380 listed / 12 sampled). Chat does not retrieve ops %.

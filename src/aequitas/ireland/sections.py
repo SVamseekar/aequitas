@@ -57,7 +57,7 @@ CATALOGUE: dict[str, str] = {
     "d9e_barriers_access": OMIT,
     "f1_gini": SAME,
     "f2_disparity_ratio": SAME,
-    "f3_ethnic_access": OMIT,
+    "f3_ethnic_access": SAME,  # CSO SAPS T2_2 ethnic/cultural background at Small Area GUID
     "f5_rural_penalty": SAME,
     "f6_equitable_regions": SAME,
     "g1_route_clusters": SAME,
@@ -296,6 +296,38 @@ def _hp_urban_matrix(areas: pd.DataFrame) -> list[list[float]]:
     return grid
 
 
+_ETHNIC_LABELS = (
+    ("eth_white_irish", "White Irish"),
+    ("eth_traveller", "White Irish Traveller"),
+    ("eth_other_white", "Other White"),
+    ("eth_black", "Black or Black Irish"),
+    ("eth_asian", "Asian or Asian Irish"),
+    ("eth_other", "Other"),
+)
+
+
+def _ethnic_coverage_bars(areas: pd.DataFrame) -> list[dict[str, Any]]:
+    """People of each CSO Theme 2 group who live in a Small Area within 400 m.
+
+    Unmatched GUIDs stay null and are left out of both numerator and denominator.
+    """
+    bars: list[dict[str, Any]] = []
+    if "within_400m" not in areas:
+        return bars
+    covered = areas["within_400m"].fillna(False).astype(bool)
+    for col, label in _ETHNIC_LABELS:
+        if col not in areas:
+            continue
+        counts = pd.to_numeric(areas[col], errors="coerce")
+        known = counts.notna()
+        total = float(counts[known].sum())
+        if total <= 0:
+            continue
+        inside = float(counts[known & covered].sum())
+        bars.append({"label": label, "group": "Within 400 m", "value": round(inside / total * 100.0, 1)})
+    return bars
+
+
 def _section_bundle(
     areas: pd.DataFrame,
     all_areas: pd.DataFrame,
@@ -433,6 +465,9 @@ def _section_bundle(
     has_unemp = n and "unemp_rate" in areas and areas["unemp_rate"].notna().sum() >= 3
     has_car = n and "no_car_share" in areas and areas["no_car_share"].notna().sum() >= 3
     has_elderly = n and "elderly_share" in areas and areas["elderly_share"].notna().sum() >= 3
+    has_eth = n and "eth_total" in areas and int(areas["eth_total"].notna().sum()) >= 3
+    n_eth = int(areas["eth_total"].notna().sum()) if has_eth else 0
+    n_eth_miss = int(n - n_eth) if has_eth else n
     r_unemp = (
         _corr(pd.to_numeric(areas["unemp_rate"], errors="coerce"), pd.to_numeric(areas["stops_per_1k"], errors="coerce"))
         if has_unemp and "stops_per_1k" in areas
@@ -710,7 +745,17 @@ def _section_bundle(
             ),
             "insufficient_data": empty,
         },
-        "f3_ethnic_access": omit_eth,
+        "f3_ethnic_access": (
+            omit_eth
+            if not has_eth
+            else {
+                "n_with": n_eth,
+                "n_without": n_eth_miss,
+                "groups": _ethnic_coverage_bars(areas),
+                "score_r": "unchanged — national r is Pobal HP vs stops per 1,000, not Theme 2",
+                "insufficient_data": False,
+            }
+        ),
         "f5_rural_penalty": {
             "urban": ur_stats.get("urban", {}),
             "rural": ur_stats.get("rural", {}),
@@ -1037,6 +1082,21 @@ def _section_bundle(
                     ),
                     f"People-weighted 400 m coverage by HP decile in {place} is the equity slope — who can walk to TFI.",
                     caveat_base,
+                ),
+                **(
+                    {
+                        "f3_ethnic_access": _brief(
+                            (
+                                f"CSO Theme 2 ethnic group vs TFI 400 m in {place}: "
+                                f"n={n_eth:,} Small Areas with a GUID join"
+                                f" ({n_eth_miss:,} unmatched, not set to 0)."
+                            ),
+                            "Share of each group living in a Small Area that has a stop within 400 m. Not a second HP scatter.",
+                            caveat_base,
+                        )
+                    }
+                    if has_eth
+                    else {}
                 ),
                 "f5_rural_penalty": _brief(
                     f"Rural 400 m coverage in {place} trails urban by {stats_map['f5_rural_penalty']['penalty_pp']:.1f} pp.",
@@ -1402,6 +1462,17 @@ def _section_bundle(
                     for d in by_decile
                 ],
             },
+            **(
+                {
+                    "f3_ethnic_access": _ranking_chart(
+                        stats_map["f3_ethnic_access"]["groups"],
+                        title=f"TFI 400 m by CSO ethnic group — {place} (n={n_eth:,} Small Areas)",
+                        x_label="% of group in a Small Area within 400 m",
+                    )
+                }
+                if has_eth
+                else {}
+            ),
             "f5_rural_penalty": {
                 "type": "grouped_bar",
                 "title": f"Urban vs rural 400 m by county — {place}",
