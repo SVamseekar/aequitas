@@ -93,7 +93,7 @@ def get_time_series(
         else "LSOAs"
     )
     frozen = (
-        "Network dates; Census 2021 / IMD 2025 frozen."
+        "Census and deprivation vintage stay frozen. The network date is the GTFS harvest."
         if key == "england"
         else "Network dates; CSO Small Areas 2022 / Pobal HP 2022 frozen."
         if key == "ireland"
