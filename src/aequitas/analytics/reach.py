@@ -258,15 +258,25 @@ def write_reach(
         if not cfg.force and cache_is_fresh(out, [p for p in (pbf, gtfs) if p]):
             logger.info("Reach cache newer than GTFS+PBF — skip (use --force to recompute)")
             return out
-        if pbf is None or gtfs is None:
+        missing: list[str] = []
+        if pbf is None:
+            missing.append("OSM PBF (data/raw/osm/*.pbf)")
+        if gtfs is None:
+            missing.append("BODS GTFS (data/raw/bods/*.zip)")
+        if missing:
             logger.warning(
-                "No OSM PBF or BODS GTFS found. Download Geofabrik England "
+                "Reach skipped. Missing: {}. Download Geofabrik England "
                 "(https://download.geofabrik.de/europe/united-kingdom/england.html) "
                 "into data/raw/osm/ (gitignored). {}",
+                "; ".join(missing),
                 JAVA_HINT,
             )
-            return out if out.exists() else None
-        engine = try_build_r5_engine(pbf, gtfs)
+            return None
+        try:
+            engine = try_build_r5_engine(pbf, gtfs)
+        except RuntimeError as exc:
+            logger.warning("Reach skipped. Missing router: {}", exc)
+            return None
 
     origins_path = cfg.processed_dir / "master_lsoa_table.parquet"
     if cfg.country == "ireland":

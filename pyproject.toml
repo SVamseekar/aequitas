@@ -50,6 +50,9 @@ dev = [
     "ruff>=0.4.0",
     "mypy>=1.10.0",
 ]
+reach = [
+    "r5py>=1.0",
+]
 
 [project.scripts]
 aequitas = "aequitas.pipeline.cli:main"
