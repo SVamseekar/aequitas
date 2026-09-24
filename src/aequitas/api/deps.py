@@ -225,6 +225,16 @@ async def lifespan(app: Any):  # type: ignore[type-arg]
             f"France FAISS not found at {cfg.france_faiss_index_path} — France chat retrieval disabled"
         )
 
+    if cfg.netherlands_faiss_index_path.exists() and cfg.netherlands_faiss_metadata_path.exists():
+        logger.info(f"Loading Netherlands FAISS index: {cfg.netherlands_faiss_index_path}")
+        nl_idx = faiss.read_index(str(cfg.netherlands_faiss_index_path))
+        nl_meta = json.loads(cfg.netherlands_faiss_metadata_path.read_text())
+        by_country["netherlands"] = (nl_idx, nl_meta)
+    else:
+        logger.warning(
+            f"Netherlands FAISS not found at {cfg.netherlands_faiss_index_path} — Netherlands chat retrieval disabled"
+        )
+
     _state["faiss_by_country"] = by_country
     if by_country:
         from sentence_transformers import SentenceTransformer

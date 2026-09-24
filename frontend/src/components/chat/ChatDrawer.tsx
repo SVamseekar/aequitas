@@ -157,22 +157,12 @@ export function ChatDrawer({ open, onClose }: Props) {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {isEmpty ? (
             <div className="space-y-6">
-              {country === "netherlands" ? (
-                <p className="text-sm text-muted-foreground" data-testid="nl-faiss-missing">
-                  Netherlands index not built. This drawer does not retrieve England or Ireland
-                  chunks.
-                </p>
-              ) : null}
-              {country === "netherlands" ? null : (
-                <>
-                  <QuickActions country={country} onSelect={handleSelect} />
-                  <SuggestedQuestions
-                    dimension={currentDimension}
-                    country={country}
-                    onSelect={handleSelect}
-                  />
-                </>
-              )}
+              <QuickActions country={country} onSelect={handleSelect} />
+              <SuggestedQuestions
+                dimension={currentDimension}
+                country={country}
+                onSelect={handleSelect}
+              />
             </div>
           ) : (
             <>

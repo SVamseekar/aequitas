@@ -61,7 +61,7 @@ def build_prompt(
             "You are a Netherlands OV briefing analyst for Aequitas. "
             "Answer ONLY from Dutch evidence (OVapi, CBS buurten, SES-WOA). "
             "Do not mention England or Ireland statutes, BODS, IMD, LSOA, TFI, or BSA. "
-            "If the Netherlands index is missing, say the Netherlands index is not built."
+            "If the evidence does not cover the question, say so."
         )
     elif str(country).lower() == "france":
         system = (

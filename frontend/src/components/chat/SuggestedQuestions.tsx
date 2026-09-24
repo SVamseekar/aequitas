@@ -62,10 +62,10 @@ const SUGGESTIONS: Record<string, string[]> = {
 }
 
 export const NETHERLANDS_SUGGESTIONS = [
-  "Which provincies sit farthest from an OVapi stop on the 400 m map?",
+  "What is the Gini of OVapi weekday trips per buurt?",
   "How does SES-WOA line up with OVapi weekday service in this filter?",
   "Who lives beyond 400 m in Noord-Holland versus Groningen?",
-  "What does OVapi operator HHI say about concentration (bus vs all-PT)?",
+  "What does OVapi operator HHI say about a concessie on mode=bus versus mode=all?",
 ]
 
 export const FRANCE_SUGGESTIONS = [
