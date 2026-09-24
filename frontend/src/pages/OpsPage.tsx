@@ -137,6 +137,14 @@ function OpsExhibit({
         </div>
       ) : null}
 
+      <p className="text-sm text-foreground max-w-2xl" data-testid="ops-late-rule">
+        {pct == null
+          ? `Late is — because n_with_delay = ${data.n_with_delay}. Late means delay > ${data.late_threshold_seconds ?? 300} seconds, and only when that field exists.`
+          : `Late means delay > ${data.late_threshold_seconds ?? 300} seconds. ${data.n_with_delay.toLocaleString("en-GB")} updates carried a delay field.`}
+        {country === "england" && pct == null
+          ? " This is AVL coverage, not a DfT punctuality statistic."
+          : ""}
+      </p>
       <p className="text-sm text-foreground max-w-2xl" data-testid="ops-coverage">
         {data.coverage_sentence}
       </p>

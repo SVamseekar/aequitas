@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import re
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -12,7 +13,7 @@ import duckdb
 from loguru import logger
 
 from aequitas.ops.fetch import FetchHit, env_key, fetch_bytes
-from aequitas.ops.proto import TripObs, parse_feed_message
+from aequitas.ops.proto import LATE_THRESHOLD_SECONDS, TripObs, parse_feed_message
 from aequitas.ops.rollup import build_rollup, imd_strip, region_strip
 from aequitas.ops.store import write_rollup
 
@@ -86,7 +87,7 @@ def collect_england(project_root: Path | None = None) -> dict[str, Any]:
             observations.extend(obs)
             n_entities += n
 
-    hit, _ = fetch_bytes(
+    hit, siri_body = fetch_bytes(
         BODS_SIRI_API,
         entity="SIRI-VM (BODS API)",
         auth=auth,
@@ -94,7 +95,10 @@ def collect_england(project_root: Path | None = None) -> dict[str, Any]:
         api_key_query="api_key",
     )
     hits.append(hit)
-    # SIRI-VM is XML vehicle locations — no delay field we trust without inventing.
+    if siri_body:
+        siri_obs = _siri_vm_delay_obs(siri_body)
+        observations.extend(siri_obs)
+        n_entities += len(siri_obs)
 
     hit, body = fetch_bytes(BODS_AVL_ZIP, entity="GTFS-RT zip (BODS AVL download)", auth="none")
     hits.append(hit)
@@ -144,16 +148,15 @@ def collect_england(project_root: Path | None = None) -> dict[str, Any]:
             empty_reason=reason,
         )
 
-    cov = (
-        f"BODS GTFS-RT snapshot: {len(observations)} trip/vehicle updates; "
-        f"{len({o.route_id for o in observations if o.route_id})} distinct route_id values. "
+    n_routes = len({o.route_id for o in observations if o.route_id})
+    n_with_delay = sum(1 for o in observations if o.delay_seconds is not None)
+    cov = _england_coverage_sentence(
+        n_updates=len(observations),
+        n_routes=n_routes,
+        n_static=n_static,
+        n_with_delay=n_with_delay,
+        key_set=bool(bods_key),
     )
-    if n_static:
-        cov += (
-            f"{len({o.route_id for o in observations if o.route_id})} of {n_static} "
-            "static England warehouse routes saw ≥1 update in this window. "
-        )
-    cov += "OGL. Late means delay > 5 minutes. Not a national BODS punctuality KPI."
     return build_rollup(
         country="england",
         observations=observations,
@@ -202,6 +205,97 @@ def _england_lookups(
             names = [str(served)]
         route_regions[str(rid)] = names
     return int(n_routes), lookup, route_regions
+
+
+def _england_coverage_sentence(
+    *,
+    n_updates: int,
+    n_routes: int,
+    n_static: int | None,
+    n_with_delay: int,
+    key_set: bool,
+) -> str:
+    """AVL coverage sentence. Late stays unnamed as a percentage when delay is absent."""
+    if n_static:
+        counts = f"{n_routes} of {n_static} static England warehouse routes saw ≥1 update"
+    else:
+        counts = f"{n_routes} distinct route_id values in {n_updates} updates"
+    if n_with_delay == 0:
+        key_note = (
+            "BODS_API_KEY is unset, so TripUpdates and SIRI-VM stay closed"
+            if not key_set
+            else "BODS_API_KEY is set, but TripUpdates and SIRI-VM still returned no delay field"
+        )
+        return (
+            f"BODS AVL coverage: {counts}. n_with_delay = 0, so late is —. {key_note}. "
+            "The public AVL zip is VehiclePositions-style and has no stop_time_update.delay. "
+            f"Late means delay > {LATE_THRESHOLD_SECONDS} seconds, and only when that field exists. "
+            "This is AVL coverage, not a DfT punctuality statistic."
+        )
+    return (
+        f"BODS snapshot: {counts}. n_with_delay = {n_with_delay}. "
+        f"Late means delay > {LATE_THRESHOLD_SECONDS} seconds on TripUpdates or SIRI-VM. "
+        "Not a DfT punctuality statistic. Joined to existing stop → LSOA only."
+    )
+
+
+_ISO_DURATION = re.compile(
+    r"^P(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)$",
+    re.IGNORECASE,
+)
+
+
+def _delay_seconds_from_text(text: str) -> int | None:
+    raw = text.strip()
+    if not raw:
+        return None
+    sign = -1 if raw.startswith("-") else 1
+    body = raw[1:] if raw[0] in "+-" else raw
+    if body.isdigit():
+        return sign * int(body)
+    match = _ISO_DURATION.match(body)
+    if not match:
+        return None
+    hours = int(match.group(1) or 0)
+    minutes = int(match.group(2) or 0)
+    seconds = int(match.group(3) or 0)
+    return sign * (hours * 3600 + minutes * 60 + seconds)
+
+
+_SIRI_TAG = r"(?:[\w.-]+:)?{name}"
+_SIRI_DELAY = re.compile(rf"<({_SIRI_TAG.format(name='Delay')})>\s*([^<]+?)\s*</\1>", re.IGNORECASE)
+_SIRI_REF = {
+    name: re.compile(rf"<{_SIRI_TAG.format(name=name)}>\s*([^<]+?)\s*</(?:[\w.-]+:)?{name}>", re.IGNORECASE)
+    for name in ("LineRef", "DatedVehicleJourneyRef", "VehicleJourneyRef", "StopPointRef")
+}
+
+
+def _siri_vm_delay_obs(body: bytes) -> list[TripObs]:
+    """Keep a SIRI-VM vehicle only when a Delay element is present. Do not invent delay from clocks."""
+    text = body.decode("utf-8", errors="replace")
+    out: list[TripObs] = []
+    for match in _SIRI_DELAY.finditer(text):
+        delay = _delay_seconds_from_text(match.group(2))
+        if delay is None:
+            continue
+        window = text[max(0, match.start() - 2500) : match.start()]
+        refs = {name: rx.search(window) for name, rx in _SIRI_REF.items()}
+        line = refs["LineRef"].group(1).strip() if refs["LineRef"] else None
+        trip = None
+        for key in ("DatedVehicleJourneyRef", "VehicleJourneyRef"):
+            if refs[key]:
+                trip = refs[key].group(1).strip()
+                break
+        stop = refs["StopPointRef"].group(1).strip() if refs["StopPointRef"] else None
+        out.append(
+            TripObs(
+                trip_id=trip,
+                route_id=line,
+                stop_ids=[stop] if stop else [],
+                delay_seconds=delay,
+            )
+        )
+    return out
 
 
 def collect_ireland(project_root: Path | None = None) -> dict[str, Any]:
