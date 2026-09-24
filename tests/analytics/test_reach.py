@@ -13,6 +13,24 @@ from aequitas.analytics.reach import (
 )
 
 
+def test_departure_from_gtfs_uses_feed_start_date(tmp_path):
+    import zipfile
+
+    from aequitas.analytics.reach import departure_from_gtfs
+
+    gtfs = tmp_path / "feed.zip"
+    with zipfile.ZipFile(gtfs, "w") as zf:
+        zf.writestr(
+            "feed_info.txt",
+            "feed_publisher_name,feed_start_date,feed_end_date\nBODS,20260924,20270801\n",
+        )
+    dep = departure_from_gtfs(gtfs)
+    assert dep is not None
+    assert dep.year == 2026 and dep.month == 9 and dep.day == 24
+    assert dep.hour == 8
+    assert departure_from_gtfs(tmp_path / "missing.zip") is None
+
+
 def test_count_within_cutoffs():
     s = pd.Series([5, 15, 30, 45, 90, None, -1])
     c = count_within_cutoffs(s)

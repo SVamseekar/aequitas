@@ -65,6 +65,26 @@ class ReachConfig:
     country: str = "england"
 
 
+def departure_from_gtfs(gtfs: Path) -> datetime | None:
+    """08:00 UTC on feed_info feed_start_date. None if the zip does not say."""
+    import csv
+    import io
+    import zipfile
+
+    if not zipfile.is_zipfile(gtfs):
+        return None
+    with zipfile.ZipFile(gtfs) as zf:
+        names = [n for n in zf.namelist() if n.endswith("feed_info.txt")]
+        if not names:
+            return None
+        text = zf.read(names[0]).decode("utf-8")
+    row = next(csv.DictReader(io.StringIO(text)), None)
+    raw = (row or {}).get("feed_start_date", "").strip()
+    if len(raw) != 8 or not raw.isdigit():
+        return None
+    return datetime(int(raw[:4]), int(raw[4:6]), int(raw[6:8]), 8, 0, tzinfo=timezone.utc)
+
+
 def count_within_cutoffs(minutes: pd.Series) -> dict[str, int]:
     """Count non-null travel times under 15 / 30 / 45 minutes. No negatives."""
     valid = pd.to_numeric(minutes, errors="coerce")
@@ -349,6 +369,15 @@ def write_reach(
         except RuntimeError as exc:
             logger.warning("Reach skipped. Missing router: {}", exc)
             return None
+        if departure is None:
+            departure = departure_from_gtfs(gtfs)
+            if departure is None:
+                logger.warning(
+                    "Reach skipped. {} has no feed_start_date. Not inventing a service day.",
+                    gtfs.name,
+                )
+                return None
+            logger.info("Reach departure from GTFS feed_start_date {}", departure.date())
 
     origins_path = cfg.processed_dir / "master_lsoa_table.parquet"
     if cfg.country == "ireland":
