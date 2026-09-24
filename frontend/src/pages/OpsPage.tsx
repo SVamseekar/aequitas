@@ -4,7 +4,7 @@ import { filterSentence } from "@/lib/scoreFormat"
 
 function feedNoun(country: string): string {
   if (country === "ireland") {
-    return "NTA GTFS-RT (Dublin Bus, Bus Éireann, Go-Ahead Ireland only — not the rest of the Republic)"
+    return "NTA TripUpdates via TFI. Dublin Bus, Bus Éireann, and Go-Ahead Ireland only. Small Area nouns stay on the static pack"
   }
   if (country === "netherlands") {
     return "OVapi GTFS-RT (mixed mode; briefing default stays bus). SES / buurten stay on the static pack"

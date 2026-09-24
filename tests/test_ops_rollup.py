@@ -105,6 +105,60 @@ def test_siri_delay_element_counts_and_clocks_do_not() -> None:
     assert "DfT punctuality" in sentence
 
 
+def test_ireland_without_key_names_401_and_404(monkeypatch) -> None:
+    from aequitas.ops.collect import NTA_TRIP, NTA_VP, collect_ireland
+    from aequitas.ops.fetch import FetchHit
+
+    def fake_fetch(url, **kwargs):
+        if url == NTA_TRIP:
+            return FetchHit(url, 401, 152, 10, "TripUpdates (NTA)", "none", error="HTTP 401"), None
+        if url == NTA_VP:
+            return FetchHit(url, 404, 54, 8, "VehiclePositions (NTA)", "none", error="HTTP 404"), None
+        raise AssertionError(url)
+
+    monkeypatch.setattr("aequitas.ops.collect.fetch_bytes", fake_fetch)
+    monkeypatch.delenv("NTA_API_KEY", raising=False)
+    monkeypatch.delenv("NTA_GTFSR_KEY", raising=False)
+    body = collect_ireland()
+    assert body["empty"] is True
+    assert body["pct_late"] is None
+    reason = body["empty_reason"]
+    assert "TripUpdates HTTP 401" in reason
+    assert "VehiclePositions HTTP 404" in reason
+    assert "Dublin Bus" in reason
+    assert "Bus Éireann" in reason
+    assert "Go-Ahead Ireland" in reason
+    assert "BODS" not in reason
+    assert "IMD" not in reason
+    assert "LSOA" not in reason
+
+
+def test_ireland_protobuf_drops_agencies_outside_three() -> None:
+    from google.transit import gtfs_realtime_pb2
+
+    from aequitas.ops.collect import split_nta_scope
+    from aequitas.ops.proto import parse_feed_message
+
+    feed = gtfs_realtime_pb2.FeedMessage()
+    feed.header.gtfs_realtime_version = "2.0"
+    dublin = feed.entity.add()
+    dublin.id = "Dublin Bus"
+    dublin.trip_update.trip.trip_id = "db-1"
+    dublin.trip_update.trip.route_id = "46A"
+    dublin.trip_update.stop_time_update.add().arrival.delay = 301
+    luas = feed.entity.add()
+    luas.id = "Luas"
+    luas.trip_update.trip.trip_id = "luas-1"
+    luas.trip_update.trip.route_id = "green"
+    luas.trip_update.stop_time_update.add().arrival.delay = 900
+    obs, n = parse_feed_message(feed.SerializeToString())
+    assert n == 2
+    kept, dropped = split_nta_scope(obs)
+    assert [o.trip_id for o in kept] == ["db-1"]
+    assert kept[0].delay_seconds == 301
+    assert dropped == ["Luas"]
+
+
 def test_empty_ireland_does_not_copy_england_pct(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("AEQUITAS_OPS_DIR", str(tmp_path))
     write_rollup(

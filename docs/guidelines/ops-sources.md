@@ -28,7 +28,7 @@ Operators in scope: **Dublin Bus, Bus Éireann, Go-Ahead Ireland only**.
 | `https://api.nationaltransport.ie/gtfsr/v2/TripUpdates` | TripUpdates | none (`NTA_API_KEY` unset) | **401** | 152 | Access Denied |
 | `https://api.nationaltransport.ie/gtfsr/v2/VehiclePositions` | VehiclePositions | none | **404** | 54 | Do not invent a replacement path |
 
-**Rollup:** honest empty. No 0% on-time. No Republic-wide coverage. No BODS / IMD / LSOA nouns.
+**Rollup:** honest empty. `NTA_API_KEY` was absent on 2026-09-25, so the live collect did not run. TripUpdates stays **HTTP 401**. VehiclePositions stays **HTTP 404** — no replacement URL. With a key, the collector fetches TripUpdates only and keeps Dublin Bus, Bus Éireann, and Go-Ahead Ireland. Anything else is logged out of scope. No 0% on-time. No Republic-wide coverage. Nouns: Small Area / TFI / NTA. Score stays **55.5**.
 
 ## Netherlands — OVapi
 
