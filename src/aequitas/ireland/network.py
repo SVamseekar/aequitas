@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
+from aequitas.analytics.route_distributions import scan_zip_route_stats
+
 
 def load_tfi_network(gtfs_zip: Path) -> dict:
     """Agency shares (HHI 0–10,000), route counts, stops-per-route."""
@@ -17,16 +19,8 @@ def load_tfi_network(gtfs_zip: Path) -> dict:
         names = {Path(n).name.lower(): n for n in zf.namelist()}
         agencies = pd.read_csv(BytesIO(zf.read(names["agency.txt"])))
         routes = pd.read_csv(BytesIO(zf.read(names["routes.txt"])), dtype=str)
-        trips = pd.read_csv(BytesIO(zf.read(names["trips.txt"])), dtype=str)
-        st_name = names.get("stop_times.txt")
-        stop_times = None
-        if st_name:
-            # Only trip_id + stop_id for uniqueness — full file is large.
-            stop_times = pd.read_csv(
-                BytesIO(zf.read(st_name)),
-                usecols=lambda c: c in ("trip_id", "stop_id"),
-                dtype=str,
-            )
+        route_ids = set(routes["route_id"].astype(str))
+        stops_per_route, lengths = scan_zip_route_stats(zf, names, route_ids, id_prefix="")
 
     if "agency_id" not in routes.columns:
         routes["agency_id"] = "unknown"
@@ -50,13 +44,6 @@ def load_tfi_network(gtfs_zip: Path) -> dict:
         for aid, n in n_routes.sort_values(ascending=False).items()
     ]
 
-    stops_per_route: list[int] = []
-    if stop_times is not None and not stop_times.empty:
-        tt = trips[["trip_id", "route_id"]].drop_duplicates()
-        st = stop_times.merge(tt, on="trip_id", how="left")
-        spr = st.groupby("route_id")["stop_id"].nunique()
-        stops_per_route = spr.astype(int).tolist()
-
     logger.info("TFI network: {} agencies, HHI {:.0f}, {} routes", len(n_routes), hhi, int(total))
     return {
         "hhi": hhi,
@@ -65,4 +52,5 @@ def load_tfi_network(gtfs_zip: Path) -> dict:
         "agencies": ranking,
         "stops_per_route": stops_per_route,
         "mean_stops_per_route": float(np.mean(stops_per_route)) if stops_per_route else None,
+        "route_length_km": lengths,
     }

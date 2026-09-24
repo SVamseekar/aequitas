@@ -115,7 +115,9 @@ def test_c1_c2_honest_empty_when_spr_skipped() -> None:
         for r in rows
         if r["section_id"] == "c2_stops_per_route" and r["region"] == "all" and r["urban_rural"] == "all"
     )
-    assert c1["chart_data"].get("empty_reason") == "Stops-per-route list not persisted"
+    assert c1["chart_data"].get("type") == "histogram"
+    assert "shapes" in (c1["chart_data"].get("empty_reason") or "").lower()
     assert c1["chart_data"].get("data") == []
-    assert c2["chart_data"].get("empty_reason") == "Stops-per-route list not persisted"
-    assert "not persisted" in (c1["narrative"] or "").lower()
+    assert c2["chart_data"].get("type") == "histogram"
+    assert c2["chart_data"].get("empty_reason") == "Stops-per-route list not persisted."
+    assert "shapes" in (c1["narrative"] or "").lower()

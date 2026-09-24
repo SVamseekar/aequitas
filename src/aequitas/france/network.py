@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
+from aequitas.analytics.route_distributions import scan_zip_route_stats
 from aequitas.france.constants import ALL_PT_ROUTE_TYPES, BUS_ROUTE_TYPES
 
 
@@ -17,6 +18,9 @@ def load_nap_network(gtfs_dir: Path, *, mode: str = "bus") -> dict:
     allowed = BUS_ROUTE_TYPES if mode == "bus" else ALL_PT_ROUTE_TYPES
     n_routes: dict[str, int] = {}
     agency_name: dict[str, str] = {}
+    stops_per_route: list[int] = []
+    route_length_km: list[float] = []
+    saw_shapes = False
     n_feeds = 0
     for zp in sorted(gtfs_dir.glob("*.zip")):
         prefix = zp.stem
@@ -40,6 +44,16 @@ def load_nap_network(gtfs_dir: Path, *, mode: str = "bus") -> dict:
                 for aid, cnt in routes.groupby(routes["agency_id"].astype(str))["route_id"].nunique().items():
                     key = f"{prefix}:{aid}"
                     n_routes[key] = n_routes.get(key, 0) + int(cnt)
+                feed_stops, feed_lengths = scan_zip_route_stats(
+                    zf,
+                    names,
+                    set(routes["route_id"].astype(str)),
+                    id_prefix=prefix,
+                )
+                stops_per_route.extend(feed_stops)
+                if feed_lengths is not None:
+                    saw_shapes = True
+                    route_length_km.extend(feed_lengths)
         except Exception as exc:  # noqa: BLE001
             logger.warning("network skip {}: {}", zp.name, exc)
     if not n_routes:
@@ -49,6 +63,7 @@ def load_nap_network(gtfs_dir: Path, *, mode: str = "bus") -> dict:
             "n_routes": 0,
             "agencies": [],
             "stops_per_route": [],
+            "route_length_km": None,
             "mean_stops_per_route": None,
             "mode": mode,
             "n_feeds": n_feeds,
@@ -71,8 +86,9 @@ def load_nap_network(gtfs_dir: Path, *, mode: str = "bus") -> dict:
         "n_agencies": int(len(series)),
         "n_routes": int(total),
         "agencies": ranking,
-        "stops_per_route": [],
-        "mean_stops_per_route": None,
+        "stops_per_route": stops_per_route,
+        "route_length_km": route_length_km if saw_shapes else None,
+        "mean_stops_per_route": float(np.mean(stops_per_route)) if stops_per_route else None,
         "mode": mode,
         "n_feeds": n_feeds,
     }

@@ -44,6 +44,8 @@ export function ChartRenderer({ chartData }: Props) {
 
   let chart: ReactNode
   switch (type) {
+    case "histogram":
+    case "ecdf":
     case "horizontal_bar":
     case "grouped_bar":
     case "stacked_bar":

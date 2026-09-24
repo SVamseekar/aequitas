@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
+from aequitas.analytics.route_distributions import LENGTH_OMIT, STOPS_OMIT, network_charts
 from aequitas.ireland.constants import COUNTY_NAME_BY_SLUG, IRELAND_EVENING_NOTE
 from aequitas.warehouse.stats_builders.equity import (
     _concentration_index,
@@ -174,19 +175,6 @@ def _omit(reason: str) -> dict[str, Any]:
 
 def _county_name(slug: str) -> str:
     return COUNTY_NAME_BY_SLUG.get(str(slug), str(slug).replace("-", " ").title())
-
-
-def _spr_bins(spr: list[float]) -> list[dict[str, Any]]:
-    edges = [0, 5, 10, 20, 40, 80, 10_000]
-    labels = ["1–4", "5–9", "10–19", "20–39", "40–79", "80+"]
-    counts = [0] * len(labels)
-    for raw in spr:
-        v = float(raw)
-        for i, hi in enumerate(edges[1:]):
-            if v < hi:
-                counts[i] += 1
-                break
-    return [{"label": lab, "value": n} for lab, n in zip(labels, counts)]
 
 
 def _ranking_chart(rows: list[dict[str, Any]], *, title: str = "", x_label: str = "Value") -> dict[str, Any]:
@@ -923,13 +911,17 @@ def _section_bundle(
                     caveat_base,
                 ),
                 "c1_route_length": _brief(
-                    f"Stops-per-route distribution for TFI in {place} (median {extras.get('p50_stops') or stats_map['c1_route_length'].get('p50_stops')}).",
-                    "Length is a stop-count proxy because TFI shapes are not required.",
+                    LENGTH_OMIT
+                    if not extras.get("route_length_km")
+                    else f"Route-length histogram for TFI in {place}.",
+                    "Kilometres from GTFS shapes. A missing shapes file is a sentence, not a stop-count proxy.",
                     caveat_base,
                 ),
                 "c2_stops_per_route": _brief(
-                    f"Mean stops per TFI route is {extras.get('mean_stops_per_route')} in this pack.",
-                    "The box is the route-stop distribution — not a tile of the mean.",
+                    STOPS_OMIT
+                    if not spr
+                    else f"Mean stops per TFI route is {extras.get('mean_stops_per_route')} in this pack.",
+                    "Histogram of stops per TFI route — not a tile of the mean.",
                     caveat_base,
                 ),
                 "c3_operator_hhi": _brief(
@@ -1145,7 +1137,6 @@ def _section_bundle(
         )
 
     sqi_box = _box_from_values("Weekday SQI", areas["sqi"].astype(float).tolist()) if n and "sqi" in areas else None
-    spr_box = _box_from_values("Stops per route", [float(x) for x in spr]) if spr else None
     omit_ids = {sid for sid, action in CATALOGUE.items() if action == OMIT}
 
     charts: dict[str, dict[str, Any]] = {}
@@ -1258,26 +1249,18 @@ def _section_bundle(
                 "Pobal HP relative index 2022",
                 "SQI (TFI weekday)",
             ),
-            "c1_route_length": (
-                {
-                    "type": "horizontal_bar",
-                    "title": f"Stops-per-route bins (TFI) — {place}",
-                    "x_label": "Routes",
-                    "data": _spr_bins(spr),
-                }
-                if spr
-                else {
-                    "type": "horizontal_bar",
-                    "title": f"Stops-per-route bins (TFI) — {place} (list not persisted)",
-                    "x_label": "Routes",
-                    "data": [],
-                }
-            ),
-            "c2_stops_per_route": {
-                "type": "box_violin",
-                "title": f"Stops per TFI route — {place}",
-                "groups": [spr_box] if spr_box else [],
-            },
+            "c1_route_length": network_charts(
+                extras,
+                place=place,
+                length_title="Route length — {place}",
+                stops_title="Stops per TFI route — {place}",
+            )[0],
+            "c2_stops_per_route": network_charts(
+                extras,
+                place=place,
+                length_title="Route length — {place}",
+                stops_title="Stops per TFI route — {place}",
+            )[1],
             "c3_operator_hhi": {
                 "type": "gauge",
                 "title": f"TFI operator HHI (0–10,000) — {place}",

@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 
+from aequitas.analytics.route_distributions import LENGTH_OMIT, STOPS_OMIT, network_charts
 from aequitas.france.constants import FR_EVENING_NOTE, REGION_NAME_BY_SLUG
 from aequitas.warehouse.stats_builders.equity import (
     _concentration_index,
@@ -171,19 +172,6 @@ def _omit(reason: str) -> dict[str, Any]:
 
 def _reg_name(slug: str) -> str:
     return REGION_NAME_BY_SLUG.get(str(slug), str(slug).replace("-", " ").title())
-
-
-def _spr_bins(spr: list[float]) -> list[dict[str, Any]]:
-    edges = [0, 5, 10, 20, 40, 80, 10_000]
-    labels = ["1–4", "5–9", "10–19", "20–39", "40–79", "80+"]
-    counts = [0] * len(labels)
-    for raw in spr:
-        v = float(raw)
-        for i, hi in enumerate(edges[1:]):
-            if v < hi:
-                counts[i] += 1
-                break
-    return [{"label": lab, "value": n} for lab, n in zip(labels, counts)]
 
 
 def _ranking_chart(
@@ -566,17 +554,15 @@ def _section_bundle(areas, all_areas, region, urban_rural, extras) -> list[dict[
                 "b4_route_frequency": _brief(f"NAP agencies ranked by route count for {place}.", "Agency route mass, not HHI.", caveat_base),
                 "b5_frequency_deprivation": _brief(f"F-EDI vs weekday SQI in {place}: r = {r_freq:.3f}." if r_freq is not None else f"SES–SQI in {place} is not identified.", "Do thinner weekday services sit on lower SES IRIS?", caveat_base),
                 "c1_route_length": _brief(
-                    "Stops-per-route list not persisted for this NAP write (scan skipped after dual-mode DuckDB trap)."
-                    if not spr
-                    else "Stops-per-route distribution for this NAP mode.",
-                    "Stop-count proxy — empty is honest, not a zero bin.",
+                    LENGTH_OMIT if not extras.get("route_length_km") else f"Route-length histogram for this NAP mode in {place}.",
+                    "Kilometres from GTFS shapes. Feed ids stay prefixed so NAP route ids do not collide.",
                     caveat_base,
                 ),
                 "c2_stops_per_route": _brief(
-                    "Stops-per-route list not persisted."
-                    if extras.get("mean_stops_per_route") is None
+                    STOPS_OMIT
+                    if not spr
                     else f"Mean stops per route is {extras.get('mean_stops_per_route')}.",
-                    "Route-stop distribution.",
+                    "Histogram of stops per NAP route for this mode. Route ids are prefixed with the dataset id.",
                     caveat_base,
                 ),
                 "c3_operator_hhi": _brief(
@@ -631,7 +617,6 @@ def _section_bundle(areas, all_areas, region, urban_rural, extras) -> list[dict[
             narratives["f3_ethnic_access"] = _brief(f"Immigrés share vs stops per 1,000 in {place}: r = {r_eth}.", "INSEE origin (immigrés), not ethnicity.", caveat_base)
 
     sqi_box = _box_from_values("Weekday SQI", areas["sqi"].astype(float).tolist()) if n and "sqi" in areas else None
-    spr_box = _box_from_values("Stops per route", [float(x) for x in spr]) if spr else None
     geo = "france_region"
     if empty:
         charts = {sid: {} for sid in CATALOGUE}
@@ -690,30 +675,18 @@ def _section_bundle(areas, all_areas, region, urban_rural, extras) -> list[dict[
             ),
             "b4_route_frequency": _ranking_chart([{"label": a.get("name"), "value": a.get("n_routes") or 0} for a in agencies[:15]], title=f"NAP agencies by route count — {place}", x_label="Routes"),
             "b5_frequency_deprivation": _sample_scatter(areas, ses_col, "sqi", f"F-EDI vs weekday SQI — {place}", "F-EDI 2021", "SQI (NAP weekday)"),
-            "c1_route_length": (
-                {
-                    "type": "horizontal_bar",
-                    "title": f"Stops-per-route bins — {place}",
-                    "data": _spr_bins(spr),
-                }
-                if spr
-                else {
-                    "type": "horizontal_bar",
-                    "title": f"Stops-per-route bins — {place}",
-                    "data": [],
-                    "empty_reason": "Stops-per-route list not persisted",
-                }
-            ),
-            "c2_stops_per_route": (
-                {"type": "box_violin", "title": f"Stops per NAP route — {place}", "groups": [spr_box]}
-                if spr_box
-                else {
-                    "type": "box_violin",
-                    "title": f"Stops per NAP route — {place}",
-                    "groups": [],
-                    "empty_reason": "Stops-per-route list not persisted",
-                }
-            ),
+            "c1_route_length": network_charts(
+                extras,
+                place=place,
+                length_title="Route length — {place}",
+                stops_title="Stops per NAP route — {place}",
+            )[0],
+            "c2_stops_per_route": network_charts(
+                extras,
+                place=place,
+                length_title="Route length — {place}",
+                stops_title="Stops per NAP route — {place}",
+            )[1],
             "c3_operator_hhi": {
                 "type": "gauge",
                 "title": f"NAP operator HHI (0–10,000) — {place}",
