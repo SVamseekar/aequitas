@@ -24,9 +24,16 @@ def test_cli_validate_stage():
     assert result.exit_code == 0
 
 
+def test_cli_destinations_help():
+    runner = CliRunner()
+    result = runner.invoke(main, ["destinations", "--help"])
+    assert result.exit_code == 0
+    assert "country" in result.output
+
+
 def test_cli_all_commands_present():
     runner = CliRunner()
     result = runner.invoke(main, ["--help"])
     output = result.output
-    for cmd in ["ingest", "process", "analytics", "intelligence", "warehouse", "validate", "run"]:
+    for cmd in ["ingest", "process", "analytics", "intelligence", "warehouse", "validate", "run", "destinations"]:
         assert cmd in output, f"Command '{cmd}' not found in help output"

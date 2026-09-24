@@ -687,9 +687,15 @@ def try_write_studio_r5(
     if not ready:
         logger.warning("Studio r5py skip: {}", msg)
         return None
-    dest_jobs = processed_dir / "destinations_jobs.parquet"
-    if not dest_jobs.exists():
-        logger.warning("Studio r5py skip: no destinations_jobs.parquet")
+    from aequitas.analytics.destinations import resolve_destination_path
+
+    dest_jobs = resolve_destination_path(processed_dir, patch.country, "jobs")
+    if dest_jobs is None and patch.country == "england":
+        dest_jobs = processed_dir / "destinations_jobs.parquet"
+        if not dest_jobs.exists():
+            dest_jobs = None
+    if dest_jobs is None:
+        logger.warning("Studio r5py skip: no {} destinations_jobs.parquet", patch.country)
         return None
     # Building two TransportNetworks is expensive; only when --force and dests exist.
     if not force:

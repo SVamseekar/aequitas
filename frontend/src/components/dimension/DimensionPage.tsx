@@ -10,6 +10,7 @@ import { filterSentence } from "@/lib/scoreFormat"
 import { SectionCard } from "./SectionCard"
 import { ScenarioBuilder } from "./ScenarioBuilder"
 import { AccessReachPanel } from "@/components/access/AccessReachPanel"
+import { FacilityAccessPanel } from "@/components/access/FacilityAccessPanel"
 
 // Error boundary to catch rendering crashes in child components
 interface ErrorBoundaryState {
@@ -163,6 +164,7 @@ function DimensionPageContent() {
         <SectionCard key={s.section_id} section={s} />
       ))}
 
+      {apiDimensionId === "accessibility" && <FacilityAccessPanel />}
       {apiDimensionId === "accessibility" && <AccessReachPanel />}
     </div>
   )

@@ -219,12 +219,13 @@ def run_reach(
     *,
     force: bool = False,
     region: str | None = None,
+    country: str = "england",
 ) -> StageReport:
     """r5py 15/30/45 destination counts. Skip if cache newer than GTFS+PBF."""
     if cfg is None:
         cfg = PipelineConfig()
     t0 = time.perf_counter()
-    logger.info("Reach: r5py 15/30/45 (region={})", region or "all cached")
+    logger.info("Reach: r5py 15/30/45 (country={} region={})", country, region or "all cached")
     from aequitas.analytics.bands import write_access_bands
     from aequitas.analytics.reach import ReachConfig, write_reach
 
@@ -234,6 +235,7 @@ def run_reach(
             raw_dir=cfg.raw_dir,
             region=region,
             force=force,
+            country=country,
         )
     )
     bands = write_access_bands(cfg)

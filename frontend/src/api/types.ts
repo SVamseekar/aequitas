@@ -140,6 +140,24 @@ export interface MapResponse {
   title_count?: number
 }
 
+export interface DestinationsResponse {
+  country: string
+  destinations: Record<string, { available: boolean; rows: number; path: string | null; source?: string | null }>
+  official_distances: { available: boolean; rows: number; path: string; columns: string[] } | null
+  facility_400m: Record<
+    string,
+    {
+      available: boolean
+      n_areas: number
+      n_within_400m: number
+      people_share: number | null
+      path: string
+      note?: string | null
+    }
+  >
+  note: string | null
+}
+
 export interface ReachResponse {
   available: boolean
   geographies: string[]

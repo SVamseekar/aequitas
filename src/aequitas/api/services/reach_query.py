@@ -12,11 +12,23 @@ from aequitas.analytics.reach import ITL1_NAMES, reach_output_path, summarise_re
 from aequitas.core.config import PipelineConfig
 
 
-def load_reach_frame(cfg: PipelineConfig | None = None) -> pd.DataFrame:
+def _country_label(country: str) -> str:
+    return {
+        "england": "England",
+        "ireland": "Ireland",
+        "netherlands": "Netherlands",
+        "france": "France",
+    }.get(country, country)
+
+
+def load_reach_frame(cfg: PipelineConfig | None = None, country: str = "england") -> pd.DataFrame:
+    """Load that country's travel-time parquet only. Never fall through to England."""
     cfg = cfg or PipelineConfig()
-    path = reach_output_path(cfg.processed_dir)
+    path = reach_output_path(cfg.processed_dir, country=country)
     if path.exists():
         return pd.read_parquet(path)
+    if country != "england":
+        return pd.DataFrame()
     warehouse = cfg.warehouse_path
     if warehouse.exists():
         con = duckdb.connect(str(warehouse), read_only=True)
@@ -37,8 +49,9 @@ def query_reach(
     country: str = "england",
 ) -> dict[str, Any]:
     _ = urban_rural  # LSOA-level reach is not yet split by RUC in the writer
-    if country in {"netherlands", "france"}:
-        label = "Netherlands" if country == "netherlands" else "France"
+    label = _country_label(country)
+    df = load_reach_frame(country=country)
+    if df.empty:
         return {
             "available": False,
             "geographies": [],
@@ -54,30 +67,11 @@ def query_reach(
             ),
             "region_name": label if region == "all" else region,
         }
-    df = load_reach_frame()
-    if df.empty:
-        return {
-            "available": False,
-            "geographies": [],
-            "dest_type": dest_type,
-            "cutoff": cutoff,
-            "median": None,
-            "n_areas": 0,
-            "histogram": [],
-            "ranked": [],
-            "note": (
-                "45-minute destination counts are not in this pack. "
-                "Install Java 17 + r5py and a Geofabrik PBF, then run `uv run aequitas reach`. "
-                "We do not invent 15/30/45."
-            ),
-            "region_name": (
-                "Ireland"
-                if country == "ireland" and region == "all"
-                else ITL1_NAMES.get(region, "England") if region != "all" else "England"
-            ),
-        }
     payload = summarise_reach(df, dest_type=dest_type, cutoff=cutoff, region=region)
-    payload["region_name"] = ITL1_NAMES.get(region, "England") if region != "all" else "England"
+    if country == "england":
+        payload["region_name"] = ITL1_NAMES.get(region, "England") if region != "all" else "England"
+    else:
+        payload["region_name"] = label if region == "all" else region
     return payload
 
 

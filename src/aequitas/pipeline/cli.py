@@ -109,11 +109,12 @@ def rag(country: str) -> None:
 @main.command()
 @click.option("--force", is_flag=True, help="Recompute even if cache is newer than GTFS+PBF.")
 @click.option("--region", default=None, help="ITL1 code batch (e.g. E12000005 West Midlands).")
-def reach(force: bool, region: str | None) -> None:
+@click.option("--country", default="england", help="england | ireland | netherlands | france")
+def reach(force: bool, region: str | None, country: str) -> None:
     """Precompute 15/30/45-minute destination counts with r5py + R5 (Java)."""
     from aequitas.pipeline._stages import run_reach
 
-    run_reach(force=force, region=region)
+    run_reach(force=force, region=region, country=country)
 
 
 @main.command()
@@ -160,6 +161,31 @@ def france(skip_download: bool) -> None:
     dest = run_france_pack(skip_download=skip_download)
     write_france_bands()
     logger.info("France pack written: {}", dest)
+
+
+@main.command()
+@click.option("--country", default="england", help="england | ireland | netherlands | france")
+@click.option("--skip-probe", is_flag=True, help="Do not hit official URLs (local extracts only).")
+def destinations(country: str, skip_probe: bool) -> None:
+    """Ingest official jobs / GP / school points into country-keyed Parquets.
+
+    Writes data/processed/{country}/destinations_{jobs,gp,school}.parquet.
+    A 404 is an omit — never copy England BRES/NHS/GIAS onto IE/NL/FR.
+    """
+    from aequitas.core.config import PipelineConfig
+    from aequitas.ingestion.destinations import ingest_country_destinations
+
+    cfg = PipelineConfig()
+    report = ingest_country_destinations(
+        country=country,
+        processed_dir=cfg.processed_dir,
+        raw_dir=cfg.raw_dir,
+        audit_dir=cfg.audit_dir,
+        probe=not skip_probe,
+    )
+    logger.info("Destinations {}: written={} omits={}", country, list(report.written), len(report.omits))
+    for omit in report.omits:
+        logger.warning("{}", omit.reason)
 
 
 @main.command()
