@@ -83,6 +83,9 @@ export interface OpsResponse {
   feeds: Record<string, unknown>[]
   by_region: OpsRegionRow[]
   by_imd_decile: OpsImdRow[]
+  n_gtfs_rt_listed?: number
+  n_sampled?: number
+  skipped_n?: number
 }
 
 export interface TimeSeriesResponse {

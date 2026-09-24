@@ -42,24 +42,27 @@ Operators in scope: **Dublin Bus, Bus Éireann, Go-Ahead Ireland only**.
 
 ## France — NAP gtfs-rt union
 
+Cap is **50**. Timeout 40s. HTTP 403 and 404 are skipped and not retried. `dataset_id` is prefixed on `trip_id` and `route_id`. DOM names and bboxes outside metropolitan France are dropped before the cap. Prior catalog count on 2026-08-17 was **380**.
+
 | URL | Entity | Auth | HTTP | Bytes | Notes |
 |-----|--------|------|------|------:|-------|
-| `https://transport.data.gouv.fr/api/datasets` | catalog | none | **200** | **2,479,296** | Client-side `format=gtfs-rt` filter. **380** gtfs-rt resources listed |
+| `https://transport.data.gouv.fr/api/datasets` | catalog | none | **200** | **2,553,771** | 2026-09-25. Client-side `format=gtfs-rt` filter. **382** resources listed |
 
-Sampled first **12** listed resources this wave (cap). **370** skipped as “not harvested this wave.” Incomplete is expected (france-sources.md already noted ~380 RT not harvested).
+Sampled first **50** eligible resources. **332** skipped as “not harvested this wave (cap)”.
 
-Hits inside the sample (2026-08-17):
+Hits inside the sample (2026-09-25):
 
-| HTTP | Resource (title truncated) |
-|------|----------------------------|
-| 200 | Eurostar temps réel (`data.gouv.fr` resource) |
-| 200 | Trenitalia France GTFS-RT (NAP proxy) |
-| 200 | SNCF service-alerts |
-| 200 | SNCF trip-updates |
-| 403 | liO Occitanie (two resources) — skipped, not retried with another URL |
-| 200 | Proximité ZOU! bus RT |
+| HTTP | Count | Notes |
+|------|------:|-------|
+| 200 | 37 | Includes Eurostar, Trenitalia France, SNCF, ZOU!, and other metropolitan feeds |
+| 204 | 2 | Empty body, skipped |
+| 403 | 2 | liO Occitanie vehicle_positions and trip_updates (134 bytes each). Not retried. No second URL |
+| 429 | 2 | Skipped |
+| timeout | 7 | Connect timeout 40s. No status code |
 
-**Rollup:** `n_updates=3610`, `n_with_delay=2815`, `pct_late=16.2`, `n_skipped=126`, `n_routes_with_update=22`. This is **not** a national AOM punctuality figure. Prefix collisions on `trip_id`/`route_id` already exist in the static harvest. DOM out. F-EDI / IRIS stay on the static pack.
+No **404** in this sample. Do not invent one.
+
+**Rollup:** `listed=382`, `sampled=50`, `skipped=345`, `n_updates=6593`, `n_with_delay=4431`, sample `pct_late=27.8`. Coverage vs static NAP routes is **—**. This is **not** a national AOM figure. Score stays **47.7**.
 
 ## Env keys (optional, never committed)
 
