@@ -17,6 +17,7 @@ class TripObs:
     delay_seconds: int | None = None
     skipped: bool = False
     cancelled: bool = False
+    entity_id: str | None = None
 
 
 def parse_feed_message(payload: bytes) -> tuple[list[TripObs], int]:
@@ -26,9 +27,13 @@ def parse_feed_message(payload: bytes) -> tuple[list[TripObs], int]:
     out: list[TripObs] = []
     for ent in feed.entity:
         if ent.HasField("trip_update"):
-            out.append(_from_trip_update(ent.trip_update))
+            obs = _from_trip_update(ent.trip_update)
         elif ent.HasField("vehicle"):
-            out.append(_from_vehicle(ent.vehicle))
+            obs = _from_vehicle(ent.vehicle)
+        else:
+            continue
+        obs.entity_id = ent.id or None
+        out.append(obs)
     return out, len(feed.entity)
 
 

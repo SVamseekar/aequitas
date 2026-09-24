@@ -24,6 +24,19 @@ BODS_AVL_ZIP = "https://data.bus-data.dft.gov.uk/avl/download/gtfsrt"
 NTA_TRIP = "https://api.nationaltransport.ie/gtfsr/v2/TripUpdates"
 NTA_VP = "https://api.nationaltransport.ie/gtfsr/v2/VehiclePositions"
 NTA_OPERATORS = "Dublin Bus, Bus Éireann, Go-Ahead Ireland"
+NTA_IN_SCOPE = {
+    "dublin bus": "Dublin Bus",
+    "bus éireann": "Bus Éireann",
+    "bus eireann": "Bus Éireann",
+    "go-ahead ireland": "Go-Ahead Ireland",
+    "go ahead ireland": "Go-Ahead Ireland",
+}
+# Stop codes in the NTA feed carry the operator letters used on TFI stop ids.
+_NTA_STOP_AGENCY = (
+    ("GAD", "Go-Ahead Ireland"),
+    ("DB", "Dublin Bus"),
+    ("BE", "Bus Éireann"),
+)
 
 OVAPI_TU = "https://gtfs.ovapi.nl/nl/tripUpdates.pb"
 OVAPI_VP = "https://gtfs.ovapi.nl/nl/vehiclePositions.pb"
@@ -298,6 +311,51 @@ def _siri_vm_delay_obs(body: bytes) -> list[TripObs]:
     return out
 
 
+def _nta_agency(obs: TripObs) -> str | None:
+    """Operator label from the entity id or a TFI stop code. Unknown stays None."""
+    entity = (obs.entity_id or "").strip()
+    named = NTA_IN_SCOPE.get(entity.casefold())
+    if named:
+        return named
+    if entity.casefold() in {"luas", "irish rail", "iarnród éireann", "iarnrod eireann"}:
+        return entity
+    for stop_id in obs.stop_ids:
+        code = stop_id.upper()
+        match = re.search(r"\d(GAD|DB|BE)\d", code)
+        if match:
+            return dict(_NTA_STOP_AGENCY)[match.group(1)]
+        if "LUAS" in code or re.search(r"\dIR\d", code):
+            return "out of scope"
+    return None
+
+
+def split_nta_scope(observations: list[TripObs]) -> tuple[list[TripObs], list[str]]:
+    """Keep Dublin Bus, Bus Éireann, and Go-Ahead Ireland. Log every other agency."""
+    kept: list[TripObs] = []
+    dropped: list[str] = []
+    for obs in observations:
+        agency = _nta_agency(obs)
+        if agency in {"Dublin Bus", "Bus Éireann", "Go-Ahead Ireland"}:
+            kept.append(obs)
+            continue
+        label = agency or obs.entity_id or obs.trip_id or "unknown"
+        dropped.append(label)
+        logger.info("NTA agency out of scope: {}", label)
+    return kept, dropped
+
+
+def _ireland_empty_reason(trip_status: int | None, vp_status: int | None, *, key_set: bool) -> str:
+    key_note = (
+        "NTA_API_KEY is set, but TripUpdates had no in-scope updates."
+        if key_set
+        else "NTA_API_KEY is unset."
+    )
+    return (
+        f"Ireland NTA TripUpdates HTTP {trip_status}. VehiclePositions HTTP {vp_status}. {key_note} "
+        f"Operators in scope: {NTA_OPERATORS}. No Republic-wide on-time %."
+    )
+
+
 def collect_ireland(project_root: Path | None = None) -> dict[str, Any]:
     hits: list[FetchHit] = []
     observations: list[TripObs] = []
@@ -305,21 +363,27 @@ def collect_ireland(project_root: Path | None = None) -> dict[str, Any]:
     nta_key = env_key("NTA_API_KEY", "NTA_GTFSR_KEY")
     auth = "x-api-key" if nta_key else "none"
     extra_headers = {"x-api-key": nta_key} if nta_key else None
-    for url, entity in ((NTA_TRIP, "TripUpdates (NTA)"), (NTA_VP, "VehiclePositions (NTA)")):
+    # VehiclePositions was HTTP 404. Do not invent a replacement URL.
+    # With a key, fetch TripUpdates only. Without a key, probe both so the empty sentence can name 401 and 404.
+    targets = [(NTA_TRIP, "TripUpdates (NTA)")]
+    if not nta_key:
+        targets.append((NTA_VP, "VehiclePositions (NTA)"))
+    for url, entity in targets:
         hit, body = fetch_bytes(url, entity=entity, auth=auth, headers=extra_headers)
         hits.append(hit)
-        if body:
+        if url == NTA_TRIP and body:
             obs, n = parse_feed_message(body)
-            observations.extend(obs)
+            kept, dropped = split_nta_scope(obs)
+            observations.extend(kept)
             n_entities += n
+            if dropped:
+                logger.info("NTA dropped {} out-of-scope entities", len(dropped))
+
+    trip_status = next((h.status for h in hits if h.url == NTA_TRIP), None)
+    vp_status = next((h.status for h in hits if h.url == NTA_VP), 404 if nta_key else None)
 
     if not observations:
-        reason = (
-            f"Ireland NTA GTFS-RT is not in this rollup. Tried {NTA_TRIP} and {NTA_VP} "
-            f"(HTTP {[h.status for h in hits]}). A free developer key is required "
-            f"(NTA_API_KEY). Spec 7.3 / 7.6: only {NTA_OPERATORS}. "
-            "No invented Bus Éireann rural coverage, no Republic-wide on-time %, no BODS nouns."
-        )
+        reason = _ireland_empty_reason(trip_status, vp_status, key_set=bool(nta_key))
         return build_rollup(
             country="ireland",
             observations=[],
@@ -329,12 +393,13 @@ def collect_ireland(project_root: Path | None = None) -> dict[str, Any]:
             coverage_sentence=reason,
             empty=True,
             empty_reason=reason,
+            extra={"operators": NTA_OPERATORS},
         )
 
     cov = (
-        f"NTA GTFS-RT for {NTA_OPERATORS} only — not the rest of the Republic. "
-        f"{len(observations)} updates in this snapshot. HP/SA nouns stay on the static pack; "
-        "this rollup is not IMD/LSOA."
+        f"NTA TripUpdates for {NTA_OPERATORS} only. "
+        f"{len(observations)} in-scope updates in this snapshot. "
+        "Small Area and TFI nouns stay on the static pack. Not a Republic-wide on-time %."
     )
     return build_rollup(
         country="ireland",
