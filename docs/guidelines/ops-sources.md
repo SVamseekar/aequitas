@@ -1,6 +1,6 @@
 # Wave 8 ops — source log
 
-Fetched **2026-08-17**. Only URLs actually hit. Status and bytes are measured.
+Fetched **2026-08-17**, England re-checked **2026-09-25** (no `BODS_API_KEY`). Only URLs actually hit. Status and bytes are measured.
 No invented second URL. No paid Swiftly / CitySwift / Google. Rollups live in
 `data/ops/{country}/latest.json` (gitignored). Static DuckDB files were not written.
 
@@ -13,9 +13,11 @@ A snapshot is not “live to the second.”
 |-----|--------|------|------|------:|-------|
 | `https://data.bus-data.dft.gov.uk/api/v1/gtfsrtdatafeed/` | TripUpdates + VehiclePositions API | none (`BODS_API_KEY` unset) | **401** | 6 | Do not invent a second path |
 | `https://data.bus-data.dft.gov.uk/api/v1/datafeed/` | SIRI-VM API | none | **401** | 6 | Same key gate |
-| `https://data.bus-data.dft.gov.uk/avl/download/gtfsrt` | GTFS-RT zip (AVL download) | none | **200** (302 → signed `download.bus-data.dft.gov.uk`) | **1,651,324** | VehiclePositions-style feed |
+| `https://data.bus-data.dft.gov.uk/avl/download/gtfsrt` | GTFS-RT zip (AVL download) | none | **200** (302 → signed `download.bus-data.dft.gov.uk`) | **1,935,686** | VehiclePositions-style feed. 2026-09-25 |
 
-**Rollup (this checkout):** `n_updates=25063`, `n_entities=25063`, `n_with_delay=0` (this zip has no `stop_time_update.delay`), `n_skipped=0`, `n_cancelled=0`, `n_routes_with_update=5351` of **13640** static warehouse routes → **coverage 39.23%**. Region strip joined via `routes.regions_served` (9 ITL1 names). IMD decile empty — no stop_ids on the AVL entities. **Not** a national punctuality KPI.
+**Rollup (2026-09-25, key unset):** `n_updates=29391`, `n_with_delay=0`, `pct_late` null, `n_routes_with_update=6254` of **13640** static warehouse routes → **coverage 45.85%**. TripUpdates and SIRI-VM still **401** / 6 bytes. **Not** a DfT punctuality statistic. Prior 2026-08-17 AVL run was 5,351 of 13,640 with the same `n_with_delay=0`.
+
+Collector policy: optional `BODS_API_KEY` (env only, never committed). If TripUpdates or SIRI-VM returns a `delay` field, `pct_late` is the share with delay **> 300 seconds**. If the key is unset, or the authenticated feed still has no delay, keep the public AVL zip, leave late as **—**, and say `n_with_delay = 0`. SIRI-VM contributes only when a `Delay` element is present — clocks are not turned into delay. Stop → LSOA uses the existing England warehouse only. Score stays **80.0**.
 
 ## Ireland — NTA (spec 7.3 / 7.6)
 
