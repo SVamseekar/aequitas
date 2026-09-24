@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -241,7 +241,7 @@ def try_build_r5_engine(pbf: Path, gtfs: Path) -> TravelTimeEngine:
                         r5py.TransportMode.TRANSIT,
                         r5py.TransportMode.WALK,
                     ],
-                    max_time=datetime.timedelta(minutes=45),
+                    max_time=timedelta(minutes=45),
                 )
                 slim = tt[["from_id", "to_id", "travel_time"]].copy()
                 minutes = pd.to_numeric(slim["travel_time"], errors="coerce")
