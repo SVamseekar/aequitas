@@ -183,6 +183,22 @@ class StaticMinuteEngine:
         return out[out["origin_id"].isin(keep)]
 
 
+def _points_for_r5(frame: pd.DataFrame, id_column: str) -> pd.DataFrame:
+    """GeoDataFrame with an id column. r5py 1.1 routes on point geometry."""
+    import geopandas as gpd
+
+    out = frame.copy()
+    if "id" not in out.columns and id_column in out.columns:
+        out = out.rename(columns={id_column: "id"})
+    if "geometry" not in out.columns:
+        out = gpd.GeoDataFrame(
+            out,
+            geometry=gpd.points_from_xy(out["lon"], out["lat"]),
+            crs="EPSG:4326",
+        )
+    return out
+
+
 def try_build_r5_engine(pbf: Path, gtfs: Path) -> TravelTimeEngine:
     """Build a real r5py TransportNetwork wrapper. Raises with JAVA_HINT on failure."""
     try:
@@ -202,31 +218,53 @@ def try_build_r5_engine(pbf: Path, gtfs: Path) -> TravelTimeEngine:
             destinations: pd.DataFrame,
             departure: datetime,
         ) -> pd.DataFrame:
-            orig = origins.copy()
-            dest = destinations.copy()
-            if "id" not in orig.columns:
-                orig = orig.rename(columns={"lsoa": "id"})
-            if "id" not in dest.columns:
-                dest = dest.rename(columns={"dest_id": "id"})
-            computer = r5py.TravelTimeMatrixComputer(
-                network,
-                origins=orig,
-                destinations=dest,
-                departure=departure.replace(tzinfo=None),
-                transport_modes=[
-                    r5py.TransportMode.TRANSIT,
-                    r5py.TransportMode.WALK,
-                ],
-            )
-            tt = computer.compute_travel_times()
-            tt = tt.rename(
-                columns={
-                    "from_id": "origin_id",
-                    "to_id": "dest_id",
-                    "travel_time": "minutes",
-                }
-            )
-            return tt[["origin_id", "dest_id", "minutes"]]
+            orig = _points_for_r5(origins, "lsoa")
+            dest = _points_for_r5(destinations, "dest_id")
+            parts: list[pd.DataFrame] = []
+            # One chunk at a time. A full West Midlands × national jobs matrix
+            # does not fit in memory. Times above 45 minutes do not change t_15/t_30/t_45.
+            step = 20
+            for start in range(0, len(orig), step):
+                chunk = orig.iloc[start : start + step]
+                logger.info(
+                    "r5py travel times {}–{} of {}",
+                    start + 1,
+                    start + len(chunk),
+                    len(orig),
+                )
+                tt = r5py.TravelTimeMatrix(
+                    network,
+                    origins=chunk,
+                    destinations=dest,
+                    departure=departure.replace(tzinfo=None),
+                    transport_modes=[
+                        r5py.TransportMode.TRANSIT,
+                        r5py.TransportMode.WALK,
+                    ],
+                    max_time=datetime.timedelta(minutes=45),
+                )
+                slim = tt[["from_id", "to_id", "travel_time"]].copy()
+                minutes = pd.to_numeric(slim["travel_time"], errors="coerce")
+                slim = slim.loc[minutes.notna() & (minutes >= 0) & (minutes <= 45)]
+                present = set(slim["from_id"].astype(str))
+                slim = slim.rename(
+                    columns={
+                        "from_id": "origin_id",
+                        "to_id": "dest_id",
+                        "travel_time": "minutes",
+                    }
+                )
+                missing = [
+                    {"origin_id": str(oid), "dest_id": None, "minutes": pd.NA}
+                    for oid in chunk["id"].astype(str)
+                    if str(oid) not in present
+                ]
+                if missing:
+                    slim = pd.concat([slim, pd.DataFrame(missing)], ignore_index=True)
+                parts.append(slim)
+            if not parts:
+                return pd.DataFrame(columns=["origin_id", "dest_id", "minutes"])
+            return pd.concat(parts, ignore_index=True)
 
     return R5Engine()
 
