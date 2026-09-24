@@ -54,6 +54,11 @@ dev = [
 [project.scripts]
 aequitas = "aequitas.pipeline.cli:main"
 
+[tool.uv]
+# shap pins numba<0.63 on darwin x86_64, which resolves to numba 0.53
+# (no Python 3.12 wheel). numba 0.67 is the first release that allows numpy 2.5.
+override-dependencies = ["numba>=0.67"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
