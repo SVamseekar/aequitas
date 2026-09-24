@@ -444,3 +444,21 @@ Live HTTP. Status **0** is curl timeout (28), not a portal 404. Row counts are t
 | France | `https://www.insee.fr/fr/statistiques/7671844` | **404** | 0 | — | |
 
 Ireland omits that stay omit: d5 (no income column), d9a–e (HP file is ED, Pobal host timed out). Netherlands omits that stay omit: d9c, d9d. France omits that stay omit: d2, d3, d5, d9a–e. No warehouse rebuild. National scores stay 80.0 / 55.5 / 69.6 bus / 47.7.
+
+## Appraisal re-check (2026-09-25, issue #22)
+
+No euro factor applied. People-gap kept. j3 numeric factor omitted because no carbon table returned a usable factor.
+
+| Country | URL | HTTP | Use |
+|---------|-----|------|-----|
+| Ireland | `https://www.nationaltransport.ie/wp-content/uploads/2016/10/Common_Appraisal_Framework_for_Transport_Projects_and_Programmes.pdf` | **404** | No CAF €. People-gap |
+| Ireland | `https://www.gov.ie/en/collection/e4211-public-spending-code/` | **403** | No discount rule copied |
+| Ireland | `https://www.seai.ie/data-and-insights/seai-statistics/key-publications/energy-in-ireland/` | **403** | j3 omitted |
+| Ireland | `https://www.epa.ie/publications/monitoring--assessment/climate-change/air-emissions/GHG-inventory-report-2024.php` | **404** | j3 omitted |
+| Netherlands | `https://www.pbl.nl/publicaties/algemene-leidraad-voor-maatschappelijke-kosten-batenanalyse` | **200** | HTML page. No unit cost or discount in the fetched body. People-gap. No MKBA € |
+| Netherlands | `https://www.rijksoverheid.nl/documenten/rapporten/2020/11/10/rapport-werkgroep-discontovoet-2020` | **404** | No discount rule copied |
+| France | `https://www.strategie.gouv.fr/publications/levaluation-socioeconomique-des-investissements-publics` | **404** | No Quinet € |
+| France | `https://www.ecologie.gouv.fr/sites/default/files/documents/Instruction_cadre_2014.pdf` | **0** | Timeout. No discount rule copied |
+| France | `https://data.ademe.fr/datasets/base-carbone(r)` | **200** | Portal shell, not a factor table. j3 omitted |
+
+EU TEN-T / CEF stays funding context in the policy sentence. It is not the j2 formula. England may still name TAG and BSA 2025.

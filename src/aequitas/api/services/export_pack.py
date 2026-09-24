@@ -154,7 +154,7 @@ def pack_payload(
         vintages = {
             "network": "NAP GTFS harvest (metropolitan France, pack vintage)",
             "census": "IGN CONTOURS-IRIS + INSEE recensement 2018",
-            "fedi": "F-EDI 2021 (IRIS). Never labelled IMD.",
+            "fedi": "F-EDI 2021 (IRIS).",
             "centroids": "IGN WFS IRIS centroids",
             "reach": (
                 "r5py destination counts"

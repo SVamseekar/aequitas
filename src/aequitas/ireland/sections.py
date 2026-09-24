@@ -124,10 +124,10 @@ TITLES: dict[str, str] = {
     "g4_shap": "Feature importance (HP + density)",
     "g5_scenario_model": "Irish intervention KPIs",
     "j1_economic_value": "Priority population by county (CAF/PAG scope)",
-    "j2_bcr": "CAF/PAG BCR",
-    "j3_carbon": "Illustrative carbon (EPA Ireland / SEAI factors)",
+    "j2_bcr": "People-gap (no published CAF €)",
+    "j3_carbon": "No published EPA Ireland factor",
     "j4_investment_priority": "County × HP coverage gap",
-    "bsa1_franchising_readiness": "NTA programme coverage by county",
+    "bsa1_franchising_readiness": "Connecting Ireland, BusConnects, Local Link, PSO",
     "bsa2_operator_concentration": "TFI operator concentration",
     "bsa3_tier_distribution": "Local Link / BusConnects / Connecting Ireland tiers",
     "ps1_freq_restoration": "Restore TFI / Local Link weekday frequency",
@@ -137,12 +137,10 @@ TITLES: dict[str, str] = {
     "ps5_scenario_comparison": "Irish intervention comparison",
 }
 
-# SEAI Energy in Ireland / EPA inventory: petrol car ~164 gCO2/km (tank-to-wheel).
-# Used only as a labelled illustration — not a statutory CAF appraisal.
-_EPA_CAR_G_PER_KM = 164.0
+# EPA Ireland and SEAI pages did not return a factor table on 2026-09-25.
+# Do not keep a grammes-per-km number without that file.
 _EPA_FACTOR_NOTE = (
-    "Illustrative only: SEAI/EPA Ireland passenger-car intensity ~164 gCO₂/km. "
-    "Not a statutory CAF appraisal."
+    "No published EPA Ireland carbon table returned 200. Factor omitted."
 )
 
 
@@ -458,9 +456,6 @@ def _section_bundle(
     ps2_pop = float(eve["population"].sum()) if len(eve) else 0.0
     ps3_pop = float(rural_desert["population"].sum()) if len(rural_desert) else 0.0
     ps4_pop = float(areas.loc[~areas["within_400m"], "population"].sum()) if n else 0.0
-
-    # Illustrative carbon: desert people × 3 km × 220 days × 164 g / 1e6
-    carbon_t = pop_zero * 3.0 * 220.0 * _EPA_CAR_G_PER_KM / 1e6 if pop_zero else 0.0
 
     has_unemp = n and "unemp_rate" in areas and areas["unemp_rate"].notna().sum() >= 3
     has_car = n and "no_car_share" in areas and areas["no_car_share"].notna().sum() >= 3
@@ -803,15 +798,17 @@ def _section_bundle(
         "j2_bcr": {
             "bcr": None,
             "omit_euro": True,
-            "reason": "No free published CAF/PAG unit cost applied. People-gap only.",
+            "reason": "No published CAF €. People-gap only.",
             "people_gap": pop_zero,
             "insufficient_data": False,
         },
         "j3_carbon": {
-            "co2_saving_tonnes": carbon_t,
-            "factor_g_per_km": _EPA_CAR_G_PER_KM,
+            "co2_saving_tonnes": None,
+            "factor_g_per_km": None,
+            "omit": True,
+            "reason": _EPA_FACTOR_NOTE,
             "note": _EPA_FACTOR_NOTE,
-            "insufficient_data": empty,
+            "insufficient_data": True,
         },
         "j4_investment_priority": {
             "ranking": sorted(county_rows, key=lambda r: (r["pop_desert"], -r["mean_hp"]), reverse=True)[:12],
@@ -1139,13 +1136,13 @@ def _section_bundle(
                     caveat_base,
                 ),
                 "j2_bcr": _brief(
-                    f"No free published CAF/PAG BCR for {place}. People-gap is {int(pop_zero):,}.",
-                    "People-gap only — no invented euro BCR.",
+                    f"No published CAF € for {place}. People-gap is {int(pop_zero):,}.",
+                    "People-gap only.",
                     caveat_base,
                 ),
                 "j3_carbon": _brief(
-                    f"{carbon_t:,.0f} t illustrative car-km CO₂ in {place} if desert residents drove 3 km × 220 days.",
                     _EPA_FACTOR_NOTE,
+                    f"Carbon stays omitted for {place}.",
                     caveat_base,
                 ),
                 "j4_investment_priority": _brief(
@@ -1546,8 +1543,8 @@ def _section_bundle(
             ),
             "j2_bcr": {
                 "type": "horizontal_bar",
-                "title": f"People beyond 400 m by Pobal HP decile — {place}",
-                "x_label": "People (no published CAF/PAG unit cost)",
+                "title": f"People beyond 400 m — {place} (no published CAF €)",
+                "x_label": "People",
                 "data": [
                     {
                         "label": f"HP {row['decile']}",
@@ -1556,18 +1553,7 @@ def _section_bundle(
                     for row in sorted(by_decile, key=lambda x: x["decile"])
                 ],
             },
-            "j3_carbon": {
-                "type": "horizontal_bar",
-                "title": f"Illustrative car-km CO₂ by county (EPA { _EPA_CAR_G_PER_KM:g} g/km) — {place}",
-                "x_label": "Tonnes (illustrative)",
-                "data": [
-                    {
-                        "label": r["name"],
-                        "value": r["pop_desert"] * 3.0 * 220.0 * _EPA_CAR_G_PER_KM / 1e6,
-                    }
-                    for r in sorted(county_rows, key=lambda x: -x["pop_desert"])
-                ],
-            },
+            "j3_carbon": {},
             "j4_investment_priority": {
                 "type": "scatter_regression",
                 "title": f"Priority: people beyond 400 m vs HP — {place}",
@@ -1581,7 +1567,7 @@ def _section_bundle(
             "bsa1_franchising_readiness": {
                 "type": "choropleth",
                 "geography": "ireland_county",
-                "title": f"NTA coverage proxy (% people within 400 m) — {place}",
+                "title": f"Connecting Ireland, BusConnects, Local Link, PSO — {place}",
                 "metric_label": "% people",
                 "data": [
                     {"area_code": r["code"], "area_name": r["name"], "value": r["pct_covered"]}
