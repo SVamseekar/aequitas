@@ -96,8 +96,8 @@ async def chat(
     chunks = retrieve_chunks(
         req.query, embedding_model, faiss_index, faiss_metadata, context=req.context
     )
-    if country == "france":
-        chunks = [c for c in chunks if not _mentions_foreign_statute(c.get("text") or "")]
+    if country in ("france", "netherlands"):
+        chunks = [c for c in chunks if not _mentions_foreign_statute(c.get("text") or "", country)]
     source_sections = list({c["section_id"] for c in chunks if "section_id" in c})
 
     has_gemini = bool(cfg.gemini_api_key and str(cfg.gemini_api_key).strip())
@@ -158,9 +158,12 @@ _FOREIGN_STATUTE = (
 )
 
 
-def _mentions_foreign_statute(text: str) -> bool:
+def _mentions_foreign_statute(text: str, country: str = "france") -> bool:
     blob = text.lower()
-    return any(tok in blob for tok in _FOREIGN_STATUTE)
+    tokens = list(_FOREIGN_STATUTE)
+    if country == "netherlands":
+        tokens.extend(("lsoa", "bods", "f-edi"))
+    return any(tok in blob for tok in tokens)
 
 
 def _honest_retrieval_reply(country: str, chunks: list[dict], query: str = "") -> str:
@@ -169,7 +172,12 @@ def _honest_retrieval_reply(country: str, chunks: list[dict], query: str = "") -
         "netherlands": "Netherlands",
         "france": "France",
     }.get(country, "England")
-    if country == "france" and _mentions_foreign_statute(query):
+    if country == "netherlands" and _mentions_foreign_statute(query, "netherlands"):
+        return (
+            "Those statutes (BSA, IMD, Pobal HP, LSOA, BODS) are not the Netherlands pack. "
+            "This index only holds OVapi × SES-WOA × buurt narratives."
+        )
+    if country == "france" and _mentions_foreign_statute(query, "france"):
         return (
             "Those statutes (BSA 2025 / IMD / Pobal HP) are not the France pack. "
             "This index only holds NAP × F-EDI × IRIS narratives."

@@ -87,6 +87,21 @@ def france_index_paths(project_root: Path) -> tuple[Path, Path]:
     return folder / "faiss_index.bin", folder / "faiss_metadata.json"
 
 
+def netherlands_index_paths(project_root: Path) -> tuple[Path, Path]:
+    folder = project_root / "data" / "netherlands"
+    return folder / "faiss_index.bin", folder / "faiss_metadata.json"
+
+
+_NL_BANNED = ("bsa", "imd", "pobal", "lsoa", "bods", "f-edi")
+
+
+def _chunk_allowed(text: str, country: str) -> bool:
+    if country != "netherlands":
+        return True
+    blob = text.lower()
+    return not any(tok in blob for tok in _NL_BANNED)
+
+
 def build_faiss_index(
     cfg: PipelineConfig,
     *,
@@ -111,6 +126,8 @@ def build_faiss_index(
     for row in narratives:
         chunks = chunk_narrative(row["narrative"])
         for chunk in chunks:
+            if not _chunk_allowed(chunk, country):
+                continue
             texts.append(chunk)
             metadata.append({
                 "section_id": row["section_id"],
@@ -141,6 +158,8 @@ def build_faiss_index(
             index_path, metadata_path = ireland_index_paths(cfg.project_root)
         elif country == "france":
             index_path, metadata_path = france_index_paths(cfg.project_root)
+        elif country == "netherlands":
+            index_path, metadata_path = netherlands_index_paths(cfg.project_root)
         else:
             index_path = cfg.project_root / cfg.faiss_index_path
             metadata_path = cfg.project_root / cfg.faiss_metadata_path

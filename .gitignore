@@ -24,6 +24,8 @@ data/processed/
 data/ops/
 data/france/
 data/ireland/
+data/netherlands/faiss_index.bin
+data/netherlands/faiss_metadata.json
 data/audit/*.json
 data/audit/*.png
 data/audit/figures/

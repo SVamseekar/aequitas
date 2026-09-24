@@ -52,6 +52,16 @@ class ApiConfig:
             os.environ.get("AEQUITAS_FR_FAISS_METADATA", "data/france/faiss_metadata.json")
         )
     )
+    netherlands_faiss_index_path: Path = field(
+        default_factory=lambda: Path(
+            os.environ.get("AEQUITAS_NL_FAISS_INDEX", "data/netherlands/faiss_index.bin")
+        )
+    )
+    netherlands_faiss_metadata_path: Path = field(
+        default_factory=lambda: Path(
+            os.environ.get("AEQUITAS_NL_FAISS_METADATA", "data/netherlands/faiss_metadata.json")
+        )
+    )
     gemini_api_key: str = field(
         default_factory=lambda: os.environ.get("GEMINI_API_KEY", "")
     )

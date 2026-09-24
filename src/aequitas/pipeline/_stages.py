@@ -393,6 +393,10 @@ def run_rag_index(cfg: PipelineConfig | None = None, *, country: str = "england"
     kwargs: dict = {"country": country}
     if country == "ireland":
         kwargs["warehouse_path"] = cfg.project_root / "data" / "aequitas_ireland.duckdb"
+    elif country == "france":
+        kwargs["warehouse_path"] = cfg.project_root / "data" / "aequitas_france.duckdb"
+    elif country == "netherlands":
+        kwargs["warehouse_path"] = cfg.project_root / "data" / "aequitas_netherlands.duckdb"
     result = build_faiss_index(cfg, **kwargs)
     return StageReport(
         stage="rag_index",
