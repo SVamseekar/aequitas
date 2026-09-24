@@ -14,7 +14,7 @@ Ranks stay **inside** the country. Never plot IMD vs HP vs SES-WOA vs F-EDI
 on one axis. £0 sources only.
 
 **Status (2026-08-13):** England computed. Ireland warehouse CSO-scale
-(18,919 SA). Catalogue **36/12/7** (d2–d4 from CSO SAPS). Wave 5 briefing +
+(18,919 SA). Catalogue **37/12/6** after the 2026-09-25 re-check (d2–d4 and f3 from CSO SAPS). Wave 5 briefing +
 Ireland FAISS stamped after PNG pass. Read **§ Ireland mistakes — do not
 repeat (NL / FR)** before Wave 7 or 9.
 
@@ -130,7 +130,7 @@ Keep every *metric* in the warehouse. UI: **one matrix + one scatter**
 |----|----------|----|----|-----|
 | f1 | Gini (Lorenz once) | Gini of Irish service/trips | same | same |
 | f2 | Disparity by deprivation decile | **HP decile** slope | SES decile | F-EDI/proxy decile |
-| f3 | Access by ethnicity | CSO if free else omit | CBS if free else omit | omit if none |
+| f3 | Access by ethnicity | **same** — CSO SAPS T2_2 at Small Area GUID (2026-09-25). Score r unchanged | CBS if free else omit | omit if none |
 | f5 | Rural penalty | same | same | same |
 | f6 | Most equitable regions | counties | provinces | régions |
 
@@ -187,7 +187,7 @@ correlations, unique exhibits).
 | Country | same | replace | omit | Code | Warehouse |
 |---------|------|---------|------|------|-----------|
 | England | 55 computed | — | — | `section_registry.py` | `aequitas.duckdb` live |
-| Ireland | 36 | 12 | 7 | `ireland/sections.py` | **18,919 SA** warehouse live; d2–d4 from CSO SAPS |
+| Ireland | 37 | 12 | 6 | `ireland/sections.py` | **18,919 SA** warehouse live; d2–d4 and f3 from CSO SAPS. Score r stays HP vs stops per 1,000 (f3 does not enter it). |
 | Netherlands | **41** | **12** | **2** | `netherlands/sections.py` | **13,827** buurten live; d2–d5/f3/d9a/d9b/d9e from CBS 85984NED; omit d9c crime + d9d environment |
 | France | **35** | **12** | **8** | `france/sections.py` | **48,522** IRIS live; F-EDI 2021; NAP harvest 441/111 |
 
@@ -418,3 +418,29 @@ Before calling Wave 7 or 9 done:
 - [ ] England **and** Ireland regression still green
 - [ ] Briefing quality called out separately from “pack on disk”
 - [ ] Visual pass = screenshots of exhibits, not a text scrape of 80 loads
+
+## Catalogue re-check (2026-09-25, issue #13)
+
+Live HTTP. Status **0** is curl timeout (28), not a portal 404. Row counts are the file that matches the byte size already on disk, or a header read of that file. Destinations log in `destinations-sources.md` is a different question.
+
+| Country | URL | HTTP | Bytes | Rows | Catalogue |
+|---------|-----|------|------:|-----:|-----------|
+| Ireland | `https://www.cso.ie/en/media/csoie/census/census2022/SAPS_2022_Small_Area_UR_171024.csv` | **200** | **39,568,437** | **18,920** data rows | GUID is Small Area. Theme 2 `T2_2WI`…`T2_2OTH` present. **f3 same.** No income column. d5 stays omit. Score r stays HP vs stops per 1,000 |
+| Ireland | `https://ws.cso.ie/public/api.restful/PxStat.Data.Cube_API.ReadDataset/SAP2022T1T1ALY/CSV/1.0/en` | **404** | 0 | — | Not a second SAPS path |
+| Ireland | `https://data.gov.ie/datastore/dump/0806f07b-b514-4769-bd3d-649da87ad205` | **200** | **445,405** on disk | **3,417** | `ED_ID_STR`. ED-only, same honesty as before. d9a–e stay omit |
+| Ireland | data.gov.ie resource download → pobal.ie | **302** then **0** | 0 | — | curl 28 after the redirect |
+| Ireland | `https://www.pobal.ie/wp-content/uploads/2024/01/hp-deprivation-index-scores-2022.csv` | **0** | 0 | — | curl 28 |
+| Ireland | `https://www.pobal.ie/app/uploads/2024/01/hp-deprivation-index-scores-2022.csv` | **0** | 0 | — | curl 28 |
+| Ireland | `https://www.pobal.ie/wp-content/uploads/2024/01/hp-deprivation-index-scores-2022-1-1.xlsx` | **0** | 0 | — | curl 28 |
+| Netherlands | `https://opendata.cbs.nl/ODataApi/odata/85984NED` | **200** | **760** | service document only | Lists TableInfos / TypedDataSet. Not a crime or living-environment series |
+| Netherlands | `https://opendata.cbs.nl/ODataFeed/odata/85984NED/TypedDataSet?$top=1` | **404** | 0 | — | Do not invent another table id. d9c and d9d stay omit |
+| France | `https://www.insee.fr/fr/statistiques/fichier/5650720/base-ic-evol-struct-pop-2018_csv.zip` | **200** | **19,925,333** on disk | **49,285** | IRIS, `P18_POP65P`, `P18_POP_IMM`. No chômage, voiture, or HLM column. d2, d3, d9e stay omit |
+| France | `https://www.insee.fr/fr/statistiques/5650720` | **200** | HTML | — | Page, not a new IRIS table |
+| France | `https://www.insee.fr/fr/statistiques/fichier/8229323/BASE_TD_FILO_DISP_IRIS_2021.xlsx` | **500** | 0 | — | d5 stays omit |
+| France | `https://www.insee.fr/fr/statistiques/fichier/6692218/BASE_TD_FILO_DISP_IRIS_2020.xlsx` | **404** | 0 | — | d5 stays omit |
+| France | `https://www.insee.fr/fr/statistiques/fichier/6036907/BASE_TD_FILO_DISP_IRIS_2019.xlsx` | **500** | 0 | — | d5 stays omit |
+| France | `https://www.insee.fr/fr/statistiques/7704076` | **200** | HTML | — | Page timed out in 2026-08-17; HEAD 200 now. Not an IRIS xlsx |
+| France | `https://www.insee.fr/fr/statistiques/6692269` | **404** | 0 | — | |
+| France | `https://www.insee.fr/fr/statistiques/7671844` | **404** | 0 | — | |
+
+Ireland omits that stay omit: d5 (no income column), d9a–e (HP file is ED, Pobal host timed out). Netherlands omits that stay omit: d9c, d9d. France omits that stay omit: d2, d3, d5, d9a–e. No warehouse rebuild. National scores stay 80.0 / 55.5 / 69.6 bus / 47.7.
