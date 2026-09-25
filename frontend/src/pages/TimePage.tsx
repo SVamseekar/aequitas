@@ -81,7 +81,7 @@ export default function TimePage() {
             ? "CBS buurten / SES-WOA stay frozen. Only OVapi network dates time-travel."
             : country === "france"
               ? "IGN IRIS / F-EDI 2021 stay frozen. Only the NAP harvest date time-travels."
-            : "Census 2021 and IMD 2025 stay frozen. Only BODS-derived metrics time-travel."}
+              : "Census and deprivation vintage stay frozen. The network date is the GTFS harvest."}
       </p>
 
       <div className="flex flex-wrap gap-2 mb-4">
