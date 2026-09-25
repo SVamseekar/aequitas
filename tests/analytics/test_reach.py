@@ -6,9 +6,11 @@ import pandas as pd
 import pytest
 
 from aequitas.analytics.reach import (
+    R5_UNREACHABLE,
     StaticMinuteEngine,
     clip_destinations,
     count_within_cutoffs,
+    counts_from_minute_values,
     validate_reach_frame,
     write_reach_from_engine,
 )
@@ -43,6 +45,16 @@ def test_clip_keeps_destination_inside_buffer_and_drops_outside():
     )
     kept = clip_destinations(destinations, origins, buffer_km=40)
     assert set(kept["dest_id"]) == {"inside"}
+
+
+def test_counts_from_minute_values_drops_unreachable():
+    counts = counts_from_minute_values([10, 20, 40, 50, R5_UNREACHABLE, -1])
+    assert counts == {"t_15": 1, "t_30": 2, "t_45": 3}
+
+
+def test_counts_from_minute_values_zeroes_matching_id():
+    counts = counts_from_minute_values([90], dest_ids=["E1"], origin_id="E1")
+    assert counts["t_15"] == 1
 
 
 def test_count_within_cutoffs():

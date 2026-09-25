@@ -29,6 +29,8 @@ CUTOFFS_MIN = (15, 30, 45)
 BUFFER_KM = 40.0
 CHUNK_ORIGINS = 20
 KM_PER_DEG_LAT = 111.32
+# R5 marks a destination past max_time with this sentinel. r5py then turns it into NaN.
+R5_UNREACHABLE = (2**31) - 1
 OUTPUT_NAME = "lsoa_access_times.parquet"
 META_NAME = "lsoa_access_times.meta.json"
 
@@ -110,6 +112,31 @@ def _minutes_from_travel_time(raw: pd.Series) -> pd.Series:
     if pd.api.types.is_timedelta64_dtype(raw):
         return raw.dt.total_seconds() / 60.0
     return pd.to_numeric(raw, errors="coerce")
+
+
+def counts_from_minute_values(
+    minutes,
+    dest_ids=None,
+    origin_id=None,
+) -> dict[str, int]:
+    """Count one origin's R5 minute array. Unreachable sentinel and negatives drop out.
+
+    r5py sets travel time to 0 when from_id equals to_id. Same rule here, so the
+    count matches TravelTimeMatrix.
+    """
+    values = list(minutes)
+    if dest_ids is not None and origin_id is not None:
+        oid = str(origin_id)
+        values = [0 if str(dest_id) == oid else minute for minute, dest_id in zip(values, dest_ids)]
+    kept = []
+    for minute in values:
+        if minute is None:
+            continue
+        minute = int(minute)
+        if minute == R5_UNREACHABLE or minute < 0 or minute > 45:
+            continue
+        kept.append(minute)
+    return count_within_cutoffs(pd.Series(kept, dtype="float64"))
 
 
 def counts_from_travel_times(matrix: pd.DataFrame, origin_ids: list[str]) -> pd.DataFrame:
@@ -309,12 +336,23 @@ def try_build_r5_engine(pbf: Path, gtfs: Path) -> TravelTimeEngine:
             destinations: pd.DataFrame,
             departure: datetime,
         ) -> pd.DataFrame:
-            """One matrix for this chunk, then counts only. Pairs are discarded."""
+            """Route this chunk on one network. Count the Java minute array and discard it.
+
+            TravelTimeMatrix walks origins in one Python thread and concatenates a
+            full OD frame. DetailedItineraries already uses a thread pool of
+            ceil(cpu_count / 2) on that same JVM. Same pool here, without the frame.
+            """
+            import copy
+            import math
+            import multiprocessing
+
+            import com.conveyal.r5.analyst
+            import joblib
+
             orig = _points_for_r5(origins, "lsoa")
             dest = _points_for_r5(destinations, "dest_id")
-            tt = r5py.TravelTimeMatrix(
+            request = r5py.RegionalTask(
                 network,
-                origins=orig,
                 destinations=dest,
                 departure=departure.replace(tzinfo=None),
                 transport_modes=[
@@ -323,9 +361,25 @@ def try_build_r5_engine(pbf: Path, gtfs: Path) -> TravelTimeEngine:
                 ],
                 max_time=timedelta(minutes=45),
             )
-            counts = counts_from_travel_times(tt, orig["id"].astype(str).tolist())
-            del tt
-            return counts
+            dest_ids = dest["id"].astype(str).tolist()
+            n_jobs = max(1, math.ceil(multiprocessing.cpu_count() * 0.5))
+            logger.info("r5py origin threads={} (half of cpu_count)", n_jobs)
+
+            def _one(origin_id: str, geometry) -> dict[str, int | str]:
+                task = copy.copy(request)
+                task.origin = geometry
+                computer = com.conveyal.r5.analyst.TravelTimeComputer(task, network)
+                results = computer.computeTravelTimes()
+                minutes = results.travelTimes.getValues()[0]
+                counts = counts_from_minute_values(minutes, dest_ids, origin_id)
+                del results, minutes
+                return {"lsoa": str(origin_id), **counts}
+
+            rows = joblib.Parallel(prefer="threads", n_jobs=n_jobs)(
+                joblib.delayed(_one)(origin_id, geometry)
+                for origin_id, geometry in zip(orig["id"].astype(str), orig.geometry, strict=True)
+            )
+            return pd.DataFrame(rows)
 
     return R5Engine()
 
