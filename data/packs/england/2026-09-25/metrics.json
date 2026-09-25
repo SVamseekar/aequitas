@@ -1,0 +1,17 @@
+{
+  "pack_id": "2026-09-25",
+  "as_of": "2026-09-25",
+  "country": "england",
+  "score": 80.0,
+  "pct_400m": 79.27,
+  "evening_isolated_pct": 15.37,
+  "mean_sqi": 65.42,
+  "n_areas": null,
+  "note": "Census and deprivation vintage stay frozen. Network date is the GTFS harvest. Scores are the live warehouse until a rebuild.",
+  "gtfs_sha256": "fd428ac3bf789cfe0f202feae7aa46be1db5e1c81174ae11fb2556b70a0586c7",
+  "gtfs_bytes": 135194743,
+  "feed_start_date": "20260924",
+  "feed_end_date": "20270801",
+  "feed_version": "20260924_025039",
+  "gtfs_file": "itm_west_midlands_gtfs.zip"
+}

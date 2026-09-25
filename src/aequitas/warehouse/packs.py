@@ -12,6 +12,7 @@ is allowed to time-travel when refresh writes a new pack.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -155,6 +156,13 @@ def extract_metrics(db_path: Path, *, region: str = "all", urban_rural: str = "a
         conn.close()
 
 
+def metrics_digest(payload: dict[str, Any]) -> str:
+    """Hash of a pack's metrics, ignoring the date fields a cloned file would change."""
+    body = {k: payload[k] for k in sorted(payload) if k not in {"pack_id", "as_of"}}
+    raw = json.dumps(body, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
 def write_metrics_file(dest_dir: Path, metrics: dict[str, Any]) -> Path:
     dest_dir.mkdir(parents=True, exist_ok=True)
     path = dest_dir / "metrics.json"
@@ -176,7 +184,6 @@ def register_pack(
     """Write metrics.json (and optionally a DuckDB copy) and update the manifest."""
     country = country.strip().lower()
     dest = packs_root(root) / country / pack_id
-    dest.mkdir(parents=True, exist_ok=True)
     payload = {
         "pack_id": pack_id,
         "as_of": pack_id,
@@ -189,6 +196,24 @@ def register_pack(
         "note": note,
         **{k: v for k, v in metrics.items() if k not in {"score", "pct_400m", "n_areas"}},
     }
+    digest = metrics_digest(payload)
+    for row in list_packs(country, root):
+        if row.get("pack_id") == pack_id:
+            continue
+        existing = Path(str(row.get("metrics") or ""))
+        if not existing.is_absolute():
+            existing = packs_root(root) / country / str(row.get("pack_id")) / "metrics.json"
+        if not existing.exists():
+            continue
+        try:
+            previous = json.loads(existing.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if metrics_digest(previous) == digest:
+            raise ValueError(
+                f"Refusing {country} pack {pack_id}: metrics hash matches {row.get('pack_id')}"
+            )
+    dest.mkdir(parents=True, exist_ok=True)
     write_metrics_file(dest, payload)
     wh_path: Path | None = None
     if copy_db and warehouse is not None and warehouse.exists():
