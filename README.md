@@ -112,7 +112,29 @@ uv run aequitas netherlands
 uv run aequitas france
 ```
 
-Optional 15 / 30 / 45 minute layers require Java 17, r5py, and a Geofabrik PBF. If those are absent, Access and Reach stay empty rather than estimated.
+### Reach (15 / 30 / 45)
+
+Optional. Not installed with the default test suite.
+
+```bash
+brew install openjdk@17
+uv pip install r5py
+```
+
+r5py 1.1.7 ships an R5 jar built for Java 21 (class file 65). Java 17 cannot import it. Use the Java 21 Homebrew JDK for the run:
+
+```bash
+brew install openjdk@21
+export JAVA_HOME="$(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home"
+```
+
+Or `uv sync --extra reach`. Place a Geofabrik England PBF under `data/raw/osm/` and BODS GTFS under `data/raw/bods/` (both gitignored). Then:
+
+```bash
+uv run aequitas reach --country england --region E12000005
+```
+
+`E12000005` is the West Midlands ITL1. The API only reads the parquet. Ireland, the Netherlands, and France stay empty until that country has its own destination points and its own run. A missing JDK, r5py, PBF, GTFS, or destination file writes nothing. Access and Reach keep the empty sentence. Studio walk-to-stop stays walk-to-stop, not a 45-minute job count.
 
 ---
 

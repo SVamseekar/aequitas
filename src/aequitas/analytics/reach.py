@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -37,9 +37,10 @@ ITL1_NAMES: dict[str, str] = {
 }
 
 JAVA_HINT = (
-    "r5py needs a JDK (this machine documented Java 17). "
-    "Install: brew install openjdk@17 && uv pip install r5py. "
-    "Place a Geofabrik England/GB PBF under data/raw/osm/ and BODS GTFS under data/raw/bods/."
+    "r5py needs Java 21 (class file 65). Java 17 cannot load it. "
+    "Install: brew install openjdk@21 && uv pip install r5py, "
+    "then set JAVA_HOME to that JDK. "
+    "Place a Geofabrik England PBF under data/raw/osm/ and BODS GTFS under data/raw/bods/."
 )
 
 
@@ -62,6 +63,26 @@ class ReachConfig:
     dest_types: tuple[str, ...] = DEST_TYPES
     force: bool = False
     country: str = "england"
+
+
+def departure_from_gtfs(gtfs: Path) -> datetime | None:
+    """08:00 UTC on feed_info feed_start_date. None if the zip does not say."""
+    import csv
+    import io
+    import zipfile
+
+    if not zipfile.is_zipfile(gtfs):
+        return None
+    with zipfile.ZipFile(gtfs) as zf:
+        names = [n for n in zf.namelist() if n.endswith("feed_info.txt")]
+        if not names:
+            return None
+        text = zf.read(names[0]).decode("utf-8")
+    row = next(csv.DictReader(io.StringIO(text)), None)
+    raw = (row or {}).get("feed_start_date", "").strip()
+    if len(raw) != 8 or not raw.isdigit():
+        return None
+    return datetime(int(raw[:4]), int(raw[4:6]), int(raw[6:8]), 8, 0, tzinfo=timezone.utc)
 
 
 def count_within_cutoffs(minutes: pd.Series) -> dict[str, int]:
@@ -182,6 +203,22 @@ class StaticMinuteEngine:
         return out[out["origin_id"].isin(keep)]
 
 
+def _points_for_r5(frame: pd.DataFrame, id_column: str) -> pd.DataFrame:
+    """GeoDataFrame with an id column. r5py 1.1 routes on point geometry."""
+    import geopandas as gpd
+
+    out = frame.copy()
+    if "id" not in out.columns and id_column in out.columns:
+        out = out.rename(columns={id_column: "id"})
+    if "geometry" not in out.columns:
+        out = gpd.GeoDataFrame(
+            out,
+            geometry=gpd.points_from_xy(out["lon"], out["lat"]),
+            crs="EPSG:4326",
+        )
+    return out
+
+
 def try_build_r5_engine(pbf: Path, gtfs: Path) -> TravelTimeEngine:
     """Build a real r5py TransportNetwork wrapper. Raises with JAVA_HINT on failure."""
     try:
@@ -201,31 +238,53 @@ def try_build_r5_engine(pbf: Path, gtfs: Path) -> TravelTimeEngine:
             destinations: pd.DataFrame,
             departure: datetime,
         ) -> pd.DataFrame:
-            orig = origins.copy()
-            dest = destinations.copy()
-            if "id" not in orig.columns:
-                orig = orig.rename(columns={"lsoa": "id"})
-            if "id" not in dest.columns:
-                dest = dest.rename(columns={"dest_id": "id"})
-            computer = r5py.TravelTimeMatrixComputer(
-                network,
-                origins=orig,
-                destinations=dest,
-                departure=departure.replace(tzinfo=None),
-                transport_modes=[
-                    r5py.TransportMode.TRANSIT,
-                    r5py.TransportMode.WALK,
-                ],
-            )
-            tt = computer.compute_travel_times()
-            tt = tt.rename(
-                columns={
-                    "from_id": "origin_id",
-                    "to_id": "dest_id",
-                    "travel_time": "minutes",
-                }
-            )
-            return tt[["origin_id", "dest_id", "minutes"]]
+            orig = _points_for_r5(origins, "lsoa")
+            dest = _points_for_r5(destinations, "dest_id")
+            parts: list[pd.DataFrame] = []
+            # One chunk at a time. A full West Midlands × national jobs matrix
+            # does not fit in memory. Times above 45 minutes do not change t_15/t_30/t_45.
+            step = 20
+            for start in range(0, len(orig), step):
+                chunk = orig.iloc[start : start + step]
+                logger.info(
+                    "r5py travel times {}–{} of {}",
+                    start + 1,
+                    start + len(chunk),
+                    len(orig),
+                )
+                tt = r5py.TravelTimeMatrix(
+                    network,
+                    origins=chunk,
+                    destinations=dest,
+                    departure=departure.replace(tzinfo=None),
+                    transport_modes=[
+                        r5py.TransportMode.TRANSIT,
+                        r5py.TransportMode.WALK,
+                    ],
+                    max_time=timedelta(minutes=45),
+                )
+                slim = tt[["from_id", "to_id", "travel_time"]].copy()
+                minutes = pd.to_numeric(slim["travel_time"], errors="coerce")
+                slim = slim.loc[minutes.notna() & (minutes >= 0) & (minutes <= 45)]
+                present = set(slim["from_id"].astype(str))
+                slim = slim.rename(
+                    columns={
+                        "from_id": "origin_id",
+                        "to_id": "dest_id",
+                        "travel_time": "minutes",
+                    }
+                )
+                missing = [
+                    {"origin_id": str(oid), "dest_id": None, "minutes": pd.NA}
+                    for oid in chunk["id"].astype(str)
+                    if str(oid) not in present
+                ]
+                if missing:
+                    slim = pd.concat([slim, pd.DataFrame(missing)], ignore_index=True)
+                parts.append(slim)
+            if not parts:
+                return pd.DataFrame(columns=["origin_id", "dest_id", "minutes"])
+            return pd.concat(parts, ignore_index=True)
 
     return R5Engine()
 
@@ -239,6 +298,39 @@ def merge_reach_frames(existing: pd.DataFrame | None, incoming: pd.DataFrame) ->
     keep = existing.merge(incoming[key], on=key, how="left", indicator=True)
     keep = keep[keep["_merge"] == "left_only"].drop(columns="_merge")
     return pd.concat([keep, incoming], ignore_index=True)
+
+
+def _england_origins_from_centroids(processed_dir: Path) -> Path | None:
+    """Centroids plus the warehouse region name. No invented coordinates."""
+    centroids = processed_dir / "lsoa_centroids.parquet"
+    if not centroids.exists():
+        logger.warning("Reach skipped. Missing master_lsoa_table.parquet and lsoa_centroids.parquet")
+        return None
+    warehouse = processed_dir.parent / "aequitas.duckdb"
+    if not warehouse.exists():
+        logger.warning(
+            "Reach skipped. Centroids have no ITL1 column and {} is missing.",
+            warehouse.name,
+        )
+        return None
+    import duckdb
+
+    origins = pd.read_parquet(centroids)
+    con = duckdb.connect(str(warehouse), read_only=True)
+    try:
+        demo = con.execute("SELECT lsoa_cd AS lsoa, region FROM lsoa_demographics").df()
+    finally:
+        con.close()
+    if "lsoa_code" in origins.columns and "lsoa" not in origins.columns:
+        origins = origins.rename(columns={"lsoa_code": "lsoa"})
+    origins["lsoa"] = origins["lsoa"].astype(str)
+    demo["lsoa"] = demo["lsoa"].astype(str)
+    merged = origins.merge(demo, on="lsoa", how="left")
+    out = processed_dir / "reach" / "_origins_england.parquet"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    merged.to_parquet(out, index=False)
+    logger.info("Reach origins from centroids + warehouse region ({})", len(merged))
+    return out
 
 
 def write_reach(
@@ -258,15 +350,34 @@ def write_reach(
         if not cfg.force and cache_is_fresh(out, [p for p in (pbf, gtfs) if p]):
             logger.info("Reach cache newer than GTFS+PBF — skip (use --force to recompute)")
             return out
-        if pbf is None or gtfs is None:
+        missing: list[str] = []
+        if pbf is None:
+            missing.append("OSM PBF (data/raw/osm/*.pbf)")
+        if gtfs is None:
+            missing.append("BODS GTFS (data/raw/bods/*.zip)")
+        if missing:
             logger.warning(
-                "No OSM PBF or BODS GTFS found. Download Geofabrik England "
+                "Reach skipped. Missing: {}. Download Geofabrik England "
                 "(https://download.geofabrik.de/europe/united-kingdom/england.html) "
                 "into data/raw/osm/ (gitignored). {}",
+                "; ".join(missing),
                 JAVA_HINT,
             )
-            return out if out.exists() else None
-        engine = try_build_r5_engine(pbf, gtfs)
+            return None
+        try:
+            engine = try_build_r5_engine(pbf, gtfs)
+        except RuntimeError as exc:
+            logger.warning("Reach skipped. Missing router: {}", exc)
+            return None
+        if departure is None:
+            departure = departure_from_gtfs(gtfs)
+            if departure is None:
+                logger.warning(
+                    "Reach skipped. {} has no feed_start_date. Not inventing a service day.",
+                    gtfs.name,
+                )
+                return None
+            logger.info("Reach departure from GTFS feed_start_date {}", departure.date())
 
     origins_path = cfg.processed_dir / "master_lsoa_table.parquet"
     if cfg.country == "ireland":
@@ -281,23 +392,41 @@ def write_reach(
         alt = cfg.processed_dir / "france" / "iris_table.parquet"
         if alt.exists():
             origins_path = alt
-    if not origins_path.exists():
+    if not origins_path.exists() and cfg.country == "england":
+        origins_path = _england_origins_from_centroids(cfg.processed_dir)
+    if origins_path is None or not origins_path.exists():
         logger.warning("No origin table — cannot compute reach")
         return None
 
     origins = pd.read_parquet(origins_path)
     if "lsoa_cd" in origins.columns and "lsoa" not in origins.columns:
         origins = origins.rename(columns={"lsoa_cd": "lsoa"})
+    if "lsoa_code" in origins.columns and "lsoa" not in origins.columns:
+        origins = origins.rename(columns={"lsoa_code": "lsoa"})
     if "lsoa" not in origins.columns:
         for cand in ("sa", "sa_code", "buurt", "buurt_code", "iris", "code_iris", "area_id"):
             if cand in origins.columns:
                 origins = origins.rename(columns={cand: "lsoa"})
                 break
-    if cfg.region and cfg.region != "all" and "region_code" in origins.columns:
-        origins = origins[origins["region_code"] == cfg.region]
-        logger.info("Reach batch region={} rows={}", cfg.region, len(origins))
-    elif cfg.region and cfg.region != "all" and "rgn22cd" in origins.columns:
-        origins = origins[origins["rgn22cd"] == cfg.region]
+    if cfg.region and cfg.region != "all":
+        before = len(origins)
+        if "region_code" in origins.columns:
+            origins = origins[origins["region_code"] == cfg.region]
+        elif "rgn22cd" in origins.columns:
+            origins = origins[origins["rgn22cd"] == cfg.region]
+        elif "region" in origins.columns:
+            name = ITL1_NAMES.get(cfg.region, cfg.region)
+            origins = origins[origins["region"].isin([cfg.region, name])]
+        else:
+            logger.warning(
+                "Reach skipped. Missing region column, so {} would cover every origin. Not writing.",
+                cfg.region,
+            )
+            return None
+        logger.info("Reach batch region={} rows={} (from {})", cfg.region, len(origins), before)
+        if origins.empty:
+            logger.warning("Reach skipped. No origins for region {}.", cfg.region)
+            return None
 
     dest_frames = load_destination_frames(cfg.processed_dir, cfg.country, dest_types=cfg.dest_types)
 
