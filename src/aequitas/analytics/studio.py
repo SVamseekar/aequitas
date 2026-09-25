@@ -286,11 +286,16 @@ def _parse_gtfs_stops(text: str) -> tuple[list[StudioOp], str | None]:
 
 
 def r5py_ready(raw_dir: Path) -> tuple[bool, str]:
+    """True only when streets, GTFS, and the optional package are present.
+
+    Do not import r5py here. Importing it runs its memory parser, which
+    treats pytest's ``-m`` expression as ``--max-memory``.
+    """
+    import importlib.util
+
     pbf = _find_pbf(raw_dir)
     gtfs = _find_gtfs(raw_dir)
-    try:
-        import r5py  # noqa: F401
-    except ImportError:
+    if importlib.util.find_spec("r5py") is None:
         return False, JAVA_HINT
     if pbf is None or gtfs is None:
         return False, (

@@ -37,7 +37,7 @@ ITL1_NAMES: dict[str, str] = {
 }
 
 JAVA_HINT = (
-    "r5py 1.1 needs Java 21 (class file 65). Java 17 cannot load it. "
+    "r5py needs Java 21 (class file 65). Java 17 cannot load it. "
     "Install: brew install openjdk@21 && uv pip install r5py, "
     "then set JAVA_HOME to that JDK. "
     "Place a Geofabrik England PBF under data/raw/osm/ and BODS GTFS under data/raw/bods/."
