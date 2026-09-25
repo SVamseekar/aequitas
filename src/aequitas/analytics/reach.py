@@ -11,6 +11,9 @@ and writes nothing (never random percentages).
 from __future__ import annotations
 
 import json
+import math
+import os
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -20,7 +23,14 @@ import pandas as pd
 from loguru import logger
 
 DEST_TYPES = ("jobs", "gp", "school")
+# School first: smallest point set, so the first chunk is the timing canary.
+DEST_RUN_ORDER = ("school", "gp", "jobs")
 CUTOFFS_MIN = (15, 30, 45)
+BUFFER_KM = 40.0
+CHUNK_ORIGINS = 20
+KM_PER_DEG_LAT = 111.32
+# R5 marks a destination past max_time with this sentinel. r5py then turns it into NaN.
+R5_UNREACHABLE = (2**31) - 1
 OUTPUT_NAME = "lsoa_access_times.parquet"
 META_NAME = "lsoa_access_times.meta.json"
 
@@ -63,6 +73,8 @@ class ReachConfig:
     dest_types: tuple[str, ...] = DEST_TYPES
     force: bool = False
     country: str = "england"
+    buffer_km: float = BUFFER_KM
+    chunk_size: int = CHUNK_ORIGINS
 
 
 def departure_from_gtfs(gtfs: Path) -> datetime | None:
@@ -94,6 +106,92 @@ def count_within_cutoffs(minutes: pd.Series) -> dict[str, int]:
         "t_30": int((valid <= 30).sum()),
         "t_45": int((valid <= 45).sum()),
     }
+
+
+def _minutes_from_travel_time(raw: pd.Series) -> pd.Series:
+    if pd.api.types.is_timedelta64_dtype(raw):
+        return raw.dt.total_seconds() / 60.0
+    return pd.to_numeric(raw, errors="coerce")
+
+
+def counts_from_minute_values(
+    minutes,
+    dest_ids=None,
+    origin_id=None,
+) -> dict[str, int]:
+    """Count one origin's R5 minute array. Unreachable sentinel and negatives drop out.
+
+    r5py sets travel time to 0 when from_id equals to_id. Same rule here, so the
+    count matches TravelTimeMatrix.
+    """
+    values = list(minutes)
+    if dest_ids is not None and origin_id is not None:
+        oid = str(origin_id)
+        values = [0 if str(dest_id) == oid else minute for minute, dest_id in zip(values, dest_ids)]
+    kept = []
+    for minute in values:
+        if minute is None:
+            continue
+        minute = int(minute)
+        if minute == R5_UNREACHABLE or minute < 0 or minute > 45:
+            continue
+        kept.append(minute)
+    return count_within_cutoffs(pd.Series(kept, dtype="float64"))
+
+
+def counts_from_travel_times(matrix: pd.DataFrame, origin_ids: list[str]) -> pd.DataFrame:
+    """Reduce one chunk's OD pairs to t_15 / t_30 / t_45. Unreachable origins stay 0."""
+    if matrix.empty or "travel_time" not in matrix.columns:
+        minutes = pd.Series(dtype=float)
+        from_id = pd.Series(dtype=str)
+    else:
+        minutes = _minutes_from_travel_time(matrix["travel_time"])
+        from_id = matrix["from_id"].astype(str)
+    ok = minutes.notna() & (minutes >= 0) & (minutes <= 45)
+    slim = pd.DataFrame({"origin_id": from_id.loc[ok].values, "minutes": minutes.loc[ok].values})
+    grouped = {str(key): grp for key, grp in slim.groupby("origin_id")["minutes"]}
+    rows = [
+        {"lsoa": str(oid), **count_within_cutoffs(grouped.get(str(oid), pd.Series(dtype=float)))}
+        for oid in origin_ids
+    ]
+    return pd.DataFrame(rows)
+
+
+def clip_destinations(
+    destinations: pd.DataFrame,
+    origins: pd.DataFrame,
+    buffer_km: float,
+) -> pd.DataFrame:
+    """Keep destinations inside the origin bbox plus buffer_km. Inclusive edges stay."""
+    national = len(destinations)
+    if destinations.empty or origins.empty:
+        logger.info("dest clip buffer_km={} national={} kept=0", buffer_km, national)
+        return destinations.iloc[0:0].copy()
+    lat = pd.to_numeric(origins["lat"], errors="coerce")
+    lon = pd.to_numeric(origins["lon"], errors="coerce")
+    lat_min, lat_max = float(lat.min()), float(lat.max())
+    lon_min, lon_max = float(lon.min()), float(lon.max())
+    mid = (lat_min + lat_max) / 2.0
+    lat_pad = buffer_km / KM_PER_DEG_LAT
+    lon_scale = max(math.cos(math.radians(mid)), 0.2)
+    lon_pad = buffer_km / (KM_PER_DEG_LAT * lon_scale)
+    south, north = lat_min - lat_pad, lat_max + lat_pad
+    west, east = lon_min - lon_pad, lon_max + lon_pad
+    dlat = pd.to_numeric(destinations["lat"], errors="coerce")
+    dlon = pd.to_numeric(destinations["lon"], errors="coerce")
+    keep = dlat.between(south, north) & dlon.between(west, east)
+    clipped = destinations.loc[keep].copy()
+    logger.info(
+        "dest clip buffer_km={} national={} kept={} bbox=({:.4f},{:.4f},{:.4f},{:.4f})",
+        buffer_km,
+        national,
+        len(clipped),
+        south,
+        west,
+        north,
+        east,
+    )
+    return clipped
 
 
 def validate_reach_frame(df: pd.DataFrame, expected_lsoas: int | None = None) -> list[str]:
@@ -232,59 +330,56 @@ def try_build_r5_engine(pbf: Path, gtfs: Path) -> TravelTimeEngine:
         raise RuntimeError(f"Could not open R5 network. {JAVA_HINT} Detail: {exc}") from exc
 
     class R5Engine:
-        def travel_minutes(
+        def destination_counts(
             self,
             origins: pd.DataFrame,
             destinations: pd.DataFrame,
             departure: datetime,
         ) -> pd.DataFrame:
+            """Route this chunk on one network. Count the Java minute array and discard it.
+
+            TravelTimeMatrix walks origins in one Python thread and concatenates a
+            full OD frame. DetailedItineraries already uses a thread pool of
+            ceil(cpu_count / 2) on that same JVM. Same pool here, without the frame.
+            """
+            import copy
+            import math
+            import multiprocessing
+
+            import com.conveyal.r5.analyst
+            import joblib
+
             orig = _points_for_r5(origins, "lsoa")
             dest = _points_for_r5(destinations, "dest_id")
-            parts: list[pd.DataFrame] = []
-            # One chunk at a time. A full West Midlands × national jobs matrix
-            # does not fit in memory. Times above 45 minutes do not change t_15/t_30/t_45.
-            step = 20
-            for start in range(0, len(orig), step):
-                chunk = orig.iloc[start : start + step]
-                logger.info(
-                    "r5py travel times {}–{} of {}",
-                    start + 1,
-                    start + len(chunk),
-                    len(orig),
-                )
-                tt = r5py.TravelTimeMatrix(
-                    network,
-                    origins=chunk,
-                    destinations=dest,
-                    departure=departure.replace(tzinfo=None),
-                    transport_modes=[
-                        r5py.TransportMode.TRANSIT,
-                        r5py.TransportMode.WALK,
-                    ],
-                    max_time=timedelta(minutes=45),
-                )
-                slim = tt[["from_id", "to_id", "travel_time"]].copy()
-                minutes = pd.to_numeric(slim["travel_time"], errors="coerce")
-                slim = slim.loc[minutes.notna() & (minutes >= 0) & (minutes <= 45)]
-                present = set(slim["from_id"].astype(str))
-                slim = slim.rename(
-                    columns={
-                        "from_id": "origin_id",
-                        "to_id": "dest_id",
-                        "travel_time": "minutes",
-                    }
-                )
-                missing = [
-                    {"origin_id": str(oid), "dest_id": None, "minutes": pd.NA}
-                    for oid in chunk["id"].astype(str)
-                    if str(oid) not in present
-                ]
-                if missing:
-                    slim = pd.concat([slim, pd.DataFrame(missing)], ignore_index=True)
-                parts.append(slim)
-            if not parts:
-                return pd.DataFrame(columns=["origin_id", "dest_id", "minutes"])
-            return pd.concat(parts, ignore_index=True)
+            request = r5py.RegionalTask(
+                network,
+                destinations=dest,
+                departure=departure.replace(tzinfo=None),
+                transport_modes=[
+                    r5py.TransportMode.TRANSIT,
+                    r5py.TransportMode.WALK,
+                ],
+                max_time=timedelta(minutes=45),
+            )
+            dest_ids = dest["id"].astype(str).tolist()
+            n_jobs = max(1, math.ceil(multiprocessing.cpu_count() * 0.5))
+            logger.info("r5py origin threads={} (half of cpu_count)", n_jobs)
+
+            def _one(origin_id: str, geometry) -> dict[str, int | str]:
+                task = copy.copy(request)
+                task.origin = geometry
+                computer = com.conveyal.r5.analyst.TravelTimeComputer(task, network)
+                results = computer.computeTravelTimes()
+                minutes = results.travelTimes.getValues()[0]
+                counts = counts_from_minute_values(minutes, dest_ids, origin_id)
+                del results, minutes
+                return {"lsoa": str(origin_id), **counts}
+
+            rows = joblib.Parallel(prefer="threads", n_jobs=n_jobs)(
+                joblib.delayed(_one)(origin_id, geometry)
+                for origin_id, geometry in zip(orig["id"].astype(str), orig.geometry, strict=True)
+            )
+            return pd.DataFrame(rows)
 
     return R5Engine()
 
@@ -333,6 +428,77 @@ def _england_origins_from_centroids(processed_dir: Path) -> Path | None:
     return out
 
 
+def _done_lsoas(path: Path, dest_type: str) -> set[str]:
+    if not path.exists():
+        return set()
+    frame = pd.read_parquet(path, columns=["lsoa", "dest_type"])
+    hit = frame[frame["dest_type"].astype(str) == dest_type]
+    return set(hit["lsoa"].astype(str))
+
+
+def _reach_complete(path: Path, origin_ids: set[str], dest_types: tuple[str, ...] | list[str]) -> bool:
+    if not path.exists() or not origin_ids:
+        return False
+    frame = pd.read_parquet(path, columns=["lsoa", "dest_type"])
+    for dest in dest_types:
+        have = set(frame.loc[frame["dest_type"].astype(str) == dest, "lsoa"].astype(str))
+        if not origin_ids <= have:
+            return False
+    return True
+
+
+def _counts_for_origins(
+    origins: pd.DataFrame,
+    destinations: pd.DataFrame,
+    engine: TravelTimeEngine,
+    *,
+    dest_type: str,
+    region: str | None,
+    departure: datetime | None,
+) -> pd.DataFrame:
+    counter = getattr(engine, "destination_counts", None)
+    if counter is not None:
+        if departure is None:
+            raise RuntimeError("Reach departure is missing. Not inventing a service day.")
+        counts = counter(origins, destinations, departure)
+        counts["dest_type"] = dest_type
+        counts["region"] = region
+        return counts
+    return write_reach_from_engine(
+        origins,
+        destinations,
+        engine,
+        dest_type=dest_type,
+        region=region,
+        departure=departure,
+    )
+
+
+def checkpoint_reach(out: Path, incoming: pd.DataFrame, *, region: str | None) -> None:
+    """Merge this chunk onto the parquet and replace the file. A kill keeps earlier chunks."""
+    if incoming.empty:
+        return
+    existing = pd.read_parquet(out) if out.exists() else None
+    merged = merge_reach_frames(existing, incoming)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out.parent / f"{out.name}.tmp"
+    merged.to_parquet(tmp, index=False)
+    os.replace(tmp, out)
+    meta = {
+        "written_at": datetime.now(timezone.utc).isoformat(),
+        "region": region,
+        "rows": int(len(merged)),
+        "lsoas": int(merged["lsoa"].nunique()) if not merged.empty else 0,
+        "dest_types": sorted(merged["dest_type"].unique().tolist()) if not merged.empty else [],
+        "geographies": sorted(
+            {str(r) for r in merged["region"].dropna().unique()} if "region" in merged.columns else []
+        ),
+        "unit": "count of destinations reachable within cutoff (not Hansen)",
+        "cutoffs_min": list(CUTOFFS_MIN),
+    }
+    (out.parent / META_NAME).write_text(json.dumps(meta, indent=2), encoding="utf-8")
+
+
 def write_reach(
     cfg: ReachConfig,
     engine: TravelTimeEngine | None = None,
@@ -347,9 +513,6 @@ def write_reach(
     gtfs = _find_gtfs(cfg.raw_dir)
 
     if engine is None:
-        if not cfg.force and cache_is_fresh(out, [p for p in (pbf, gtfs) if p]):
-            logger.info("Reach cache newer than GTFS+PBF — skip (use --force to recompute)")
-            return out
         missing: list[str] = []
         if pbf is None:
             missing.append("OSM PBF (data/raw/osm/*.pbf)")
@@ -439,41 +602,88 @@ def write_reach(
         )
         return out if out.exists() else None
 
-    existing = pd.read_parquet(out) if out.exists() else None
-    frames = []
-    for dest, dest_df in dest_frames.items():
-        logger.info("Reach dest_type={} origins={} dests={}", dest, len(origins), len(dest_df))
-        frames.append(
-            write_reach_from_engine(
-                origins,
+    origin_ids = set(origins["lsoa"].astype(str))
+    if (
+        not cfg.force
+        and cache_is_fresh(out, [p for p in (pbf, gtfs) if p])
+        and _reach_complete(out, origin_ids, tuple(dest_frames))
+    ):
+        logger.info("Reach cache complete — skip (use --force to recompute)")
+        return out
+
+    ordered = [d for d in DEST_RUN_ORDER if d in dest_frames]
+    ordered += [d for d in dest_frames if d not in ordered]
+    # The bbox clip is for the router. Fixture engines ignore coordinates.
+    route_clip = hasattr(engine, "destination_counts")
+    clipped: dict[str, pd.DataFrame] = {}
+    for dest in ordered:
+        if route_clip:
+            clipped[dest] = clip_destinations(dest_frames[dest], origins, cfg.buffer_km)
+        else:
+            clipped[dest] = dest_frames[dest]
+        if clipped[dest].empty:
+            logger.warning("Reach dest_type={} kept 0 destinations after clip. Not writing zeros.", dest)
+
+    chunk = max(int(cfg.chunk_size), 1)
+    canary = False
+    school_n = len(clipped.get("school", ()))
+    jobs_n = len(clipped.get("jobs", ()))
+    for dest in ordered:
+        dest_df = clipped[dest]
+        if dest_df.empty:
+            continue
+        done = set() if cfg.force else _done_lsoas(out, dest)
+        pending = origins[~origins["lsoa"].astype(str).isin(done)].reset_index(drop=True)
+        logger.info(
+            "Reach dest_type={} pending={} skipped={} dests={}",
+            dest,
+            len(pending),
+            len(done),
+            len(dest_df),
+        )
+        start = 0
+        while start < len(pending):
+            part = pending.iloc[start : start + chunk]
+            t0 = time.perf_counter()
+            incoming = _counts_for_origins(
+                part,
                 dest_df,
                 engine,
                 dest_type=dest,
                 region=cfg.region,
                 departure=departure,
             )
-        )
-    incoming = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
-    issues = validate_reach_frame(incoming, expected_lsoas=origins["lsoa"].nunique() if not origins.empty else None)
-    for issue in issues:
-        logger.warning("Reach validation: {}", issue)
-
-    merged = merge_reach_frames(existing, incoming)
-    merged.to_parquet(out, index=False)
-    meta = {
-        "written_at": datetime.now(timezone.utc).isoformat(),
-        "region": cfg.region,
-        "rows": int(len(merged)),
-        "lsoas": int(merged["lsoa"].nunique()) if not merged.empty else 0,
-        "dest_types": sorted(merged["dest_type"].unique().tolist()) if not merged.empty else [],
-        "geographies": sorted(
-            {str(r) for r in merged["region"].dropna().unique()} if "region" in merged.columns else []
-        ),
-        "unit": "count of destinations reachable within cutoff (not Hansen)",
-        "cutoffs_min": list(CUTOFFS_MIN),
-    }
-    (out.parent / META_NAME).write_text(json.dumps(meta, indent=2), encoding="utf-8")
-    logger.info("Wrote {} ({} rows)", out, len(merged))
+            elapsed = time.perf_counter() - t0
+            sec = elapsed / max(len(part), 1)
+            logger.info(
+                "reach chunk dest={} origins={}–{} seconds={:.1f} sec_per_origin={:.2f}",
+                dest,
+                start + 1,
+                start + len(part),
+                elapsed,
+                sec,
+            )
+            issues = validate_reach_frame(incoming, expected_lsoas=len(part))
+            for issue in issues:
+                logger.warning("Reach validation: {}", issue)
+            checkpoint_reach(out, incoming, region=cfg.region)
+            start += len(part)
+            if dest == "school" and not canary and jobs_n and school_n:
+                canary = True
+                projected = sec * (jobs_n / school_n) * len(origins)
+                logger.info(
+                    "jobs projection {:.1f} h at this rate (buffer_km={} chunk={})",
+                    projected / 3600,
+                    cfg.buffer_km,
+                    chunk,
+                )
+                if projected > 8 * 3600 and chunk < 100:
+                    chunk = 100
+                    logger.warning("Widened chunk to 100 origins. max_time stays 45.")
+    if not out.exists():
+        logger.warning("Reach wrote nothing for region={}", cfg.region)
+        return None
+    logger.info("Wrote {}", out)
     return out
 
 
