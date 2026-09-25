@@ -7,6 +7,7 @@ import pytest
 
 from aequitas.analytics.reach import (
     StaticMinuteEngine,
+    clip_destinations,
     count_within_cutoffs,
     validate_reach_frame,
     write_reach_from_engine,
@@ -29,6 +30,19 @@ def test_departure_from_gtfs_uses_feed_start_date(tmp_path):
     assert dep.year == 2026 and dep.month == 9 and dep.day == 24
     assert dep.hour == 8
     assert departure_from_gtfs(tmp_path / "missing.zip") is None
+
+
+def test_clip_keeps_destination_inside_buffer_and_drops_outside():
+    origins = pd.DataFrame({"lat": [52.5, 52.5], "lon": [-1.9, -1.9]})
+    destinations = pd.DataFrame(
+        {
+            "dest_id": ["inside", "outside"],
+            "lat": [52.5, 60.0],
+            "lon": [-1.9, -1.9],
+        }
+    )
+    kept = clip_destinations(destinations, origins, buffer_km=40)
+    assert set(kept["dest_id"]) == {"inside"}
 
 
 def test_count_within_cutoffs():
