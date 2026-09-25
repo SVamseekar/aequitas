@@ -559,9 +559,14 @@ def write_reach(
 
     ordered = [d for d in DEST_RUN_ORDER if d in dest_frames]
     ordered += [d for d in dest_frames if d not in ordered]
+    # The bbox clip is for the router. Fixture engines ignore coordinates.
+    route_clip = hasattr(engine, "destination_counts")
     clipped: dict[str, pd.DataFrame] = {}
     for dest in ordered:
-        clipped[dest] = clip_destinations(dest_frames[dest], origins, cfg.buffer_km)
+        if route_clip:
+            clipped[dest] = clip_destinations(dest_frames[dest], origins, cfg.buffer_km)
+        else:
+            clipped[dest] = dest_frames[dest]
         if clipped[dest].empty:
             logger.warning("Reach dest_type={} kept 0 destinations after clip. Not writing zeros.", dest)
 
@@ -621,6 +626,9 @@ def write_reach(
                 if projected > 8 * 3600 and chunk < 100:
                     chunk = 100
                     logger.warning("Widened chunk to 100 origins. max_time stays 45.")
+    if not out.exists():
+        logger.warning("Reach wrote nothing for region={}", cfg.region)
+        return None
     logger.info("Wrote {}", out)
     return out
 
