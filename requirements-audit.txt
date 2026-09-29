@@ -2,7 +2,7 @@
 # Install with: pip install -r requirements-audit.txt
 pandas>=2.2.0
 numpy>=2.5.3
-requests>=2.31.0
+requests>=2.34.2
 shapely>=2.0.0
 geopandas>=1.0.0
 scipy>=1.13.0
