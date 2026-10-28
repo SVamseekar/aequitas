@@ -1,0 +1,17 @@
+Aequitas
+Copyright 2026 Marti Soura Vamseekar
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Trademarks
+The name "Aequitas" and associated marks are not licensed under the Apache
+License (see Section 6 of LICENSE). Forks and derived works must use a
+different name.
+
+Third-party data
+Datasets published by governments and transport operators (GTFS feeds,
+census and small-area geography, national deprivation indices) remain under
+their own licences, including the Open Government Licence (OGL) and the Open
+Database Licence (ODbL) where those apply. The Apache License covers this
+repository's code and documentation only; it does not relicense those
+datasets.
