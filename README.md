@@ -196,7 +196,7 @@ To add a country: implement ingest for GTFS, small-area geography, and that coun
 - [CONTRIBUTING.md](CONTRIBUTING.md) — local setup, `uv` / `./scripts/dev.sh`, test markers, commit style.
 - [SECURITY.md](SECURITY.md) — private reports to martisoura@gmail.com. Do not file public 0-days.
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
-- [LICENSE](LICENSE) — all rights reserved. Write before adapting the product for an authority or research programme.
+- [LICENSE](LICENSE) — Apache License 2.0. See [NOTICE](NOTICE): the Aequitas name is not licensed, and government and operator datasets keep their own licences (OGL, ODbL).
 
 Support: [GitHub Issues](https://github.com/SVamseekar/aequitas/issues). Method work lives on [issue #17](https://github.com/SVamseekar/aequitas/issues/17).
 

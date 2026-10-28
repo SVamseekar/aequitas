@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for taking an interest in Aequitas. This repository is the source for a four-country briefing product. Viewing the source does not grant a licence to reuse the product; see [LICENSE](LICENSE).
+Thank you for taking an interest in Aequitas. This repository is the source for a four-country briefing product. The code is licensed under the Apache License 2.0; see [LICENSE](LICENSE) and [NOTICE](NOTICE). By contributing, you agree that your contributions are licensed under the same terms.
 
 ## Support and method work
 
