@@ -1,9 +1,11 @@
 """Score API serialisation and compare labels stay English."""
 
+from fastapi.testclient import TestClient
+
 from aequitas.analytics.score import compute_score
 
 
-def test_score_payload_schema():
+def test_score_payload_schema() -> None:
     payload = compute_score(
         {
             "pop_within_400m": 0.9,
@@ -22,10 +24,14 @@ def test_score_payload_schema():
     assert len(payload["components"]) == 4
 
 
-def test_score_endpoint_on_client(api_client):
+def test_score_endpoint_on_client(api_client: TestClient) -> None:
     resp = api_client.get("/api/score?region=all&urban_rural=all")
     assert resp.status_code == 200
     body = resp.json()
     assert "score" in body
     assert "components" in body
     assert "filter" in body
+    assert body['coverage_basis'] == 'area_share'
+    assert 'rather than population-weighted' in body['coverage_note']
+    coverage = next(c for c in body['components'] if c['id'] == 'pop_within_400m')
+    assert coverage['label'] == 'Share of LSOAs with a non-zero access score'

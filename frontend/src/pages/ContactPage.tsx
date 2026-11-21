@@ -75,39 +75,15 @@ export default function ContactPage() {
         Work with us
       </p>
       <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-4">
-        Schedule a conversation
+        Commission a briefing
       </h1>
       <p className="text-[var(--l-slate)] max-w-xl mb-10 text-pretty">
         Tell us the country, the official sources you already publish, and the decision the
         briefing has to support. We tailor the pack. Ranks stay in-country.
       </p>
 
-      <ul className="grid sm:grid-cols-2 gap-x-8 gap-y-4 mb-12 max-w-2xl text-sm">
-        <li>
-          <p className="font-semibold text-[var(--l-ink)]">A country pack</p>
-          <p className="text-[var(--l-slate)] mt-1">
-            Your network feed, your small areas, your deprivation index.
-          </p>
-        </li>
-        <li>
-          <p className="font-semibold text-[var(--l-ink)]">A method adaptation</p>
-          <p className="text-[var(--l-slate)] mt-1">
-            Appraisal rule, destinations, real-time rollup, local statute titles.
-          </p>
-        </li>
-        <li>
-          <p className="font-semibold text-[var(--l-ink)]">A single-authority briefing</p>
-          <p className="text-[var(--l-slate)] mt-1">
-            One filter, the same doors, exhibits you can quote.
-          </p>
-        </li>
-        <li>
-          <p className="font-semibold text-[var(--l-ink)]">Research</p>
-          <p className="text-[var(--l-slate)] mt-1">
-            Dated packs and empty cells that stay empty. Email {SUPPORT_EMAIL}.
-          </p>
-        </li>
-      </ul>
+      <div className="public-contact-layout">
+
 
       <section>
         <h2 className="text-lg font-semibold text-[var(--l-ink)] mb-5">Contact</h2>
@@ -117,7 +93,7 @@ export default function ContactPage() {
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5 max-w-xl">
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-5">
               <label className="block">
                 <span className="text-sm font-medium text-[var(--l-ink)] mb-1.5 block">Name</span>
                 <input required type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
@@ -178,12 +154,41 @@ export default function ContactPage() {
                   <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> Sending…
                 </>
               ) : (
-                "Send"
+                "Send enquiry"
               )}
             </button>
           </form>
         )}
       </section>
+      <aside className="public-contact-aside"><h2>What you receive</h2><p>Briefings are tailored to your country and policy questions.</p>
+      <ul className="public-contact-deliverables">
+        <li>
+          <p className="font-semibold text-[var(--l-ink)]">A country pack</p>
+          <p className="text-[var(--l-slate)] mt-1">
+            Your network feed, your small areas, your deprivation index.
+          </p>
+        </li>
+        <li>
+          <p className="font-semibold text-[var(--l-ink)]">A method adaptation</p>
+          <p className="text-[var(--l-slate)] mt-1">
+            Appraisal rule, destinations, real-time rollup, local statute titles.
+          </p>
+        </li>
+        <li>
+          <p className="font-semibold text-[var(--l-ink)]">A single-authority briefing</p>
+          <p className="text-[var(--l-slate)] mt-1">
+            One filter, the same doors, exhibits you can quote.
+          </p>
+        </li>
+        <li>
+          <p className="font-semibold text-[var(--l-ink)]">Research</p>
+          <p className="text-[var(--l-slate)] mt-1">
+            Dated packs and empty cells that stay empty. Email {SUPPORT_EMAIL}.
+          </p>
+        </li>
+      </ul>
+<p>Your enquiry stays separate from your analytical workspace. <a href="/privacy">Read the privacy policy</a>.</p></aside>
+      </div>
     </BriefingLayout>
   )
 }

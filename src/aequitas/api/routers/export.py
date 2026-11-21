@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 from io import BytesIO
+from typing import Annotated
 
 import duckdb
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -14,6 +15,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 
 from aequitas.api.auth.dependencies import require_session
 from aequitas.api.deps import country_warehouse, get_db
+from aequitas.api.services.reach_scope import current_reach_scope
 from aequitas.api.services.warehouse import DIMENSION_PREFIXES, query_sections
 
 router = APIRouter(tags=["export"])
@@ -91,7 +93,22 @@ def _pack_country_or_404(country: str) -> str:
     return key
 
 
-@router.get("/export/pack.csv")
+@router.get("/export/pack.json", dependencies=[Depends(current_reach_scope)])
+def review_research_pack(
+    db: Annotated[duckdb.DuckDBPyConnection | None, Depends(country_warehouse)],
+    region: str = Query("all"),
+    urban_rural: str = Query("all"),
+    dest_type: str = Query("jobs", pattern="^(jobs|gp|school)$"),
+    cutoff: int = Query(45),
+    country: str = Query("england"),
+) -> dict:
+    from aequitas.api.services.export_pack import pack_payload
+
+    return pack_payload(db, region=region, urban_rural=urban_rural,
+                        dest_type=dest_type, cutoff=cutoff, country=_pack_country_or_404(country))
+
+
+@router.get("/export/pack.csv", dependencies=[Depends(current_reach_scope)])
 def export_research_pack_csv(
     region: str = Query("all"),
     urban_rural: str = Query("all"),
@@ -127,7 +144,7 @@ def export_research_pack_csv(
     )
 
 
-@router.get("/export/pack.html")
+@router.get("/export/pack.html", dependencies=[Depends(current_reach_scope)])
 def export_research_pack_html(
     region: str = Query("all"),
     urban_rural: str = Query("all"),
@@ -170,8 +187,17 @@ async def export_dimension_pdf(
     urban_rural: str = Query("all"),
     db: duckdb.DuckDBPyConnection | None = Depends(get_db),
     session: dict = Depends(require_session),
+    country: str = Query("england"),
+    pack: str | None = Query(None),
+    as_of: str | None = Query(None),
+    mode: str = Query("bus"),
 ) -> StreamingResponse:
     """Generate a PDF report for a dimension + filter combination."""
+    if country not in {"england", "ireland", "netherlands", "france"}:
+        raise HTTPException(404, "Unknown country. No PDF country fallback is available.")
+    if country != "england" or mode != "bus":
+        raise HTTPException(400, "Dimension PDF exports support the current England bus network only.")
+    current_reach_scope(country=country, pack=pack, as_of=as_of)
     if dimension not in DIMENSION_PREFIXES:
         raise HTTPException(400, f"Unknown dimension: {dimension}")
     sections: list[dict] = []

@@ -4,10 +4,11 @@ import { Helmet } from "react-helmet-async"
 import { useAuth } from "@/contexts/AuthContext"
 import { Header } from "./Header"
 import { TabBar } from "./TabBar"
-import { MetricsTicker } from "./MetricsTicker"
-import { Footer } from "./Footer"
+import {SourceFooter} from './SourceFooter'
 import { ChatFAB } from "../chat/ChatFAB"
 import { ChatDrawer } from "../chat/ChatDrawer"
+import { AssistantContext } from '@/lib/assistantContext'
+import {useFilters} from '@/api/hooks'
 
 class ShellErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state: { error: Error | null } = { error: null }
@@ -31,18 +32,21 @@ class ShellErrorBoundary extends Component<{ children: ReactNode }, { error: Err
 
 export function AppShell() {
   const [chatOpen, setChatOpen] = useState(false)
-  const { user } = useAuth()
+  const { user, activeTenant } = useAuth()
+  const {country,region,urbanRural,pack,mode}=useFilters()
   const isDevSession = user?.email === "dev@localhost"
 
   return (
+    <AssistantContext.Provider value={() => setChatOpen(true)}>
     <div
-      className="app-atmosphere flex flex-col min-h-screen text-foreground"
-      style={{ minHeight: "100vh", backgroundColor: "#f4f0e8", color: "#141311" }}
+      className="app-redesign min-h-screen text-foreground"
     >
       <Helmet>
         <meta name="robots" content="noindex, nofollow" />
         <meta name="theme-color" content="#F4F0E8" />
       </Helmet>
+      <TabBar />
+      <div className='app-workspace'>
       {isDevSession && (
         <p className="bg-amber-100 text-amber-950 text-xs text-center py-1.5 px-3">
           Dev session — Google sign-in is bypassed locally.
@@ -51,20 +55,17 @@ export function AppShell() {
       <ShellErrorBoundary>
         <Header />
       </ShellErrorBoundary>
-      <ShellErrorBoundary>
-        <MetricsTicker />
-      </ShellErrorBoundary>
-      <ShellErrorBoundary>
-        <TabBar />
-      </ShellErrorBoundary>
-      <main className="mx-auto max-w-7xl px-4 py-6 w-full flex-1">
+      <a href='#main-content' className='app-skip-link'>Skip to content</a>
+      <main id='main-content' className="app-content">
         <ShellErrorBoundary>
           <Outlet />
         </ShellErrorBoundary>
       </main>
-      <Footer />
+      <SourceFooter />
       <ChatFAB onClick={() => setChatOpen(true)} />
-      <ChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
+      <ChatDrawer key={`${user?.id??'anonymous'}:${activeTenant?.id??'none'}:${country}:${region}:${urbanRural}:${pack}:${mode}`} open={chatOpen} onClose={() => setChatOpen(false)} />
+      </div>
     </div>
+    </AssistantContext.Provider>
   )
 }

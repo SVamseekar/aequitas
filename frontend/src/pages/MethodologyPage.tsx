@@ -61,7 +61,7 @@ export default function MethodologyPage() {
         Method · {AUTHOR_NAME}
       </p>
       <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-3">
-        How it is computed
+        How Aequitas is computed
       </h1>
       <p className="text-[var(--l-slate)] max-w-2xl leading-relaxed mb-8 text-pretty">
         The warehouse is a dated lookup. These pages describe the method. The engine runs
@@ -76,18 +76,9 @@ export default function MethodologyPage() {
         ))}
       </nav>
 
-      <div className="grid lg:grid-cols-2 gap-8 items-center mb-14">
-        <img
-          src="/landing/method.jpg"
-          alt="Maps, a clock, and a network sketch on a desk"
-          width={1600}
-          height={1000}
-          className="rounded-2xl w-full aspect-[16/10] object-cover"
-        />
-        <p className="text-[var(--l-slate)] leading-relaxed text-pretty">
-          One claim per section. The stack table is the source of truth for names and scores.
-        </p>
-      </div>
+      <section className='public-country-section' aria-labelledby='score-method-heading'><h2 id='score-method-heading'>The four-component score</h2><p>If a component is unavailable, it is dropped and the remaining weights are renormalised.</p><div className='public-country-grid'>
+        {[['Coverage', '40%', 'Ireland, Netherlands and France: share of people within 400 m of a stop. England’s legacy input is the share of LSOAs with a non-zero access score, rather than population-weighted coverage.'], ['Evening service', '25%', 'Share of areas with service after 19:00 on a typical weekday.'], ['Weekday service quality', '20%', 'Mean service quality, scaled to 0–1.'], ['Service equity', '15%', 'One minus the absolute deprivation–service correlation.']].map(([title,weight,meaning]) => <article key={title} className='public-topic-group'><h3>{title}</h3><p className='text-4xl text-primary my-4'>{weight}</p><p className='text-sm text-muted-foreground'>{meaning}</p></article>)}
+      </div></section>
 
       <ol className="space-y-10 mb-14 max-w-2xl">
         {SECTIONS.map((section) => (

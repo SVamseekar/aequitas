@@ -1,376 +1,86 @@
-import { useEffect, useMemo, useRef, useState } from "react"
-import { Link, useSearchParams } from "react-router"
-import { useFilters } from "@/api/hooks"
-import { apiPost, fetchJson } from "@/api/client"
-import { AREA_TYPES, COUNTRIES, regionsForCountry } from "@/lib/constants"
-import { appPath, withSearch } from "@/lib/appRoutes"
-import { filterSentence } from "@/lib/scoreFormat"
-import { isLondonRural } from "@/lib/uniqueExhibits"
-import StudioEditorMap, { type DrawnOp } from "@/components/studio/StudioEditorMap"
-import StudioResultMap from "@/components/studio/StudioResultMap"
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router'
+import { useFilters, usePackDates } from '@/api/hooks'
+import { AREA_TYPES, COUNTRIES, regionsForCountry } from '@/lib/constants'
+import { appPath, withSearch } from '@/lib/appRoutes'
+import { isLondonRural } from '@/lib/uniqueExhibits'
+import { downloadStudioPatch, operationLabel, studioViews, studioViewNames, type StudioOp, type StudioPatch, type StudioView } from '@/lib/studio'
+import { useStudioRun } from '@/hooks/useStudioRun'
+import { BriefingActions } from '@/components/shared/BriefingActions'
+import StudioEditorMap from '@/components/studio/StudioEditorMap'
+import StudioUpload from '@/components/studio/StudioUpload'
+import StudioJobStages from '@/components/studio/StudioJobStages'
+import StudioResults from '@/components/studio/StudioResults'
+import StudioExport from '@/components/studio/StudioExport'
+import StudioOperationDetails from '@/components/studio/StudioOperationDetails'
 
-export interface StudioOp {
-  op: "add_stop" | "remove_stop" | "add_trips" | "frequency_uplift"
-  lat?: number
-  lon?: number
-  name?: string
-  factor?: number
-  extra_trips?: number
-  line?: number[][]
-  source?: "drawn" | "upload"
-}
-
-interface JobSnapshot {
-  id: string
-  status: string
-  error?: string | null
-  result?: StudioResult | null
-}
-
-interface StudioResult {
-  ok: boolean
-  mode: string
-  note: string
-  patch: { country: string; region: string; urban_rural: string; ops: StudioOp[]; source: string }
-  score_before: number | null
-  score_after: number | null
-  people_gained: number
-  people_lost: number
-  n_areas: number
-  deciles: { imd_decile: number; people_gained: number; people_lost: number }[]
-  areas: {
-    area: string
-    name?: string
-    lat?: number
-    lon?: number
-    pop: number
-    imd_decile: number | null
-    covered_before: boolean
-    covered_after: boolean
-    delta_people: number
-  }[]
-  reach_available: boolean
-  needs_r5py: boolean
-  narrative: string
-  default_region_note?: string | null
-}
-
-const LAST_PATCH_KEY = "aequitas.studio.lastPatch"
+export type { StudioOp } from '@/lib/studio'
 
 export default function StudioPage() {
-  const { country, region, urbanRural } = useFilters()
-  const [params] = useSearchParams()
-  const countryName = COUNTRIES.find((c) => c.code === country)?.name ?? country
-  const regionName = regionsForCountry(country).find((r) => r.code === region)?.name ?? region
-  const areaName = AREA_TYPES.find((a) => a.code === urbanRural)?.name ?? urbanRural
-  const place = filterSentence(regionName, areaName)
+  const { country, region, urbanRural, pack, mode } = useFilters()
+  // Context changes cancel observation and restore only that context's draft.
+  const contextKey = JSON.stringify([country, region, urbanRural, pack, mode])
+  return <StudioWorkspace key={contextKey} country={country} region={region} urbanRural={urbanRural} pack={pack} contextKey={contextKey} />
+}
 
-  const [ops, setOps] = useState<StudioOp[]>([])
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const [job, setJob] = useState<JobSnapshot | null>(null)
-  const [result, setResult] = useState<StudioResult | null>(null)
-  const [applyError, setApplyError] = useState<string | null>(null)
-  const [narrow, setNarrow] = useState(false)
-  const [clickWarn, setClickWarn] = useState<string | null>(null)
-  const [mapMode, setMapMode] = useState<"baseline" | "after" | "difference">("difference")
-  const pollRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    if (typeof window.matchMedia !== "function") return
-    const mq = window.matchMedia("(max-width: 420px)")
-    const apply = () => setNarrow(mq.matches)
-    apply()
-    mq.addEventListener("change", apply)
-    return () => mq.removeEventListener("change", apply)
-  }, [])
-
-  useEffect(() => {
+interface Props { country: string; region: string; urbanRural: string; pack: string; contextKey: string }
+function StudioWorkspace({ country, region, urbanRural, pack, contextKey }: Props) {
+  const [params, setParams] = useSearchParams()
+  const rawView = params.get('view')
+  const view: StudioView = studioViews.includes(rawView as StudioView) ? rawView as StudioView : 'edit'
+  const storageKey = `aequitas.studio.patch.v2:${contextKey}`
+  const [ops, setOps] = useState<StudioOp[]>(() => {
     try {
-      const raw = localStorage.getItem(LAST_PATCH_KEY)
-      if (!raw) return
-      const parsed = JSON.parse(raw) as { ops?: StudioOp[] }
-      if (Array.isArray(parsed.ops) && parsed.ops.length) setOps(parsed.ops)
-    } catch {
-      /* ignore */
-    }
-  }, [])
-
+      const parsed = JSON.parse(window.localStorage.getItem(storageKey) ?? 'null') as StudioPatch | null
+      return parsed?.country === country && parsed.region === region && parsed.urban_rural === urbanRural && Array.isArray(parsed.ops) ? parsed.ops : []
+    } catch { return [] }
+  })
+  const [warning, setWarning] = useState<string | null>(null)
+  const [factor, setFactor] = useState('1.5')
+  const [extraTrips, setExtraTrips] = useState('4')
+  const run = useStudioRun()
+  const packs = usePackDates()
+  const countryPacks = packs.data?.[country as keyof NonNullable<typeof packs.data>]
+  const currentDate = countryPacks && 'dates' in countryPacks ? countryPacks.dates?.find(item => item.current) : undefined
+  const currentNetwork = !pack || ['current', 'latest'].includes(pack.toLowerCase()) || Boolean(currentDate && [currentDate.pack_id, currentDate.as_of].includes(pack))
+  const patch: StudioPatch = { country, region, urban_rural: urbanRural, ops, source: ops.some(op => op.source === 'upload') ? 'upload' : 'drawn' }
   useEffect(() => {
-    try {
-      localStorage.setItem(LAST_PATCH_KEY, JSON.stringify({ ops }))
-    } catch {
-      /* ignore */
-    }
-  }, [ops])
-
-  useEffect(() => {
-    return () => {
-      if (pollRef.current) window.clearInterval(pollRef.current)
-    }
-  }, [])
-
-  const packReady = COUNTRIES.find((c) => c.code === country)?.packReady ?? false
-  if (!packReady) {
-    return (
-      <div className="py-8 max-w-xl">
-        <h1 className="text-2xl font-semibold mb-2">Studio</h1>
-        <p className="text-sm text-muted-foreground">
-          The {countryName} pack is not built yet. Studio computes on England and Ireland.
-        </p>
+    try { window.localStorage.setItem(storageKey, JSON.stringify({ country, region, urban_rural: urbanRural, ops })) } catch { /* Draft remains editable when storage is unavailable. */ }
+  }, [storageKey, country, region, urbanRural, ops])
+  const selectView = (next: StudioView) => {
+    const search = new URLSearchParams(params)
+    search.set('view', next)
+    setParams(search)
+  }
+  const updateOps = (next: StudioOp[]) => {
+    if (run.running) return
+    run.reset(); setOps(next)
+  }
+  const apply = () => { selectView('job'); void run.start(patch, pack) }
+  const countryName = COUNTRIES.find(item => item.code === country)?.name ?? country
+  const regionName = regionsForCountry(country).find(item => item.code === region)?.name ?? region
+  const areaName = AREA_TYPES.find(item => item.code === urbanRural)?.name ?? urbanRural
+  const unavailable = !['england', 'ireland'].includes(country) ? `Studio calculations are not available for ${countryName} yet. You can edit and export a draft.` : !currentNetwork ? 'Studio calculates against the current warehouse only. Select the current network to run this patch.' : null
+  if (isLondonRural(region, urbanRural)) return <p className='py-8 text-sm'>London has no rural LSOAs under the official urban/rural classification — this filter is empty.</p>
+  const displayedPatch = run.submitted ?? patch
+  return <div className='studio-page pb-10'>
+    <div className='studio-heading'><div><h1>Studio — {view === 'edit' ? 'Edit network' : studioViewNames[view]}</h1><p>{countryName} · {regionName} · {areaName}</p></div><div className='flex gap-2'><BriefingActions /><button type='button' className='app-primary-button' onClick={() => selectView('export')}>Export briefing</button></div></div>
+    <nav className='studio-view-tabs' aria-label='Studio views'>{studioViews.map(item => <Link key={item} aria-current={view === item ? 'page' : undefined} to={{ search: (() => { const search = new URLSearchParams(params); search.set('view', item); return `?${search}` })() }}>{studioViewNames[item]}</Link>)}</nav>
+    {unavailable ? <p className='studio-notice mb-4'>{unavailable}</p> : null}
+    {run.running ? <p role='status' className='studio-notice mb-4'>Calculation in progress. Submitted operations are frozen. Changing country or filters opens a separate draft.</p> : null}
+    {view === 'edit' ? <>
+      <div className='studio-editor-layout'>
+        <aside className='app-panel' data-testid='studio-patch-list'><h2>Operations</h2><p className='mt-2'>Draft edits ({ops.length}) · impacts not calculated</p><ol className='studio-operation-list'>{ops.map((op, index) => <li key={index}><p>{operationLabel(op)}</p><button type='button' className='app-text-link' disabled={run.running} aria-label={`Remove operation ${index + 1}`} onClick={() => updateOps(ops.filter((_, i) => i !== index))}>Remove</button></li>)}</ol>{!ops.length ? <p className='mt-4'>No operations yet — draw a stop or upload a file.</p> : null}<button type='button' className='app-panel-button mt-4' onClick={() => selectView('upload')}>Upload a file</button></aside>
+        <section className='app-panel studio-canvas-panel'><fieldset disabled={run.running}><legend className='sr-only'>Network editing tools</legend><StudioEditorMap country={country} region={region} ops={ops} onAdd={op => updateOps([...ops, { ...op, source: 'drawn' }])} onDelete={index => updateOps(ops.filter((_, i) => i !== index))} onOutsideFilter={message => setWarning(message || null)} onFrequency={() => document.getElementById("studio-frequency-factor")?.focus()} /></fieldset><p className='mt-3'>Draft stop and corridor edits · WGS84 coordinates. Stop proximity is not travel time.</p></section>
       </div>
-    )
-  }
-
-  if (isLondonRural(region, urbanRural)) {
-    return (
-      <p className="text-sm text-muted-foreground py-8 max-w-xl">
-        London has no rural LSOAs under the official urban/rural classification — this filter is empty.
-      </p>
-    )
-  }
-
-  const addDrawn = (drawn: DrawnOp) => {
-    setOps((prev) => [...prev, { ...drawn, source: "drawn" }])
-  }
-
-  const onUpload = async (file: File) => {
-    setUploadError(null)
-    const text = await file.text()
-    try {
-      const parsed = await apiPost<{ ok: boolean; error: string | null; ops: StudioOp[] }>(
-        "/studio/parse",
-        { text, filename: file.name },
-      )
-      if (!parsed.ok) {
-        setUploadError(parsed.error ?? "That file could not be read.")
-        return
-      }
-      setOps((prev) => [...prev, ...parsed.ops.map((o) => ({ ...o, source: "upload" as const }))])
-    } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "That file could not be read.")
-    }
-  }
-
-  const apply = async () => {
-    setApplyError(null)
-    setResult(null)
-    try {
-      const created = await apiPost<JobSnapshot>("/studio/jobs", {
-        country,
-        region,
-        urban_rural: urbanRural,
-        ops,
-        source: ops.some((o) => o.source === "upload") ? "upload" : "drawn",
-      })
-      setJob(created)
-      if (created.status === "done" && created.result) {
-        setResult(created.result)
-        return
-      }
-      if (pollRef.current) window.clearInterval(pollRef.current)
-      pollRef.current = window.setInterval(async () => {
-        const st = await fetchJson<JobSnapshot>(`/studio/jobs/${created.id}`)
-        setJob(st)
-        if (st.status === "done") {
-          const body = await fetchJson<StudioResult>(`/studio/jobs/${created.id}/result`)
-          setResult(body)
-          if (pollRef.current) window.clearInterval(pollRef.current)
-        }
-        if (st.status === "error") {
-          setApplyError(st.error ?? "Studio job failed.")
-          if (pollRef.current) window.clearInterval(pollRef.current)
-        }
-      }, 1200)
-    } catch (err) {
-      setApplyError(err instanceof Error ? err.message : "Could not start the studio job.")
-    }
-  }
-
-  const downloadPatch = () => {
-    const blob = new Blob(
-      [JSON.stringify({ country, region, urban_rural: urbanRural, ops, source: "drawn" }, null, 2)],
-      { type: "application/json" },
-    )
-    const a = document.createElement("a")
-    a.href = URL.createObjectURL(blob)
-    a.download = "studio-patch.json"
-    a.click()
-  }
-
-  const downloadCsv = () => {
-    if (!job?.id) return
-    window.location.href = `/api/studio/jobs/${job.id}/winners.csv`
-  }
-
-  const patchSummary = useMemo(
-    () =>
-      ops.map((o, i) => {
-        if (o.op === "add_stop") return `${i + 1}. Add stop ${o.name ?? ""} ${o.lat?.toFixed(3)}, ${o.lon?.toFixed(3)}`
-        if (o.op === "remove_stop") return `${i + 1}. Remove stop ${o.lat?.toFixed(3)}, ${o.lon?.toFixed(3)}`
-        if (o.op === "frequency_uplift") return `${i + 1}. Frequency ×${o.factor ?? "?"} / +${o.extra_trips ?? 0} trips`
-        return `${i + 1}. New corridor (${o.line?.length ?? 0} vertices)`
-      }),
-    [ops],
-  )
-
-  return (
-    <div className="pb-10">
-      <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-1">Studio — {place}</h1>
-      <p className="text-sm text-muted-foreground mb-4 max-w-2xl">
-        Draw or upload a stop or corridor. Who gains is walk-to-stop (400 m) unless r5py and a PBF
-        are on this machine. Frequency and new corridors are not multiplied by a made-up factor.
-      </p>
-
-      {narrow ? (
-        <p className="text-sm text-muted-foreground mb-4">
-          Use a wider screen to draw on the map. You can still upload a CSV or GeoJSON.
-        </p>
-      ) : null}
-
-      {!narrow ? (
-        <StudioEditorMap
-          country={country}
-          ops={ops}
-          region={region}
-          onAdd={addDrawn}
-          onDelete={(index) => setOps((prev) => prev.filter((_, i) => i !== index))}
-          onOutsideFilter={(msg) => setClickWarn(msg || null)}
-        />
-      ) : null}
-      {clickWarn ? <p className="text-sm text-destructive mt-2">{clickWarn}</p> : null}
-
-      <div className="mt-4 flex flex-wrap gap-3 items-center">
-        <label className="text-sm border border-border rounded-lg px-3 py-2 cursor-pointer">
-          Upload GTFS / GeoJSON / CSV
-          <input
-            type="file"
-            accept=".csv,.txt,.geojson,.json,.zip,text/csv,application/geo+json"
-            className="sr-only"
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) void onUpload(f)
-            }}
-          />
-        </label>
-        <button
-          type="button"
-          className="text-sm border border-border rounded-lg px-3 py-2"
-          onClick={() =>
-            setOps((prev) => [...prev, { op: "frequency_uplift", factor: 1.5, extra_trips: 4 }])
-          }
-        >
-          Add frequency uplift (needs r5py)
-        </button>
-        <button type="button" className="text-sm text-muted-foreground underline" onClick={() => setOps([])}>
-          Clear patch
-        </button>
-      </div>
-      {uploadError ? <p className="text-sm text-destructive mt-2">{uploadError}</p> : null}
-
-      <div className="mt-4 app-glass rounded-2xl p-4" data-testid="studio-patch-list">
-        <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground mb-2">
-          Patch ({ops.length})
-        </p>
-        {ops.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No operations yet — draw a stop or upload a file.</p>
-        ) : (
-          <ul className="text-sm space-y-1">
-            {patchSummary.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-3">
-        <button
-          type="button"
-          disabled={ops.length === 0 || job?.status === "running"}
-          onClick={() => void apply()}
-          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
-        >
-          {job?.status === "running" ? "Applying… (poll, not a silent spinner)" : "Apply patch"}
-        </button>
-        <button type="button" className="text-sm underline" onClick={downloadPatch} disabled={ops.length === 0}>
-          Download patch JSON
-        </button>
-        <button type="button" className="text-sm underline" onClick={downloadCsv} disabled={!result}>
-          Download winners/losers CSV
-        </button>
-        {job?.id ? (
-          <a
-            className="text-sm underline"
-            href={`/api/export/pack.csv?region=${encodeURIComponent(region)}&urban_rural=${encodeURIComponent(urbanRural)}&studio_job=${encodeURIComponent(job.id)}`}
-          >
-            Download briefing pack (CSV)
-          </a>
-        ) : null}
-        <Link className="text-sm text-muted-foreground underline" to={withSearch(appPath(country, "scenarios"), params.toString())}>
-          Listed scenarios still live here
-        </Link>
-      </div>
-      {applyError ? <p className="text-sm text-destructive mt-2">{applyError}</p> : null}
-
-      {result ? (
-        <div className="mt-8" data-testid="studio-result">
-          <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground">
-            Before / after score
-          </p>
-          <p className="text-4xl font-bold tabular-nums">
-            {result.score_before == null ? "—" : result.score_before.toFixed(1)} →{" "}
-            {result.score_after == null ? "—" : result.score_after.toFixed(1)}
-          </p>
-          <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{result.note}</p>
-          {result.default_region_note ? (
-            <p className="text-sm text-muted-foreground mt-1">{result.default_region_note}</p>
-          ) : null}
-          {result.narrative ? <p className="text-sm mt-3 max-w-2xl">{result.narrative}</p> : null}
-          <p className="text-sm mt-3">
-            {result.people_gained.toLocaleString("en-GB")} people newly within 400 m;{" "}
-            {result.people_lost.toLocaleString("en-GB")} lose that walk.
-            {result.reach_available
-              ? " Reach parquet exists — 15/30/45 is only shown when r5py actually recomputed it."
-              : " No reach parquet — 15/30/45 job counts are not shown."}
-          </p>
-
-          {result.deciles.length > 0 ? (
-            <table className="mt-4 text-sm w-full max-w-lg">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="py-1">IMD decile (England ranks)</th>
-                  <th>People gained</th>
-                  <th>People lost</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.deciles.map((d) => (
-                  <tr key={d.imd_decile}>
-                    <td className="py-1">{d.imd_decile}</td>
-                    <td>{d.people_gained.toLocaleString("en-GB")}</td>
-                    <td>{d.people_lost.toLocaleString("en-GB")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-sm text-muted-foreground mt-3">No decile who-gains for this run.</p>
-          )}
-
-          <div className="mt-4 flex gap-2 text-sm">
-            {(["baseline", "after", "difference"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                className={`px-3 py-1 rounded-full border ${mapMode === m ? "border-primary text-primary" : "border-border"}`}
-                onClick={() => setMapMode(m)}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-          <StudioResultMap result={result} mode={mapMode} ops={ops} />
-        </div>
-      ) : null}
-    </div>
-  )
+      <div className='app-panel studio-frequency mt-4'><h2>Frequency uplift</h2><label>Factor<input type='number' id='studio-frequency-factor' min='0.01' step='0.1' value={factor} disabled={run.running} onChange={event => setFactor(event.target.value)} /></label><label>Extra trips<input type='number' min='0' step='1' value={extraTrips} disabled={run.running} onChange={event => setExtraTrips(event.target.value)} /></label><button type='button' className='app-panel-button' disabled={run.running || !factor || !extraTrips || !Number.isFinite(Number(factor)) || Number(factor) <= 0 || !Number.isInteger(Number(extraTrips)) || Number(extraTrips) < 0} onClick={() => updateOps([...ops, { op: 'frequency_uplift', factor: Number(factor), extra_trips: Number(extraTrips), source: 'drawn' }])}>Add frequency uplift (needs r5py)</button><p>Frequency and corridor travel-time impacts are unavailable until a routing calculation supports them.</p></div>
+      <StudioOperationDetails ops={ops} disabled={run.running} onChange={updateOps} />
+      {warning ? <p role='alert' className='studio-notice mt-3'>{warning}</p> : null}
+    </> : null}
+    {view === 'upload' ? <StudioUpload patch={patch} disabled={run.running} onAdd={added => { updateOps([...ops, ...added]); selectView('edit') }} /> : null}
+    {view === 'job' ? <StudioJobStages job={run.job} submitted={run.submitted} starting={run.starting} error={run.error} onRetryStatus={run.retryStatus} onRetry={() => { if (run.submitted) void run.start(run.submitted, pack) }} /> : null}
+    {view === 'results' || view === 'gains' ? <StudioResults result={run.result} patch={displayedPatch} gains={view === 'gains'} /> : null}
+    {view === 'export' ? <StudioExport patch={displayedPatch} job={run.job} result={run.result} pack={pack || currentDate?.as_of || ''} currentNetwork={currentNetwork} /> : null}
+    {view !== 'export' ? <div className='studio-actions mt-4'><button type='button' className='app-primary-button' disabled={!ops.length || run.running || Boolean(unavailable)} onClick={apply}>{run.running ? 'Calculating…' : 'Apply patch'}</button><button type='button' className='app-panel-button' disabled={!ops.length || run.running} onClick={() => updateOps([])}>Clear patch</button><button type='button' className='app-text-link' disabled={!ops.length} onClick={() => downloadStudioPatch(patch)}>Download patch JSON</button>{run.result ? <button type='button' className='app-panel-button' onClick={() => selectView('results')}>View completed run</button> : null}<Link className='app-text-link' to={withSearch(appPath(country, 'scenarios'), params.toString())}>Listed scenarios</Link></div> : null}
+  </div>
 }

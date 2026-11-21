@@ -1,149 +1,48 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { useEffect, useMemo, useRef } from 'react'
+import * as Plot from '@observablehq/plot'
+import { useChartWidth } from '@/hooks/useChartWidth'
 
-interface GaugeBand {
-  label: string
-  min: number
-  max: number | null
-  color_hint: string
-}
+interface Band { label:string; min:number; max:number|null; color_hint:string }
+interface Marker { label:string; value:number }
+const finite=(value:unknown):value is number=>typeof value==='number'&&Number.isFinite(value)
+const COLORS:Record<string,string>={red:'#e6b2a6',orange:'#efc38f',yellow:'#eadc91',green:'#a7c6a3',blue:'#94b8d1'}
 
-interface GaugeMarker {
-  label: string
-  value: number
-}
-
-interface Props {
-  chartData: Record<string, unknown>
-}
-
-const COLOR_MAP: Record<string, string> = {
-  red: "bg-red-200 dark:bg-red-900/50",
-  orange: "bg-orange-200 dark:bg-orange-900/50",
-  yellow: "bg-yellow-200 dark:bg-yellow-900/50",
-  green: "bg-green-200 dark:bg-green-900/50",
-  blue: "bg-blue-200 dark:bg-blue-900/50",
-}
-
-/** Open-ended bands (max: null) are drawn out to this multiple of their min. */
-const OPEN_BAND_EXTENT_FACTOR = 1.5
-
-/**
- * Resolve the numeric scale max, expanding open-ended bands and marker values.
- *
- * Assumes open-ended bands (max: null) have min > 0 — a band with min == 0
- * would collapse `min * OPEN_BAND_EXTENT_FACTOR` to 0.
- */
-function resolveScaleMax(bands: GaugeBand[], markers: GaugeMarker[]): number {
-  const bandMax = bands.map((b) => b.max ?? b.min * OPEN_BAND_EXTENT_FACTOR)
-  const markerMax = markers.map((m) => m.value)
-  return Math.max(...bandMax, ...markerMax, 1)
-}
-
-/** Convert a data value to a left-offset percentage along the gauge track. */
-function toPercent(value: number, scaleMax: number): number {
-  return Math.min(100, Math.max(0, (value / scaleMax) * 100))
-}
-
-/**
- * Renders a horizontal banded gauge: colored threshold zones, marker pins for
- * each value, and optional reference lines (e.g. BCR break-even at 1.0).
- *
- * Used for headline "is this good or bad" metrics (j2_bcr VfM bands,
- * bsa2_operator_concentration HHI bands) where the value's position relative
- * to standard thresholds is the policy question.
- */
-export default function GaugeChart({ chartData }: Props) {
-  const bands = (chartData.bands ?? []) as GaugeBand[]
-  let markers = (chartData.markers ?? []) as GaugeMarker[]
-  const rawValue = chartData.value
-  if (
-    markers.length === 0 &&
-    typeof rawValue === "number" &&
-    Number.isFinite(rawValue)
-  ) {
-    markers = [{ label: "HHI", value: rawValue }]
-  }
-  const referenceLines = (chartData.reference_lines ?? []) as number[]
-  const title = chartData.title as string | undefined
-  const unit = chartData.unit as string | undefined
-
-  if (bands.length === 0 || markers.length === 0) {
-    return <p className="text-muted-foreground text-sm">No data available</p>
-  }
-
-  const scaleMax = resolveScaleMax(bands, markers)
-
-  return (
-    <div role="img" aria-label={title ?? "Threshold gauge"}>
-      {title && <p className="text-sm font-medium text-foreground mb-2">{title}</p>}
-      <TooltipProvider>
-        <div className="relative h-6 w-full rounded overflow-hidden border border-border flex">
-          {bands.map((band) => {
-            const start = toPercent(band.min, scaleMax)
-            const end = toPercent(band.max ?? scaleMax, scaleMax)
-            return (
-              <Tooltip key={band.label}>
-                <TooltipTrigger
-                  render={
-                    <div
-                      className={`${COLOR_MAP[band.color_hint] ?? "bg-muted"} h-full`}
-                      style={{ width: `${end - start}%` }}
-                    />
-                  }
-                />
-                <TooltipContent>
-                  {band.label}: {band.min}{band.max !== null ? `-${band.max}` : "+"}
-                </TooltipContent>
-              </Tooltip>
-            )
-          })}
-          {referenceLines.map((ref) => (
-            <div
-              key={`ref-${ref}`}
-              data-testid="gauge-reference-line"
-              className="absolute top-0 h-full w-px bg-foreground/60"
-              style={{ left: `${toPercent(ref, scaleMax)}%` }}
-            />
-          ))}
-          {markers.map((marker) => (
-            <Tooltip key={marker.label}>
-              <TooltipTrigger
-                render={
-                  <div
-                    className="absolute top-0 h-full w-0.5 bg-foreground"
-                    style={{ left: `${toPercent(marker.value, scaleMax)}%` }}
-                  />
-                }
-              />
-              <TooltipContent>
-                {marker.label}: {marker.value} {unit ?? ""}
-              </TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
-      </TooltipProvider>
-      <div className="flex justify-between text-xs text-muted-foreground mt-1">
-        {bands.map((band) => (
-          <span key={band.label}>{band.label}</span>
-        ))}
-      </div>
-      <ul className="mt-3 space-y-1 text-sm">
-        {markers.map((marker) => (
-          <li key={marker.label} className="flex justify-between">
-            <span className="text-foreground">{marker.label}</span>
-            <span className="text-muted-foreground">
-              {typeof marker.value === "number"
-                ? `${Math.round(marker.value).toLocaleString("en-GB")} ${unit ?? ""}`.trim()
-                : `${marker.value} ${unit ?? ""}`}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
+/** Thresholds describe the supplied model. Open-ended bands remain explicitly open-ended. */
+export default function GaugeChart({chartData}:{chartData:Record<string,unknown>}) {
+  const container=useRef<HTMLDivElement>(null),target=useRef<HTMLDivElement>(null)
+  const width=useChartWidth(container,700)
+  const bands=useMemo(()=>((chartData.bands??[]) as Band[]).filter(row=>finite(row.min)&&(row.max===null||finite(row.max)&&row.max>row.min)),[chartData])
+  const unit=typeof chartData.unit==='string'?chartData.unit:''
+  const ring=chartData.variant==='ring'
+  const hhi=unit.includes('HHI')||unit.includes('10,000')
+  const markers=useMemo(()=>{
+    const supplied=((chartData.markers??[]) as Marker[]).filter(row=>finite(row.value))
+    return supplied.length?supplied:finite(chartData.value)?[{label:hhi?'HHI':'Selected value',value:chartData.value}]:[]
+  },[chartData,hhi])
+  const references=useMemo(()=>((chartData.reference_lines??[]) as unknown[]).filter(finite),[chartData])
+  const maximum=hhi?10000:Math.max(5,...bands.map(row=>row.max??row.min+1),...markers.map(row=>row.value))
+  useEffect(()=>{
+    if(!target.current)return
+    if(ring&&markers.length===1){
+      const arc=(fraction:number)=>{const length=Math.max(2,Math.ceil(fraction*360)+1);return Array.from({length},(_,i)=>{const angle=-Math.PI/2+2*Math.PI*fraction*i/(length-1);return {x:Math.cos(angle),y:-Math.sin(angle)}})}
+      const marker=markers[0],fraction=Math.max(0,Math.min(1,marker.value/maximum))
+      const plot=Plot.plot({width:Math.min(width,250),height:160,margin:12,x:{axis:null,domain:[-1.4,1.4]},y:{axis:null,domain:[-1.4,1.4]},marks:[Plot.line(arc(1),{x:'x',y:'y',stroke:'#e7e4df',strokeWidth:13}),...(fraction>0?[Plot.line(arc(fraction),{x:'x',y:'y',stroke:'#759d73',strokeWidth:13})]:[]),Plot.text([{x:0,y:.1,label:marker.value.toLocaleString('en-GB',{maximumFractionDigits:1})}],{x:'x',y:'y',text:'label',fontSize:26,fontWeight:650}),Plot.text([{x:0,y:-.32,label:`/ ${maximum.toLocaleString('en-GB')}`}],{x:'x',y:'y',text:'label',fontSize:11,fill:'#625d55'})]})
+      target.current.replaceChildren(plot);return()=>plot.remove()
+    }
+    if(!bands.length||!markers.length){target.current.replaceChildren();return}
+    const plot=Plot.plot({width,height:155,marginLeft:20,marginRight:20,marginTop:35,marginBottom:45,
+      x:{label:hhi?'HHI (0–10,000)':unit||'Model value',domain:[0,maximum],ticks:hhi?(width<400?[0,5000,10000]:[0,2500,5000,7500,10000]):width<500?4:6},y:{axis:null,domain:[0,1.8]},
+      marks:[Plot.rect(bands,{x1:'min',x2:row=>row.max??maximum,y1:0,y2:1,fill:row=>COLORS[row.color_hint]??'#dedbd6',tip:true,title:row=>`${row.label}: ${row.min}${row.max===null?'+':`–${row.max}`}`}),
+        Plot.ruleX(references,{y1:0,y2:1,stroke:'#555',strokeDasharray:'3,3',ariaLabel:'Reference thresholds'}),
+        Plot.ruleX(markers,{x:'value',y1:0,y2:1.25,stroke:'#222',strokeWidth:2}),
+        Plot.dot(markers,{x:'value',y:0.5,fill:'#222',r:4,tip:true,title:row=>`${row.label}: ${row.value} ${unit}`})]})
+    target.current.replaceChildren(plot)
+    return()=>plot.remove()
+  },[bands,markers,references,maximum,width,unit,hhi,ring])
+  return <div ref={container}>
+    {bands.length&&markers.length?<><div ref={target} role='img' aria-label={typeof chartData.title==='string'?chartData.title:'Threshold gauge'} />{typeof chartData.title==='string'&&<p className='sr-only'>{chartData.title}</p>}
+      <div className={ring?'gauge-ring-labels':'gauge-band-labels'}>{(ring?bands.filter(row=>markers.length===1&&markers[0].value>=row.min&&(row.max===null||markers[0].value<row.max)):bands).map(row=><span key={row.label}>{row.label}<small>{row.min}{row.max===null?'+':`–${row.max}`}</small></span>)}</div>
+      <dl className={ring?'sr-only':'network-summary'}>{markers.map(row=><div key={row.label}><dt>{row.label}</dt><dd>{row.value.toLocaleString('en-GB',{maximumFractionDigits:hhi?1:4})} {unit}</dd></div>)}</dl>
+    </>:<p className='text-muted-foreground text-sm'>No data available</p>}
+  </div>
 }

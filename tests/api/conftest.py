@@ -1,9 +1,22 @@
+from collections.abc import Iterator
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
 
+@pytest.fixture(autouse=True)
+def isolated_search_indexes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep every API fixture, including custom clients, off user-owned RAG indexes."""
+    monkeypatch.setenv("AEQUITAS_FAISS_INDEX", str(tmp_path / "england.faiss"))
+    monkeypatch.setenv("AEQUITAS_FAISS_METADATA", str(tmp_path / "england.json"))
+    for country in ("IE", "NL", "FR"):
+        monkeypatch.setenv(f"AEQUITAS_{country}_FAISS_INDEX", str(tmp_path / f"{country}.faiss"))
+        monkeypatch.setenv(f"AEQUITAS_{country}_FAISS_METADATA", str(tmp_path / f"{country}.json"))
+
+
 @pytest.fixture
-def api_client(tmp_path, monkeypatch):
+def api_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     """Create a test client with a temporary DuckDB."""
     import duckdb
 
@@ -46,6 +59,7 @@ def api_client(tmp_path, monkeypatch):
     monkeypatch.setenv("DEV_AUTH_BYPASS", "true")
 
     from aequitas.api.app import create_app
+
     app = create_app()
     with TestClient(app) as client:
         yield client

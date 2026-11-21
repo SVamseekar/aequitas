@@ -5,7 +5,7 @@ import "maplibre-gl/dist/maplibre-gl.css"
 interface AreaDatum {
   area_code: string
   area_name: string
-  value: number
+  value: number | null
   hover?: string
 }
 
@@ -18,12 +18,12 @@ interface Props {
   chartData: Record<string, unknown>
   onAreaClick?: (areaCode: string) => void
   className?: string
+  onStatus?: (status:'ready'|'unavailable')=>void
 }
 
-const CARTO_POSITRON =
-  "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png"
+const OSM_RASTER = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 
-function computeBounds(featureCollection: GeoJSON.FeatureCollection): maplibregl.LngLatBoundsLike | null {
+function computeBounds(featureCollection: GeoJSON.FeatureCollection): [[number, number], [number, number]] | null {
   let minLng = Infinity
   let minLat = Infinity
   let maxLng = -Infinity
@@ -51,18 +51,20 @@ function computeBounds(featureCollection: GeoJSON.FeatureCollection): maplibregl
   return [[minLng, minLat], [maxLng, maxLat]]
 }
 
-function formatHoverValue(value: number | undefined, metricLabel: string): string {
-  if (value === undefined || Number.isNaN(value)) return "—"
+function formatHoverValue(value: number | null | undefined, metricLabel: string): string {
+  if (value == null || !Number.isFinite(value)) return "—"
   const compact = value.toLocaleString("en-GB", { maximumFractionDigits: value >= 100 ? 0 : 1 })
   if (metricLabel.includes("%")) return `${compact}%`
   return compact
 }
 
-export default function ChoroplethMap({ chartData, onAreaClick, className }: Props) {
+export default function ChoroplethMap({ chartData, onAreaClick, className,onStatus }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const clickRef = useRef(onAreaClick)
   clickRef.current = onAreaClick
+  const statusRef=useRef(onStatus)
+  statusRef.current=onStatus
   const chartDataKey = useMemo(() => JSON.stringify(chartData), [chartData])
   const [mapUnavailable, setMapUnavailable] = useState(false)
   const [svgMarkup, setSvgMarkup] = useState<string | null>(null)
@@ -73,23 +75,24 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
     if (!data.length) {
       setMapUnavailable(true)
       setSvgMarkup(null)
+      statusRef.current?.('unavailable')
       return
     }
     setMapUnavailable(false)
     setSvgMarkup(null)
     const container = ref.current
 
-    const values = new Map<string, number>()
+    const values = new Map<string, number | null>()
     const names = new Map<string, string>()
     const hovers = new Map<string, string | undefined>()
     for (const d of data) {
       for (const key of choroplethLookupKeys(d.area_code, d.area_name)) {
-        values.set(key, d.value)
+        values.set(key, typeof d.value === 'number' && Number.isFinite(d.value) ? d.value : null)
         names.set(key, d.area_name)
         hovers.set(key, d.hover)
       }
     }
-    const maxVal = data.length > 0 ? Math.max(...data.map((d) => d.value), 1) : 1
+    const maxVal = Math.max(1, ...data.flatMap(d => typeof d.value === 'number' && Number.isFinite(d.value) ? [d.value] : []))
     const colorMode = (chartData.color_mode as string | undefined) ?? "continuous"
 
     const inferredIreland = looksLikeIrelandCounties(data)
@@ -135,18 +138,21 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
           ? ["LAD22NM", "lad22nm"]
           : ["RGN22NM", "rgn22nm"]
 
-    fetch(boundaryFile)
+    const request = new AbortController()
+    let disposed = false
+    fetch(boundaryFile, { signal: request.signal })
       .then((r) => {
         if (!r.ok) throw new Error(`Failed to load boundaries: HTTP ${r.status}`)
         return r.json()
       })
       .then((geojson: { features: GeoJsonFeature[] }) => {
+        if (disposed) return
         const matched: GeoJsonFeature[] = []
         for (const f of geojson.features) {
           const code = firstProp(f.properties, codeKeys)
           const valueKey = lookupChoroplethValue(values, f.properties, codeKeys)
           if (valueKey !== undefined) {
-            f.properties["value"] = values.get(valueKey) ?? 0
+            f.properties["value"] = values.get(valueKey) ?? null
             f.properties["area_name"] =
               names.get(valueKey) ?? firstProp(f.properties, nameKeys) ?? valueKey
             f.properties["area_code"] = valueKey
@@ -156,7 +162,7 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
             const insee = String(f.properties["code"] ?? "")
             const slug = FR_INSEE_TO_SLUG[insee] ?? frBoundarySlug(String(firstProp(f.properties, nameKeys) ?? ""))
             const vk = [...choroplethLookupKeys(slug)].find((k) => values.has(k))
-            f.properties["value"] = vk !== undefined ? (values.get(vk) ?? 0) : 0
+            f.properties["value"] = vk !== undefined ? values.get(vk) : null
             f.properties["area_name"] = firstProp(f.properties, nameKeys) ?? slug
             f.properties["area_code"] = slug
             matched.push(f)
@@ -167,7 +173,7 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
             geography !== "france_region" &&
             regionAllowsOutline(chartData)
           ) {
-            f.properties["value"] = 0
+            f.properties["value"] = null
             f.properties["area_name"] = firstProp(f.properties, nameKeys)
             f.properties["area_code"] = code
             matched.push(f)
@@ -177,17 +183,23 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
         if (matched.length === 0) {
           setMapUnavailable(true)
           setSvgMarkup(null)
+          statusRef.current?.('unavailable')
           return
         }
         const paintSvg = () => {
           setSvgMarkup(
-            svgFromFeatures(matched as GeoJSON.Feature[], maxVal, colorMode),
+            svgFromFeatures(matched as GeoJSON.Feature[], maxVal, colorMode, Boolean(clickRef.current)),
           )
           setMapUnavailable(false)
+          statusRef.current?.('ready')
         }
         // Paint local polygons first so MapLibre abort / late tiles never leave
         // a blank CARTO frame. GL is an enhancement, not the only paint path.
         paintSvg()
+        const bounds = computeBounds(geojson as GeoJSON.FeatureCollection)
+        // The Irish county asset uses projected metres. Its real polygons can
+        // render in the local SVG path, but cannot be sent to MapLibre as degrees.
+        if(bounds?.some(([x,y])=>Math.abs(x)>180||Math.abs(y)>90))return
         if (
           geography === "ireland_county" ||
           geography === "netherlands_provincie" ||
@@ -196,7 +208,7 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
           geography === "lad"
         ) {
           // SVG is the briefing exhibit. Skip GL — ERR_ABORTED left blank maps.
-          return
+          if (colorMode !== 'coverage' && colorMode !== 'desert_rate') return
         }
 
         const style: StyleSpecification = {
@@ -204,9 +216,9 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
           sources: {
             carto: {
               type: "raster",
-              tiles: [CARTO_POSITRON],
+              tiles: [OSM_RASTER],
               tileSize: 256,
-              attribution: "© OpenStreetMap contributors © CARTO",
+              attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
             },
             regions: {
               type: "geojson",
@@ -231,7 +243,11 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
               source: "regions",
               paint: {
                 "fill-color":
-                  colorMode === "band"
+                  colorMode === 'coverage'
+                    ? ['case', ['==', ['get', 'value'], null], '#d9d7d2', ['step', ['get', 'value'], '#c6602d', 60, '#e5ae69', 75, '#dfd7a2', 85, '#9eb17f', 95, '#64885d']]
+                    : colorMode === 'desert_rate'
+                    ? ['case', ['==', ['get', 'value'], null], '#d9d7d2', ['step', ['get', 'value'], '#64885d', 10, '#9eb17f', 20, '#dfd7a2', 40, '#e5ae69', 60, '#c6602d', 80, '#8f2d18']]
+                    : colorMode === "band"
                     ? [
                         "match",
                         ["coalesce", ["get", "value"], 0],
@@ -252,19 +268,17 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
                         maxVal * 0.75, "#8b3a1a",
                         maxVal, "#4a1c0c",
                       ],
-                "fill-opacity": 0.78,
+                "fill-opacity": colorMode === 'coverage' ? 1 : 0.78,
               },
             },
             {
               id: "regions-outline",
               type: "line",
               source: "regions",
-              paint: { "line-color": "#2a2118", "line-width": 0.8 },
+              paint: { "line-color": colorMode === 'coverage' ? '#ffffff' : '#2a2118', "line-width": 1.2 },
             },
           ],
         }
-
-        const bounds = computeBounds(geojson as GeoJSON.FeatureCollection)
 
         let map: maplibregl.Map
         try {
@@ -307,6 +321,10 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
         })
 
         map.on("load", () => {
+          if (colorMode === 'coverage' || colorMode === 'desert_rate') {
+            setSvgMarkup(null)
+            if (typeof map.addControl === 'function') map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left')
+          }
           map.on("mousemove", "regions-fill", (e) => {
             if (!e.features || e.features.length === 0) return
             const props = e.features[0].properties as Record<string, unknown>
@@ -340,11 +358,15 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
         mapRef.current = map
       })
       .catch(() => {
+        if (disposed) return
         setMapUnavailable(true)
         setSvgMarkup(null)
+        statusRef.current?.('unavailable')
       })
 
     return () => {
+      disposed = true
+      request.abort()
       mapRef.current?.remove()
       mapRef.current = null
     }
@@ -352,7 +374,7 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
   }, [chartDataKey])
 
   return (
-    <div className={`relative min-h-[280px] h-[min(62vh,520px)] rounded-md overflow-hidden ${className ?? ""}`}>
+    <div data-map-state={mapUnavailable?'unavailable':svgMarkup||mapRef.current?'ready':'loading'} className={`relative min-h-[280px] h-[min(62vh,520px)] rounded-md overflow-hidden ${className ?? ""}`}>
       <div
         ref={ref}
         className="h-full w-full"
@@ -363,6 +385,15 @@ export default function ChoroplethMap({ chartData, onAreaClick, className }: Pro
         <div
           className="absolute inset-0 bg-[#e8e4dc]"
           data-testid="choropleth-svg-fallback"
+          onClick={event => {
+            const area = (event.target as Element).closest('[data-area-code]')?.getAttribute('data-area-code')
+            if (area) clickRef.current?.(area)
+          }}
+          onKeyDown={event => {
+            if (event.key !== 'Enter' && event.key !== ' ') return
+            const area = (event.target as Element).closest('[data-area-code]')?.getAttribute('data-area-code')
+            if (area) { event.preventDefault(); clickRef.current?.(area) }
+          }}
           dangerouslySetInnerHTML={{ __html: svgMarkup }}
         />
       )}
@@ -475,7 +506,7 @@ function choroplethLookupKeys(areaCode: string, areaName?: string): string[] {
 }
 
 function lookupChoroplethValue(
-  values: Map<string, number>,
+  values: Map<string, number | null>,
   props: Record<string, unknown>,
   codeKeys: string[],
 ): string | undefined {
@@ -552,6 +583,7 @@ function svgFromFeatures(
   features: GeoJSON.Feature[],
   maxVal: number,
   colorMode: string,
+  interactive: boolean,
 ): string {
   let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity
   const walk = (coords: unknown): void => {
@@ -577,12 +609,35 @@ function svgFromFeatures(
     const y = pad + ((maxLat - lat) / dy) * (h - pad * 2)
     return [x, y]
   }
-  const color = (value: number): string => {
+  const color = (value: number | null): string => {
+    if (value === null) return '#d9d7d2'
+    if (colorMode === 'desert_rate') {
+      if (value < 10) return '#64885d'
+      if (value < 20) return '#9eb17f'
+      if (value < 40) return '#dfd7a2'
+      if (value < 60) return '#e5ae69'
+      if (value < 80) return '#c6602d'
+      return '#8f2d18'
+    }
+    if (colorMode === 'coverage') {
+      if (value < 60) return '#c6602d'
+      if (value < 75) return '#e5ae69'
+      if (value < 85) return '#dfd7a2'
+      if (value < 95) return '#9eb17f'
+      return '#64885d'
+    }
     if (colorMode === "band") {
       const bands: Record<number, string> = {
         1: "#4a1c0c", 2: "#8b3a1a", 3: "#c45c26", 4: "#e8b86d", 5: "#c5d4a8", 6: "#6b8f71",
       }
       return bands[value] ?? "#d9d3c7"
+    }
+    if (colorMode === 'reach_rate') {
+      if (value < 10) return '#4f8050'
+      if (value < 20) return '#d6d38d'
+      if (value < 30) return '#efc45e'
+      if (value < 40) return '#e7923c'
+      return '#d85220'
     }
     const t = maxVal > 0 ? value / maxVal : 0
     if (t < 0.25) return "#edd3a4"
@@ -593,8 +648,11 @@ function svgFromFeatures(
   }
   const paths: string[] = []
   for (const f of features) {
-    const value = Number(f.properties?.value ?? 0)
+    const rawValue = f.properties?.value
+    const value = typeof rawValue === 'number' && Number.isFinite(rawValue) ? rawValue : null
     const name = String(f.properties?.area_name ?? "")
+    const code = String(f.properties?.area_code ?? '')
+    const description = `${name}: ${value == null ? 'Unavailable' : value.toLocaleString('en-GB', { maximumFractionDigits: 1 }) + (colorMode === 'coverage' || colorMode === 'reach_rate' || colorMode === 'desert_rate' ? '%' : '')}`
     const geom = f.geometry
     const polys: number[][][][] = []
     if (geom?.type === "Polygon") polys.push(geom.coordinates as number[][][])
@@ -603,12 +661,12 @@ function svgFromFeatures(
       .flatMap((poly) => poly.map((ring) => ringToD(ring as number[][], project)))
       .join(" ")
     paths.push(
-      `<path d="${d}" fill="${color(value)}" stroke="#2a2118" stroke-width="0.6"><title>${escapeXml(name)}: ${value.toLocaleString("en-GB")}</title></path>`,
+      `<path d="${d}" fill="${color(value)}" stroke="${colorMode === 'coverage' ? '#fff' : '#2a2118'}" stroke-width="${colorMode === 'coverage' ? '1.2' : '0.6'}" data-area-code="${escapeXml(code)}"${interactive && value != null ? ` role="button" tabindex="0" aria-label="${escapeXml(description)}"` : ''}><title>${escapeXml(description)}</title></path>`,
     )
   }
-  return `<svg viewBox="0 0 ${w} ${h}" class="h-full w-full" role="img" aria-label="County choropleth">${paths.join("")}</svg>`
+  return `<svg viewBox="0 0 ${w} ${h}" class="h-full w-full" role="${interactive ? 'group' : 'img'}" aria-label="Regional choropleth">${paths.join("")}</svg>`
 }
 
 function escapeXml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, '&quot;').replace(/'/g, '&apos;')
 }

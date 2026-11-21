@@ -8,6 +8,7 @@ from typing import Any
 import duckdb
 
 from aequitas.analytics.score import ScoreResult, compute_score, terms_from_section_stats
+
 try:
     from aequitas.ireland.constants import COUNTY_NAME_BY_SLUG
 except ImportError:
@@ -29,7 +30,26 @@ _SECTIONS = (
 )
 
 
-def _parse_stats(raw: Any) -> dict[str, Any]:
+def coverage_metadata(country: str) -> dict[str, str]:
+    """Describe the stored coverage denominator without changing score values."""
+    if country == "england":
+        return {
+            "coverage_basis": "area_share",
+            "coverage_label": "Share of LSOAs with a non-zero access score",
+            "coverage_note": (
+                "England's legacy coverage input counts LSOAs with non-zero "
+                "sfca_score_norm, rather than population-weighted coverage. "
+                "The score calculation and legacy component identifier are unchanged."
+            ),
+        }
+    return {
+        "coverage_basis": "population_share",
+        "coverage_label": "Share of people within 400 m of a stop",
+        "coverage_note": "Population-weighted stop proximity; not travel-time accessibility.",
+    }
+
+
+def _parse_stats(raw: object) -> dict[str, Any]:
     if raw is None:
         return {}
     if isinstance(raw, str):
@@ -56,7 +76,9 @@ def load_section_stats(
     params: list[Any] = [region, urban_rural]
     if "mode" in cols:
         sql += " AND mode = ?"
-        params.append((mode or "bus").strip().lower() if (mode or "bus") in {"bus", "all"} else "bus")
+        params.append(
+            (mode or "bus").strip().lower() if (mode or "bus") in {"bus", "all"} else "bus"
+        )
     rows = db.execute(sql, params).fetchall()
     return {sid: _parse_stats(stats) for sid, stats in rows}
 
@@ -97,6 +119,8 @@ def map_areas_for_filter(
     region: str = "all",
     urban_rural: str = "all",
     mode: str | None = None,
+    metric: str = "deserts",
+    country: str = "england",
 ) -> dict[str, Any]:
     """Choropleth payload: prefer people in deserts (a5), else 400 m coverage (a3)."""
     if region == "E12000007" and urban_rural == "rural":
@@ -108,8 +132,35 @@ def map_areas_for_filter(
             "empty_reason": "London has no rural LSOAs under the official classification.",
         }
 
+    coverage_label = (
+        "LSOAs with non-zero access score (%)"
+        if country == "england" else "People within 400 m of a stop (%)"
+    )
     # Prefer regional a5 people counts for the national home map.
     extra_sql, extra_params = _mode_clause(db, mode)
+    if metric == "coverage":
+        region_sql = "region != 'all'" if region == "all" else "region = ?"
+        rows = db.execute(
+            f"""SELECT region, stats FROM section_results
+                WHERE urban_rural = ? AND {region_sql}
+                AND section_id = 'a3_walking_distance' {extra_sql}""",
+            [urban_rural, *([] if region == "all" else [region]), *extra_params],
+        ).fetchall()
+        data = []
+        for rgn, stats in rows:
+            s = _parse_stats(stats)
+            pct = s.get("pct_covered")
+            if not s.get("insufficient_data") and isinstance(pct, (int, float)):
+                data.append({
+                    "area_code": rgn,
+                    "area_name": _REGION_NAMES.get(rgn, rgn),
+                    "value": float(pct),
+                })
+        return {
+            "geography": "region", "metric_label": coverage_label,
+            "data": data, "empty": not bool(data),
+            "empty_reason": None if data else "400 m coverage unavailable for this filter.",
+        }
     if region == "all":
         rows = db.execute(
             f"""
@@ -130,7 +181,11 @@ def map_areas_for_filter(
             pop = s.get("pop_affected")
             if not isinstance(pop, (int, float)):
                 continue
-            data.append({"area_code": rgn, "area_name": _REGION_NAMES.get(rgn, rgn), "value": float(pop)})
+            data.append({
+                "area_code": rgn,
+                "area_name": _REGION_NAMES.get(rgn, rgn),
+                "value": float(pop),
+            })
         if data:
             return {
                 "geography": "region",
@@ -157,12 +212,16 @@ def map_areas_for_filter(
             pct = s.get("pct_covered")
             if isinstance(pct, (int, float)):
                 data.append(
-                    {"area_code": rgn, "area_name": _REGION_NAMES.get(rgn, rgn), "value": float(pct)}
+                    {
+                        "area_code": rgn,
+                        "area_name": _REGION_NAMES.get(rgn, rgn),
+                        "value": float(pct),
+                    }
                 )
         if data:
             return {
                 "geography": "region",
-                "metric_label": "People within 400 m of a stop (%)",
+                "metric_label": coverage_label,
                 "data": data,
                 "empty": False,
                 "empty_reason": None,

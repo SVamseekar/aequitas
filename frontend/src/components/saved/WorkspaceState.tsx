@@ -1,0 +1,3 @@
+export function WorkspaceState({loading,error,retry,empty}:{loading:boolean;error:Error|null;retry:()=>void;empty?:string}) {
+ return loading?<p className='app-panel' role='status'>Loading workspace records…</p>:error?<section className='app-panel' role='alert'><h2>Workspace records could not be loaded</h2><p>{error.message==='Unauthorized'?'Your session is unavailable. Sign in again to access this workspace.':'Try again while keeping your selected workspace.'}</p><button type='button' className='app-panel-button' onClick={retry}>Retry workspace records</button></section>:empty?<section className='app-panel workspace-empty'><h2>{empty}</h2><p>Saved records appear here when you create them in this workspace.</p></section>:null
+}

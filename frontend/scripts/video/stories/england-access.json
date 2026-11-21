@@ -1,0 +1,112 @@
+{
+  "id": "england-access",
+  "research": "research/england-access.json",
+  "output": "media/aequitas-england-access-feature.mp4",
+  "audio": {
+    "music": "media/audio/england-access-music.mp3",
+    "voice": "media/audio/england-access-voice"
+  },
+  "theme": "grid",
+  "binds": {
+    "zeroAccessShare": {
+      "from": {
+        "card": "LSOAs with zero access score"
+      },
+      "pick": "percent",
+      "line": 2
+    },
+    "zeroPop": {
+      "from": {
+        "card": "Population with zero access"
+      },
+      "pick": "count",
+      "line": 2
+    },
+    "zeroLsoas": {
+      "from": {
+        "card": "Zero-access LSOAs"
+      },
+      "pick": "count",
+      "line": 2
+    },
+    "source": {
+      "from": ".app-source-footer > span",
+      "pick": "text"
+    }
+  },
+  "scenes": [
+    {
+      "type": "title",
+      "layout": "left",
+      "reveal": "rise",
+      "eyebrow": "England · Public transport access",
+      "title": "Public *transport* access",
+      "subtitle": "How access scores and coverage are shared across England small areas.",
+      "say": "Public transport access shapes daily mobility across communities. Here is what official records show."
+    },
+    {
+      "type": "stat",
+      "layout": "split",
+      "lead": "Across England, the share of small areas with zero public transport access reaches",
+      "value": "{{zeroAccessShare}}",
+      "tail": "Official access scores identify communities without scheduled service.",
+      "source": "{{source}}",
+      "say": "Across England, {{zeroAccessShare}} of small areas have zero recorded access."
+    },
+    {
+      "type": "stat",
+      "layout": "split",
+      "lead": "Across **{{zeroLsoas}} small areas**,",
+      "value": "{{zeroPop}}",
+      "tail": "Residents living in small areas with zero access score.",
+      "source": "{{source}}",
+      "say": "Covering {{zeroPop}} residents across England."
+    },
+    {
+      "type": "app",
+      "path": "/app/england/access",
+      "frame": "tilt",
+      "exit": "drop",
+      "beats": [
+        {
+          "do": "wide",
+          "caption": "Live in Aequitas: **national access coverage**",
+          "say": "Aequitas evaluates transport accessibility using official stop coordinates and census boundaries."
+        },
+        {
+          "do": "lift",
+          "target": {
+            "card": "Population with zero access"
+          },
+          "caption": "**{{zeroPop}} residents** live in small areas with zero access score",
+          "say": "A substantial population lives in small areas with a zero access score."
+        },
+        {
+          "do": "select",
+          "control": "Region",
+          "option": "East of England",
+          "caption": "Filter regional geography: **East of England**",
+          "say": "Regional breakdowns reveal pronounced disparities across England."
+        },
+        {
+          "do": "focus",
+          "target": {
+            "card": "Coverage by geography"
+          },
+          "highlight": true,
+          "caption": "Regional coverage ranges from **North East** down to **East of England**",
+          "say": "Coverage varies significantly by geography, with noticeable regional gaps."
+        }
+      ]
+    },
+    {
+      "type": "outro",
+      "eyebrow": "Aequitas · Transport analytics",
+      "title": "Official *data*. Objective evidence.",
+      "subtitle": "Explore transport access, service frequency, and equity across England.",
+      "url": "aequitas.souravamseekar.com",
+      "source": "{{source}}",
+      "say": "Aequitas. Objective transport equity briefings, built on official timetables."
+    }
+  ]
+}

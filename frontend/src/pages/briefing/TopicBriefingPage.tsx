@@ -1,12 +1,15 @@
-import { Link, useParams } from "react-router"
+import { Link, useParams, useSearchParams } from "react-router"
 import { Seo } from "@/components/shared/Seo"
 import { breadcrumbJsonLd } from "@/lib/structuredData"
 import { COUNTRY_BRIEFS, topicBySlug } from "@/lib/briefingCatalog"
-import { COUNTRY_PHOTO } from "@/lib/publicPhotos"
+import { PublicTopicEvidence } from "@/components/briefing/PublicTopicEvidence"
+import { DIMENSION_API_IDS } from "@/lib/constants"
 import { BriefingLayout } from "./BriefingLayout"
 
 export default function TopicBriefingPage({ slug: slugProp }: { slug?: string }) {
   const params = useParams()
+  const [search] = useSearchParams()
+  const country = COUNTRY_BRIEFS.find(item => item.code === search.get("country")) ?? COUNTRY_BRIEFS[0]
   const topic = topicBySlug(slugProp ?? params.slug)
   if (!topic) {
     return (
@@ -31,41 +34,20 @@ export default function TopicBriefingPage({ slug: slugProp }: { slug?: string })
         ])}
       />
       <p className="text-xs font-medium uppercase tracking-wide text-[var(--l-rust)]">
-        Four countries
+        Briefings / {topic.title}
       </p>
       <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-2 text-balance">
-        {topic.title}
+        {topic.question}
       </h1>
-      <p className="text-[var(--l-slate)] mb-8 text-pretty">{topic.question}</p>
+      <p className="public-briefing-lede">{topic.body[0]}</p>
 
-      <ul className="grid grid-cols-4 gap-2 mb-8">
-        {COUNTRY_BRIEFS.map((c) => (
-          <li key={c.code}>
-            <Link to={c.path} className="block overflow-hidden rounded-lg">
-              <img
-                src={COUNTRY_PHOTO[c.code].src}
-                alt={COUNTRY_PHOTO[c.code].alt}
-                className="aspect-[4/3] w-full object-cover"
-                width={400}
-                height={300}
-                loading="lazy"
-              />
-              <span className="sr-only">{c.name}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-
-      <ul className="space-y-3 mb-10">
-        {COUNTRY_BRIEFS.map((c) => (
-          <li key={c.code} className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3 text-sm border-b border-[var(--l-rule)] pb-3">
-            <Link to={c.path} className="font-semibold text-[var(--l-ink)]">
-              {c.name}
-            </Link>
-            <span className="text-[var(--l-slate)]">{topic.perCountry[c.code]}</span>
-          </li>
-        ))}
-      </ul>
+      <nav className="public-country-tabs" aria-label="Country evidence">{COUNTRY_BRIEFS.map(item => {
+        const next = new URLSearchParams(search); next.set('country', item.code); next.delete('exhibit')
+        return <Link key={item.code} to={{ search: `?${next}` }} aria-current={country.code === item.code ? 'page' : undefined}>{item.name}</Link>
+      })}</nav>
+      <p className="text-sm text-muted-foreground mb-6">{topic.perCountry[country.code]}</p>
+      {DIMENSION_API_IDS[topic.slug] ? <PublicTopicEvidence key={`${topic.slug}-${country.code}`} slug={topic.slug} country={country.code} /> : <section className="public-topic-evidence"><h2>{country.name}: {topic.title}</h2><p>{topic.perCountry[country.code]}</p><p>Open the selected analytical page to inspect current availability and calculation scope.</p></section>}
+      <div className="public-topic-actions"><Link className="landing-btn-primary" to={`/app/${country.code}/${topic.slug === 'appraisal' ? 'economy' : topic.slug === 'destinations' ? 'access?view=destinations' : topic.slug === 'realtime' ? 'ops' : topic.slug === 'chat' ? '' : topic.slug}`}>Open selected evidence</Link><Link className="landing-btn-secondary" to={country.path}>Read {country.name} briefing</Link></div>
 
       <Link to="/briefings" className="text-sm underline text-[var(--l-ink)]">
         All briefings

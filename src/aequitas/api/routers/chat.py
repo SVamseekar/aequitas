@@ -13,6 +13,7 @@ from aequitas.api.config import ApiConfig
 from aequitas.api.deps import get_embedding_model, get_faiss
 from aequitas.api.models.requests import ChatRequest
 from aequitas.api.services.rag import build_prompt, retrieve_chunks, stream_gemini
+from aequitas.api.services.chat_scope import current_chat_scope
 
 router = APIRouter(tags=["chat"])
 
@@ -76,8 +77,8 @@ async def chat(
     Request body uses ``query`` (not ``message`` / ``prompt``). Missing key or
     FAISS index returns HTTP 503 with a clear detail string before SSE starts.
     """
+    country = current_chat_scope(req.context or {})
     _check_rate_limit(session.get("user_id", "anon"))
-    country = str((req.context or {}).get("country") or "england").lower()
     faiss_index, faiss_metadata = get_faiss(country)
     embedding_model = get_embedding_model()
 

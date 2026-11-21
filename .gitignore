@@ -115,3 +115,11 @@ AGENTS.md
 .serena/
 docs/superpowers/
 
+# Local redesign execution memory and screenshot evidence
+CLAUDE.md
+frontend/CLAUDE.md
+.agents/
+.codex/
+design/
+implementation/
+frontend/design-evidence/

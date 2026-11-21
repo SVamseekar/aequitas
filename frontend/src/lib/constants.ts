@@ -19,10 +19,10 @@ export type CountryCode = (typeof COUNTRIES)[number]["code"]
 
 export const DIMENSIONS: DimensionDef[] = [
   { id: "equity", name: "Equity & Deprivation", route: "/equity", prefixes: ["f"], headlineSection: "f2_disparity_ratio", headlineStatKey: "ratio", description: "Lorenz, IMD decile slope, rural penalty — in-country ranks only" },
-  { id: "access", name: "Access", route: "/access", prefixes: ["a"], headlineSection: "a3_walking_distance", headlineStatKey: "pct_covered", description: "400m coverage, deserts, 15/30/45-min reach (Wave 2)" },
+  { id: "access", name: "Access", route: "/access", prefixes: ["a"], headlineSection: "a3_walking_distance", headlineStatKey: "pct_covered", description: "Stop access, service deserts, destination proximity and computed travel times" },
   { id: "service", name: "Service", route: "/service", prefixes: ["b"], headlineSection: "b1_frequency", headlineStatKey: "national_avg", description: "Frequency, evening isolation, Sunday deserts" },
   { id: "network", name: "Network", route: "/network", prefixes: ["c"], headlineSection: "c3_operator_hhi", headlineStatKey: "hhi", description: "Distributions, one HHI (0–10,000), archetypes" },
-  { id: "correlations", name: "Correlations", route: "/correlations", prefixes: ["d", "g"], headlineSection: "d1_coverage_deprivation", headlineStatKey: "r", description: "One matrix plus one deep-dive scatter" },
+  { id: "correlations", name: "Correlations", route: "/correlations", prefixes: ["d", "g"], headlineSection: "d1_coverage_deprivation", headlineStatKey: "r", description: "Relationships between small-area characteristics and scheduled service" },
   { id: "economy", name: "Economy", route: "/economy", prefixes: ["j"], headlineSection: "j3_carbon", headlineStatKey: "co2_saving_tonnes", description: "TAG/BCR/carbon — England scopes named honestly" },
   { id: "policy", name: "Policy", route: "/policy", prefixes: ["bsa"], headlineSection: "bsa1_franchising_readiness", headlineStatKey: "national_avg", description: "Bus Services Act 2025 (England). Other countries: not applicable." },
   { id: "scenarios", name: "Scenarios", route: "/scenarios", prefixes: ["ps"], headlineSection: "ps1_freq_restoration", headlineStatKey: "population_affected", description: "Listed interventions — who and £" },
@@ -148,6 +148,10 @@ export const STAT_LABELS: Record<string, string> = {
   top_agency: "Top agency",
   n_agencies: "Agencies",
   n_routes: "Routes",
+  n_with_ses: 'Buurten with SES-WOA',
+  n_without_ses: 'Missing SES-WOA scores omitted',
+  n_with_fedi: 'IRIS with F-EDI',
+  n_without_fedi: 'Missing F-EDI scores omitted',
 }
 
 export const IRELAND_STAT_LABELS: Record<string, string> = {

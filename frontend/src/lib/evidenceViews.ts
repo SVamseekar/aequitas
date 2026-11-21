@@ -1,0 +1,20 @@
+export interface EvidenceView { id: string; label: string; sections: string[]; panel?: 'facilities' | 'destinations' | 'custom' | 'table' | 'density' | 'domains' | 'assumptions' | 'policy-context' }
+const section = (id: string, label: string): EvidenceView => ({ id, label, sections: [id] })
+
+export const EVIDENCE_VIEWS: Record<string, EvidenceView[]> = {
+  equity: [section('f1_gini', 'Distribution'), section('f2_disparity_ratio', 'Deprivation'), section('f3_ethnic_access', 'Social access'), section('f5_rural_penalty', 'Rural gap'), section('f6_equitable_regions', 'Regions')],
+  accessibility: [section('a3_walking_distance', 'Stop coverage'), section('a5_service_deserts', 'Sunday deserts'), section('a6_urban_rural_gap', 'Urban / rural'), { id: 'facilities', label: 'Facilities', sections: [], panel: 'facilities' }, { id: 'destinations', label: 'Travel time', sections: [], panel: 'destinations' }, { id: 'density', label: 'Density', sections: ['a1_route_density', 'a2_stop_density'], panel: 'density' }, section('a4_coverage_equity', 'Distribution'), section('a7_investment_gap', 'Gap to target'), section('a8_coverage_prediction', 'Prediction')],
+  service_quality: [section('b1_frequency', 'Weekday quality'), section('b2_operating_hours', 'Operating hours'), section('b3_weekend_penalty', 'Sunday penalty'), section('b4_route_frequency', 'Route ranking'), section('b5_frequency_deprivation', 'Deprivation'), { id: 'table', label: 'Evidence table', sections: [], panel: 'table' }],
+  route_network: [section('c1_route_length', 'Route length'), section('c2_stops_per_route', 'Stop counts'), section('c3_operator_hhi', 'Operators'), section('c6_route_archetypes', 'Archetypes'), section('c4_urban_rural_routes', 'Route mix'), section('c5_length_vs_frequency', 'Relationships'), section('c7_network_topology', 'Topology')],
+  correlations: [{ id: 'relationships', label: 'Relationships', sections: ['d1_coverage_deprivation','d2_coverage_unemployment','d3_coverage_car','d4_coverage_elderly'] }, { id: 'domains', label: 'Domains', panel: 'domains', sections: ['d5_coverage_income','d9a_health_access','d9b_employment_access','d9c_crime_access','d9d_environment_access','d9e_barriers_access'] }, section('d6_transport_poverty', 'Poverty groups'), section('d7_deprivation_urban_rural', 'Rural deciles'), section('g3_coverage_model', 'Model fit'), { id: 'features', label: 'Feature importance', sections: ['d8_feature_importance', 'g4_shap'] }, section('g1_route_clusters', 'Route clusters'), section('g2_anomalies', 'Anomalies'), section('g5_scenario_model', 'Model scenario')],
+  economic: [section('j1_economic_value', 'Annual value'), section('j2_bcr', 'Appraisal'), section('j3_carbon', 'Carbon'), section('j4_investment_priority', 'Priorities'),{id:'assumptions',label:'Assumptions',sections:[],panel:'assumptions'}],
+  bus_services_act: [{ id: 'readiness', label: 'Readiness', sections: ['bsa1_franchising_readiness'] },{id:'operators',label:'Operators',sections:['bsa2_operator_concentration']}, section('bsa3_tier_distribution', 'Tiers'),{id:'context',label:'Country context',sections:[],panel:'policy-context'}],
+  scenarios: [section('ps1_freq_restoration', 'Frequency'), section('ps2_evening_extension', 'Evening'), section('ps3_drt_rural', 'Rural DRT'), section('ps4_franchise', 'Combined package'), section('ps5_scenario_comparison', 'Comparison'), { id: 'custom', label: 'Custom sandbox', sections: [], panel: 'custom' }],
+}
+
+export function evidenceView(dimension: string, requested: string | null, exhibit?: string|null): EvidenceView | undefined {
+  const views = EVIDENCE_VIEWS[dimension] ?? []
+  if(dimension==='correlations'&&requested==='relationships'&&/^d(5_|9)/.test(exhibit??''))return views.find(view=>view.id==='domains')
+  if(dimension==='bus_services_act'&&requested==='readiness'&&exhibit==='bsa2_operator_concentration')return views.find(view=>view.id==='operators')
+  return views.find(v => v.id === requested || v.sections.includes(requested ?? '')) ?? views[0]
+}

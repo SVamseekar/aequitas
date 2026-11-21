@@ -6,6 +6,7 @@ from aequitas.warehouse.precompute import precompute_all_sections
 from aequitas.warehouse.provenance import ProvenanceEntry, build_equity_provenance
 
 
+@pytest.mark.requires_data
 @pytest.mark.slow
 def test_precompute_produces_results():
     cfg = PipelineConfig()
@@ -56,6 +57,7 @@ def test_region_filter_matches_full_names():
     assert len(REGION_NAMES) == 9
 
 
+@pytest.mark.requires_data
 @pytest.mark.slow
 def test_region_filter_produces_nonempty_subset():
     """Filtering lsoa_policy_synthesis by ONS code (via REGION_NAMES) must match rows."""

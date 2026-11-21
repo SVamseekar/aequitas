@@ -153,3 +153,13 @@ def test_unknown_region_filled_from_same_lad():
     assert codes == ["E12000009"]
     assert payload["unmatched_people"] == 0
     assert payload["people"] == 30
+
+
+def test_mixed_classification_exposes_both_methods():
+    payload = summarise_bands(_band_rows(scheme=['travel_time', 'service', 'service']))
+    assert payload['mode'] == 'mixed'
+    assert 'mixed' in payload['narrative'].lower()
+    assert 'travel-time band' in payload['formula']
+    assert 'service band' in payload['formula']
+    assert payload['n_travel_time'] == 1
+    assert payload['n_service'] == 2

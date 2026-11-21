@@ -13,11 +13,12 @@ import io
 import json
 import math
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from loguru import logger
 
 from aequitas.analytics.reach import (
@@ -27,8 +28,6 @@ from aequitas.analytics.reach import (
     reach_output_path,
 )
 from aequitas.analytics.score import compute_score
-from jinja2 import Environment, FileSystemLoader, select_autoescape
-
 from aequitas.intelligence.engine import _TEMPLATES_DIR
 
 ALLOWED_OPS = ("add_stop", "remove_stop", "add_trips", "frequency_uplift")
@@ -37,11 +36,14 @@ ENGLAND_BBOX = (-6.5, 49.8, 2.0, 55.9)  # west, south, east, north
 try:
     from aequitas.ireland.constants import in_ireland_bbox, in_northern_ireland
 except ImportError:  # Ireland pack not on this branch
+
     def in_ireland_bbox(lat: float, lon: float) -> bool:
         return False
 
     def in_northern_ireland(lat: float, lon: float) -> bool:
         return False
+
+
 WALK_M = 400.0
 WALK_LABEL = "walk-to-stop change, not 45-minute jobs."
 
@@ -138,6 +140,8 @@ def parse_studio_patch(raw: dict[str, Any]) -> tuple[StudioPatch | None, str | N
     country = str(raw.get("country") or "").strip().lower()
     if not country:
         return None, "Patch needs a country."
+    if country not in {"england", "ireland", "netherlands", "france"}:
+        return None, "Unknown country for this Studio draft."
     region = str(raw.get("region") or "all")
     urban_rural = str(raw.get("urban_rural") or "all")
     source = str(raw.get("source") or "drawn")
@@ -153,7 +157,8 @@ def parse_studio_patch(raw: dict[str, Any]) -> tuple[StudioPatch | None, str | N
         op = str(item.get("op") or "")
         if op not in ALLOWED_OPS:
             return None, (
-                f"Unknown operation “{op}”. Use add stop, remove stop, add trips, or frequency uplift."
+                f"Unknown operation “{op}”. "
+                "Use add stop, remove stop, add trips, or frequency uplift."
             )
         lat = item.get("lat")
         lon = item.get("lon")
@@ -167,25 +172,59 @@ def parse_studio_patch(raw: dict[str, Any]) -> tuple[StudioPatch | None, str | N
                 lon = float(lon)
             except (TypeError, ValueError):
                 return None, f"Operation {i + 1} has a longitude that is not a number."
+        if (lat is not None and not math.isfinite(lat)) or (
+            lon is not None and not math.isfinite(lon)
+        ):
+            return None, f"Operation {i + 1} needs finite coordinates."
         if op in ("add_stop", "remove_stop") and lat is not None and lon is not None:
             if country == "england" and not in_england_bbox(lat, lon):
                 return None, "That point is outside England. Studio only patches the England pack."
-            if country == "ireland":
-                if in_northern_ireland(lat, lon) or not in_ireland_bbox(lat, lon):
-                    return None, (
-                        "That point is outside the Republic of Ireland. "
-                        "Studio does not apply England or Northern Ireland clicks to the Ireland pack."
-                    )
+            if country == "ireland" and (
+                in_northern_ireland(lat, lon) or not in_ireland_bbox(lat, lon)
+            ):
+                return None, (
+                    "That point is outside the Republic of Ireland. "
+                    "Studio does not apply England or Northern Ireland clicks "
+                    "to the Ireland pack."
+                )
+            bounds = {"netherlands": (3.2, 50.75, 7.22, 53.7), "france": (-5.2, 41.3, 9.7, 51.2)}
+            if country in bounds:
+                west, south, east, north = bounds[country]
+                if not (south <= lat <= north and west <= lon <= east):
+                    return None, f"Operation {i + 1} is outside the selected country."
         if op == "add_stop" and (lat is None or lon is None):
             return None, "Adding a stop needs a latitude and longitude."
+        if op == "remove_stop" and (lat is None or lon is None):
+            return None, "Removing a stop needs a latitude and longitude."
+        try:
+            factor = float(item["factor"]) if item.get("factor") is not None else None
+            extra = int(item["extra_trips"]) if item.get("extra_trips") is not None else None
+        except (TypeError, ValueError, OverflowError):
+            return None, f"Operation {i + 1} has an invalid frequency or trip count."
         if op == "frequency_uplift":
-            factor = item.get("factor")
-            extra = item.get("extra_trips")
             if factor is None and extra is None:
                 return None, "A frequency uplift needs a factor or extra trips."
+            if (factor is not None and (not math.isfinite(factor) or factor <= 0)) or (
+                extra is not None and extra < 0
+            ):
+                return None, "Frequency factor must be positive and extra trips non-negative."
         line = item.get("line")
         if line is not None and not isinstance(line, list):
             return None, "A drawn line must be a list of [longitude, latitude] pairs."
+        if op == "add_trips":
+            if not isinstance(line, list) or len(line) < 2:
+                return None, "A corridor needs at least two coordinate pairs."
+            for point in line:
+                if not isinstance(point, list) or len(point) != 2:
+                    return None, "A corridor needs [longitude, latitude] pairs."
+                _, error = parse_studio_patch(
+                    {
+                        "country": country,
+                        "ops": [{"op": "add_stop", "lon": point[0], "lat": point[1]}],
+                    }
+                )
+                if error:
+                    return None, error
         ops.append(
             StudioOp(
                 op=op,
@@ -193,8 +232,8 @@ def parse_studio_patch(raw: dict[str, Any]) -> tuple[StudioPatch | None, str | N
                 lon=lon,
                 stop_id=item.get("stop_id"),
                 name=item.get("name"),
-                factor=float(item["factor"]) if item.get("factor") is not None else None,
-                extra_trips=int(item["extra_trips"]) if item.get("extra_trips") is not None else None,
+                factor=factor,
+                extra_trips=extra,
                 line=line,
             )
         )
@@ -244,9 +283,15 @@ def _parse_geojson(text: str) -> tuple[list[StudioOp], str | None]:
                 )
             )
         elif gtype == "LineString" and isinstance(coords, list) and len(coords) >= 2:
-            ops.append(StudioOp(op="add_trips", line=[[float(c[0]), float(c[1])] for c in coords if len(c) >= 2]))
+            ops.append(
+                StudioOp(
+                    op="add_trips", line=[[float(c[0]), float(c[1])] for c in coords if len(c) >= 2]
+                )
+            )
             for c in (coords[0], coords[-1]):
-                ops.append(StudioOp(op="add_stop", lon=float(c[0]), lat=float(c[1]), name="Corridor end"))
+                ops.append(
+                    StudioOp(op="add_stop", lon=float(c[0]), lat=float(c[1]), name="Corridor end")
+                )
     if not ops:
         return [], "No points or lines found in that GeoJSON."
     return ops, None
@@ -264,7 +309,13 @@ def _parse_csv(text: str) -> tuple[list[StudioOp], str | None]:
     for row in rows:
         keys = {k.lower().strip(): v for k, v in row.items() if k}
         lat = keys.get("lat") or keys.get("latitude") or keys.get("stop_lat") or keys.get("y")
-        lon = keys.get("lon") or keys.get("lng") or keys.get("longitude") or keys.get("stop_lon") or keys.get("x")
+        lon = (
+            keys.get("lon")
+            or keys.get("lng")
+            or keys.get("longitude")
+            or keys.get("stop_lon")
+            or keys.get("x")
+        )
         if lat is None or lon is None:
             return [], "CSV needs lat and lon (or stop_lat / stop_lon) columns."
         try:
@@ -305,7 +356,9 @@ def r5py_ready(raw_dir: Path) -> tuple[bool, str]:
     return True, ""
 
 
-def _nearest_within(lat: float, lon: float, stops: list[tuple[float, float]], metres: float) -> bool:
+def _nearest_within(
+    lat: float, lon: float, stops: list[tuple[float, float]], metres: float
+) -> bool:
     return any(haversine_m(lat, lon, s[0], s[1]) <= metres for s in stops)
 
 
@@ -408,11 +461,7 @@ def walk_to_stop_delta(
     # Keep the filter's 400 m term as the before baseline (same compute_score as home).
     # After = that term plus the centroid coverage change. Never reuse a national 400 m share.
     base_400 = terms_b.get("pop_within_400m")
-    if (
-        base_400 is not None
-        and share_before is not None
-        and share_after is not None
-    ):
+    if base_400 is not None and share_before is not None and share_after is not None:
         delta_share = share_after - share_before
         terms_b["pop_within_400m"] = float(base_400)
         terms_a["pop_within_400m"] = max(0.0, min(1.0, float(base_400) + delta_share))
@@ -520,7 +569,10 @@ def apply_studio(
         return StudioResult(
             ok=False,
             mode="pack_missing",
-            note=f"The {patch.country} pack is not built yet. Studio computes on England and Ireland.",
+            note=(
+                f"Studio calculations are unavailable for {patch.country}. "
+                "Studio computes on England and Ireland."
+            ),
             patch=patch.to_dict(),
             score_before=None,
             score_after=None,
@@ -537,7 +589,10 @@ def apply_studio(
         return StudioResult(
             ok=False,
             mode="empty_filter",
-            note="London has no rural LSOAs under the official classification — this filter is empty.",
+            note=(
+                "London has no rural LSOAs under the official classification "
+                "— this filter is empty."
+            ),
             patch=patch.to_dict(),
             score_before=None,
             score_after=None,
@@ -567,7 +622,9 @@ def apply_studio(
     after_stops = _apply_stop_ops(base, patch.ops)
 
     if centroids.empty:
-        sb = compute_score(other_terms or {}, n_areas=0, region=region, urban_rural=patch.urban_rural)
+        sb = compute_score(
+            other_terms or {}, n_areas=0, region=region, urban_rural=patch.urban_rural
+        )
         return StudioResult(
             ok=True,
             mode="needs_centroids",
@@ -607,8 +664,7 @@ def apply_studio(
     if walk["people_gained"] == 0 and walk["people_lost"] == 0 and stop_ops:
         note = (
             "Every nearby LSOA already had a stop within 400 m — this point does not change "
-            "walk-to-stop coverage. Try a more isolated place. "
-            + WALK_LABEL
+            "walk-to-stop coverage. Try a more isolated place. " + WALK_LABEL
         )
     if needs_router and not ready:
         mode = "walk_to_stop_partial"
@@ -651,7 +707,7 @@ def apply_studio(
             (out_dir / f"{stamp}_meta.json").write_text(
                 json.dumps(
                     {
-                        "written_at": datetime.now(timezone.utc).isoformat(),
+                        "written_at": datetime.now(UTC).isoformat(),
                         "patch": patch.to_dict(),
                         "mode": mode,
                         "note": note,
@@ -666,7 +722,9 @@ def apply_studio(
         mode=mode,
         note=note,
         patch=patch.to_dict(),
-        score_before=None if walk["score_before"] is None else round(float(walk["score_before"]), 1),
+        score_before=None
+        if walk["score_before"] is None
+        else round(float(walk["score_before"]), 1),
         score_after=None if walk["score_after"] is None else round(float(walk["score_after"]), 1),
         people_gained=walk["people_gained"],
         people_lost=walk["people_lost"],
@@ -704,7 +762,9 @@ def try_write_studio_r5(
         return None
     # Building two TransportNetworks is expensive; only when --force and dests exist.
     if not force:
-        logger.info("Studio r5py skip: pass --force to rebuild a network (can take tens of minutes)")
+        logger.info(
+            "Studio r5py skip: pass --force to rebuild a network (can take tens of minutes)"
+        )
         return None
     try:
         from aequitas.analytics.reach import try_build_r5_engine

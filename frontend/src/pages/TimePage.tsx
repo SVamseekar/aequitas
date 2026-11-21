@@ -1,8 +1,12 @@
-import { lazy, Suspense, useMemo, useState } from "react"
+import { lazy, Suspense, useMemo } from "react"
+import { useSearchParams } from 'react-router'
 import { useFilters, useTimeSeries } from "@/api/hooks"
 import { AREA_TYPES, COUNTRIES, regionsForCountry } from "@/lib/constants"
 import { filterSentence } from "@/lib/scoreFormat"
 import { isLondonRural } from "@/lib/uniqueExhibits"
+import { BriefingActions } from '@/components/shared/BriefingActions'
+import { downloadCsv } from '@/lib/downloadCsv'
+import { coveragePresentation } from '@/lib/coverage'
 
 const TimeLineChart = lazy(() => import("@/components/charts/TimeLineChart"))
 
@@ -28,11 +32,19 @@ export default function TimePage() {
         : country === "france"
           ? "IRIS"
           : "LSOAs"
-  const [metric, setMetric] = useState<(typeof METRICS)[number]["id"]>("score")
+  const [params, setParams] = useSearchParams()
+  const metric = METRICS.find(m => m.id === params.get('metric'))?.id ?? 'score'
+  const setMetric = (value: string) => { const next = new URLSearchParams(params); next.set('metric', value); setParams(next) }
   const series = useTimeSeries(country, region, urbanRural, metric, pack)
   const londonRural = isLondonRural(region, urbanRural)
 
-  const points = series.data?.points ?? []
+  const points = useMemo(() => series.data?.points ?? [], [series.data?.points])
+  const metricLabel = metric === 'pct_400m' ? coveragePresentation(country).shortLabel : METRICS.find(m => m.id === metric)?.label ?? metric
+  const unit = metric === 'pct_400m' || metric === 'evening_isolated_pct' ? '%' : ' / 100'
+  const digits = metric === 'mean_sqi' ? 2 : 1
+  const deltaUnit = unit === '%' ? ' pp' : ' points'
+  const exportObservations = () => downloadCsv('aequitas-network-observations.csv', ['country', 'region', 'area', 'metric', 'network_date', 'value', 'areas', 'current'], points.map(point => [country, region, urbanRural, metric, point.as_of, point.value, point.n_areas, point.current ? 'true' : 'false']))
+  const latest = points.at(-1)
   const compare = useMemo(() => {
     const numbered = points.filter((p) => typeof p.value === "number")
     if (numbered.length < 2) return null
@@ -69,34 +81,30 @@ export default function TimePage() {
   }
 
   return (
-    <div data-testid="time-page">
+    <div data-testid="time-page" className='time-page'>
+      <div className='time-heading'><div>
       <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-1">
-        Network dates — {place}
+        Time — {metricLabel}
       </h1>
       <p className="text-sm text-muted-foreground mb-4 max-w-2xl">
-        Same metric for {countryName} ({areaNoun}), many network dates.{" "}
-        {country === "ireland"
-          ? "CSO Small Areas 2022 and Pobal HP 2022 stay frozen. Only TFI network dates time-travel."
-          : country === "netherlands"
-            ? "CBS buurten / SES-WOA stay frozen. Only OVapi network dates time-travel."
-            : country === "france"
-              ? "IGN IRIS / F-EDI 2021 stay frozen. Only the NAP harvest date time-travels."
-              : "Census and deprivation vintage stay frozen. The network date is the GTFS harvest."}
+        {countryName} · {place === countryName ? '' : `${place} · `}{areaNoun} · registered network dates.
       </p>
+      </div><div className='flex gap-2'><BriefingActions /><button type='button' className='app-panel-button' disabled={!points.length || Boolean(series.error)} onClick={exportObservations}>Export observations CSV</button></div></div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="time-metric-tabs" role='group' aria-label='Time metric'>
         {METRICS.map((m) => (
           <button
             key={m.id}
             type="button"
             onClick={() => setMetric(m.id)}
+            aria-pressed={metric === m.id}
             className={`px-3 py-1.5 text-sm rounded-xl border ${
               metric === m.id
                 ? "border-primary bg-primary/10 text-foreground"
                 : "border-white/50 text-muted-foreground"
             }`}
           >
-            {m.label}
+            {m.id === 'pct_400m' ? coveragePresentation(country).shortLabel : m.label}
           </button>
         ))}
       </div>
@@ -106,10 +114,10 @@ export default function TimePage() {
       ) : (series.error as { status?: number } | null)?.status === 404 ||
         String(series.error?.message ?? "").includes("API 404") ? (
         <p className="text-sm text-muted-foreground max-w-xl" data-testid="unknown-pack">
-          Unknown pack {pack || "date"} for {countryName}. This checkout has one network date —
+          Unknown pack {pack || "date"} for {countryName}. This network date is not registered;
           it does not silently show the current point.
         </p>
-      ) : series.data?.empty ? (
+      ) : series.error ? <p role='alert' className='text-destructive text-sm'>Network observations could not be loaded. Try refreshing.</p> : series.data?.empty ? (
         <p className="text-sm text-muted-foreground max-w-xl">{series.data.empty_reason}</p>
       ) : (
         <>
@@ -119,19 +127,31 @@ export default function TimePage() {
             </p>
           ) : null}
           <p className="text-sm text-muted-foreground mb-3">{series.data?.note}</p>
+          <div className='app-time-grid'>
+          <section className='app-panel'>
+          <h2>{metricLabel} over time</h2>
           <Suspense fallback={<div className="h-64 app-glass animate-pulse rounded-2xl" />}>
             <TimeLineChart
               points={points}
-              metricLabel={METRICS.find((m) => m.id === metric)?.label ?? metric}
+              metricLabel={metricLabel}
               areaNoun={areaNoun}
             />
           </Suspense>
+          <p className='mt-2'>{points.length === 2 ? 'Two observations; no trend conclusion.' : 'Registered observations only; no forecast.'}</p>
+          </section>
+          <aside className='app-panel'>
+            <h2>Latest value</h2><p>{latest?.as_of ?? 'No dated observation'}</p>
+            <p className='app-score-number'>{latest?.value == null ? '—' : latest.value.toFixed(digits)}<span>{unit}</span></p>
           {compare ? (
             <p className="text-sm mt-4" data-testid="time-delta">
-              {compare.from} → {compare.to}: Δ {compare.delta > 0 ? "+" : ""}
-              {compare.delta} on {METRICS.find((m) => m.id === metric)?.label}.
+              Δ from {compare.from}: {compare.delta > 0 ? "+" : ""}
+              {compare.delta.toFixed(1)}{deltaUnit}.
             </p>
           ) : null}
+          <h3 className='mt-6 mb-3'>Registered observations</h3>
+          <dl>{points.map(point => <div key={point.pack_id} className='flex justify-between gap-4 py-3 border-t border-border text-sm'><dt>{point.as_of}{point.current ? ' (current)' : ''}</dt><dd>{point.value == null ? '—' : `${point.value.toFixed(digits)}${unit}`}</dd></div>)}</dl>
+          <p className='mt-5'>{metric === 'pct_400m' ? coveragePresentation(country).definition : metric === 'evening_isolated_pct' ? 'Share of areas with no service after 19:00 on a typical weekday.' : metric === 'mean_sqi' ? 'Mean scheduled service quality index.' : 'Composite in-country score; missing components are dropped and weights renormalised.'}</p>
+          </aside></div>
         </>
       )}
     </div>

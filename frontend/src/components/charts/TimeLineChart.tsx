@@ -35,19 +35,19 @@ export default function TimeLineChart({
     }
     const chart = Plot.plot({
       width,
-      height: 320,
+      height: Math.max(220, Math.min(400, width * 0.65)),
       x: { label: "Network date", type: "band" },
       y: {
         label: metricLabel,
         grid: true,
         nice: true,
-        domain: /score/i.test(metricLabel) ? [0, 100] : undefined,
+        domain: [0, 100],
       },
       marks: [
         Plot.line(rows, {
           x: "date",
           y: "value",
-          stroke: "#4e79a7",
+          stroke: "#b84e1f",
           strokeWidth: 2,
           tip: true,
           title: (d: { date: string; value: number | null; n: number | null }) =>
@@ -56,7 +56,7 @@ export default function TimeLineChart({
         Plot.dot(rows, {
           x: "date",
           y: "value",
-          fill: "#4e79a7",
+          fill: "#b84e1f",
           r: 5,
           tip: true,
           title: (d: { date: string; value: number | null; n: number | null }) =>
@@ -69,7 +69,7 @@ export default function TimeLineChart({
   }, [points, metricLabel, areaNoun, width])
 
   return (
-    <div ref={containerRef} className="app-glass rounded-2xl p-3 overflow-x-auto">
+    <div ref={containerRef} className="p-2 overflow-x-auto">
       <div ref={ref} data-testid="time-chart" />
     </div>
   )

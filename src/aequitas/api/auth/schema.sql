@@ -132,3 +132,10 @@ CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id
 CREATE INDEX IF NOT EXISTS idx_saved_analyses_tenant ON saved_analyses(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_policy_notes_tenant ON policy_notes(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_saved_regions_tenant ON saved_regions(tenant_id);
+
+-- Expand only: old clients ignore this nullable column; legacy records stay unknown.
+-- Rollback application code without dropping the column or any saved context.
+ALTER TABLE saved_analyses ADD COLUMN IF NOT EXISTS view_context JSONB;
+ALTER TABLE policy_notes ADD COLUMN IF NOT EXISTS view_context JSONB;
+ALTER TABLE saved_regions ADD COLUMN IF NOT EXISTS view_context JSONB;
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS view_context JSONB;

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated, Literal
+
 import duckdb
 from fastapi import APIRouter, Depends, Query
 
@@ -16,7 +18,8 @@ def get_map(
     urban_rural: str = Query("all"),
     country: str = Query("england"),
     mode: str | None = Query(None),
-    db: duckdb.DuckDBPyConnection | None = Depends(country_warehouse),
+    metric: Literal["deserts", "coverage"] = Query("deserts"),
+    db: Annotated[duckdb.DuckDBPyConnection | None, Depends(country_warehouse)] = None,
 ) -> dict:
     if db is None:
         return {
@@ -28,7 +31,9 @@ def get_map(
         }
     from aequitas.api.services.score import map_areas_for_filter
 
-    payload = map_areas_for_filter(db, region, urban_rural, mode=mode)
+    payload = map_areas_for_filter(
+        db, region, urban_rural, mode=mode, metric=metric, country=country,
+    )
     if country == "ireland" and not payload.get("empty"):
         payload["geography"] = "ireland_county"
     if country == "netherlands" and not payload.get("empty"):

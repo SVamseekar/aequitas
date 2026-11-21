@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException, Query
 
 from aequitas.warehouse.packs import extract_metrics, list_packs, resolve_pack
@@ -30,7 +32,10 @@ def get_time_series(
         if rec is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"Unknown pack {requested!r} for {key}. Not falling back to the current point.",
+                detail=(
+                    f"Unknown pack {requested!r} for {key}. "
+                    "Not falling back to the current point."
+                ),
             )
     if metric not in _METRICS:
         raise HTTPException(status_code=422, detail=f"metric must be one of {sorted(_METRICS)}")
@@ -51,22 +56,21 @@ def get_time_series(
 
     rows = list_packs(key)
     points: list[dict] = []
+    filtered = region != "all" or urban_rural != "all"
     for rec in rows:
         value = None
-        n_areas = rec.get("n_areas")
+        n_areas = None if filtered else rec.get("n_areas")
         wh = rec.get("warehouse")
-        from pathlib import Path
-
-        if wh and Path(wh).exists() and not (region == "all" and urban_rural == "all"):
+        if wh and Path(wh).exists() and filtered:
             try:
                 m = extract_metrics(Path(wh), region=region, urban_rural=urban_rural)
                 value = m.get(metric)
                 n_areas = m.get("n_areas")
             except Exception:
-                value = rec.get(metric)
+                value = None
         else:
-            value = rec.get(metric)
-            if (value is None or (region != "all" or urban_rural != "all")) and wh and Path(wh).exists():
+            value = None if filtered else rec.get(metric)
+            if (value is None or filtered) and wh and Path(wh).exists():
                 try:
                     m = extract_metrics(Path(wh), region=region, urban_rural=urban_rural)
                     value = m.get(metric)

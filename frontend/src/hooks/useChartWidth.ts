@@ -18,3 +18,14 @@ export function useChartWidth(ref: RefObject<HTMLElement | null>, fallback: numb
 
   return width
 }
+
+/** Track short analytical windows as they resize. */
+export function useViewportHeight(): number {
+  const [height,setHeight]=useState(()=>typeof window==='undefined'?900:window.innerHeight)
+  useEffect(()=>{
+    const resize=()=>setHeight(window.innerHeight)
+    window.addEventListener('resize',resize)
+    return()=>window.removeEventListener('resize',resize)
+  },[])
+  return height
+}

@@ -7,7 +7,7 @@ import {
   SITE_TAGLINE,
   SITE_URL,
 } from "@/lib/site"
-import { FAQ_ITEMS } from "@/components/landing/LandingFaq"
+import { FAQ_ITEMS } from "@/lib/landingFaq"
 
 export function landingPageJsonLd() {
   return [

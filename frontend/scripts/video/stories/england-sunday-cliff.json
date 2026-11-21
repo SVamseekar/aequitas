@@ -1,0 +1,102 @@
+{
+  "id": "england-sunday-cliff",
+  "output": "media/aequitas-england-sunday-cliff-feature.mp4",
+  "binds": {
+    "reduction": {
+      "from": {
+        "card": "Sunday service reduction"
+      },
+      "pick": "percent"
+    },
+    "desertShare": {
+      "from": {
+        "card": "Sunday-desert areas"
+      },
+      "pick": "percent"
+    },
+    "desertCount": {
+      "from": {
+        "card": "Sunday-desert areas"
+      },
+      "pick": "count"
+    },
+    "source": {
+      "from": ".app-source-footer > span",
+      "pick": "text"
+    }
+  },
+  "scenes": [
+    {
+      "type": "title",
+      "eyebrow": "England · Sunday service",
+      "title": "The *Sunday* transit cliff",
+      "subtitle": "What official bus timetables show about the weekend, small area by small area.",
+      "say": "Every Sunday, bus timetables across England thin out. Here is what the official data shows.",
+      "reveal": "mask"
+    },
+    {
+      "type": "stat",
+      "lead": "Compared with a weekday, Sunday bus departures across England are lower by",
+      "value": "{{reduction}}",
+      "tail": "**{{desertCount}} small areas ({{desertShare}})** have no scheduled Sunday bus.",
+      "source": "{{source}}",
+      "say": "Compared with a weekday, Sunday departures are {{reduction}} lower, and {{desertCount}} small areas have no scheduled Sunday bus."
+    },
+    {
+      "type": "app",
+      "path": "/app/england/service?view=b3_weekend_penalty",
+      "exit": "zoom",
+      "beats": [
+        {
+          "do": "wide",
+          "caption": "Live in Aequitas: **all of England**",
+          "seconds": 2.6,
+          "say": "Aequitas reads these figures straight from official timetables."
+        },
+        {
+          "do": "compare",
+          "target": {
+            "card": "Sunday-desert areas"
+          },
+          "control": "Area",
+          "options": [
+            "All Areas",
+            "Rural"
+          ],
+          "labels": [
+            "All England",
+            "Rural areas"
+          ],
+          "caption": "Small areas with **no scheduled Sunday bus**",
+          "seconds": 5.2,
+          "say": "Put rural areas beside the national picture, and the Sunday gap is plain to see."
+        },
+        {
+          "do": "select",
+          "control": "Area",
+          "option": "Rural",
+          "caption": "Filter to **rural areas**",
+          "say": "Now filter the whole page to rural areas."
+        },
+        {
+          "do": "focus",
+          "target": {
+            "card": "Weekday and Sunday departures by region"
+          },
+          "hover": [
+            "bar:tallest",
+            "bar:shortest"
+          ],
+          "caption": "Weekday and Sunday departures, **region by region**",
+          "seconds": 6.2,
+          "say": "Region by region, compare weekday and Sunday departures."
+        }
+      ]
+    },
+    {
+      "type": "outro",
+      "source": "{{source}}",
+      "say": "Aequitas. Transport equity briefings, built on official data."
+    }
+  ]
+}

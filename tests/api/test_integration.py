@@ -3,10 +3,10 @@ import pytest
 from pathlib import Path
 
 
-pytestmark = pytest.mark.skipif(
+pytestmark = [pytest.mark.requires_data, pytest.mark.skipif(
     not Path("data/aequitas.duckdb").exists(),
     reason="No warehouse built — run pipeline first",
-)
+)]
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@ import { Seo } from "@/components/shared/Seo"
 import { breadcrumbJsonLd } from "@/lib/structuredData"
 import { AUTHOR_NAME } from "@/lib/site"
 import { countryByCode, TOPIC_BRIEFS, type CountryCode } from "@/lib/briefingCatalog"
-import { COUNTRY_PHOTO } from "@/lib/publicPhotos"
+import { PublicCountryEvidence } from "@/components/briefing/PublicCountryEvidence"
 import { BriefingLayout } from "./BriefingLayout"
 
 export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
@@ -41,19 +41,15 @@ export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
         ])}
       />
       <p className="text-xs font-medium uppercase tracking-wide text-[var(--l-rust)]">
-        {country.name} · {country.packAsOf} · score {country.score}
+        Briefings / {country.name}
       </p>
       <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-6 text-balance">
-        {country.name}
+        {country.name} transport equity briefing
       </h1>
-      <img
-        src={COUNTRY_PHOTO[country.code].src}
-        alt={COUNTRY_PHOTO[country.code].alt}
-        className="w-full rounded-2xl aspect-[21/8] object-cover object-center mb-8"
-        width={1920}
-        height={730}
-      />
-
+      <p className="public-briefing-lede">{country.description}</p>
+      <PublicCountryEvidence key={country.code} code={country.code} name={country.name} />
+      <div className="public-briefing-details">
+      <aside className="public-briefing-about"><h2>About this briefing</h2>
       <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-3 mb-10 text-sm">
         {rows.map(([k, v]) => (
           <div key={k} className="border-b border-[var(--l-rule)] pb-2">
@@ -63,21 +59,23 @@ export default function CountryBriefingPage({ code }: { code?: CountryCode }) {
         ))}
       </dl>
 
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--l-slate)] mb-3">
-        Doors
-      </h2>
+      <div className="public-briefing-actions"><Link to="/contact" className="landing-btn-primary">Discuss a briefing</Link><Link to={`/app/${country.code}`} className="landing-btn-secondary">Open local pack</Link></div>
+      </aside>
+      <section><h2 className="text-2xl mb-2">Explore the evidence</h2><p className="mb-4 text-sm text-muted-foreground">Dive into a topic or open the full analytical briefing.</p>
       <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-2 mb-10 text-sm">
         {TOPIC_BRIEFS.filter((t) =>
           !["destinations", "appraisal", "realtime", "chat"].includes(t.slug),
         ).map((t) => (
           <li key={t.slug}>
-            <Link to={t.path} className="font-medium text-[var(--l-ink)] hover:text-[var(--l-rust)]">
+            <Link to={`${t.path}?country=${country.code}`} aria-label={t.title} className="font-medium text-[var(--l-ink)] hover:text-[var(--l-rust)]">
               {t.title}
             </Link>
           </li>
         ))}
       </ul>
 
+      </section>
+      </div>
       <p className="text-xs text-[var(--l-slate)]">
         {AUTHOR_NAME}
         {" · "}

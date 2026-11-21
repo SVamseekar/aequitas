@@ -6,6 +6,9 @@ from aequitas.intelligence.section_registry import SECTION_REGISTRY
 from aequitas.warehouse.precompute import precompute_all_sections
 
 
+# These integration fixtures read the real pipeline inputs.
+pytestmark = pytest.mark.requires_data
+
 @pytest.fixture
 def cfg() -> PipelineConfig:
     return PipelineConfig()

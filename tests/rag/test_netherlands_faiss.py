@@ -11,6 +11,10 @@ from sentence_transformers import SentenceTransformer
 
 from aequitas.api.services.rag import retrieve_chunks
 
+
+# Uses live Postgres or a built local index; excluded from ordinary isolated checks.
+pytestmark = pytest.mark.requires_data
+
 ROOT = Path(__file__).resolve().parents[2]
 INDEX = ROOT / "data" / "netherlands" / "faiss_index.bin"
 META = ROOT / "data" / "netherlands" / "faiss_metadata.json"

@@ -64,3 +64,31 @@ describe("HomePage map race", () => {
     expect(screen.queryByText(/Deserts/)).toBeNull()
   })
 })
+
+describe('Overview empty geography',()=>{
+ it('keeps country, region, area and network context in the reference Explore navigation',()=>{
+  overviewState.isLoading=false;overviewState.error=null;overviewState.data={score:55.5,dimensions:[]}
+  mapState.isLoading=false;mapState.error=null;mapState.data={empty:true,data:[]}
+  renderAt('/app/ireland?region=dublin&urban_rural=urban&pack=2026-08-13&view=map')
+  const navigation=screen.getByRole('navigation',{name:'Explore briefing'})
+  const access=navigation.querySelector('a[href*="/access"]')!
+  const url=new URL(access.getAttribute('href')!,'http://localhost')
+  expect(url.pathname).toBe('/app/ireland/access')
+  expect(url.searchParams.get('region')).toBe('dublin')
+  expect(url.searchParams.get('urban_rural')).toBe('urban')
+  expect(url.searchParams.get('pack')).toBe('2026-08-13')
+  expect(url.searchParams.has('view')).toBe(false)
+ })
+ it('offers an area reset while preserving the selected country, region and network',()=>{
+  overviewState.isLoading=false;overviewState.error=null;overviewState.data={dimensions:[]}
+  mapState.isLoading=false;mapState.error=null;mapState.data={empty:true,data:[]}
+  renderAt('/app/england?region=E12000007&urban_rural=rural&pack=2026-08-01')
+  expect(screen.getByRole('heading',{name:'No areas match this filter'})).toBeInTheDocument()
+  const href=screen.getByRole('link',{name:'Reset area filter'}).getAttribute('href')!
+  const url=new URL(href,'http://localhost')
+  expect(url.pathname).toBe('/app/england')
+  expect(url.searchParams.get('region')).toBe('E12000007')
+  expect(url.searchParams.get('pack')).toBe('2026-08-01')
+  expect(url.searchParams.get('urban_rural')).toBe('all')
+ })
+})

@@ -8,6 +8,10 @@ import pytest
 from aequitas.api.auth import db
 
 
+# Uses live Postgres or a built local index; excluded from ordinary isolated checks.
+pytestmark = pytest.mark.requires_data
+
+
 def _requires_database_url():
     if "DATABASE_URL" not in os.environ:
         pytest.skip("DATABASE_URL not set; requires a live Postgres instance")

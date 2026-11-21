@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
+import io
 import threading
 import uuid
-from datetime import datetime, timezone
-from typing import Any
+import zipfile
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Annotated, Any
 
 import duckdb
+import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
@@ -35,11 +41,15 @@ class StudioJobRequest(BaseModel):
     source: str = "drawn"
     upload_text: str | None = None
     upload_filename: str = ""
+    pack: str = ""
 
 
-def _load_demographics(db: duckdb.DuckDBPyConnection | None):
-    import pandas as pd
+def _stage(job_id: str, stage: str) -> None:
+    with _LOCK:
+        _JOBS[job_id]["stage"] = stage
 
+
+def _load_demographics(db: duckdb.DuckDBPyConnection | None) -> pd.DataFrame:
     if db is None:
         return pd.DataFrame()
     tables = {r[0] for r in db.execute("SHOW TABLES").fetchall()}
@@ -48,9 +58,12 @@ def _load_demographics(db: duckdb.DuckDBPyConnection | None):
     return db.execute("SELECT * FROM lsoa_demographics").df()
 
 
-def _load_centroids(db: duckdb.DuckDBPyConnection | None, region: str, urban_rural: str, processed_dir):
-    import pandas as pd
-
+def _load_centroids(
+    db: duckdb.DuckDBPyConnection | None,
+    region: str,
+    urban_rural: str,
+    processed_dir: Path | None,
+) -> pd.DataFrame:
     from aequitas.analytics.centroids import (
         ensure_centroids,
         filter_centroids_for_studio,
@@ -84,31 +97,38 @@ def _load_centroids(db: duckdb.DuckDBPyConnection | None, region: str, urban_rur
 
 def _load_baseline_stops(
     db: duckdb.DuckDBPyConnection | None,
-    centroids,
+    centroids: pd.DataFrame,
 ) -> list[tuple[float, float]]:
     from aequitas.analytics.centroids import bbox_of, filter_stops_to_bbox
 
     if db is None:
         return []
     tables = {r[0] for r in db.execute("SHOW TABLES").fetchall()}
-    stop_table = "stops" if "stops" in tables else "naptan_stops" if "naptan_stops" in tables else None
+    stop_table = (
+        "stops" if "stops" in tables else "naptan_stops" if "naptan_stops" in tables else None
+    )
     if stop_table is None:
         return []
     cols = {r[0] for r in db.execute(f"DESCRIBE {stop_table}").fetchall()}
     lat_c = "latitude" if "latitude" in cols else "stop_lat"
     lon_c = "longitude" if "longitude" in cols else "stop_lon"
-    q = f"SELECT {lat_c}, {lon_c} FROM {stop_table} WHERE {lat_c} IS NOT NULL AND {lon_c} IS NOT NULL"
+    q = (
+        f"SELECT {lat_c}, {lon_c} FROM {stop_table} "
+        f"WHERE {lat_c} IS NOT NULL AND {lon_c} IS NOT NULL"
+    )
     rows = db.execute(q).fetchall()
     stops = [(float(a), float(b)) for a, b in rows]
     return filter_stops_to_bbox(stops, bbox_of(centroids, pad_deg=0.08))
 
 
-def _other_terms(db: duckdb.DuckDBPyConnection | None, region: str, urban_rural: str) -> dict[str, float | None]:
+def _other_terms(
+    db: duckdb.DuckDBPyConnection | None, region: str, urban_rural: str
+) -> dict[str, float | None]:
     if db is None:
         return {}
     try:
-        from aequitas.api.services.score import load_section_stats
         from aequitas.analytics.score import terms_from_section_stats
+        from aequitas.api.services.score import load_section_stats
 
         by_id = load_section_stats(db, region, urban_rural)
         terms, _ = terms_from_section_stats(
@@ -123,36 +143,42 @@ def _other_terms(db: duckdb.DuckDBPyConnection | None, region: str, urban_rural:
 
 
 def _run_job(job_id: str, patch: StudioPatch) -> None:
-    from aequitas.core.config import PipelineConfig
     from aequitas.api.deps import _state
+    from aequitas.core.config import PipelineConfig
 
     cfg = PipelineConfig()
     db: duckdb.DuckDBPyConnection | None = None
     try:
+        _stage(job_id, "baseline")
         db_path = _state.get("ie_db_path") if patch.country == "ireland" else _state.get("db_path")
         if db_path is not None:
             db = duckdb.connect(str(db_path), read_only=True)
-        processed = cfg.processed_dir / "ireland" if patch.country == "ireland" else cfg.processed_dir
+        processed = (
+            cfg.processed_dir / "ireland" if patch.country == "ireland" else cfg.processed_dir
+        )
         centroids = _load_centroids(db, patch.region, patch.urban_rural, processed)
         baseline = _load_baseline_stops(db, centroids)
         terms = _other_terms(db, patch.region, patch.urban_rural)
+        _stage(job_id, "coverage")
         result = apply_studio(
             patch,
             centroids=centroids,
             baseline_stops=baseline,
-            processed_dir=cfg.processed_dir,
+            processed_dir=processed,
             raw_dir=cfg.raw_dir,
             other_terms=terms,
         )
+        _stage(job_id, "results")
+        payload = result.to_dict()
         with _LOCK:
             _JOBS[job_id]["status"] = "done"
-            _JOBS[job_id]["result"] = result.to_dict()
-            _JOBS[job_id]["finished_at"] = datetime.now(timezone.utc).isoformat()
+            _JOBS[job_id]["result"] = payload
+            _JOBS[job_id]["finished_at"] = datetime.now(UTC).isoformat()
     except Exception as exc:
         with _LOCK:
             _JOBS[job_id]["status"] = "error"
             _JOBS[job_id]["error"] = str(exc)
-            _JOBS[job_id]["finished_at"] = datetime.now(timezone.utc).isoformat()
+            _JOBS[job_id]["finished_at"] = datetime.now(UTC).isoformat()
     finally:
         if db is not None:
             db.close()
@@ -162,7 +188,51 @@ def _run_job(job_id: str, patch: StudioPatch) -> None:
 def parse_upload(body: dict[str, Any]) -> dict[str, Any]:
     text = str(body.get("text") or "")
     filename = str(body.get("filename") or "")
-    ops, err = parse_upload_text(text, filename=filename)
+    limit = 10 * 1024 * 1024
+    try:
+        encoded = body.get("archive_base64")
+        if encoded is not None:
+            if not isinstance(encoded, str) or len(encoded) > 4 * ((limit + 2) // 3):
+                raise ValueError("GTFS ZIP must be at most 10 MB.")
+            archive = base64.b64decode(encoded, validate=True)
+            if len(archive) > limit:
+                raise ValueError("GTFS ZIP must be at most 10 MB.")
+            with zipfile.ZipFile(io.BytesIO(archive)) as zipped:
+                stops = [
+                    entry
+                    for entry in zipped.infolist()
+                    if entry.filename.rsplit("/", 1)[-1] == "stops.txt"
+                ]
+                if len(stops) != 1:
+                    raise ValueError("GTFS ZIP must contain exactly one stops.txt file.")
+                if stops[0].file_size > limit:
+                    raise ValueError("GTFS stops.txt must be at most 10 MB when extracted.")
+                text = zipped.read(stops[0]).decode("utf-8-sig")
+                filename = "stops.txt"
+        if len(text.encode("utf-8")) > limit:
+            raise ValueError("Upload must be at most 10 MB.")
+        ops, err = parse_upload_text(text, filename=filename)
+        if not err and body.get("country"):
+            _, err = parse_studio_patch(
+                {
+                    "country": body["country"],
+                    "region": body.get("region", "all"),
+                    "urban_rural": body.get("urban_rural", "all"),
+                    "ops": [op.to_dict() for op in ops],
+                    "source": "upload",
+                }
+            )
+    except (
+        ValueError,
+        TypeError,
+        AttributeError,
+        IndexError,
+        UnicodeError,
+        binascii.Error,
+        zipfile.BadZipFile,
+        RuntimeError,
+    ) as exc:
+        return {"ok": False, "error": str(exc) or "That file could not be read.", "ops": []}
     if err:
         return {"ok": False, "error": err, "ops": []}
     return {"ok": True, "error": None, "ops": [o.to_dict() for o in ops]}
@@ -171,8 +241,35 @@ def parse_upload(body: dict[str, Any]) -> dict[str, Any]:
 @router.post("/jobs")
 def create_job(
     body: StudioJobRequest,
-    db: duckdb.DuckDBPyConnection | None = Depends(get_db),
+    db: Annotated[duckdb.DuckDBPyConnection | None, Depends(get_db)],
 ) -> dict[str, Any]:
+    if body.country not in {"england", "ireland"}:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Studio calculations are available for England and Ireland only. "
+                "Your country draft can still be saved."
+            ),
+        )
+    from aequitas.api.deps import _state
+    from aequitas.warehouse.packs import CURRENT_IDS, resolve_pack, warehouse_for_pack
+
+    requested = resolve_pack(body.country, body.pack) if body.pack else None
+    live = _state.get("ie_db_path") if body.country == "ireland" else _state.get("db_path")
+    current_date = bool(
+        requested
+        and requested.get("current")
+        and live
+        and warehouse_for_pack(body.country, body.pack, live) == Path(live)
+    )
+    if body.pack.strip().lower() not in CURRENT_IDS and not current_date:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Studio calculates against the current warehouse only. "
+                "Select the current network before running."
+            ),
+        )
     raw = body.model_dump()
     extra_ops = []
     if body.upload_text:
@@ -189,15 +286,15 @@ def create_job(
         _JOBS[job_id] = {
             "id": job_id,
             "status": "running",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "result": None,
             "error": None,
+            "stage": "validated",
+            "patch": patch.to_dict(),
         }
-    # Tiny fixtures run sync; keep a thread so the UI can poll.
+    # Return promptly so every job can report its actual worker stages.
     thread = threading.Thread(target=_run_job, args=(job_id, patch), daemon=True)
     thread.start()
-    if len(patch.ops) <= 8:
-        thread.join(timeout=45)
     with _LOCK:
         snapshot = dict(_JOBS[job_id])
     return snapshot
@@ -209,7 +306,11 @@ def job_status(job_id: str) -> dict[str, Any]:
         job = _JOBS.get(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="No studio job with that id.")
-    return {k: job[k] for k in ("id", "status", "created_at", "finished_at", "error") if k in job}
+    return {
+        k: job[k]
+        for k in ("id", "status", "stage", "patch", "created_at", "finished_at", "error")
+        if k in job
+    }
 
 
 @router.get("/jobs/{job_id}/result")

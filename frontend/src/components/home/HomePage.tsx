@@ -1,220 +1,110 @@
-import { lazy, Suspense } from "react"
-import { Link, useNavigate, useSearchParams } from "react-router"
-import { useFilters, useMapLayer, useOps, useOverview } from "@/api/hooks"
-import { AREA_TYPES, COUNTRIES, regionsForCountry } from "@/lib/constants"
-import { appPath, withSearch } from "@/lib/appRoutes"
-import { filterSentence, formatInCountryScore } from "@/lib/scoreFormat"
-import { DimensionCard } from "./DimensionCard"
+import { lazy, Suspense,useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router'
+import { ChevronRight } from 'lucide-react'
+import { useFilters, useMapLayer, useOverview, useScore, useSections } from '@/api/hooks'
+import { AREA_TYPES, COUNTRIES, regionsForCountry } from '@/lib/constants'
+import { appPath, withSearch } from '@/lib/appRoutes'
+import { filterSentence } from '@/lib/scoreFormat'
+import { OverviewScore } from './OverviewScore'
+import { BriefingActions } from '@/components/shared/BriefingActions'
+import { coveragePresentation } from '@/lib/coverage'
+import {ResearchExport} from './ResearchExport'
+import {ProvenancePanel} from '@/components/dimension/ProvenancePanel'
+import {EvidenceState} from '@/components/shared/EvidenceState'
 
-const ChoroplethMap = lazy(() => import("@/components/charts/ChoroplethMap"))
+const ChoroplethMap = lazy(() => import('@/components/charts/ChoroplethMap'))
+const fixed = (value: unknown, digits = 1, suffix = '') => typeof value === 'number' && Number.isFinite(value) ? `${value.toFixed(digits)}${suffix}` : '—'
 
 export function HomePage() {
   const { country, region, urbanRural, pack, mode } = useFilters()
-  const countryName = COUNTRIES.find((c) => c.code === country)?.name ?? country
-  const regionName = regionsForCountry(country).find((r) => r.code === region)?.name ?? region
-  const areaName = AREA_TYPES.find((a) => a.code === urbanRural)?.name ?? urbanRural
-  const packReady = COUNTRIES.find((c) => c.code === country)?.packReady ?? false
-  const { data, isLoading, error } = useOverview(region, urbanRural, country, pack, mode)
-  const mapQ = useMapLayer(region, urbanRural, country, pack, mode)
+  const countryName = COUNTRIES.find(c => c.code === country)?.name ?? country
+  const regionName = regionsForCountry(country).find(r => r.code === region)?.name ?? region
+  const areaName = AREA_TYPES.find(a => a.code === urbanRural)?.name ?? urbanRural
+  const overview = useOverview(region, urbanRural, country, pack, mode)
+  const score = useScore(region, urbanRural, country, pack, mode)
+  const equity = useSections('equity', region, urbanRural, country, pack, mode)
+  const service = useSections('service_quality', region, urbanRural, country, pack, mode)
+  const map = useMapLayer(region, urbanRural, country, pack, mode, 'coverage')
   const [params] = useSearchParams()
+  const [provenance,setProvenance]=useState(false)
   const navigate = useNavigate()
   const place = filterSentence(regionName, areaName)
-  const londonRural = region === "E12000007" && urbanRural === "rural"
+  const coverageMeaning = coveragePresentation(country)
+  const expanded = params.get('view') === 'score'
+  const link = (slug: string) => { const next=new URLSearchParams(params);next.delete('view');return withSearch(appPath(country, slug), next.toString()) }
+  const londonRural = region === 'E12000007' && urbanRural === 'rural'
+  const packMiss = (overview.error as { status?: number } | null)?.status === 404 || (map.error as { status?: number } | null)?.status === 404
 
-  if (!packReady) {
-    return (
-      <p className="text-sm text-muted-foreground py-8 max-w-xl">
-        The {countryName} pack is not built yet. England, Ireland, the Netherlands, and France
-        use the same method.
-      </p>
-    )
-  }
+  if(params.get('view')==='export')return <ResearchExport key={`${country}:${region}:${urbanRural}:${pack}:${mode}`} />
+  if (packMiss) return <EvidenceState kind='unavailable' title='Not available in this pack' description={`Unknown pack ${pack || 'date'} for ${countryName}. This checkout does not silently show the current briefing.`} />
+  if (overview.error) return <EvidenceState kind='error' title='Could not load evidence' description='Your country and selected filters are retained.' retry={()=>{void overview.refetch();void map.refetch()}} />
+  if (overview.isLoading || map.isLoading) return <div data-testid='home-loading'><h1 className='mb-4'>Loading {countryName} briefing…</h1><div className='h-[520px] app-glass animate-pulse' /></div>
 
-  const packMiss =
-    (error as { status?: number } | null)?.status === 404 ||
-    (mapQ.error as { status?: number } | null)?.status === 404
-
-  if (packMiss || error) {
-    const status = (error as { status?: number } | undefined)?.status
-      ?? (mapQ.error as { status?: number } | undefined)?.status
-    if (status === 404 || packMiss) {
-      return (
-        <p className="text-sm text-muted-foreground py-8 max-w-xl" data-testid="unknown-pack-home">
-          Unknown pack {pack || "date"} for {countryName}. This checkout has one network date —
-          it does not silently show the current briefing.
-        </p>
-      )
-    }
-    return (
-      <p className="text-destructive text-sm">Unable to load overview — try refreshing.</p>
-    )
-  }
-
-  if (isLoading || mapQ.isLoading) {
-    return (
-      <div data-testid="home-loading">
-        <h1 className="text-2xl font-semibold mb-4">Loading {countryName} briefing…</h1>
-        <div className="h-[min(62vh,520px)] app-glass animate-pulse rounded-2xl mb-6" />
-      </div>
-    )
-  }
-
-  const score = data?.score ?? null
-  const scoreLabel = formatInCountryScore(score)
+  const components = score.data?.components ?? []
+  const component = (id: string) => components.find(c => c.id === id)?.value
+  const coverage = component('pop_within_400m')
+  const quality = component('weekday_frequency')
+  const evening = component('evening_served')
+  const gini = equity.data?.sections.find(s => s.section_id === 'f1_gini')?.stats?.gini
+  const eveningPct = evening == null ? null : (1 - evening) * 100
+  const sunday = service.data?.sections.find(s => s.section_id === 'b3_weekend_penalty')?.stats?.pct_sunday_desert
+  const mapTitle = `Transport coverage across ${region === 'all' ? countryName : regionName}`
+  const exportParams=new URLSearchParams(params);exportParams.set('view','export')
+  const exploreParams=new URLSearchParams(params);exploreParams.delete('view')
+  if(londonRural)return <EvidenceState kind='empty' title='No areas match this filter' description='London has no rural LSOAs under the official urban/rural classification.' action={<Link className='app-panel-button' to={{search:`?${new URLSearchParams({...Object.fromEntries(params),urban_rural:'all'})}`}}>Reset area filter</Link>} />
 
   return (
-    <div>
-      <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight mb-1">
-        Where the bus fails people — {place}
-      </h1>
-      <p className="text-sm text-muted-foreground mb-4 max-w-2xl">
-        In-country briefing for {place}. Ranks stay inside {countryName}. Never one Europe-wide index.
-      </p>
-
-      <div className="mb-4">
-        <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground">
-          In-country score
-        </p>
-        <p className="text-5xl sm:text-6xl font-bold tabular-nums tracking-tight text-foreground">
-          {scoreLabel}
-        </p>
-        <p className="text-sm text-muted-foreground mt-1 max-w-xl">
-          {data?.score_note
-            ?? "0–100 for this filter: 400 m coverage, evening service, weekday quality, inverted deprivation gap."}
-        </p>
+    <div className='app-overview-page'>
+      <div className='app-page-heading'>
+        <div><h1>Where the bus fails people</h1><p>{place} · official timetables × official need</p></div>
+        <div className='flex gap-3 flex-wrap'><BriefingActions /><Link className='app-panel-button' to={{search:`?${exportParams}`}}>Export research pack</Link></div>
       </div>
-
-      {londonRural ? (
-        <p className="text-sm text-muted-foreground py-6 max-w-xl">
-          London has no rural LSOAs under the official urban/rural classification — this filter is empty.
-        </p>
-      ) : mapQ.data?.empty ? (
-        <p className="text-sm text-muted-foreground py-6 max-w-xl">
-          {mapQ.data.empty_reason ?? "No map layer for this filter."}
-        </p>
-      ) : mapQ.data && Array.isArray(mapQ.data.data) && mapQ.data.data.length > 0 ? (
-        <Suspense fallback={<div className="h-[min(62vh,520px)] app-glass animate-pulse rounded-2xl mb-4" />}>
-          <ChoroplethMap
-            chartData={{
-              type: "choropleth",
-              geography:
-                country === "ireland"
-                  ? "ireland_county"
-                  : country === "netherlands"
-                    ? "netherlands_provincie"
-                    : country === "france"
-                      ? "france_region"
-                      : (mapQ.data.geography ?? "region"),
-              metric_label: mapQ.data.metric_label ?? "People with no nearby stop",
-              data: mapQ.data.data,
-              title: `Deserts — ${place}`,
-            }}
-            onAreaClick={(code) => {
-              const next = new URLSearchParams(params)
-              if (code.startsWith("E12") || country === "ireland" || country === "netherlands" || country === "france") {
-                next.set("region", code)
-              }
-              navigate(withSearch(appPath(country, "access"), next.toString()))
-            }}
-          />
-        </Suspense>
-      ) : (
-        <p className="text-sm text-muted-foreground py-6 max-w-xl">
-          {mapQ.error
-            ? "Map layer could not be loaded for this filter."
-            : "No map layer for this filter."}
-        </p>
-      )}
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6">
-        {data?.dimensions.map((d) => (
-          <DimensionCard key={d.id} dim={d} />
-        ))}
-        <Link
-          to={withSearch(appPath(country, "reach"), params.toString())}
-          className="app-glass-strong group block text-left p-5 rounded-2xl hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5"
-          data-testid="reach-door"
-        >
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-            Reach
-          </h3>
-          <p className="text-2xl font-bold tabular-nums mt-2">Bands</p>
-          <p className="text-sm text-muted-foreground mt-1 leading-snug">
-            Access / service bands and 15/30/45
-          </p>
-        </Link>
-        <Link
-          to={withSearch(appPath(country, "time"), params.toString())}
-          className="app-glass-strong group block text-left p-5 rounded-2xl hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5"
-          data-testid="time-door"
-        >
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-            Time
-          </h3>
-          <p className="text-2xl font-bold tabular-nums mt-2">Network dates</p>
-          <p className="text-sm text-muted-foreground mt-1 leading-snug">
-            Same score across monthly snapshots — Census / deprivation frozen
-          </p>
-        </Link>
-        <OpsDoor />
-        <Link
-          to={withSearch(appPath(country, "studio"), params.toString())}
-          className="app-glass-strong group block text-left p-5 rounded-2xl hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5"
-          data-testid="studio-door"
-        >
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-            Studio
-          </h3>
-          <p className="text-2xl font-bold tabular-nums mt-2">Draw</p>
-          <p className="text-sm text-muted-foreground mt-1 leading-snug">
-            Patch a route — who gains and who loses
-          </p>
-        </Link>
+      <nav className='evidence-tabs overview-explore-tabs' aria-label='Explore briefing'>
+        {[['Overview',''],['Equity','equity'],['Access','access'],['Service','service'],['Network','network'],['Correlations','correlations']].map(([label,slug])=><Link key={label} to={withSearch(appPath(country,slug),exploreParams.toString())} aria-current={slug===''?'page':undefined}>{label}</Link>)}
+      </nav>
+      <div className='app-overview-grid'>
+        <div className='app-overview-main'>
+          <dl className='app-metric-strip'>
+            {[
+              [coverageMeaning.shortLabel, coverage == null ? '—' : fixed(coverage * 100, 1, '%')],
+              ['Mean service quality', quality == null ? '—' : `${fixed(quality * 100)} / 100`],
+              ['Service inequality Gini', fixed(gini, 4)],
+              ['Evening isolated', fixed(eveningPct, 1, '%')],
+            ].map(([label, value]) => <div className='app-panel' key={label}><dt>{label}</dt><dd>{label==='Service inequality Gini'?<button type='button' className='overview-evidence-value' onClick={()=>setProvenance(true)} aria-label='Show Gini evidence and calculation'>{value}</button>:value}</dd></div>)}
+          </dl>
+          {expanded ? <OverviewScore expanded fallbackScore={overview.data?.score ?? null} /> : (
+            <section className='app-panel app-map-panel'>
+              <div className='overview-map-heading'><div><h2>{mapTitle}</h2><p className='overview-map-description' title={coverageMeaning.definition}>{country==='england'?'Area share with a non-zero access score':'Population within 400 m of a stop'}, by {country === 'ireland' ? 'county' : country === 'netherlands' ? 'province' : 'region'}.</p></div>
+                <div className='overview-map-key' aria-label='Coverage legend'><strong>{coverageMeaning.shortLabel}</strong><i aria-hidden='true' /><div><span>Lower coverage</span><span>Higher coverage</span></div><small>Grey: unavailable</small></div>
+              </div>
+              {londonRural ? <p className='py-8'>London has no rural LSOAs under the official urban/rural classification — this filter is empty.</p>
+                : map.error ? <p role='alert' className='py-8'>Map layer could not be loaded for this filter.</p>
+                : map.data?.empty || !map.data?.data?.length ? <p className='py-8'>{map.data?.empty_reason ?? 'No map layer for this filter.'}</p>
+                : <Suspense fallback={<div className='h-[520px] bg-muted animate-pulse' />}><ChoroplethMap chartData={{ type: 'choropleth', geography: country === 'ireland' ? 'ireland_county' : country === 'netherlands' ? 'netherlands_provincie' : country === 'france' ? 'france_region' : map.data.geography, metric_label: map.data.metric_label, data: map.data.data, title: mapTitle, color_mode: 'coverage' }} onAreaClick={code => { const next = new URLSearchParams(params); next.set('region', code); navigate(withSearch(appPath(country, 'access'), next.toString())) }} /></Suspense>}
+            </section>
+          )}
+        </div>
+        <aside className='app-overview-aside' aria-label='Briefing summary'>
+          <OverviewScore fallbackScore={overview.data?.score ?? null} />
+          {expanded?<OverviewScore details fallbackScore={overview.data?.score ?? null} />:<>
+          <section className='app-panel'>
+            <h2>What needs attention</h2>
+            <div className='app-attention-item'><p><strong>{fixed(eveningPct, 1, '%')}</strong> of areas lack evening service</p><p>Service after 19:00 on a typical weekday.</p><Link to={link('service')} className='app-text-link'>View Service</Link></div>
+            <div className='app-attention-item'><p><strong>{fixed(sunday, 1, '%')}</strong> of areas are Sunday deserts</p><p>Areas with no service on a typical Sunday.</p><Link to={link('access')} className='app-text-link'>View Access</Link></div>
+          </section>
+          <section className='app-panel'>
+            <h2>Explore the evidence</h2>
+            {[['Equity & deprivation', 'equity'], ['Access & coverage', 'access'], ['Service quality', 'service'], ['Network structure', 'network']].map(([label, slug]) => <Link className='app-evidence-link' key={slug} to={link(slug)}>{label}<ChevronRight size={16} /></Link>)}
+          </section>
+          <Link className='app-panel-button overview-open-access' to={link('access')}>Open Access <ChevronRight size={15} aria-hidden='true' /></Link>
+          </>}
+        </aside>
       </div>
-
-      <p className="mt-6 text-xs text-muted-foreground leading-relaxed">
-        {country === "ireland"
-          ? "Network / GTFS: TFI GTFS_All.zip. CSO Small Areas 2022. Pobal HP Deprivation Index 2022. Republic only — Northern Ireland is out of scope."
-          : country === "netherlands"
-            ? "Network / GTFS: OVapi gtfs-nl.zip. CBS buurten 2024. SES-WOA 2023 (voorlopig). Bus-only is the default; mode=all adds rail/tram/metro. SES join is 70.5% at buurt — remaining SES scores are null."
-            : country === "france"
-              ? "Network / GTFS: NAP harvest (441 merged / 111 skipped). IGN IRIS. F-EDI 2021. Metropolitan France only — DOM out. 58 unmatched IRIS have no région slug and are excluded from région bars."
-            : "Network / GTFS: BODS bulk (pack vintage, not the warehouse clock). Census 2021 LSOAs. IMD 2025 ranks. These are three dates — not one “data as of warehouse build.”"}
-      </p>
+      {provenance&&<ProvenancePanel metricId='gini_national' onClose={()=>setProvenance(false)} />}
+      <details className='mt-5'><summary className='text-sm text-muted-foreground cursor-pointer'>Planning and observation tools</summary><div className='flex flex-wrap gap-5 mt-3 text-sm'>
+        {[['Scenarios', 'scenarios'], ['Studio', 'studio'], ['Compare', 'compare'], ['Reach', 'reach'], ['Time', 'time'], ['Ops', 'ops']].map(([label, slug]) => <Link className='app-text-link' key={slug} to={link(slug)}>{label}</Link>)}
+      </div></details>
+      <p className='mt-5 text-xs text-muted-foreground'>Ranks stay inside {countryName}. {country === 'ireland' ? 'TFI GTFS · CSO Small Areas 2022 · Pobal HP 2022. Republic only.' : country === 'netherlands' ? 'OVapi GTFS · CBS buurten 2024 · SES-WOA 2023. Missing SES ranks are omitted.' : country === 'france' ? 'NAP GTFS · IGN IRIS · F-EDI 2021. Metropolitan France only.' : 'BODS GTFS · Census 2021 LSOAs · IMD 2025.'} Network date selected above; geography and deprivation dates stay separate.</p>
     </div>
-  )
-}
-
-function OpsDoor() {
-  const { country } = useFilters()
-  const [params] = useSearchParams()
-  const ops = useOps(country, params.get("pack") ?? "")
-  const headline = ops.data?.empty
-    ? "Empty"
-    : ops.data?.pct_late != null
-      ? `${ops.data.pct_late.toFixed(0)}% late`
-      : ops.isError
-        ? "No rollup"
-        : "Snapshot"
-  const blurb =
-    country === "ireland"
-      ? "NTA GTFS-RT for three operators — honest empty without a key"
-      : country === "netherlands"
-        ? "OVapi RT if a rollup exists — not a second score"
-        : country === "france"
-          ? "NAP gtfs-rt union, incomplete by design"
-          : "BODS GTFS-RT / SIRI where the timetable is not what ran"
-  return (
-    <Link
-      to={withSearch(appPath(country, "ops"), params.toString())}
-      className="app-glass-strong group block text-left p-5 rounded-2xl hover:border-primary/30 transition-all duration-200 hover:-translate-y-0.5"
-      data-testid="ops-door"
-    >
-      <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-        Ops
-      </h3>
-      <p className="text-2xl font-bold tabular-nums mt-2">{headline}</p>
-      <p className="text-sm text-muted-foreground mt-1 leading-snug">{blurb}</p>
-    </Link>
   )
 }

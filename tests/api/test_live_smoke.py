@@ -8,10 +8,10 @@ import os
 
 import pytest
 
-pytestmark = pytest.mark.skipif(
+pytestmark = [pytest.mark.requires_data, pytest.mark.skipif(
     "DATABASE_URL" not in os.environ,
     reason="DATABASE_URL not set",
-)
+)]
 
 
 @pytest.fixture(autouse=True)

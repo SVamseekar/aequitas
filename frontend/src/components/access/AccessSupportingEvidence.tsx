@@ -1,0 +1,14 @@
+import type {SectionItem} from '@/api/types'
+import {ChartRenderer} from '@/components/charts/ChartRenderer'
+import {ChartInsights} from '@/components/dimension/ChartInsights'
+import {sectionPresentation} from '@/lib/sectionPresentation'
+import {modelFeatureLabel} from '@/lib/modelLabels'
+import {finiteObservation as finite,serviceNumber as number} from '@/lib/serviceData'
+
+export function AccessSupportingEvidence({section}:{section:SectionItem}){
+ const model=section.section_id==='a8_coverage_prediction',s=section.stats,p=sectionPresentation(section,'england')
+ if(section.suppressed||s.omit)return <section className='app-panel'><h2>Not available for this filter</h2><p>No publishable observations are supplied.</p></section>
+ return <div className='access-supporting-evidence'><div className='access-supporting-main'><section className='app-panel'><h2>{model?'Bus-service prediction from demographics':'Indicative service-gap estimate'}</h2><p>{model?'National Random Forest predicting log1p(trips per capita).':'Indicative annual investment to reach the stored service target.'}</p><ChartRenderer chartData={{...p.chartData,height:300,...(model?{palette:['#6a98b6']}:{color_by:'rank',palette:['#de7546','#e9b779','#bac698','#7fa27d']})}} /></section><aside className='app-panel'>
+ {model?<><h3>Model overview</h3><dl className='network-summary'>{[['Model type','Random Forest'],['R² (held-out)',number(s.r2,4)],['Number of predictors',number(s.n_features)],['Top predictor',typeof s.top_feature==='string'?modelFeatureLabel(s.top_feature):'—'],['Importance',`${number(s.top_importance,4)} (mean |SHAP|)`]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><ChartInsights section={section} /></>:<><h3>Key facts (selected filter)</h3><div className='access-supporting-stat'><strong>{number(s.pct_below,1)}{finite(s.pct_below)?'%':''}</strong><p>Areas below target ({number(s.n_below)} areas)</p></div><div className='access-supporting-stat'><strong>{number(s.mean_gap,2)}</strong><p>Mean gap · trips per capita</p></div><div className='access-supporting-stat'><strong>{finite(s.total_annual_cost_m)?`£${number(s.total_annual_cost_m,1)}m`:'—'}</strong><p>Indicative annual cost</p></div><ChartInsights section={section} /></>}
+ </aside></div><div className='access-supporting-source app-panel'><section><h3>{model?'Source and model details':'Source and assumptions'}</h3><dl><div><dt>Data pack</dt><dd>England BODS schedules</dd></div><div><dt>Population</dt><dd>Census 2021 LSOAs</dd></div><div><dt>Deprivation</dt><dd>IMD 2025</dd></div><div><dt>{model?'Model target':'Service target'}</dt><dd>{model?'log1p(trips per capita)':`${number(s.target,3)} trips per capita`}</dd></div></dl></section><section><h3>{model?'Interpretation':'Model estimate'}</h3><p>{p.interpretation}</p></section></div></div>
+}

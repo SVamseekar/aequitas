@@ -114,8 +114,8 @@ export interface PackDateRow {
 export interface PacksResponse {
   england: { packReady: boolean; dates?: PackDateRow[] }
   ireland: { packReady: boolean; dates?: PackDateRow[] }
-  netherlands: { packReady: boolean }
-  france: { packReady: boolean }
+  netherlands: { packReady: boolean; dates?: PackDateRow[] }
+  france: { packReady: boolean; dates?: PackDateRow[] }
 }
 
 export interface ScoreResponse {
@@ -186,6 +186,8 @@ export interface ReachBandsResponse {
   empty: boolean
   empty_reason: string | null
   mode: string
+  n_travel_time?: number
+  n_service?: number
   label?: string
   not_tfl_ptal: boolean
   hansen_available: boolean

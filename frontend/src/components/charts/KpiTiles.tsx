@@ -12,7 +12,7 @@ interface Props {
 
 /** Format a tile value for display: large counts get thousands separators, null becomes "—". */
 function formatValue(value: number | null): string {
-  if (value === null) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
     return "—"
   }
   if (Number.isInteger(value)) {

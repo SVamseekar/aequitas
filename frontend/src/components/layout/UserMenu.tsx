@@ -1,11 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext"
-import { useNavigate } from "react-router"
+import { Link,useLocation,useNavigate } from "react-router"
 import { LogOut, User, Settings, Bookmark, MapPin, FileText } from "lucide-react"
 import { useState, useRef, useEffect, useCallback } from "react"
 
 export function UserMenu() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const location=useLocation()
   const [open, setOpen] = useState(false)
   const [imgError, setImgError] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -74,7 +75,7 @@ export function UserMenu() {
     }
   }, [])
 
-  if (!user) return null
+  if (!user) return <Link className='app-account-entry' aria-label='Sign in to Aequitas' title='Sign in to Aequitas' to={`/auth?${new URLSearchParams({returnTo:location.pathname+location.search})}`}><User size={18} aria-hidden='true' /></Link>
 
   const avatar: string | undefined = undefined
   const name = user.display_name ?? user.email?.split("@")[0]

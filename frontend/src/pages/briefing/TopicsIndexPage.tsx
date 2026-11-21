@@ -1,10 +1,9 @@
 import { Link } from "react-router"
 import { Seo } from "@/components/shared/Seo"
 import { breadcrumbJsonLd } from "@/lib/structuredData"
-import { COUNTRY_BRIEFS, TOPIC_BRIEFS } from "@/lib/briefingCatalog"
-import { AUTHOR_NAME } from "@/lib/site"
+import { TOPIC_BRIEFS } from "@/lib/briefingCatalog"
 import { BriefingLayout } from "./BriefingLayout"
-import { LandingDimensions } from "@/components/landing/LandingDimensions"
+import { CountryBriefCards } from '@/components/landing/CountryBriefCards'
 import { LandingActions } from "@/components/landing/LandingActions"
 
 export default function TopicsIndexPage() {
@@ -21,46 +20,16 @@ export default function TopicsIndexPage() {
         jsonLd={breadcrumbJsonLd([{ name: "Briefings", path: "/briefings" }])}
       />
 
-      <p className="text-xs font-medium uppercase tracking-wide text-[var(--l-rust)]">
-        Briefings · {AUTHOR_NAME}
-      </p>
       <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-3 text-balance">
-        Four countries. Same doors.
+        Explore the briefings.
       </h1>
       <p className="text-[var(--l-slate)] max-w-2xl leading-relaxed text-pretty mb-10">
-        Official timetables joined to official deprivation. Ranks never leave the country.
+        Same questions. Local evidence. Ranks stay within each country.
       </p>
 
-      <div className="overflow-hidden rounded-2xl mb-12 aspect-[21/8] bg-[#1a1612]">
-        <img
-          src="/landing/briefings.jpg"
-          alt="A map archive drawer being opened"
-          className="h-full w-full object-cover"
-          width={1920}
-          height={730}
-        />
-      </div>
-
-      <h2 className="text-lg font-semibold text-[var(--l-ink)] mb-4">Countries</h2>
-      <ul className="divide-y divide-[var(--l-rule)] border-y border-[var(--l-rule)] mb-12">
-        {COUNTRY_BRIEFS.map((c) => (
-          <li key={c.code}>
-            <Link
-              to={c.path}
-              className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 py-4 group"
-            >
-              <span className="font-display text-xl text-[var(--l-ink)] group-hover:text-[var(--l-rust)]">
-                {c.name}
-              </span>
-              <span className="text-sm text-[var(--l-slate)]">
-                {c.deprivation} · score {c.score}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-
-      <LandingDimensions embed />
+      <nav className='evidence-tabs' aria-label='Briefing index'><a href='#country-briefings'>Countries</a><a href='#topic-briefings'>Topics</a></nav>
+      <section id='country-briefings' className='mb-10 scroll-mt-24'><h2 className='sr-only'>Countries</h2><CountryBriefCards /></section>
+      <section id='topic-briefings' className='border-t border-border pt-7 scroll-mt-24'><h2 className='text-3xl mb-2'>Explore by topic</h2><p className='text-sm text-muted-foreground mb-5'>Find briefings on the questions that matter.</p><div className='public-topic-groups'>{[['Measure', ['equity','access','service','network']], ['Interpret', ['correlations','economy','policy','scenarios']], ['Observe', ['time','reach','ops']]].map(([name, slugs]) => <div className='public-topic-group' key={String(name)}><h3>{name}</h3>{TOPIC_BRIEFS.filter(topic => Array.isArray(slugs) && slugs.includes(topic.slug)).map(topic => <Link key={topic.slug} to={topic.path}>{topic.title}<span>{topic.question}</span></Link>)}</div>)}</div></section>
 
       <h2 className="text-lg font-semibold text-[var(--l-ink)] mt-10 mb-4">Also in the method</h2>
       <ul className="grid sm:grid-cols-2 gap-3">

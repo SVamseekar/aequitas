@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import maplibregl, { type StyleSpecification } from "maplibre-gl"
 import "maplibre-gl/dist/maplibre-gl.css"
 import type { StudioOp } from "@/pages/StudioPage"
@@ -12,6 +12,7 @@ interface Props {
   onAdd: (op: DrawnOp) => void
   onDelete: (index: number) => void
   onOutsideFilter?: (message: string) => void
+  onFrequency?: () => void
 }
 
 const ENGLAND: [[number, number], [number, number]] = [
@@ -89,7 +90,7 @@ function boundsOf(feature: GeoJSON.Feature): maplibregl.LngLatBoundsLike | null 
   return [[minLng, minLat], [maxLng, maxLat]]
 }
 
-const CARTO = "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png"
+const CARTO = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 
 const STYLE: StyleSpecification = {
   version: 8,
@@ -98,7 +99,7 @@ const STYLE: StyleSpecification = {
       type: "raster",
       tiles: [CARTO],
       tileSize: 256,
-      attribution: "© OpenStreetMap contributors © CARTO",
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
     },
   },
   layers: [
@@ -107,21 +108,25 @@ const STYLE: StyleSpecification = {
   ],
 }
 
-export default function StudioEditorMap({ ops, region, country = "england", onAdd, onDelete, onOutsideFilter }: Props) {
+export default function StudioEditorMap({ ops, region, country = "england", onAdd, onDelete, onOutsideFilter, onFrequency }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
+  const [tool, setTool] = useState('add')
   const markers = useRef<maplibregl.Marker[]>([])
   const drawLine = useRef<boolean>(false)
+  const removeStop = useRef(false)
   const lineAcc = useRef<[number, number][]>([])
   const onAddRef = useRef(onAdd)
   const regionRef = useRef(region)
   const countryRef = useRef(country)
   const warnRef = useRef(onOutsideFilter)
   const regionFeature = useRef<GeoJSON.Feature | null>(null)
-  onAddRef.current = onAdd
-  regionRef.current = region
-  countryRef.current = country
-  warnRef.current = onOutsideFilter
+  useEffect(() => {
+    onAddRef.current = onAdd
+    regionRef.current = region
+    countryRef.current = country
+    warnRef.current = onOutsideFilter
+  }, [onAdd, region, country, onOutsideFilter])
 
   useEffect(() => {
     if (!ref.current || mapRef.current) return
@@ -202,13 +207,13 @@ export default function StudioEditorMap({ ops, region, country = "england", onAd
         }
         return
       }
-      onAddRef.current({ op: "add_stop", lat, lon, name: "Drawn stop" })
+      onAddRef.current({ op: removeStop.current ? 'remove_stop' : 'add_stop', lat, lon, name: removeStop.current ? 'Stop removal' : 'Drawn stop' })
     })
     return () => {
       map.remove()
       mapRef.current = null
     }
-  }, [])
+  }, [country])
 
   useEffect(() => {
     const map = mapRef.current
@@ -288,20 +293,24 @@ export default function StudioEditorMap({ ops, region, country = "england", onAd
 
   return (
     <div>
-      <div className="flex gap-2 mb-2 text-xs">
-        <button type="button" className="underline" onClick={() => { drawLine.current = false }}>
-          Add / move stops (click)
+      <div className="flex flex-wrap gap-2 mb-2 text-xs">
+        <button type="button" className="app-panel-button" aria-pressed={tool === 'add'} onClick={() => { setTool('add'); drawLine.current = false; removeStop.current = false }}>
+          Add stop
         </button>
+        <button type='button' className='app-panel-button' aria-pressed={tool === 'remove'} onClick={() => { setTool('remove'); drawLine.current = false; removeStop.current = true }}>Remove stop</button>
         <button
           type="button"
-          className="underline"
+          className="app-panel-button"
+          aria-pressed={tool === 'line'}
           onClick={() => {
+            setTool('line')
             drawLine.current = true
             lineAcc.current = []
           }}
         >
           Draw a line
         </button>
+        {onFrequency ? <button type='button' className='app-panel-button' onClick={onFrequency}>Frequency uplift</button> : null}
       </div>
       <div ref={ref} className="h-[min(52vh,440px)] rounded-2xl overflow-hidden" data-testid="studio-editor-map" />
     </div>

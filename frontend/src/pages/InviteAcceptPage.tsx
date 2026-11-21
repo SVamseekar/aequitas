@@ -1,91 +1,24 @@
-import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router"
-import { useAuth } from "@/contexts/AuthContext"
-import { fetchJson, apiPost } from "@/api/client"
-import { Seo } from "@/components/shared/Seo"
+import {useState} from 'react'
+import {Link,useParams} from 'react-router'
+import {useQuery,useMutation} from '@tanstack/react-query'
+import {useAuth} from '@/contexts/AuthContext'
+import {fetchJson,apiPost} from '@/api/client'
+import {Seo} from '@/components/shared/Seo'
 
-export default function InviteAcceptPage() {
-  const { token } = useParams<{ token: string }>()
-  const { user, loading, refresh } = useAuth()
-  const navigate = useNavigate()
-  const [tenantName, setTenantName] = useState<string | null>(null)
-  const [role, setRole] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [accepting, setAccepting] = useState(false)
-
-  useEffect(() => {
-    if (!token) return
-    void (async () => {
-      try {
-        const data = await fetchJson<{ tenant_name: string; role: string }>(
-          `/invites/${token}`,
-        )
-        setTenantName(data.tenant_name)
-        setRole(data.role)
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Invite not found")
-      }
-    })()
-  }, [token])
-
-  const handleAccept = async () => {
-    if (!token) return
-    if (!user) {
-      // Preserve invite token through OAuth via query param on return is not
-      // automatic; send user to auth then they can re-open the invite link.
-      navigate(`/auth?returnTo=/invite/${token}`)
-      return
-    }
-    setAccepting(true)
-    try {
-      await apiPost(`/invites/${token}/accept`)
-      await refresh()
-      navigate("/app/england")
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not accept invite")
-      setAccepting(false)
-    }
-  }
-
-  return (
-    <>
-      <Seo title="Accept invite — Aequitas" path={`/invite/${token ?? ""}`} noindex />
-      <div className="min-h-screen app-atmosphere flex items-center justify-center p-6">
-        <div className="w-full max-w-md app-glass-strong rounded-2xl border border-white/60 p-8">
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            </div>
-          ) : error ? (
-            <div>
-              <h1 className="text-lg font-bold mb-2">Invite unavailable</h1>
-              <p className="text-sm text-muted-foreground">{error}</p>
-            </div>
-          ) : (
-            <div>
-              <h1 className="text-lg font-bold mb-2">Join workspace</h1>
-              <p className="text-sm text-muted-foreground mb-6">
-                You&apos;ve been invited to join{" "}
-                <span className="text-foreground font-medium">
-                  {tenantName ?? "a workspace"}
-                </span>
-                {role ? ` as ${role}` : ""}.
-              </p>
-              <button
-                onClick={() => void handleAccept()}
-                disabled={accepting}
-                className="w-full px-4 py-3 text-sm font-medium bg-primary text-white rounded hover:bg-primary/90 disabled:opacity-50"
-              >
-                {user
-                  ? accepting
-                    ? "Accepting…"
-                    : "Accept invite"
-                  : "Sign in to accept"}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </>
-  )
+export default function InviteAcceptPage(){
+ const {token}=useParams<{token:string}>(),{user,loading,refresh}=useAuth()
+ const [accepted,setAccepted]=useState(false)
+ const invitation=useQuery({queryKey:['invitation',token],queryFn:()=>fetchJson<{tenant_name:string;role:string}>(`/invites/${encodeURIComponent(token!)}`),enabled:Boolean(token),retry:false})
+ const accept=useMutation({mutationFn:async()=>{await apiPost(`/invites/${encodeURIComponent(token!)}/accept`);await refresh()},onSuccess:()=>setAccepted(true)})
+ const returnTo=`/invite/${encodeURIComponent(token??'')}`
+ const unavailable=!token||invitation.error
+ return <div className='app-redesign invite-layout'>
+  <Seo title='Accept invitation — Aequitas' path='/auth' noindex />
+  <Link to='/' className='app-wordmark'>Aequitas</Link>
+  <main className='app-panel invite-panel'>
+   {loading||invitation.isPending?<p role='status'>Checking invitation…</p>:unavailable?<><h1>Invitation unavailable</h1><p>This invitation link is no longer available or could not be loaded.</p><p>Ask your workspace admin for a new link.</p><button type='button' className='app-panel-button' onClick={()=>void invitation.refetch()}>Retry invitation</button></>:accepted?<><h1>Accept invitation</h1><p>You’re joining {invitation.data?.tenant_name} as a {invitation.data?.role}.</p><p className='invite-success' role='status'>Invitation accepted</p><Link to='/saved' className='app-btn-primary'>Open your workspace</Link></>:<><h1>{user?'Accept invitation':'You’re invited'}</h1><p>Join {invitation.data?.tenant_name}</p><p className='invite-role'>Invited role <strong>{invitation.data?.role==='admin'?'Admin':invitation.data?.role==='member'?'Member':invitation.data?.role}</strong></p><p>You’ve been invited to join this workspace as a {invitation.data?.role}.</p>
+    {user?<button type='button' className='app-btn-primary' disabled={accept.isPending} onClick={()=>accept.mutate()}>{accept.isPending?'Accepting…':'Accept invitation'}</button>:<Link className='app-btn-primary' to={`/auth?${new URLSearchParams({returnTo})}`}>Continue with Google</Link>}
+    {accept.error&&<p role='alert'>{accept.error.message}</p>}<p className='invite-terms'>By continuing, you agree to our <Link className='app-text-link' to='/privacy'>Privacy Policy</Link> and <Link className='app-text-link' to='/terms'>Terms of Service</Link>.</p></>}
+  </main>
+ </div>
 }

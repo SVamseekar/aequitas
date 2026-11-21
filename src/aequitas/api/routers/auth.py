@@ -13,6 +13,7 @@ from aequitas.api.auth import db
 from aequitas.api.auth.dependencies import require_admin, require_session
 from aequitas.api.auth.email import send_invite_email
 from aequitas.api.auth.oauth import get_google_oauth_client
+from aequitas.api.auth.return_path import safe_return_path
 from aequitas.api.auth.sessions import (
     COOKIE_MAX_AGE_SECONDS,
     COOKIE_NAME,
@@ -55,6 +56,7 @@ async def login_google(request: Request):
             detail="Google OAuth is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.",
         )
     oauth = get_google_oauth_client()
+    request.session["return_to"] = safe_return_path(request.query_params.get("returnTo"))
     redirect_uri = str(request.url_for("auth_callback_google"))
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
@@ -118,7 +120,8 @@ async def auth_callback_google(request: Request):
 
     cfg = ApiConfig()
     frontend_origin = cfg.frontend_url.rstrip("/")
-    response = RedirectResponse(url=f"{frontend_origin}/dashboard")
+    destination = safe_return_path(request.session.pop("return_to", None))
+    response = RedirectResponse(url=f"{frontend_origin}{destination}")
     response.set_cookie(
         COOKIE_NAME,
         sign_session_id(str(session["id"])),
@@ -265,11 +268,11 @@ async def create_invite(
 
     tenant_row = await db._fetch_tenant(pool, tenant_id=tenant_id)
     tenant_name = tenant_row["name"] if tenant_row else "Workspace"
-    await send_invite_email(
+    email_sent = await send_invite_email(
         to_email=body.email, tenant_name=tenant_name, invite_link=link
     )
 
-    return {"token": token, "link": link, "invite_id": str(invite["id"])}
+    return {"token": token, "link": link, "invite_id": str(invite["id"]), "email_sent": email_sent}
 
 
 @router.get("/invites/{token}")

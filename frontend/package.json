@@ -4,6 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -b",
+    "design:validate": "node scripts/design-validate.mjs",
+    "design:capture": "node scripts/design-capture.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",

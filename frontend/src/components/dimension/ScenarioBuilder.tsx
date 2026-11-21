@@ -1,167 +1,25 @@
-import { useFilters, useScenarioCalculation } from "@/api/hooks"
-import { Sliders } from "lucide-react"
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, v))
-}
+import { Link, useSearchParams } from 'react-router'
+import { useFilters, useScenarioSettings } from '@/api/hooks'
+import { appPath, withSearch } from '@/lib/appRoutes'
 
 export function ScenarioBuilder() {
-  const { region, urbanRural } = useFilters()
-  const {
-    freqPct,
-    lastBusHour,
-    drtCoverage,
-    franchise,
-    populationAffected,
-    co2Saving,
-    bcr,
-    setSettings,
-  } = useScenarioCalculation(region, urbanRural)
-
-  const formattedBcr = typeof bcr === "number" ? bcr.toFixed(2) : String(bcr)
-
-  const isRegulatoryOnly = franchise !== "none" && freqPct === 0 && lastBusHour === 19 && drtCoverage === 0
-
-  const metrics = [
-    {
-      label: "Population affected",
-      value: populationAffected.toLocaleString(),
-      sub: "estimated people affected",
-      isMuted: false,
-    },
-    {
-      label: "CO₂ saving",
-      value: isRegulatoryOnly ? "—" : `${co2Saving} kt`,
-      sub: isRegulatoryOnly ? "N/A (Regulatory only)" : "annual estimate",
-      isMuted: isRegulatoryOnly,
-    },
-    {
-      label: "BCR",
-      value: isRegulatoryOnly ? "—" : formattedBcr,
-      sub: isRegulatoryOnly ? "N/A (Zero central capital cost)" : "benefit-cost ratio",
-      isMuted: isRegulatoryOnly,
-    },
-  ]
-
-
-  return (
-    <div className="app-glass-strong rounded-2xl mb-6 overflow-hidden">
-      <div className="px-5 py-3 border-b border-border flex items-center gap-2">
-        <Sliders className="w-4 h-4 text-primary" />
-        <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-foreground">Scenario Builder</h3>
-        <span className="text-[11px] text-muted-foreground font-mono ml-2">
-          Indicative estimates · not DfT-validated
-        </span>
+  const { country, urbanRural } = useFilters()
+  const [params] = useSearchParams()
+  const { freqPct, lastBusHour, drtCoverage, franchise, setSettings } = useScenarioSettings()
+  const studioParams = new URLSearchParams(params); studioParams.delete('view'); studioParams.delete('exhibit')
+  const settings = [['Frequency uplift', `${freqPct}%`], ['Last bus time', `${lastBusHour}:00`], ['Rural DRT coverage', `${drtCoverage}%`], ['Franchise model', franchise]]
+  const outputs = [['Target population affected', 'People'], ['Annual cost', `${country === 'england' ? '£' : '€'}m / year`], ['CO₂ change', 'Tonnes / year']]
+  return <div className='scenario-sandbox'>
+    <section className='app-panel'><h2>Scenario builder</h2><p>Explore service options. These controls are separate from the network Studio.</p>
+      <div className='scenario-controls'>
+        <div><label htmlFor='scenario-frequency'>Frequency uplift</label><output htmlFor='scenario-frequency'>{freqPct}%</output><input id='scenario-frequency' type='range' min={0} max={50} step={5} value={freqPct} onChange={event => setSettings({ freqPct: Number(event.target.value) })} /><small>0% – 50%</small></div>
+        <div><label htmlFor='scenario-last-bus'>Last bus time</label><output htmlFor='scenario-last-bus'>{lastBusHour}:00</output><input id='scenario-last-bus' type='range' min={19} max={23} step={1} value={lastBusHour} onChange={event => setSettings({ lastBusHour: Number(event.target.value) })} /><small>19:00 – 23:00</small></div>
+        <div><label htmlFor='scenario-drt'>Rural DRT coverage</label><output htmlFor='scenario-drt'>{drtCoverage}%</output><input id='scenario-drt' type='range' min={0} max={100} step={5} disabled={urbanRural === 'urban'} value={drtCoverage} onChange={event => setSettings({ drtCoverage: Number(event.target.value) })} /><small>{urbanRural === 'urban' ? 'Not applicable to an urban-only filter' : '0% – 100%'}</small></div>
+        <div><label htmlFor='scenario-franchise'>Franchise model</label><select id='scenario-franchise' value={franchise} onChange={event => setSettings({ franchise: event.target.value as 'none' | 'partial' | 'full' })}><option value='none'>None</option><option value='partial'>Partial</option><option value='full'>Full</option></select></div>
       </div>
-
-      <div className="p-5 grid sm:grid-cols-2 gap-6">
-        {/* Sliders */}
-        <div className="space-y-5">
-          <div>
-            <div className="flex justify-between mb-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground">
-                Frequency increase
-              </label>
-              <span className="text-[11px] font-mono text-primary font-semibold">+{freqPct}%</span>
-            </div>
-            <input
-              type="range"
-              min={0} max={50} step={5}
-              value={freqPct}
-              onChange={(e) => setSettings({ freqPct: clamp(Number(e.target.value), 0, 50) })}
-              className="w-full accent-primary"
-            />
-            <div className="flex justify-between text-[11px] text-muted-foreground/40 font-mono mt-0.5">
-              <span>0%</span><span>50%</span>
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between mb-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground">
-                Last bus extension
-              </label>
-              <span className="text-[11px] font-mono text-primary font-semibold">to {lastBusHour}:00</span>
-            </div>
-            <input
-              type="range"
-              min={19} max={23} step={1}
-              value={lastBusHour}
-              onChange={(e) => setSettings({ lastBusHour: clamp(Number(e.target.value), 19, 23) })}
-              className="w-full accent-primary"
-            />
-            <div className="flex justify-between text-[11px] text-muted-foreground/40 font-mono mt-0.5">
-              <span>19:00</span><span>23:00</span>
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between mb-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground">
-                DRT rural coverage
-              </label>
-              <span className="text-[11px] font-mono text-primary font-semibold">{drtCoverage}%</span>
-            </div>
-            <input
-              type="range"
-              min={0} max={100} step={5}
-              value={drtCoverage}
-              onChange={(e) => setSettings({ drtCoverage: clamp(Number(e.target.value), 0, 100) })}
-              className="w-full accent-primary"
-            />
-            <div className="flex justify-between text-[11px] text-muted-foreground/40 font-mono mt-0.5">
-              <span>0%</span><span>100%</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground block mb-1.5">
-              Franchise scope
-            </label>
-            <div className="flex gap-2">
-              {(["none", "partial", "full"] as const).map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setSettings({ franchise: opt })}
-                  className={`px-3 py-1.5 text-xs font-semibold capitalize rounded-full border transition-colors ${
-                    franchise === opt
-                      ? "bg-primary border-primary text-white"
-                      : "app-glass border-white/60 text-muted-foreground hover:border-primary/35 hover:text-foreground"
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Impact estimates */}
-        <div className="space-y-3">
-          <p className="text-[11px] font-mono uppercase tracking-wide text-muted-foreground mb-3">
-            Estimated impact
-          </p>
-          {metrics.map((m) => (
-            <div
-              key={m.label}
-              className={`rounded-xl p-3 transition-opacity border border-white/60 ${
-                m.isMuted ? "app-glass opacity-60 select-none" : "app-glass"
-              }`}
-            >
-              <p className="text-xs text-muted-foreground">{m.label}</p>
-              <p className={`text-lg font-bold tabular-nums mt-0.5 ${m.isMuted ? "text-muted-foreground/50" : "text-primary"}`}>
-                {m.value}
-              </p>
-              <p className="text-xs text-muted-foreground leading-snug mt-0.5">{m.sub}</p>
-            </div>
-          ))}
-          <p className="text-[11px] text-muted-foreground/40 leading-relaxed mt-2">
-            Coefficients derived from DfT elasticity-based scenario analysis (Phase 0). BCR uses
-            TAG v2.03fc methodology. These are indicative estimates only.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
+    </section>
+    <section className='app-panel mt-4'><h2>Indicative scenario outputs</h2><p>Illustrative control state; model outputs require selected assumptions.</p><div className='scenario-output-cards'>{outputs.map(([label, unit]) => <article key={label}><h3>{label}</h3><strong>—</strong><small>{unit}</small></article>)}</div>
+      <div className='scenario-summary'><div><h3>Service option summary</h3><table aria-label='Selected service options'><thead><tr><th>Option</th><th>Selected value</th></tr></thead><tbody>{settings.map(([label,value]) => <tr key={label}><td>{label}</td><td>{value}</td></tr>)}</tbody></table></div><aside><h3>About these results</h3><p>No benefit-cost ratio or calculated access impact is available for these controls. Stored scenario target populations do not describe newly gained access.</p><Link className='app-text-link' to={withSearch(appPath(country,'studio'),studioParams.toString())}>Open network Studio</Link></aside></div>
+    </section>
+  </div>
 }

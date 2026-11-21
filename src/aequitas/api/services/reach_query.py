@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import duckdb
@@ -48,9 +47,19 @@ def query_reach(
     urban_rural: str,
     country: str = "england",
 ) -> dict[str, Any]:
-    _ = urban_rural  # LSOA-level reach is not yet split by RUC in the writer
     label = _country_label(country)
     df = load_reach_frame(country=country)
+    classification_missing = False
+    if not df.empty and urban_rural != "all":
+        # Join official origin classifications; never silently return all origins.
+        bands = load_bands_frame(country=country)
+        column = next((c for c in ("urban_rural_norm", "urban_rural") if c in bands.columns), None)
+        if column and "lsoa" in bands.columns:
+            origins = bands.loc[bands[column].astype(str).str.lower() == urban_rural, "lsoa"]
+            df = df[df["lsoa"].isin(origins)]
+        else:
+            classification_missing = True
+            df = pd.DataFrame()
     if df.empty:
         return {
             "available": False,
@@ -62,6 +71,8 @@ def query_reach(
             "histogram": [],
             "ranked": [],
             "note": (
+                "Official origin area classification is unavailable for this filter. "
+                if classification_missing else
                 f"15/30/45 destination counts are not in the {label} pack. "
                 "We do not invent them or copy another country's travel times."
             ),
@@ -83,28 +94,19 @@ def geographies_with_reach() -> list[str]:
 
 
 def load_bands_frame(cfg: PipelineConfig | None = None, country: str = "england") -> pd.DataFrame:
-    from aequitas.analytics.bands import bands_output_path, write_access_bands
+    from aequitas.analytics.bands import bands_output_path
 
     cfg = cfg or PipelineConfig()
     if country == "ireland":
         ie = cfg.processed_dir / "ireland" / "sa_access_bands.parquet"
         if ie.exists():
             return pd.read_parquet(ie)
-        try:
-            from aequitas.ireland.bands import write_ireland_bands
-        except ImportError:
-            return pd.DataFrame()
-
-        written = write_ireland_bands(cfg)
-        return pd.read_parquet(written) if written is not None and written.exists() else pd.DataFrame()
+        return pd.DataFrame()
     if country == "netherlands" or country == "france":
         return pd.DataFrame()
     path = bands_output_path(cfg.processed_dir)
     if path.exists():
         return pd.read_parquet(path)
-    written = write_access_bands(cfg)
-    if written is not None and written.exists():
-        return pd.read_parquet(written)
     return pd.DataFrame()
 
 

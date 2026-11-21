@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
-router = APIRouter(tags=["reach"])
+from aequitas.api.services.reach_scope import current_reach_scope
+
+router = APIRouter(tags=["reach"], dependencies=[Depends(current_reach_scope)])
 
 
 @router.get("/reach")

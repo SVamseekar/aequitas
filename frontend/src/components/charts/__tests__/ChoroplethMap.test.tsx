@@ -1,6 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { describe, expect, it, vi, afterEach } from "vitest"
 import ChoroplethMap from "../ChoroplethMap"
+import { StrictMode } from 'react'
+import maplibregl from 'maplibre-gl'
 
 vi.mock("maplibre-gl", () => ({
   default: {
@@ -25,6 +27,32 @@ afterEach(() => {
 })
 
 describe("ChoroplethMap empty / unmatched", () => {
+  it('keeps Irish projected-metre coverage in SVG and reports the actual ready state',async()=>{
+    const create=vi.mocked(maplibregl.Map);create.mockClear()
+    const status=vi.fn()
+    vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>({features:[{properties:{COUNTY_SLUG:'dublin',COUNTY:'Dublin'},geometry:{type:'Polygon',coordinates:[[[700000,720000],[710000,720000],[710000,730000],[700000,730000],[700000,720000]]]}}]})}))
+    render(<ChoroplethMap onStatus={status} chartData={{geography:'ireland_county',color_mode:'coverage',data:[{area_code:'dublin',area_name:'Dublin',value:55}]}} />)
+    const fallback=await screen.findByTestId('choropleth-svg-fallback')
+    expect(fallback.querySelector('path')).toBeTruthy()
+    expect(create).not.toHaveBeenCalled()
+    expect(status).toHaveBeenCalledWith('ready')
+  })
+  it('keeps a matched missing observation unavailable rather than painting an observed zero', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ features: [{ properties: { RGN22CD: 'E12000005', RGN22NM: 'West Midlands' }, geometry: { type: 'Polygon', coordinates: [[[-2,52],[-1,52],[-1,53],[-2,52]]] } }] }) }))
+    render(<ChoroplethMap chartData={{ geography: 'region', color_mode: 'reach_rate', data: [{ area_code: 'E12000005', area_name: 'West Midlands', value: null }] }} />)
+    const map = await screen.findByTestId('choropleth-svg-fallback')
+    expect(map.querySelector('path')).toHaveAttribute('fill', '#d9d7d2')
+    expect(map.querySelector('title')?.textContent).toContain('Unavailable')
+  })
+  it('opens the real area from the SVG map with mouse and keyboard', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ features: [{ properties: { RGN22CD: 'E12000002', RGN22NM: 'North West' }, geometry: { type: 'Polygon', coordinates: [[[-3, 53], [-2, 53], [-2, 54], [-3, 54], [-3, 53]]] } }] }) }))
+    const onAreaClick = vi.fn()
+    render(<ChoroplethMap onAreaClick={onAreaClick} chartData={{ geography: 'region', color_mode: 'coverage', metric_label: 'Coverage (%)', data: [{ area_code: 'E12000002', area_name: 'North West', value: 83.1 }] }} />)
+    const region = await screen.findByRole('button', { name: /North West: 83.1%/ })
+    fireEvent.click(region)
+    fireEvent.keyDown(region, { key: 'Enter' })
+    expect(onAreaClick.mock.calls).toEqual([['E12000002'], ['E12000002']])
+  })
   it("does not paint a hollow box when data is empty — shows the load-failure sentence", async () => {
     render(
       <ChoroplethMap
@@ -166,5 +194,21 @@ describe("ChoroplethMap empty / unmatched", () => {
       expect(screen.getByTestId("choropleth-svg-fallback")).toBeTruthy()
     })
     expect(screen.getByTestId("choropleth-svg-fallback").querySelector("path")).toBeTruthy()
+  })
+  it('uses a fixed percentage scale for Reach rates and keeps zero as observed', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ features: [{ properties: { RGN22CD: 'E12000005', RGN22NM: 'West Midlands' }, geometry: { type: 'Polygon', coordinates: [[[-2,52],[-1,52],[-1,53],[-2,52]]] } }] }) }))
+    render(<ChoroplethMap chartData={{ geography: 'region', color_mode: 'reach_rate', data: [{ area_code: 'E12000005', area_name: 'West Midlands', value: 0 }] }} />)
+    await waitFor(() => expect(screen.getByTestId('choropleth-svg-fallback')).toBeTruthy())
+    const map = screen.getByTestId('choropleth-svg-fallback')
+    expect(map.querySelector('path')).toHaveAttribute('fill', '#4f8050')
+    expect(map.querySelector('title')?.textContent).toContain('0%')
+  })
+  it('does not mount a map from a discarded StrictMode boundary request', async () => {
+    const create = vi.mocked(maplibregl.Map)
+    create.mockClear()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ features: [{ properties: { RGN22CD: 'E12000005', RGN22NM: 'West Midlands' }, geometry: { type: 'Polygon', coordinates: [[[-2,52],[-1,52],[-1,53],[-2,52]]] } }] }) }))
+    render(<StrictMode><ChoroplethMap chartData={{ geography: 'region', color_mode: 'coverage', data: [{ area_code: 'E12000005', area_name: 'West Midlands', value: 80 }] }} /></StrictMode>)
+    await waitFor(() => expect(create).toHaveBeenCalled())
+    expect(create).toHaveBeenCalledTimes(1)
   })
 })

@@ -25,7 +25,7 @@ interface Props {
   ops: StudioOp[]
 }
 
-const CARTO = "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png"
+const BASEMAP = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 
 export default function StudioResultMap({ result, mode, ops }: Props) {
   const ref = useRef<HTMLDivElement>(null)
@@ -41,9 +41,9 @@ export default function StudioResultMap({ result, mode, ops }: Props) {
           sources: {
             carto: {
               type: "raster",
-              tiles: [CARTO],
+              tiles: [BASEMAP],
               tileSize: 256,
-              attribution: "© OpenStreetMap contributors © CARTO",
+              attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
             },
           },
           layers: [
@@ -51,9 +51,13 @@ export default function StudioResultMap({ result, mode, ops }: Props) {
             { id: "carto-tiles", type: "raster", source: "carto" },
           ],
         } as StyleSpecification,
-        center: [-1.5, 52.8],
+        center: (() => {
+          const point = result.areas.find(area => area.lat != null && area.lon != null) ?? ops.find(op => op.lat != null && op.lon != null)
+          return [point?.lon ?? 0, point?.lat ?? 0] as [number, number]
+        })(),
         zoom: 5.6,
       })
+      mapRef.current.addControl(new maplibregl.NavigationControl(), 'top-left')
     }
     const map = mapRef.current
     const areaFeatures: GeoJSON.Feature[] = result.areas
@@ -71,7 +75,7 @@ export default function StudioResultMap({ result, mode, ops }: Props) {
                 ? "#2f6f4e"
                 : "#c5b8a5"
               : a.covered_before
-                ? "#5b4a3a"
+                ? "#2f6f4e"
                 : "#c5b8a5"
         return {
           type: "Feature",
@@ -128,7 +132,7 @@ export default function StudioResultMap({ result, mode, ops }: Props) {
           const text =
             p.kind === "stop"
               ? String(p.name)
-              : `${p.name} — ${Number(p.people).toLocaleString("en-GB")} people, IMD decile ${p.decile}, change ${p.delta}`
+              : `${p.name} — ${Number(p.people).toLocaleString("en-GB")} people, in-country decile ${p.decile}, change ${p.delta}`
           const popup = new maplibregl.Popup({ closeButton: false })
             .setLngLat(e.lngLat)
             .setText(text)
@@ -152,18 +156,21 @@ export default function StudioResultMap({ result, mode, ops }: Props) {
     if (map.isStyleLoaded()) apply()
     else map.once("load", apply)
 
-    if (result.areas.length === 0) {
-      /* map still shows the patch geometry */
-    }
+    return () => { map.off('load', apply) }
   }, [result, mode, ops])
 
-  if (result.areas.length === 0 && ops.length === 0) {
+  useEffect(() => () => {
+    mapRef.current?.remove()
+    mapRef.current = null
+  }, [])
+
+  if (!result.areas.some(area => area.lat != null && area.lon != null) && !ops.some(op => op.lat != null && op.lon != null)) {
     return (
       <p className="text-sm text-muted-foreground py-4">
-        No before/after map for this run — the patch has no mapped points.
+        No before/after map for this run — mapped coordinates are unavailable.
       </p>
     )
   }
 
-  return <div ref={ref} className="h-[min(48vh,400px)] rounded-2xl overflow-hidden mt-3" data-testid="studio-result-map" />
+  return <div ref={ref} className="studio-result-map" data-testid="studio-result-map" />
 }

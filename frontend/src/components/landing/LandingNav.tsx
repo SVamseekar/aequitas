@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router"
+import { Link, NavLink } from "react-router"
 import { useAuth } from "@/contexts/AuthContext"
-import { AequitasLockup } from "@/components/shared/AequitasLockup"
 
 const LINKS = [
   { to: "/briefings", label: "Briefings" },
@@ -27,15 +26,15 @@ export function LandingNav() {
         className="landing-shell flex items-center justify-between h-16 sm:h-[4.25rem]"
       >
         <Link to="/" aria-label="Aequitas home">
-          <AequitasLockup size="nav" />
+          <span className='app-wordmark'>Aequitas</span>
         </Link>
 
         <div className="flex items-center gap-5 lg:gap-7">
           <div className="hidden md:flex items-center gap-6 lg:gap-7">
             {LINKS.map((l) => (
-              <Link key={l.to} to={l.to} className="landing-nav-link">
+              <NavLink key={l.to} to={l.to} className="landing-nav-link">
                 {l.label}
-              </Link>
+              </NavLink>
             ))}
             <Link to={user ? "/app/england" : "/auth"} className="landing-nav-link hidden md:inline">
               {user ? "Open" : "Log in"}
@@ -44,7 +43,7 @@ export function LandingNav() {
           <Link to={user ? "/app/england" : "/auth"} className="landing-nav-link md:hidden">
             {user ? "Open" : "Log in"}
           </Link>
-          <Link to="/contact" className="landing-btn-outline">
+          <Link to="/contact" className="landing-btn-primary">
             Work with us
           </Link>
         </div>

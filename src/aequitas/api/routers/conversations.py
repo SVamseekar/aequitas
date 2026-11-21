@@ -4,16 +4,20 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from aequitas.api.auth import db
 from aequitas.api.auth.dependencies import require_session
+from aequitas.api.models.workspace import SavedViewContext
+from aequitas.api.models.requests import HistoryMessage
 
 router = APIRouter(tags=["conversations"])
 
 
 class ConversationCreate(BaseModel):
     title: str
+    view_context: SavedViewContext | None = None
+    messages: list[HistoryMessage] = Field(default_factory=list, max_length=200)
 
 
 class MessageCreate(BaseModel):
@@ -51,6 +55,8 @@ async def create_conversation(
         tenant_id=session["tenant_id"],
         user_id=session["user_id"],
         title=body.title,
+        **({"view_context": body.view_context.model_dump()} if body.view_context else {}),
+        **({"messages": [message.model_dump() for message in body.messages]} if body.messages else {}),
     )
     return _serialize_row(row)
 

@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from aequitas.api.auth import db
 from aequitas.api.auth.dependencies import require_session
+from aequitas.api.models.workspace import SavedViewContext
 
 router = APIRouter(tags=["saved_analyses"])
 
@@ -18,6 +19,7 @@ class SavedAnalysisCreate(BaseModel):
     section_id: str | None = None
     dimension: str | None = None
     tags: list[str] = Field(default_factory=list)
+    view_context: SavedViewContext | None = None
 
 
 def _serialize(row: dict) -> dict:
@@ -53,6 +55,7 @@ async def create_analysis(
         section_id=body.section_id,
         dimension=body.dimension,
         tags=body.tags,
+        **({"view_context": body.view_context.model_dump()} if body.view_context else {}),
     )
     return _serialize(row)
 

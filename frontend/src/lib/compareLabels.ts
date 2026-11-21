@@ -4,6 +4,7 @@ export const COMPARE_METRICS = [
   { id: "pct_within_400m", label: "People within 400 m of a stop" },
   { id: "evening_isolated", label: "Evening isolated" },
   { id: "in_country_score", label: "In-country score" },
+  { id: "gini", label: "Service inequality Gini" },
   { id: "jobs_45", label: "45-minute jobs (median destinations)" },
 ] as const
 

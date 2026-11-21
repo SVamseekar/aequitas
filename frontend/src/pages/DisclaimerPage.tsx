@@ -1,3 +1,4 @@
+import { DocumentSections } from "@/components/shared/DocumentSections"
 import { Seo } from "@/components/shared/Seo"
 import { BriefingLayout } from "./briefing/BriefingLayout"
 
@@ -17,8 +18,7 @@ export default function DisclaimerPage() {
         Independent briefing. Not affiliated with DfT, NTA, CBS, or a French ministry.
       </p>
 
-      <div className="space-y-6 max-w-2xl">
-        {[
+      <DocumentSections sections={[
           {
             title: "Data accuracy",
             body: "Analytics come from official public datasets. No warranty of completeness or fitness for a funding decision.",
@@ -39,13 +39,7 @@ export default function DisclaimerPage() {
             title: "Liability",
             body: "Authors accept no liability for decisions made on these pages.",
           },
-        ].map((s) => (
-          <section key={s.title} className="border-b border-[var(--l-rule)] pb-6">
-            <h2 className="font-semibold text-[var(--l-ink)] mb-2">{s.title}</h2>
-            <p className="text-sm text-[var(--l-slate)] leading-relaxed">{s.body}</p>
-          </section>
-        ))}
-      </div>
+        ]} />
     </BriefingLayout>
   )
 }

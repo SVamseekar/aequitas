@@ -468,9 +468,17 @@ def summarise_bands(
     if urban_rural and urban_rural != "all":
         place = f"{place} {urban_rural}"
     n = int(work["lsoa"].nunique())
+    band_kind = {
+        "mixed": "mixed access / service",
+        TRAVEL_SCHEME: "access",
+        SERVICE_SCHEME: "service",
+    }[mode]
+    formula = FORMULA_TRAVEL if mode == TRAVEL_SCHEME else FORMULA_SERVICE
+    if mode == "mixed":
+        formula = f"{FORMULA_SERVICE} {FORMULA_TRAVEL}"
     narrative = (
         f"In {place}, {n:,} LSOAs are assigned an Aequitas "
-        f"{'access' if mode == TRAVEL_SCHEME else 'service'} band. "
+        f"{band_kind} band. "
         f"{people_worst:,.0f} people ({pct_worst:.1f}% of {people_total:,.0f}) live in the worst two bands."
         if pct_worst is not None
         else f"In {place}, {n:,} LSOAs are assigned a band."
@@ -508,7 +516,9 @@ def summarise_bands(
         "people": int(people_total),
         "pct_worst_two": pct_worst,
         "narrative": narrative,
-        "formula": FORMULA_TRAVEL if mode == TRAVEL_SCHEME else FORMULA_SERVICE,
+        "formula": formula,
+        "n_travel_time": n_tt,
+        "n_service": n - n_tt,
         "geographies_with_times": geographies,
         "coverage_400m_share": _coverage_share(work),
     }
@@ -588,7 +598,7 @@ def _band_map(work: pd.DataFrame, region: str) -> dict[str, Any]:
             "data": rows,
             "color_mode": "continuous",
             "aggregation": (
-                "ITL1 choropleth is the share of people in service bands 1–2 "
+            "ITL1 choropleth is the share of people in access / service bands 1–2 "
                 "(not modal SQI, not mean SQI). Unmatched LSOAs are excluded from the map."
             ),
         }

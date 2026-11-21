@@ -1,109 +1,39 @@
-import { Link, useSearchParams } from "react-router"
-import { useFilters, useReach } from "@/api/hooks"
-import { AREA_TYPES, regionsForCountry } from "@/lib/constants"
-import { appPath, withSearch } from "@/lib/appRoutes"
-import { filterSentence } from "@/lib/scoreFormat"
-
-const DEST = [
-  { id: "jobs", label: "Jobs" },
-  { id: "gp", label: "GP" },
-  { id: "school", label: "School" },
-] as const
-
-const CUTOFFS = [15, 30, 45] as const
+import { ChartInsights } from '@/components/dimension/ChartInsights'
+import { Link, useSearchParams } from 'react-router'
+import { useFilters, useReach } from '@/api/hooks'
+import { AREA_TYPES, regionsForCountry } from '@/lib/constants'
+import { appPath } from '@/lib/appRoutes'
+import { filterSentence } from '@/lib/scoreFormat'
+import { reachSelection } from '@/lib/reach'
+import { ReachControls } from '@/components/reach/ReachControls'
+import { ReachHistogram } from '@/components/reach/ReachPlot'
+import { EvidenceState } from '@/components/shared/EvidenceState'
 
 export function AccessReachPanel() {
-  const { country, region, urbanRural } = useFilters()
-  const [params, setParams] = useSearchParams()
-  const cutoffRaw = Number(params.get("cutoff") ?? "45")
-  const cutoff = CUTOFFS.includes(cutoffRaw as 15 | 30 | 45) ? cutoffRaw : 45
-  const dest = DEST.some((d) => d.id === params.get("dest")) ? (params.get("dest") as string) : "jobs"
-  const { data, isLoading } = useReach(region, urbanRural, dest, cutoff, country)
-  const regionName = regionsForCountry(country).find((r) => r.code === region)?.name ?? region
-  const areaName = AREA_TYPES.find((a) => a.code === urbanRural)?.name ?? urbanRural
+  const { country, region, urbanRural, pack } = useFilters()
+  const [params] = useSearchParams()
+  const { dest, cutoff } = reachSelection(params)
+  const query = useReach(region, urbanRural, dest.id, cutoff, country, pack)
+  const data = query.data
+  const regionName = regionsForCountry(country).find(item => item.code === region)?.name ?? region
+  const areaName = AREA_TYPES.find(item => item.code === urbanRural)?.name ?? urbanRural
   const place = filterSentence(regionName, areaName)
-
-  const setControl = (key: string, value: string) => {
-    const next = new URLSearchParams(params)
-    next.set(key, value)
-    setParams(next)
-  }
-
-  return (
-    <section className="app-glass-strong rounded-2xl border border-white/60 p-5 mb-6">
-      <h2 className="text-lg font-semibold text-foreground">Jobs, GP, and school in 15 / 30 / 45 minutes</h2>
-      <p className="text-sm text-muted-foreground mt-1">
-        For {place}, destinations reachable by walk + bus (r5py / R5). Counts, not Hansen. Not the 400 m
-        walking bar above.{" "}
-        <Link className="underline" to={withSearch(appPath(country, "reach"), params.toString())}>
-          Open Reach for bands and the research pack
-        </Link>
-        .
-      </p>
-
-      <div className="flex flex-wrap gap-2 mt-4">
-        {CUTOFFS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setControl("cutoff", String(c))}
-            className={`px-3 py-1.5 text-xs rounded-full border ${
-              cutoff === c ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground"
-            }`}
-          >
-            {c} min
-          </button>
-        ))}
-        {DEST.map((d) => (
-          <button
-            key={d.id}
-            type="button"
-            onClick={() => setControl("dest", d.id)}
-            className={`px-3 py-1.5 text-xs rounded-full border ${
-              dest === d.id ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground"
-            }`}
-          >
-            {d.label}
-          </button>
-        ))}
-      </div>
-
-      {isLoading ? (
-        <div className="h-24 app-glass animate-pulse rounded-xl mt-4" />
-      ) : !data?.available ? (
-        <p className="text-sm text-muted-foreground mt-4 max-w-2xl">
-          {data?.note
-            ?? `${cutoff}-minute ${dest} not precomputed for ${place} in this pack.`}
-        </p>
-      ) : (
-        <div className="mt-4">
-          <p className="text-3xl font-bold tabular-nums">
-            {data.median !== null ? Math.round(data.median).toLocaleString("en-GB") : "—"}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Median {dest} reachable in {cutoff} minutes across {data.n_areas.toLocaleString("en-GB")}{" "}
-            {country === "ireland" ? "Small Areas" : "LSOAs"}
-            in {place}.
-          </p>
-          <div className="mt-4 space-y-1">
-            {data.histogram.map((bin) => {
-              const max = Math.max(...data.histogram.map((b) => b.n), 1)
-              return (
-                <div key={bin.bin} className="flex items-center gap-2 text-xs">
-                  <span className="w-28 shrink-0 text-muted-foreground">{bin.bin}</span>
-                  <div className="flex-1 h-3 bg-muted rounded">
-                    <div
-                      className="h-3 rounded bg-primary/70"
-                      style={{ width: `${(100 * bin.n) / max}%` }}
-                    />
-                  </div>
-                  <span className="tabular-nums w-10 text-right">{bin.n}</span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </section>
-  )
+  const areaNoun = country === 'ireland' ? 'Small Areas' : country === 'netherlands' ? 'buurten' : country === 'france' ? 'IRIS' : 'LSOAs'
+  const bands = new URLSearchParams(params); bands.set('view', 'bands')
+  const reach = new URLSearchParams(params); reach.set('view', 'travel-time')
+  const heading = dest.id === 'jobs' ? 'Employment destination points' : `${dest.label} destination points`
+  if (!query.isPending && !query.error && !data?.available) return <div className='access-travel'>
+    <EvidenceState kind='unavailable' title='Not available in this pack' description={data?.note ?? 'No computed travel-time observations for this country and filter.'} action={<Link className='app-panel-button' to={{ pathname: appPath(country, 'reach'), search: `?${bands}` }}>View service bands</Link>} />
+    <details className='app-panel mt-4'><summary>Change destination or travel-time cutoff</summary><ReachControls segmentedCutoff /></details>
+  </div>
+  return <div className='access-travel'>
+    <section className='app-panel'><h2>Travel time to key destinations</h2><p>Counts of destination points by origin area; R5 walk + bus. Stop proximity at 400 m is a separate measure.</p><ReachControls segmentedCutoff /></section>
+    {query.isPending ? <p className='app-panel mt-4' role='status'>Loading selected travel times…</p> : query.error ? <div className='app-panel mt-4' role='alert'><h2>Travel times unavailable for this request</h2><p>Travel-time caches use the current network. Historical results are unavailable; no current counts are shown as dated results.</p><button type='button' className='app-panel-button' onClick={() => void query.refetch()}>Retry travel times</button></div> : <div className='access-travel-layout'>
+      <section className='app-panel'><h2>{heading}</h2><p>Reachable destination points for {place}, within {cutoff} minutes.</p>{data && data.histogram.length > 0 ? <ReachHistogram rows={data.histogram} unit={`${dest.unit} within ${cutoff} minutes`} areaNoun={areaNoun} /> : <p>No histogram observations are stored for this configuration.</p>}</section>
+      <aside><section className='app-panel'><h2>Destination points (median origin)</h2><strong>{data?.available && typeof data.median === 'number' && Number.isFinite(data.median) ? data.median.toLocaleString('en-GB', { maximumFractionDigits: 1 }) : '—'}</strong><p>{dest.unit}. These are destination counts, rather than total accessible jobs or Hansen scores.</p></section>
+        <section className='app-panel'><h2>Areas covered by travel-time calculation</h2><strong>{data?.available ? data.n_areas.toLocaleString('en-GB') : '—'}</strong><p>{data?.available ? `${areaNoun} in the computed scope, including origins with zero reachable destinations.` : 'Not available in this pack.'}</p></section>
+        <section className='app-panel'><ChartInsights items={data?.available?[...(typeof data.median==='number'&&Number.isFinite(data.median)?[`The median computed origin reaches **${data.median.toLocaleString('en-GB')} ${dest.unit}** within **${cutoff} minutes**.`]:[]),`The calculation covers **${data.n_areas.toLocaleString('en-GB')} ${areaNoun}**, including origins with zero reachable destinations.`]:[]} /><h2>Method and scope</h2><p>Origin-centroid travel times use the stored R5 walk + public transport computation. A national filter describes computed origins only, and does not imply nationwide calculation.</p><p>Employment points may be an area-centroid proxy. No isochrone or uncomputed journey time is inferred.</p><Link className='app-text-link' to={{ pathname: appPath(country, 'reach'), search: `?${reach}` }}>Open all nine configurations in Reach</Link></section>
+      </aside>
+    </div>}
+  </div>
 }

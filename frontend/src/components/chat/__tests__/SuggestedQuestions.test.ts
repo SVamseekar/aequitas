@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { ENGLAND_QUICK_ACTIONS } from "../QuickActions"
-import { IRELAND_SUGGESTIONS } from "../SuggestedQuestions"
+import { ENGLAND_QUICK_ACTIONS } from "@/lib/quickActions"
+import { IRELAND_SUGGESTIONS } from "@/lib/suggestedQuestions"
 
 describe("Ireland chat suggestions", () => {
   it("does not suggest BSA or IMD", () => {

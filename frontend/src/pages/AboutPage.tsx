@@ -19,7 +19,7 @@ export default function AboutPage() {
         About · {AUTHOR_NAME}
       </p>
       <h1 className="font-display text-3xl sm:text-4xl text-[var(--l-ink)] mt-2 mb-4 text-balance">
-        A briefing method, not a hosted warehouse
+        Official evidence. Local decisions.
       </h1>
       <p className="text-[var(--l-slate)] max-w-xl text-pretty mb-8">
         Same doors in four countries. Official timetables × official deprivation. The engine
@@ -43,6 +43,7 @@ export default function AboutPage() {
         ))}
       </ul>
       <LandingActions />
+      <section className='border-t border-border mt-10 pt-7 max-w-3xl'><h2 className='text-3xl mb-3'>About the author</h2><h3 className='text-2xl mb-3'>{AUTHOR_NAME}</h3><p className='text-sm text-muted-foreground leading-relaxed'>Aequitas is an independent method for reproducible transport briefings. It joins official timetables to census geography and each country’s own deprivation measure. The analytics engine runs locally; scores and ranks remain within their country.</p></section>
     </BriefingLayout>
   )
 }

@@ -4,7 +4,7 @@ import { LandingFooter } from "@/components/landing/LandingFooter"
 
 export function BriefingLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="landing-root min-h-screen">
+    <div className="landing-root public-redesign min-h-screen">
       <LandingNav />
       <main id="main-content" className="landing-shell py-12 sm:py-14">
         {children}

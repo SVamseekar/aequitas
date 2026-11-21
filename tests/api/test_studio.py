@@ -1,9 +1,39 @@
 """Studio job / result schema."""
 
+import time
+from pathlib import Path
+
+import pandas as pd
+import pytest
+from fastapi.testclient import TestClient
+
 from aequitas.analytics.studio import parse_studio_patch
 
 
-def test_job_and_result_schema(api_client):
+def test_job_and_result_schema(
+    api_client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from aequitas.api.routers import studio
+    from aequitas.core import config
+
+    isolated = config.PipelineConfig(processed_dir=tmp_path / "processed", raw_dir=tmp_path / "raw")
+    monkeypatch.setattr(config, "PipelineConfig", lambda: isolated)
+    centroids = pd.DataFrame(
+        [
+            {
+                "area": "fixture-area",
+                "name": "Fixture only",
+                "lat": 52.48,
+                "lon": -1.9,
+                "pop": 100,
+                "imd_decile": 1,
+            }
+        ]
+    )
+    monkeypatch.setattr(studio, "_load_centroids", lambda *args: centroids)
+    monkeypatch.setattr(studio, "_load_baseline_stops", lambda *args: [])
     payload = {
         "country": "england",
         "region": "all",
@@ -18,14 +48,16 @@ def test_job_and_result_schema(api_client):
     body = resp.json()
     assert set(body) >= {"id", "status"}
     job_id = body["id"]
-    # Tiny job should finish during the sync join window.
-    if body["status"] != "done":
+    # Job creation is asynchronous. Wait for the real isolated worker result.
+    for _ in range(100):
         st = api_client.get(f"/api/studio/jobs/{job_id}")
         assert st.status_code == 200
         assert "status" in st.json()
+        if st.json()["status"] != "running":
+            break
+        time.sleep(0.01)
+    assert st.json()["status"] == "done", st.json()
     result = api_client.get(f"/api/studio/jobs/{job_id}/result")
-    if result.status_code == 409:
-        return
     assert result.status_code == 200
     data = result.json()
     assert set(data) >= {
@@ -46,9 +78,14 @@ def test_job_and_result_schema(api_client):
     # Never invent a 45-min bar when reach is missing
     if not data["reach_available"]:
         assert data["mode"] != "r5_delta"
+    assert data["people_gained"] == 100
+    assert data["people_lost"] == 0
+    csv = api_client.get(f"/api/studio/jobs/{job_id}/winners.csv")
+    assert csv.status_code == 200
+    assert "fixture-area" in csv.text
 
 
-def test_bad_patch_is_english(api_client):
+def test_bad_patch_is_english(api_client: TestClient) -> None:
     resp = api_client.post(
         "/api/studio/jobs",
         json={"country": "england", "ops": [{"op": "teleport"}]},

@@ -10,6 +10,9 @@ from aequitas.warehouse.chart_dispatch import build_chart_data
 from aequitas.warehouse.precompute import REGION_NAMES, _dispatch, _load_sources, _Sources
 
 
+# These integration fixtures read the real pipeline inputs.
+pytestmark = pytest.mark.requires_data
+
 @pytest.fixture(scope="module")
 def cfg() -> PipelineConfig:
     return PipelineConfig()

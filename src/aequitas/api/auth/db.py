@@ -418,19 +418,27 @@ async def list_conversations(pool: asyncpg.Pool, *, tenant_id: str) -> list[dict
 
 
 async def create_conversation(
-    pool: asyncpg.Pool, *, tenant_id: str, user_id: str, title: str
+    pool: asyncpg.Pool, *, tenant_id: str, user_id: str, title: str,
+    view_context: dict | None = None, messages: list[dict[str, str]] | None = None,
 ) -> dict:
     async with pool.acquire() as conn:
-        row = await conn.fetchrow(
-            """
-            INSERT INTO conversations (tenant_id, user_id, title)
-            VALUES ($1, $2, $3)
-            RETURNING *
-            """,
-            tenant_id,
-            user_id,
-            title,
-        )
+        async with conn.transaction():
+            row = await conn.fetchrow(
+                """
+                INSERT INTO conversations (tenant_id, user_id, title, view_context)
+                VALUES ($1, $2, $3, $4)
+                RETURNING *
+                """,
+                tenant_id, user_id, title, view_context,
+            )
+            for position, message in enumerate(messages or []):
+                await conn.execute(
+                    """INSERT INTO messages
+                       (conversation_id, tenant_id, user_id, role, content, created_at)
+                       VALUES ($1, $2, $3, $4, $5,
+                               transaction_timestamp() + $6::int * interval '1 microsecond')""",
+                    row["id"], tenant_id, user_id, message["role"], message["content"], position,
+                )
         return dict(row)
 
 
@@ -561,13 +569,14 @@ async def create_saved_analysis(
     section_id: str | None = None,
     dimension: str | None = None,
     tags: list[str] | None = None,
+    view_context: dict | None = None,
 ) -> dict:
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """
             INSERT INTO saved_analyses
-              (tenant_id, user_id, title, content, section_id, dimension, tags)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+              (tenant_id, user_id, title, content, section_id, dimension, tags, view_context)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
             """,
             tenant_id,
@@ -577,6 +586,7 @@ async def create_saved_analysis(
             section_id,
             dimension,
             tags or [],
+            view_context,
         )
         return dict(row)
 
@@ -615,13 +625,14 @@ async def create_policy_note(
     stance: str | None,
     thesis: str,
     critique: str | None = None,
+    view_context: dict | None = None,
 ) -> dict:
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """
             INSERT INTO policy_notes
-              (tenant_id, user_id, dimension, region, stance, thesis, critique)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+              (tenant_id, user_id, dimension, region, stance, thesis, critique, view_context)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
             """,
             tenant_id,
@@ -631,6 +642,7 @@ async def create_policy_note(
             stance,
             thesis,
             critique,
+            view_context,
         )
         return dict(row)
 
@@ -645,6 +657,7 @@ async def update_policy_note(
     stance: str | None = None,
     thesis: str | None = None,
     critique: str | None = None,
+    view_context: dict | None = None,
 ) -> dict | None:
     existing = None
     async with pool.acquire() as conn:
@@ -663,6 +676,7 @@ async def update_policy_note(
               stance = COALESCE($3, stance),
               thesis = COALESCE($4, thesis),
               critique = COALESCE($5, critique),
+              view_context = COALESCE($8, view_context),
               updated_at = now()
             WHERE id = $6 AND tenant_id = $7
             RETURNING *
@@ -674,6 +688,7 @@ async def update_policy_note(
             critique,
             note_id,
             tenant_id,
+            view_context,
         )
         return dict(row) if row is not None else None
 
@@ -710,13 +725,14 @@ async def create_saved_region(
     region_code: str,
     region_name: str,
     notes: str | None = None,
+    view_context: dict | None = None,
 ) -> dict:
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """
             INSERT INTO saved_regions
-              (tenant_id, user_id, region_code, region_name, notes)
-            VALUES ($1, $2, $3, $4, $5)
+              (tenant_id, user_id, region_code, region_name, notes, view_context)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING *
             """,
             tenant_id,
@@ -724,6 +740,7 @@ async def create_saved_region(
             region_code,
             region_name,
             notes,
+            view_context,
         )
         return dict(row)
 

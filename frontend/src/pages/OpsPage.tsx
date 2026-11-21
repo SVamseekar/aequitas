@@ -1,6 +1,10 @@
 import { useFilters, useOps } from "@/api/hooks"
 import { AREA_TYPES, COUNTRIES, regionsForCountry } from "@/lib/constants"
 import { filterSentence } from "@/lib/scoreFormat"
+import { Link, useSearchParams } from 'react-router'
+import { OpsEvidence } from '@/components/ops/OpsEvidence'
+import { OpsCountryScope } from '@/components/ops/OpsCountryScope'
+import { BriefingActions } from '@/components/shared/BriefingActions'
 
 function feedNoun(country: string): string {
   if (country === "ireland") {
@@ -22,20 +26,23 @@ export default function OpsPage() {
   const areaName = AREA_TYPES.find((a) => a.code === urbanRural)?.name ?? urbanRural
   const place = filterSentence(regionName, areaName)
   const ops = useOps(country, pack)
+  const [params] = useSearchParams()
+  const view = ['snapshot', 'regional', 'deprivation', 'sources'].includes(params.get('view') ?? '') ? params.get('view')! : 'snapshot'
 
   const errStatus = (ops.error as { status?: number } | null)?.status
   const unknownPack =
     errStatus === 404 && Boolean(pack) && String(ops.error?.message ?? "").includes("Unknown pack")
 
   return (
-    <div data-testid="ops-page" className="pb-10">
-      <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-1">
-        Ops — {place}
-      </h1>
-      <p className="text-sm text-muted-foreground mb-4 max-w-2xl">
-        Where the published timetable is not what ran, if a free real-time feed exists. Not a second
-        score. Not 15/30/45. {feedNoun(country)}.
+    <div data-testid="ops-page" className="ops-page pb-10">
+      <div className='ops-heading'><h1 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-1">
+        Operations — {country !== 'england' ? countryName : view === 'regional' ? 'regional feed coverage' : view === 'deprivation' ? 'deprivation join' : view === 'sources' ? 'sources' : place}
+      </h1><BriefingActions /></div>
+      <p className="text-sm text-muted-foreground mb-4 max-w-2xl" title={feedNoun(country)}>
+        {countryName} · {country==='england'?'collected feed snapshot and update counts':'real-time public transport data availability'}. Separate from the static equity score.
       </p>
+      <nav className='evidence-tabs' aria-label='Operations views'>{[['snapshot','Snapshot'], ['regional','Regional join'], ['deprivation','Deprivation join'], ['sources','Sources']].map(([id,label]) => { const next = new URLSearchParams(params); next.set('view',id); return <Link key={id} to={{search:`?${next}`}} aria-current={view===id?'page':undefined}>{label}</Link> })}</nav>
+      <p className='text-xs text-muted-foreground mb-4'>Collector snapshot scope is independent of the static region and area filters.</p>
 
       {ops.isLoading ? (
         <div className="h-64 app-glass animate-pulse rounded-2xl" />
@@ -44,143 +51,17 @@ export default function OpsPage() {
           Unknown pack {pack} for {countryName}. Ops is not time-travelled to a date we did not store.
         </p>
       ) : errStatus === 404 ? (
-        <p className="text-sm text-muted-foreground max-w-xl" data-testid="ops-empty">
-          No ops rollup for {countryName} yet. {feedNoun(country)}. We do not invent 0% on-time.
-        </p>
-      ) : ops.data?.empty ? (
+        <><p className="text-sm text-muted-foreground max-w-xl" data-testid="ops-empty">No ops rollup for {countryName} yet. We do not invent 0% on-time.</p><OpsCountryScope country={country} /></>
+      ) : ops.error ? <div role='alert' className='app-panel'><p>Collector observations could not be loaded.</p><button type='button' className='app-panel-button' onClick={() => void ops.refetch()}>Retry operations</button></div> : ops.data?.empty ? (
         <div className="space-y-3">
-          <p className="text-sm text-muted-foreground max-w-xl" data-testid="ops-empty">
-            {ops.data.empty_reason}
-          </p>
-          {country === "france" ? <FranceSample data={ops.data} /> : null}
+          <OpsCountryScope country={country} data={ops.data} />
+          <details className='ops-collector-note'><summary>Collector availability details</summary><p className="text-sm text-muted-foreground max-w-xl" data-testid="ops-empty">{ops.data.empty_reason}</p></details>
         </div>
       ) : ops.data ? (
-        <OpsExhibit data={ops.data} country={country} />
+        <OpsEvidence data={ops.data} country={country} view={view} />
       ) : (
         <p className="text-sm text-muted-foreground">Ops snapshot could not be loaded.</p>
       )}
-    </div>
-  )
-}
-
-function OpsExhibit({
-  data,
-  country,
-}: {
-  data: NonNullable<ReturnType<typeof useOps>["data"]>
-  country: string
-}) {
-  const rows = data.by_region ?? []
-  const maxN = Math.max(1, ...rows.map((r) => r.n_updates))
-  const pct = data.pct_late
-  return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Updates in window" value={data.n_updates.toLocaleString("en-GB")} />
-        <Stat
-          label={
-            country === "france"
-              ? `Sample late > ${(data.late_threshold_seconds ?? 300) / 60} min`
-              : `Late > ${(data.late_threshold_seconds ?? 300) / 60} min`
-          }
-          value={pct == null ? "—" : `${pct.toFixed(1)}%`}
-        />
-        <Stat label="Skipped / cancelled" value={`${data.n_skipped} / ${data.n_cancelled}`} />
-        <Stat
-          label="Route coverage"
-          value={data.coverage_pct == null ? "—" : `${data.coverage_pct.toFixed(1)}%`}
-        />
-      </div>
-
-      {rows.length > 0 ? (
-        <div data-testid="ops-strip">
-          <h2 className="text-sm font-semibold mb-2">
-            Late / skipped by {country === "england" ? "ITL1 region" : "region"} (this snapshot)
-          </h2>
-          <ul className="space-y-1.5">
-            {rows.map((r) => (
-              <li key={r.code} className="grid grid-cols-[minmax(7rem,11rem)_1fr_auto] gap-2 items-center">
-                <span className="text-xs text-muted-foreground truncate">{r.name}</span>
-                <div className="h-3 rounded-full bg-black/10 overflow-hidden flex">
-                  <div
-                    className="h-full bg-amber-700/80"
-                    style={{ width: `${Math.max(2, (r.n_late / maxN) * 100)}%` }}
-                    title={`${r.n_late} late`}
-                  />
-                  <div
-                    className="h-full bg-stone-400/70"
-                    style={{ width: `${Math.max(0, ((r.n_updates - r.n_late) / maxN) * 100)}%` }}
-                  />
-                </div>
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  {r.n_late} late · {r.n_skipped} skipped · {r.n_updates}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          No region join on this snapshot (stop_id did not match the static pack, or the feed had no
-          stop ids).
-        </p>
-      )}
-
-      {country === "england" && data.by_imd_decile?.some((d) => d.n_updates > 0) ? (
-        <div>
-          <h2 className="text-sm font-semibold mb-2">Updates that joined an IMD decile</h2>
-          <div className="flex gap-1 items-end h-24">
-            {data.by_imd_decile.map((d) => (
-              <div key={d.imd_decile} className="flex-1 flex flex-col justify-end items-center gap-1">
-                <div
-                  className="w-full bg-amber-800/70 rounded-t"
-                  style={{ height: `${Math.max(4, (d.n_updates / Math.max(1, ...data.by_imd_decile.map((x) => x.n_updates))) * 80)}px` }}
-                />
-                <span className="text-[10px] text-muted-foreground">{d.imd_decile}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Decile 1 = most deprived. England warehouse join only.</p>
-        </div>
-      ) : null}
-
-      <p className="text-sm text-foreground max-w-2xl" data-testid="ops-late-rule">
-        {pct == null
-          ? `Late is — because n_with_delay = ${data.n_with_delay}. Late means delay > ${data.late_threshold_seconds ?? 300} seconds, and only when that field exists.`
-          : `Late means delay > ${data.late_threshold_seconds ?? 300} seconds. ${data.n_with_delay.toLocaleString("en-GB")} updates carried a delay field.`}
-        {country === "england" && pct == null
-          ? " This is AVL coverage, not a DfT punctuality statistic."
-          : ""}
-      </p>
-      {country === "france" ? <FranceSample data={data} /> : null}
-      <p className="text-sm text-foreground max-w-2xl" data-testid="ops-coverage">
-        {data.coverage_sentence}
-      </p>
-      <p className="text-xs text-muted-foreground" data-testid="ops-vintage">
-        Rollup vintage {data.vintage}. {data.window_note} {data.late_threshold_note}
-      </p>
-    </div>
-  )
-}
-
-function FranceSample({
-  data,
-}: {
-  data: NonNullable<ReturnType<typeof useOps>["data"]>
-}) {
-  return (
-    <p className="text-sm text-foreground max-w-2xl" data-testid="ops-france-sample">
-      {data.n_gtfs_rt_listed ?? "—"} listed / {data.n_sampled ?? "—"} sampled / {data.skipped_n ?? "—"} skipped.
-      Not a national AOM figure.
-    </p>
-  )
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="app-glass rounded-2xl p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-xl font-semibold tabular-nums mt-1">{value}</p>
     </div>
   )
 }

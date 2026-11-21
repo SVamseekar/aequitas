@@ -1,0 +1,7 @@
+import type { SectionItem } from '@/api/types'
+import { ChartRenderer } from '@/components/charts/ChartRenderer'
+import { finiteObservation as finite, serviceNumber } from '@/lib/serviceData'
+
+export function CorrelationDomains({ sections }: { sections: SectionItem[] }) {
+  return <div className='correlation-domains'><p>Six stored relationships within England. Axes retain their native source units. Associations are not causal effects.</p><div className='correlation-domains-grid'>{sections.map(section=><section className='app-panel' key={section.section_id} data-section={section.section_id}><h2>{String(section.chart_data.x_label??'Source predictor')} and {String(section.chart_data.y_label??'Source service measure')}</h2><p>{serviceNumber(section.stats.n)} observations · <strong>{finite(section.stats.r)?`r = ${section.stats.r.toFixed(4)}`:'Correlation unavailable'}</strong>{typeof section.stats.strength==='string'&&typeof section.stats.direction==='string'?` (${section.stats.strength} ${section.stats.direction})`:''}</p>{section.stats.omit?<p>{typeof section.stats.omit_reason==='string'?section.stats.omit_reason:'This relationship is unavailable in the selected pack.'}</p>:<ChartRenderer chartData={{...section.chart_data,height:250,show_summary:false,point_color:'#8eac83',point_opacity:.45,point_radius:2,line_color:'#d65b2d'}} />}</section>)}</div>{!sections.length&&<p className='app-panel'>No domain relationships are stored for this filter.</p>}</div>
+}

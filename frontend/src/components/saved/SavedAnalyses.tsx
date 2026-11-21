@@ -1,112 +1,26 @@
-import { useState, useEffect, useCallback } from "react"
-import { useAuth } from "@/contexts/AuthContext"
-import { fetchJson, apiDelete } from "@/api/client"
-import { Trash2, ChevronDown, ChevronUp, Bookmark } from "lucide-react"
+import {useState} from 'react'
+import {Link,useSearchParams} from 'react-router'
+import {useMutation} from '@tanstack/react-query'
+import {apiDelete} from '@/api/client'
+import {useTenantCollection} from '@/hooks/useTenantCollection'
+import {savedContextLabels,savedContextHref,type SavedAnalysis} from '@/lib/workspace'
+import {Markdown} from '@/components/shared/Markdown'
+import {WorkspaceState} from './WorkspaceState'
+import {PolicyNoteForm} from './PolicyNoteForm'
 
-interface SavedAnalysisRow {
-  id: string
-  title: string
-  content: string
-  section_id: string | null
-  dimension: string | null
-  tags: string[]
-  created_at: string
-}
-
-export function SavedAnalyses() {
-  const { user } = useAuth()
-  const [analyses, setAnalyses] = useState<SavedAnalysisRow[]>([])
-  const [loading, setLoading] = useState(true)
-  const [expanded, setExpanded] = useState<string | null>(null)
-
-  const refresh = useCallback(async () => {
-    if (!user) return
-    setLoading(true)
-    try {
-      const data = await fetchJson<SavedAnalysisRow[]>("/saved-analyses")
-      setAnalyses(data)
-    } catch {
-      setAnalyses([])
-    } finally {
-      setLoading(false)
-    }
-  }, [user])
-
-  useEffect(() => {
-    void refresh()
-  }, [refresh])
-
-  const handleDelete = async (id: string) => {
-    await apiDelete(`/saved-analyses/${id}`)
-    void refresh()
-  }
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-16">
-        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-      </div>
-    )
-  }
-
-  if (analyses.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Bookmark className="w-8 h-8 text-muted-foreground/20 mb-3" />
-        <p className="text-sm text-muted-foreground">No saved analyses yet.</p>
-        <p className="text-xs text-muted-foreground/60 mt-1">
-          Save narratives from the dashboard to find them here.
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-2">
-      {analyses.map((a) => (
-        <div key={a.id} className="app-glass-strong rounded-2xl border border-white/60">
-          <div className="flex items-start gap-3 p-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
-              <div className="flex items-center gap-3 mt-0.5">
-                {a.dimension && (
-                  <span className="text-[11px] font-mono text-primary uppercase">
-                    {a.dimension}
-                  </span>
-                )}
-                <span className="text-[11px] text-muted-foreground/40 font-mono">
-                  {new Date(a.created_at).toLocaleDateString("en-GB")}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                onClick={() => setExpanded(expanded === a.id ? null : a.id)}
-                className="p-1.5 rounded hover:bg-muted text-muted-foreground transition-colors"
-              >
-                {expanded === a.id ? (
-                  <ChevronUp className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                )}
-              </button>
-              <button
-                onClick={() => void handleDelete(a.id)}
-                className="p-1.5 rounded hover:bg-red-500/10 text-muted-foreground/40 hover:text-red-400 transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-          {expanded === a.id && (
-            <div className="px-4 pb-4 border-t border-border pt-3">
-              <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                {a.content}
-              </p>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  )
+export function SavedAnalyses(){
+ const query=useTenantCollection<SavedAnalysis>('/saved-analyses')
+ const [params,setParams]=useSearchParams(),[confirm,setConfirm]=useState<string|null>(null),[noteSaved,setNoteSaved]=useState(false)
+ const search=params.get('q')??'',records=query.data??[]
+ const filtered=records.filter(row=>`${row.title} ${row.dimension??''} ${(row.tags??[]).join(' ')} ${savedContextLabels(row.view_context).country}`.toLowerCase().includes(search.toLowerCase()))
+ const selected=records.find(row=>row.id===params.get('analysis')),scope=savedContextLabels(selected?.view_context)
+ const choose=(id:string)=>{const next=new URLSearchParams(params);next.set('analysis',id);setParams(next);setNoteSaved(false)}
+ const remove=useMutation({mutationFn:(id:string)=>apiDelete(`/saved-analyses/${encodeURIComponent(id)}`),onSuccess:()=>{setConfirm(null);void query.refetch()}})
+ return <div><label className='workspace-search'>Search analyses<input type='search' value={search} onChange={event=>{const next=new URLSearchParams(params);if(event.target.value)next.set('q',event.target.value);else next.delete('q');setParams(next)}} placeholder='Title, topic, country or tag' /></label>
+  <WorkspaceState loading={query.isPending} error={query.error} retry={()=>void query.refetch()} empty={!query.isPending&&!query.error&&!records.length?'No saved analyses yet':undefined} />
+  {!query.error&&records.length>0&&<section className='app-panel'><h2>Saved analyses</h2><div className='access-table-scroll'><table aria-label='Saved analyses'><thead><tr><th>Topic</th><th>Country</th><th>Network date</th><th>Tags</th><th>Actions</th></tr></thead><tbody>{filtered.map(row=>{const context=savedContextLabels(row.view_context);return <tr key={row.id} aria-selected={selected?.id===row.id}><th scope='row'>{row.title}</th><td>{context.country}</td><td>{context.network}</td><td>{(row.tags??[]).length?(row.tags??[]).join(', '):'—'}</td><td><div className='workspace-actions'><button type='button' className='app-panel-button' onClick={()=>choose(row.id)}>Open {row.title}</button>{confirm===row.id?<><button type='button' className='app-panel-button' disabled={remove.isPending} onClick={()=>remove.mutate(row.id)}>Confirm delete</button><button type='button' className='app-panel-button' onClick={()=>setConfirm(null)}>Cancel</button></>:<button type='button' className='app-panel-button' onClick={()=>setConfirm(row.id)} aria-label={`Delete ${row.title}`}>Delete</button>}</div></td></tr>})}</tbody></table></div>{!filtered.length&&<p>No saved analyses match this search.</p>}</section>}
+  {remove.error&&<p role='alert'>{remove.error.message}</p>}
+  {params.get('analysis')&&!query.isPending&&!selected&&<p className='app-panel'>The selected analysis is unavailable in this workspace.</p>}
+  {selected&&<section className='app-panel mt-4'><div className='workspace-section-heading'><h2>{selected.title}</h2>{scope.context?<Link className='app-panel-button' to={savedContextHref(scope.context)}>Open original view</Link>:<span>Original view unavailable: context was not stored.</span>}</div><div className='workspace-detail-grid'><div><h3>Details</h3><dl className='network-summary'><div><dt>Country</dt><dd>{scope.country}</dd></div><div><dt>Region</dt><dd>{scope.region}</dd></div><div><dt>Network date</dt><dd>{scope.network}</dd></div><div><dt>Topic</dt><dd>{selected.dimension??'Not stored'}</dd></div></dl><div className='workspace-saved-content'><Markdown content={selected.content} /></div></div><div>{noteSaved?<p role='status'>Policy note saved to this workspace.</p>:<PolicyNoteForm key={selected.id} initialContext={scope.context} initialDimension={selected.dimension} onSaved={()=>setNoteSaved(true)} />}</div></div></section>}
+ </div>
 }

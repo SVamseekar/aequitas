@@ -1,3 +1,4 @@
+import { DocumentSections } from "@/components/shared/DocumentSections"
 import { Seo } from "@/components/shared/Seo"
 import { SUPPORT_EMAIL } from "@/lib/site"
 import { BriefingLayout } from "./briefing/BriefingLayout"
@@ -43,14 +44,7 @@ export default function PrivacyPage() {
       </h1>
       <p className="text-sm text-[var(--l-slate)] mb-8">Last updated: 2 July 2026</p>
 
-      <div className="space-y-6 max-w-2xl">
-        {SECTIONS.map((s) => (
-          <section key={s.title} className="border-b border-[var(--l-rule)] pb-6">
-            <h2 className="font-semibold text-[var(--l-ink)] mb-2">{s.title}</h2>
-            <p className="text-sm text-[var(--l-slate)] leading-relaxed">{s.body}</p>
-          </section>
-        ))}
-      </div>
+      <DocumentSections sections={SECTIONS} />
 
       <p className="text-sm text-[var(--l-slate)] mt-10">
         Questions:{" "}

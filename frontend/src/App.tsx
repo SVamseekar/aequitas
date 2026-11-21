@@ -2,7 +2,9 @@ import { lazy, Suspense } from "react"
 import { BrowserRouter, Navigate, Routes, Route, useLocation, useParams } from "react-router"
 import { HelmetProvider } from "react-helmet-async"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { AuthProvider } from "@/contexts/AuthContext"
+import { AuthProvider } from "@/contexts/AuthProvider"
+import { WorkspaceLayout } from '@/components/saved/WorkspaceLayout'
+import { useAuth } from '@/contexts/AuthContext'
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { AppShell } from "./components/layout/AppShell"
 import { HomePage } from "./components/home/HomePage"
@@ -33,24 +35,21 @@ const RefundsPage = lazy(() => import("./pages/RefundsPage"))
 
 // Saved sub-pages rendered inside a simple wrapper
 const SavedPage = lazy(() =>
-  import("./components/saved/SavedAnalyses").then((m) => ({ default: SavedPageWrapper(m.SavedAnalyses, "Saved Analyses") }))
+  import("./components/saved/SavedAnalyses").then((m) => ({ default: SavedPageWrapper(m.SavedAnalyses) }))
 )
 const NotesPage = lazy(() =>
-  import("./components/saved/PolicyNotes").then((m) => ({ default: SavedPageWrapper(m.PolicyNotes, "Policy Notes") }))
+  import("./components/saved/PolicyNotes").then((m) => ({ default: SavedPageWrapper(m.PolicyNotes) }))
 )
 const RegionsPage = lazy(() =>
-  import("./components/saved/SavedRegions").then((m) => ({ default: SavedPageWrapper(m.SavedRegions, "Saved Regions") }))
+  import("./components/saved/SavedRegions").then((m) => ({ default: SavedPageWrapper(m.SavedRegions) }))
 )
+const ConversationsPage=lazy(()=>import('./components/saved/SavedConversations').then(m=>({default:SavedPageWrapper(m.SavedConversations)})))
 
-function SavedPageWrapper(Component: React.ComponentType, title: string) {
+function SavedPageWrapper(Component: React.ComponentType) {
   return function WrappedPage() {
+    const {user,activeTenant}=useAuth()
     return (
-      <div className="min-h-screen app-atmosphere">
-        <div className="max-w-3xl mx-auto px-6 py-10">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground mb-6">{title}</h1>
-          <Component />
-        </div>
-      </div>
+      <WorkspaceLayout><Component key={`${user?.id}:${activeTenant?.id}`} /></WorkspaceLayout>
     )
   }
 }
@@ -138,13 +137,14 @@ export default function App() {
                 <Route path="/app/:country/time" element={<TimePage />} />
                 <Route path="/app/:country/ops" element={<OpsPage />} />
                 <Route path="/app/:country/:dimensionSlug" element={<WarehouseSlugRedirect />} />
+                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/saved" element={<ProtectedRoute><SavedPage /></ProtectedRoute>} />
+                <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
+                <Route path="/regions" element={<ProtectedRoute><RegionsPage /></ProtectedRoute>} />
+                <Route path="/conversations" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
               </Route>
 
               {/* Protected — personal / tenant data */}
-              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-              <Route path="/saved" element={<ProtectedRoute><SavedPage /></ProtectedRoute>} />
-              <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
-              <Route path="/regions" element={<ProtectedRoute><RegionsPage /></ProtectedRoute>} />
               <Route
                 path="*"
                 element={

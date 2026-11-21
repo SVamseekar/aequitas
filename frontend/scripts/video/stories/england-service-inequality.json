@@ -1,0 +1,124 @@
+{
+  "id": "england-service-inequality",
+  "output": "media/aequitas-england-service-inequality-feature.mp4",
+  "audio": {
+    "music": "media/audio/england-service-inequality-music.mp3",
+    "voice": "media/audio/england-service-inequality-voice"
+  },
+  "binds": {
+    "palma": {
+      "from": {
+        "card": "Palma ratio"
+      },
+      "pick": "number",
+      "line": 2
+    },
+    "gini": {
+      "from": {
+        "card": "Gini coefficient"
+      },
+      "pick": "number",
+      "line": 2
+    },
+    "areaCount": {
+      "from": {
+        "card": "Small area count"
+      },
+      "pick": "count",
+      "line": 2
+    },
+    "source": {
+      "from": ".app-source-footer > span",
+      "pick": "text"
+    }
+  },
+  "scenes": [
+    {
+      "type": "title",
+      "eyebrow": "England · Service distribution",
+      "title": "Mapping *bus* service inequality",
+      "subtitle": "How scheduled departures are shared across small areas in England.",
+      "say": "Public transport provision varies sharply across communities. Here is what official timetables show.",
+      "reveal": "mask"
+    },
+    {
+      "type": "stat",
+      "lead": "Across England, the scheduled service Palma ratio reaches",
+      "value": "{{palma}}",
+      "tail": "Measuring concentration of scheduled bus departures across communities.",
+      "source": "{{source}}",
+      "say": "Across England, the scheduled service Palma ratio reaches {{palma}}."
+    },
+    {
+      "type": "stat",
+      "lead": "Across **{{areaCount}} small areas**,",
+      "value": "{{gini}}",
+      "tail": "Service Gini coefficient for scheduled bus departures in England.",
+      "source": "{{source}}",
+      "say": "The overall service Gini coefficient reaches {{gini}}."
+    },
+    {
+      "type": "app",
+      "path": "/app/england/equity",
+      "exit": "zoom",
+      "beats": [
+        {
+          "do": "wide",
+          "caption": "Live in Aequitas: **equity across England**",
+          "seconds": 2.8,
+          "say": "Aequitas measures service distribution using official timetables and census boundaries."
+        },
+        {
+          "do": "lift",
+          "target": {
+            "card": "Palma ratio"
+          },
+          "caption": "Scheduled service concentration: **Palma ratio**",
+          "seconds": 4.0,
+          "say": "The Palma ratio captures the concentration of scheduled departures."
+        },
+        {
+          "do": "compare",
+          "target": {
+            "card": "Palma ratio"
+          },
+          "control": "Area",
+          "options": [
+            "All Areas",
+            "Rural"
+          ],
+          "labels": [
+            "All England",
+            "Rural areas"
+          ],
+          "caption": "Comparing service distribution across **different areas**",
+          "seconds": 5.0,
+          "say": "Comparing rural areas with the national distribution highlights local differences."
+        },
+        {
+          "do": "select",
+          "control": "Area",
+          "option": "Rural",
+          "caption": "Filter to **rural areas**",
+          "say": "Filter the page to view rural small areas."
+        },
+        {
+          "do": "focus",
+          "target": {
+            "card": "Distribution of bus service across the population"
+          },
+          "caption": "Lorenz curve of **scheduled departures**",
+          "highlight": true,
+          "zoom": 1.25,
+          "seconds": 4.5,
+          "say": "The distribution curve displays cumulative departures against the population."
+        }
+      ]
+    },
+    {
+      "type": "outro",
+      "source": "{{source}}",
+      "say": "Aequitas. Transport equity briefings, built on official data."
+    }
+  ]
+}

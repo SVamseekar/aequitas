@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from aequitas.api.auth import db
 from aequitas.api.auth.dependencies import require_session
+from aequitas.api.models.workspace import SavedViewContext
 
 router = APIRouter(tags=["policy_notes"])
 
@@ -18,6 +19,7 @@ class PolicyNoteCreate(BaseModel):
     stance: str | None = None
     thesis: str
     critique: str | None = None
+    view_context: SavedViewContext | None = None
 
 
 class PolicyNoteUpdate(BaseModel):
@@ -26,6 +28,7 @@ class PolicyNoteUpdate(BaseModel):
     stance: str | None = None
     thesis: str | None = None
     critique: str | None = None
+    view_context: SavedViewContext | None = None
 
 
 def _serialize(row: dict) -> dict:
@@ -67,6 +70,7 @@ async def create_note(
         stance=body.stance,
         thesis=body.thesis,
         critique=body.critique,
+        **({"view_context": body.view_context.model_dump()} if body.view_context else {}),
     )
     return _serialize(row)
 
@@ -87,6 +91,7 @@ async def update_note(
         stance=body.stance,
         thesis=body.thesis,
         critique=body.critique,
+        **({"view_context": body.view_context.model_dump()} if body.view_context else {}),
     )
     if row is None:
         raise HTTPException(404, "Policy note not found")

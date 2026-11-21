@@ -1,0 +1,159 @@
+{
+  "story": "england-access",
+  "date": "2026-11-06",
+  "brief": "How public transport access is distributed across England and which communities face zero access.",
+  "references": [
+    {
+      "title": "Introducing Google Vids",
+      "brand": "Google",
+      "url": "https://www.youtube.com/watch?v=4SCjXcBeW1E",
+      "length": "1:04",
+      "observed": [
+        "0:04 title typography rises gracefully from the bottom as key terms illuminate",
+        "0:28 narrator voiceover explains creative workflows over dynamic UI animations"
+      ],
+      "techniques": ["rise-title", "voiceover"],
+      "borrow": "Clean rising typography and clear pacing for complex software workflows"
+    },
+    {
+      "title": "Opening keynote | Google I/O 2023",
+      "brand": "Google",
+      "url": "https://www.youtube.com/watch?v=ixRanV-rdAQ",
+      "length": "2:05:00",
+      "observed": [
+        "0:45 dark technical grid backdrop establishes a structured engineering atmosphere",
+        "2:15 camera pushes deep into the user interface to highlight core metrics"
+      ],
+      "techniques": ["grid-stage", "camera-push"],
+      "borrow": "Technical grid background to frame data-heavy civic transport indicators"
+    },
+    {
+      "title": "WWDC 2022 - June 6 | Apple",
+      "brand": "Apple",
+      "url": "https://www.youtube.com/watch?v=q5D55G7Ejs8",
+      "length": "1:48:00",
+      "observed": [
+        "3:20 large key metric displayed prominently beside detailed contextual paragraph text",
+        "7:45 editorial left aligned headline framed by minimal graphic rule lines"
+      ],
+      "techniques": ["split-number", "editorial-title"],
+      "borrow": "Split number layout balancing large statistics with precise policy context"
+    },
+    {
+      "title": "Config 2024: Figma product launch keynote",
+      "brand": "Figma",
+      "url": "https://www.youtube.com/watch?v=n5gJgkO2Dg0",
+      "length": "1:12:00",
+      "observed": [
+        "12:10 canvas interface tilts in perspective before smoothly flattening toward the camera",
+        "14:35 interactive cursor glides across toolbars to trigger a dropdown selection"
+      ],
+      "techniques": ["3d-tilted-ui", "cursor-demo"],
+      "borrow": "Dynamic tilted framing that flattens into focused interface interactions"
+    },
+    {
+      "title": "Day 1 Opening Keynote - Dylan Field",
+      "brand": "Figma",
+      "url": "https://www.youtube.com/watch?v=v4g-oZ6mFIc",
+      "length": "48:00",
+      "observed": [
+        "8:15 background interface dims while a key component card is spotlighted",
+        "16:40 virtual pointer selects nested options from an interactive navigation control"
+      ],
+      "techniques": ["spotlight", "cursor-demo"],
+      "borrow": "Spotlight contrast to direct viewer attention toward critical regional disparities"
+    },
+    {
+      "title": "Introducing Microsoft 365 Copilot with Outlook, PowerPoint, Excel, and OneNote",
+      "brand": "Microsoft",
+      "url": "https://www.youtube.com/watch?v=ebls5x-gb0s",
+      "length": "3:20",
+      "observed": [
+        "0:52 summary metric card lifts out of the document layer with soft drop shadow",
+        "1:30 voiceover guides the viewer step by step through live document updates"
+      ],
+      "techniques": ["card-lift", "voiceover"],
+      "borrow": "Card lift animation to elevate the primary zero access metric above the page"
+    },
+    {
+      "title": "Introducing Microsoft Copilot Studio | Your Copilot, Your Way",
+      "brand": "Microsoft",
+      "url": "https://www.youtube.com/watch?v=WVn57PXoFPE",
+      "length": "2:40",
+      "observed": [
+        "0:35 camera pushes in tight on configuration panels displaying table rows",
+        "1:15 technical fine grid background organizes floating workflow diagram cards"
+      ],
+      "techniques": ["camera-push", "grid-stage"],
+      "borrow": "Sharp camera pushes that preserve legibility on dense data tables"
+    },
+    {
+      "title": "AUDIO DESCRIPTION: Meet the new Surface Copilot+ PCs",
+      "brand": "Microsoft",
+      "url": "https://www.youtube.com/watch?v=j3ZTmP5qBG4",
+      "length": "1:15",
+      "observed": [
+        "0:18 application window shown at an isometric angle before landing on stage",
+        "0:42 left aligned editorial title introduces hardware capabilities with restrained typography"
+      ],
+      "techniques": ["3d-tilted-ui", "editorial-title"],
+      "borrow": "Perspective tilt entering the scene to give spatial depth to the desktop viewport"
+    },
+    {
+      "title": "Stripe Sessions 2024 | Opening keynote",
+      "brand": "Stripe",
+      "url": "https://www.youtube.com/watch?v=j_esVVI4KlI",
+      "length": "1:15:00",
+      "observed": [
+        "15:20 split metric display pairs an enormous transaction stat with subtitle description",
+        "18:40 background dims to zero opacity leaving only key KPI card illuminated"
+      ],
+      "techniques": ["split-number", "spotlight"],
+      "borrow": "High-contrast spotlighting and split metric lockups for civic statistics"
+    },
+    {
+      "title": "Introducing Stripe Workflows: Customizing Stripe for your needs",
+      "brand": "Stripe",
+      "url": "https://www.youtube.com/watch?v=taiNRgP_rtU",
+      "length": "2:10",
+      "observed": [
+        "0:25 cursor navigates to a dropdown menu and selects an automation trigger",
+        "1:05 focused element lifts above canvas hierarchy to reveal underlying logic"
+      ],
+      "techniques": ["cursor-demo", "card-lift"],
+      "borrow": "Clean cursor choreography when demonstrating interactive filter controls"
+    },
+    {
+      "title": "Introducing Stripe Apps | Stripe Sessions 2022",
+      "brand": "Stripe",
+      "url": "https://www.youtube.com/watch?v=7latZWrmg-4",
+      "length": "2:30",
+      "observed": [
+        "0:40 headline words rise smoothly from beneath an invisible threshold",
+        "1:15 smooth camera push isolates a specific table row within a dense layout"
+      ],
+      "techniques": ["rise-title", "camera-push"],
+      "borrow": "Cinematic push-in to spotlight regional access rankings across England"
+    }
+  ],
+  "decisions": {
+    "theme": "grid",
+    "titleLayout": "left",
+    "statLayout": "split",
+    "frame": "tilt",
+    "archetype": "The coverage divide",
+    "why": "We use a cool technical grid stage and 3D tilted interface framing with split numbers to clearly contrast national access rates against regional zero access pockets, differentiating markedly from previous paper-themed center-aligned videos."
+  },
+  "wishlist": [
+    {
+      "technique": "interactive-choropleth-map-pan",
+      "seen_in": "https://www.youtube.com/watch?v=ebls5x-gb0s",
+      "why": "Allowing camera to pan smoothly across the interactive MapLibre choropleth while polygons highlight on hover would showcase spatial distribution."
+    },
+    {
+      "technique": "table-row-hover-spotlight",
+      "seen_in": "https://www.youtube.com/watch?v=j_esVVI4KlI",
+      "why": "Highlighting individual rows in the Coverage by geography table as the camera zooms in would clarify regional disparities."
+    }
+  ]
+}

@@ -1,16 +1,20 @@
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import type {SavedViewContext} from '@/lib/workspace'
 
-interface Message {
+export interface Message {
   id: string
   role: "user" | "assistant"
   content: string
+  status?:'streaming'|'complete'|'error'
+  sources?:string[]
+  viewContext?:SavedViewContext|null
 }
 
 interface UseChatReturn {
   messages: Message[]
   isStreaming: boolean
   error: string | null
-  sendMessage: (query: string, context: Record<string, string>) => void
+  sendMessage: (query: string, context: Record<string, string>,viewContext?:SavedViewContext|null) => void
   clearMessages: () => void
 }
 
@@ -27,16 +31,17 @@ export function useChat(): UseChatReturn {
   const messagesRef = useRef<Message[]>(messages)
   const controllerRef = useRef<AbortController | null>(null)
   messagesRef.current = messages
+  useEffect(()=>()=>{controllerRef.current?.abort()},[])
 
   const sendMessage = useCallback(
-    async (query: string, context: Record<string, string>) => {
+    async (query: string, context: Record<string, string>,viewContext?:SavedViewContext|null) => {
       controllerRef.current?.abort()
       const controller = new AbortController()
       controllerRef.current = controller
 
       setError(null)
-      const userMsg: Message = { id: nextId(), role: "user", content: query }
-      const assistantMsg: Message = { id: nextId(), role: "assistant", content: "" }
+      const userMsg: Message = { id: nextId(), role: "user", content: query,viewContext }
+      const assistantMsg: Message = { id: nextId(), role: "assistant", content: "",viewContext,status:'streaming' }
       setMessages((prev) => [...prev, userMsg, assistantMsg])
       setIsStreaming(true)
 
@@ -51,6 +56,7 @@ export function useChat(): UseChatReturn {
             context,
             conversation_id: conversationId.current,
             history: messagesRef.current
+              .filter(message=>message.role==='user'||!message.status||message.status==='complete')
               .slice(-6)
               .map((m) => ({ role: m.role, content: m.content })),
           }),
@@ -73,9 +79,11 @@ export function useChat(): UseChatReturn {
 
         let buffer = ""
         let currentEventType = "chunk"
+        let completed=false,failed=false,receivedText=false
 
         while (true) {
           const { done, value } = await reader.read()
+          if(controller.signal.aborted||controllerRef.current!==controller)return
           if (done) break
 
           buffer += decoder.decode(value, { stream: true })
@@ -100,6 +108,7 @@ export function useChat(): UseChatReturn {
                 switch (currentEventType) {
                   case "chunk":
                     if (typeof payload["text"] === "string") {
+                      if(payload.text.trim())receivedText=true
                       setMessages((prev) => {
                         const last = prev[prev.length - 1]
                         if (last?.role === "assistant") {
@@ -116,13 +125,20 @@ export function useChat(): UseChatReturn {
                     }
                     break
                   case "done":
+                    completed=true
+                    setMessages(previous=>previous.map(message=>message.id===assistantMsg.id?{...message,status:'complete'}:message))
+                    if(Array.isArray(payload.sources)){
+                      const sources=payload.sources.filter((value):value is string=>typeof value==='string')
+                      setMessages(previous=>previous.map(message=>message.id===assistantMsg.id?{...message,sources}:message))
+                    }
                     if (typeof payload["conversation_id"] === "string") {
                       conversationId.current = payload["conversation_id"]
                     }
                     break
                   case "error":
-                    if (typeof payload["message"] === "string")
-                      setError(payload["message"])
+                    failed=true
+                    setMessages(previous=>previous.map(message=>message.id===assistantMsg.id?{...message,status:'error'}:message))
+                    setError(typeof payload.message==='string'?payload.message:'The answer stream failed. Please retry.')
                     break
                 }
               } catch {
@@ -131,7 +147,10 @@ export function useChat(): UseChatReturn {
             }
           }
         }
+        if(!completed&&!failed){setError('The answer stream ended before completion. Please retry.');setMessages(previous=>previous.map(message=>message.id===assistantMsg.id?{...message,status:'error'}:message))}
+        if(!receivedText){setMessages(previous=>previous.filter(message=>message.id!==assistantMsg.id));if(completed&&!failed)setError('The assistant returned no answer. Please retry.')}
       } catch (e) {
+        if(controllerRef.current!==controller||controller.signal.aborted)return
         if (e instanceof DOMException && e.name === "AbortError") return
         setError(e instanceof Error ? e.message : "Chat failed")
         setMessages((prev) => {
@@ -139,18 +158,20 @@ export function useChat(): UseChatReturn {
           if (last?.role === "assistant" && !last.content.trim()) {
             return prev.slice(0, -1)
           }
-          return prev
+          return prev.map(message=>message.id===assistantMsg.id?{...message,status:'error'}:message)
         })
       } finally {
-        setIsStreaming(false)
+        if(controllerRef.current===controller)setIsStreaming(false)
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
 
   const clearMessages = useCallback(() => {
     controllerRef.current?.abort()
+    controllerRef.current=null
+    messagesRef.current=[]
+    setIsStreaming(false)
     setMessages([])
     conversationId.current = null
     setError(null)

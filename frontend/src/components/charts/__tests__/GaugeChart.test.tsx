@@ -12,6 +12,13 @@ const BCR_BANDS = [
 ]
 
 describe("GaugeChart", () => {
+  it('renders a circular concentration display from the actual value without losing zero',()=>{
+    render(<GaugeChart chartData={{type:'gauge',variant:'ring',unit:'HHI',bands:[{label:'Low',min:0,max:1500,color_hint:'green'},{label:'High',min:1500,max:null,color_hint:'red'}],markers:[{label:'Observed zero',value:0}]}} />)
+    expect(screen.getByRole('img')).toHaveTextContent('0')
+    expect(screen.getByRole('img')).toHaveTextContent('/ 10,000')
+    expect(screen.getByText('0 HHI')).toBeVisible()
+    expect(screen.queryByText('High')).toBeNull()
+  })
   it("renders bands, markers, and reference lines for j2_bcr", () => {
     render(
       <GaugeChart
@@ -34,8 +41,9 @@ describe("GaugeChart", () => {
     expect(screen.getByText("Very High")).toBeTruthy()
     expect(screen.getByText("London")).toBeTruthy()
     expect(screen.getByText("South East")).toBeTruthy()
-    expect(screen.getByText("2 BCR")).toBeTruthy()
-    expect(screen.getAllByTestId("gauge-reference-line")).toHaveLength(2)
+    expect(screen.getByText("1.6 BCR")).toBeTruthy()
+    expect(screen.getByText("0.9 BCR")).toBeTruthy()
+    expect(screen.getByRole('img').querySelectorAll('g[stroke-dasharray="3,3"] line')).toHaveLength(2)
   })
 
   it("renders open-ended HHI bands for bsa2_operator_concentration", () => {
@@ -58,7 +66,7 @@ describe("GaugeChart", () => {
 
     expect(screen.getByText("Moderate")).toBeTruthy()
     expect(screen.getByText("2,000 HHI")).toBeTruthy()
-    expect(screen.getAllByTestId("gauge-reference-line")).toHaveLength(2)
+    expect(screen.getByRole('img').querySelectorAll('g[stroke-dasharray="3,3"] line')).toHaveLength(2)
   })
 
   it("renders fallback message when markers are empty", () => {
@@ -89,5 +97,11 @@ describe("GaugeChart", () => {
     )
     expect(screen.getByText("HHI")).toBeTruthy()
     expect(screen.getByText("1,333 / 10,000")).toBeTruthy()
+  })
+  it('retains observed zero, omits non-finite markers and keeps the HHI axis at 10,000',()=>{
+    render(<GaugeChart chartData={{unit:'HHI',bands:[{label:'Low',min:0,max:1500,color_hint:'green'},{label:'High',min:1500,max:null,color_hint:'red'}],markers:[{label:'Observed zero',value:0},{label:'Missing',value:null}]}} />)
+    expect(screen.getByText('0 HHI')).toBeInTheDocument()
+    expect(screen.queryByText('Missing')).toBeNull()
+    expect(screen.getByRole('img')).toHaveTextContent('10,000')
   })
 })

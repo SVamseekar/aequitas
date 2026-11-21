@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from aequitas.api.auth import db
 from aequitas.api.auth.dependencies import require_session
+from aequitas.api.models.workspace import SavedViewContext
 
 router = APIRouter(tags=["saved_regions"])
 
@@ -16,6 +17,7 @@ class SavedRegionCreate(BaseModel):
     region_code: str
     region_name: str
     notes: str | None = None
+    view_context: SavedViewContext | None = None
 
 
 def _serialize(row: dict) -> dict:
@@ -49,6 +51,7 @@ async def create_region(
         region_code=body.region_code,
         region_name=body.region_name,
         notes=body.notes,
+        **({"view_context": body.view_context.model_dump()} if body.view_context else {}),
     )
     return _serialize(row)
 
