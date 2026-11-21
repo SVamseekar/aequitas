@@ -125,7 +125,14 @@ def get_embedding_model() -> Any:
 @asynccontextmanager
 async def lifespan(app: Any):  # type: ignore[type-arg]
     """Load DuckDB + FAISS on startup, close on shutdown."""
+    import asyncio
     import os
+
+    from aequitas.core.datastore import ensure_profile
+
+    # Remote data store (AEQUITAS_DATA_REMOTE): fetch missing runtime files once,
+    # before any path check below. Local-only setups skip this entirely.
+    await asyncio.to_thread(ensure_profile, "app")
 
     cfg = ApiConfig()
 

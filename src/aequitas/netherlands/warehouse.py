@@ -26,6 +26,7 @@ def _clean(obj: Any) -> Any:
 def _json_safe(obj: Any) -> str:
     return json.dumps(_clean(obj), default=str, allow_nan=False)
 
+from aequitas.core.datastore import data_dir
 from aequitas.netherlands.constants import NL_EVENING_NOTE, NL_PROVINCES, STEDELIJKHEID_NOTE
 from aequitas.netherlands.sections import catalogue_counts, precompute_netherlands
 
@@ -33,7 +34,7 @@ __all__ = ["build_netherlands_warehouse", "netherlands_warehouse_path"]
 
 
 def netherlands_warehouse_path(project_root: Path) -> Path:
-    return project_root / "data" / "aequitas_netherlands.duckdb"
+    return data_dir(project_root) / "aequitas_netherlands.duckdb"
 
 
 def build_netherlands_warehouse(

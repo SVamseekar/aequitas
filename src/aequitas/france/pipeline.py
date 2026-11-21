@@ -16,12 +16,13 @@ from loguru import logger
 
 from aequitas.analytics.score import compute_score
 from aequitas.core.config import PipelineConfig
+from aequitas.core.datastore import data_dir
 from aequitas.france.constants import (
     DENSITY_NOTE,
     MAINLAND_DEPS,
+    iris_text,
     region_from_insee_reg,
     slug_region,
-    iris_text,
 )
 from aequitas.france.download import (
     download_fedi_iris,
@@ -291,7 +292,7 @@ def run_france_pack(cfg: PipelineConfig | None = None, *, skip_download: bool = 
 
     fedi_path = raw / "france" / "EDI2021_IRIS_FM.xlsx"
     # also accept data/france/raw copy
-    alt_fedi = cfg.project_root / "data" / "france" / "raw" / "EDI2021_IRIS_FM.xlsx"
+    alt_fedi = data_dir(cfg.project_root) / "france" / "raw" / "EDI2021_IRIS_FM.xlsx"
     if not fedi_path.exists() and alt_fedi.exists():
         fedi_path.parent.mkdir(parents=True, exist_ok=True)
         import shutil

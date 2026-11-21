@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from aequitas.core.datastore import data_dir
+
 COUNTRIES = ("england", "ireland", "netherlands", "france")
 
 
@@ -16,7 +18,7 @@ def ops_dir(project_root: Path | None = None) -> Path:
     if env:
         return Path(env)
     root = project_root or Path(__file__).resolve().parents[3]
-    return root / "data" / "ops"
+    return data_dir(root) / "ops"
 
 
 def rollup_path(country: str, project_root: Path | None = None) -> Path:

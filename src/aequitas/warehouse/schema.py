@@ -85,26 +85,27 @@ CORE_TABLES: dict[str, str] = {
 }
 
 # Analytics tables — loaded directly from processed Parquet files.
-# Key = table name, value = relative Parquet path (from warehouse root).
+# Key = table name, value = Parquet path relative to the data dir
+# (aequitas.core.datastore.data_dir).
 ANALYTICS_PARQUET_SOURCES: dict[str, str] = {
-    "lsoa_service_quality": "data/processed/lsoa_service_quality.parquet",
-    "lsoa_equity_metrics": "data/processed/lsoa_equity_metrics.parquet",
-    "lsoa_accessibility": "data/processed/lsoa_2sfca.parquet",
-    "lsoa_economic": "data/processed/lsoa_economic_appraisal.parquet",
-    "lsoa_policy": "data/processed/lsoa_policy_synthesis.parquet",
-    "route_details": "data/processed/route_geometries.parquet",
-    "lta_readiness": "data/processed/lta_franchising_readiness.parquet",
-    # New tables for expanded sections (all in data/audit/ — Phase 0 outputs)
-    "stop_headways": "data/audit/stop_headways.parquet",
-    "coverage_prediction": "data/audit/coverage_prediction.parquet",
-    "shap_importance": "data/audit/shap_importance.parquet",
-    "route_clusters": "data/audit/route_clusters.parquet",
-    "lsoa_clusters": "data/audit/lsoa_clusters_hdbscan.parquet",
-    "anomalies": "data/audit/anomalies.parquet",
-    "modal_shift_scenarios": "data/audit/modal_shift_scenarios.parquet",
-    "policy_scenarios": "data/audit/policy_scenarios.parquet",
-    "lsoa_reach": "data/processed/reach/lsoa_access_times.parquet",
-    "lsoa_access_bands": "data/processed/reach/lsoa_access_bands.parquet",
+    "lsoa_service_quality": "processed/lsoa_service_quality.parquet",
+    "lsoa_equity_metrics": "processed/lsoa_equity_metrics.parquet",
+    "lsoa_accessibility": "processed/lsoa_2sfca.parquet",
+    "lsoa_economic": "processed/lsoa_economic_appraisal.parquet",
+    "lsoa_policy": "processed/lsoa_policy_synthesis.parquet",
+    "route_details": "processed/route_geometries.parquet",
+    "lta_readiness": "processed/lta_franchising_readiness.parquet",
+    # New tables for expanded sections (all in audit/ — Phase 0 outputs)
+    "stop_headways": "audit/stop_headways.parquet",
+    "coverage_prediction": "audit/coverage_prediction.parquet",
+    "shap_importance": "audit/shap_importance.parquet",
+    "route_clusters": "audit/route_clusters.parquet",
+    "lsoa_clusters": "audit/lsoa_clusters_hdbscan.parquet",
+    "anomalies": "audit/anomalies.parquet",
+    "modal_shift_scenarios": "audit/modal_shift_scenarios.parquet",
+    "policy_scenarios": "audit/policy_scenarios.parquet",
+    "lsoa_reach": "processed/reach/lsoa_access_times.parquet",
+    "lsoa_access_bands": "processed/reach/lsoa_access_bands.parquet",
 }
 
 # Combined: all table names in the warehouse

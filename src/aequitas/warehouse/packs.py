@@ -22,6 +22,8 @@ from typing import Any
 
 from loguru import logger
 
+from aequitas.core.datastore import data_dir
+
 MANIFEST_NAME = "manifest.json"
 CURRENT_IDS = frozenset({"", "current", "latest"})
 
@@ -31,7 +33,7 @@ def packs_root(project_root: Path | None = None) -> Path:
     if env:
         return Path(env)
     root = project_root or Path(os.environ.get("AEQUITAS_PROJECT_ROOT", "."))
-    return root / "data" / "packs"
+    return data_dir(root) / "packs"
 
 
 def manifest_path(root: Path | None = None) -> Path:

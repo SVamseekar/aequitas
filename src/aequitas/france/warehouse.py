@@ -12,6 +12,7 @@ import duckdb
 import pandas as pd
 from loguru import logger
 
+from aequitas.core.datastore import data_dir
 from aequitas.france.constants import DENSITY_NOTE, FR_EVENING_NOTE, FR_REGIONS
 from aequitas.france.sections import catalogue_counts, precompute_france
 
@@ -31,7 +32,7 @@ def _json_safe(obj: Any) -> str:
 
 
 def france_warehouse_path(project_root: Path) -> Path:
-    return project_root / "data" / "aequitas_france.duckdb"
+    return data_dir(project_root) / "aequitas_france.duckdb"
 
 
 def build_france_warehouse(

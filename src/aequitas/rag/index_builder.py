@@ -15,6 +15,7 @@ from loguru import logger
 from sentence_transformers import SentenceTransformer
 
 from aequitas.core.config import PipelineConfig
+from aequitas.core.datastore import data_dir
 
 _EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 _EMBEDDING_DIM = 384
@@ -78,17 +79,17 @@ def _load_narratives(db_path: Path) -> list[dict]:
 
 
 def ireland_index_paths(project_root: Path) -> tuple[Path, Path]:
-    folder = project_root / "data" / "ireland"
+    folder = data_dir(project_root) / "ireland"
     return folder / "faiss_index.bin", folder / "faiss_metadata.json"
 
 
 def france_index_paths(project_root: Path) -> tuple[Path, Path]:
-    folder = project_root / "data" / "france"
+    folder = data_dir(project_root) / "france"
     return folder / "faiss_index.bin", folder / "faiss_metadata.json"
 
 
 def netherlands_index_paths(project_root: Path) -> tuple[Path, Path]:
-    folder = project_root / "data" / "netherlands"
+    folder = data_dir(project_root) / "netherlands"
     return folder / "faiss_index.bin", folder / "faiss_metadata.json"
 
 

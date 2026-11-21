@@ -7,6 +7,8 @@ from pathlib import Path
 import pandas as pd
 from loguru import logger
 
+from aequitas.core.datastore import data_dir
+
 _ELDERLY = (
     "T1_1AGE65_69T",
     "T1_1AGE70_74T",
@@ -29,7 +31,7 @@ _ETHNIC = (
 
 
 def default_saps_path(project_root: Path) -> Path:
-    return project_root / "data" / "raw" / "ireland" / "saps_2022.csv"
+    return data_dir(project_root) / "raw" / "ireland" / "saps_2022.csv"
 
 
 def attach_saps_theme_shares(areas: pd.DataFrame, saps_path: Path) -> pd.DataFrame:

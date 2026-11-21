@@ -12,6 +12,7 @@ import duckdb
 import pandas as pd
 from loguru import logger
 
+from aequitas.core.datastore import data_dir
 from aequitas.ireland.constants import (
     COUNTY_NAME_BY_SLUG,
     IRELAND_COUNTIES,
@@ -31,7 +32,7 @@ __all__ = [
 
 
 def ireland_warehouse_path(project_root: Path) -> Path:
-    return project_root / "data" / "aequitas_ireland.duckdb"
+    return data_dir(project_root) / "aequitas_ireland.duckdb"
 
 
 def build_ireland_warehouse(

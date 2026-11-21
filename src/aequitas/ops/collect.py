@@ -13,6 +13,7 @@ from typing import Any
 import duckdb
 from loguru import logger
 
+from aequitas.core.datastore import data_dir
 from aequitas.france.constants import in_fr_bbox
 from aequitas.ops.fetch import FetchHit, env_key, fetch_bytes
 from aequitas.ops.proto import LATE_THRESHOLD_SECONDS, TripObs, parse_feed_message
@@ -206,7 +207,7 @@ def _england_lookups(
     project_root: Path | None,
 ) -> tuple[int | None, dict[str, tuple[str | None, str | None, int | None]], dict[str, list[str]]]:
     root = project_root or Path(__file__).resolve().parents[3]
-    db_path = root / "data" / "aequitas.duckdb"
+    db_path = data_dir(root) / "aequitas.duckdb"
     if not db_path.is_file():
         return None, {}, {}
     conn = duckdb.connect(str(db_path), read_only=True)

@@ -9,7 +9,12 @@ from dataclasses import dataclass
 from functools import cache as _cache
 from pathlib import Path
 
-_AUDIT_DIR = Path(__file__).parent.parent.parent.parent / "data" / "audit"
+
+def _audit_dir() -> Path:
+    """Resolved per call so ``AEQUITAS_DATA_DIR`` set after import still applies."""
+    from aequitas.core.datastore import data_dir
+
+    return data_dir() / "audit"
 
 # Ground truth denominators — do not change without re-running audit
 POPULATION_ENGLAND: int = 56_490_056
@@ -53,7 +58,7 @@ class DESNZConstants:
 
 def _load_tag() -> TAGConstants:
     """Load TAG Databook v2.03fc constants from Phase 0 audit JSON."""
-    with open(_AUDIT_DIR / "tag_constants.json") as f:
+    with open(_audit_dir() / "tag_constants.json") as f:
         data = json.load(f)
     vot = data["value_of_time"]
     src_2014 = vot["source_vot_2014_prices"]
@@ -75,7 +80,7 @@ def _load_tag() -> TAGConstants:
 
 def _load_desnz() -> DESNZConstants:
     """Load DESNZ 2025 GHG conversion factors from Phase 0 audit JSON."""
-    with open(_AUDIT_DIR / "desnz_carbon_factors.json") as f:
+    with open(_audit_dir() / "desnz_carbon_factors.json") as f:
         data = json.load(f)
     bus = data["bus"]
     car = data["car"]

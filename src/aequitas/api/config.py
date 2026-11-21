@@ -5,61 +5,57 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from aequitas.core.datastore import data_dir
+
+
+def _env_path(var: str, rel: str) -> Path:
+    """Explicit env var wins; else ``rel`` under the data dir."""
+    explicit = os.environ.get(var, "").strip()
+    return Path(explicit) if explicit else data_dir() / rel
+
 
 @dataclass
 class ApiConfig:
     db_path: Path = field(
-        default_factory=lambda: Path(os.environ.get("AEQUITAS_DB_PATH", "data/aequitas.duckdb"))
+        default_factory=lambda: _env_path("AEQUITAS_DB_PATH", "aequitas.duckdb")
     )
     ireland_db_path: Path = field(
-        default_factory=lambda: Path(
-            os.environ.get("AEQUITAS_IE_DB_PATH", "data/aequitas_ireland.duckdb")
-        )
+        default_factory=lambda: _env_path("AEQUITAS_IE_DB_PATH", "aequitas_ireland.duckdb")
     )
     netherlands_db_path: Path = field(
-        default_factory=lambda: Path(
-            os.environ.get("AEQUITAS_NL_DB_PATH", "data/aequitas_netherlands.duckdb")
-        )
+        default_factory=lambda: _env_path("AEQUITAS_NL_DB_PATH", "aequitas_netherlands.duckdb")
     )
     france_db_path: Path = field(
-        default_factory=lambda: Path(
-            os.environ.get("AEQUITAS_FR_DB_PATH", "data/aequitas_france.duckdb")
-        )
+        default_factory=lambda: _env_path("AEQUITAS_FR_DB_PATH", "aequitas_france.duckdb")
     )
     faiss_index_path: Path = field(
-        default_factory=lambda: Path(os.environ.get("AEQUITAS_FAISS_INDEX", "data/faiss_index.bin"))
+        default_factory=lambda: _env_path("AEQUITAS_FAISS_INDEX", "faiss_index.bin")
     )
     faiss_metadata_path: Path = field(
-        default_factory=lambda: Path(os.environ.get("AEQUITAS_FAISS_METADATA", "data/faiss_metadata.json"))
+        default_factory=lambda: _env_path("AEQUITAS_FAISS_METADATA", "faiss_metadata.json")
     )
     ireland_faiss_index_path: Path = field(
-        default_factory=lambda: Path(
-            os.environ.get("AEQUITAS_IE_FAISS_INDEX", "data/ireland/faiss_index.bin")
-        )
+        default_factory=lambda: _env_path("AEQUITAS_IE_FAISS_INDEX", "ireland/faiss_index.bin")
     )
     ireland_faiss_metadata_path: Path = field(
-        default_factory=lambda: Path(
-            os.environ.get("AEQUITAS_IE_FAISS_METADATA", "data/ireland/faiss_metadata.json")
+        default_factory=lambda: _env_path(
+            "AEQUITAS_IE_FAISS_METADATA", "ireland/faiss_metadata.json"
         )
     )
     france_faiss_index_path: Path = field(
-        default_factory=lambda: Path(
-            os.environ.get("AEQUITAS_FR_FAISS_INDEX", "data/france/faiss_index.bin")
-        )
+        default_factory=lambda: _env_path("AEQUITAS_FR_FAISS_INDEX", "france/faiss_index.bin")
     )
     france_faiss_metadata_path: Path = field(
-        default_factory=lambda: Path(
-            os.environ.get("AEQUITAS_FR_FAISS_METADATA", "data/france/faiss_metadata.json")
+        default_factory=lambda: _env_path(
+            "AEQUITAS_FR_FAISS_METADATA", "france/faiss_metadata.json"
         )
     )
     netherlands_faiss_index_path: Path = field(
-        default_factory=lambda: Path(
-            os.environ.get("AEQUITAS_NL_FAISS_INDEX", "data/netherlands/faiss_index.bin")
-        )
+        default_factory=lambda: _env_path("AEQUITAS_NL_FAISS_INDEX", "netherlands/faiss_index.bin")
     )
     netherlands_faiss_metadata_path: Path = field(
-        default_factory=lambda: Path(
-            os.environ.get("AEQUITAS_NL_FAISS_METADATA", "data/netherlands/faiss_metadata.json")
+        default_factory=lambda: _env_path(
+            "AEQUITAS_NL_FAISS_METADATA", "netherlands/faiss_metadata.json"
         )
     )
     gemini_api_key: str = field(

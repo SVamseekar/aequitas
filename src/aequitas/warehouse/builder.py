@@ -18,6 +18,7 @@ import duckdb
 from loguru import logger
 
 from aequitas.core.config import PipelineConfig
+from aequitas.core.datastore import data_dir
 from aequitas.warehouse.schema import ANALYTICS_PARQUET_SOURCES, CORE_TABLES
 
 
@@ -163,7 +164,7 @@ def build_warehouse(
                 # Try relative to project root and to processed_dir
                 candidate = cfg.processed_dir / parquet_path.name
                 if not candidate.exists():
-                    candidate = Path(parquet_rel_path)
+                    candidate = data_dir() / parquet_rel_path
             else:
                 candidate = parquet_path
 

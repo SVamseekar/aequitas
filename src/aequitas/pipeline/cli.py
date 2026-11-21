@@ -14,6 +14,7 @@ Usage::
     aequitas ops         — collect GTFS-RT / SIRI snapshot → data/ops/{country}/latest.json
     aequitas refresh     — Unattended NaPTAN+BODS download + rebuild
     aequitas schedule-refresh — Install monthly macOS launchd job
+    aequitas data pull|push|status — sync local data dir with AEQUITAS_DATA_REMOTE
 """
 
 import click
@@ -264,3 +265,61 @@ def schedule_refresh() -> None:
 
     path = install_schedule(PipelineConfig().project_root)
     logger.info("Scheduled. Leave this Mac powered on overnight on the 1st. Plist: {}", path)
+
+
+@main.group()
+def data() -> None:
+    """Sync the local data dir with the remote store (AEQUITAS_DATA_REMOTE)."""
+
+
+_PROFILE_HELP = "app (what the API reads) | raw | all"
+
+
+def _patterns(profile: str, paths: tuple[str, ...]) -> tuple[str, ...]:
+    from aequitas.core.datastore import profile_patterns
+
+    return paths or profile_patterns(profile)
+
+
+@data.command("pull")
+@click.option("--profile", default="app", show_default=True, help=_PROFILE_HELP)
+@click.option("--path", "paths", multiple=True, help="Glob relative to the data dir; repeatable.")
+@click.option("--overwrite", is_flag=True, help="Re-fetch files that already exist locally.")
+def data_pull(profile: str, paths: tuple[str, ...], overwrite: bool) -> None:
+    """Fetch files from the remote into the local data dir."""
+    from aequitas.core.datastore import data_dir, pull
+
+    report = pull(_patterns(profile, paths), overwrite=overwrite)
+    click.echo(f"pulled {len(report.transferred)} of {report.matched} files into {data_dir()}")
+
+
+@data.command("push")
+@click.option("--profile", default="app", show_default=True, help=_PROFILE_HELP)
+@click.option("--path", "paths", multiple=True, help="Glob relative to the data dir; repeatable.")
+@click.option("--message", default="data: sync from aequitas", show_default=True)
+def data_push(profile: str, paths: tuple[str, ...], message: str) -> None:
+    """Upload local files to the remote. Temp files, logs and chat state never leave."""
+    from aequitas.core.datastore import push
+
+    report = push(_patterns(profile, paths), message=message)
+    click.echo(f"pushed {len(report.transferred)} files to {report.remote}")
+
+
+@data.command("status")
+@click.option("--profile", default="app", show_default=True, help=_PROFILE_HELP)
+def data_status(profile: str) -> None:
+    """Show the data dir, the remote, and which profile files are missing locally."""
+    from aequitas.core.datastore import data_dir, get_remote, matches, profile_patterns
+
+    root = data_dir()
+    remote = get_remote()
+    click.echo(f"data dir: {root}")
+    click.echo(f"remote:   {remote.url if remote else '(none — local only)'}")
+    if remote is None:
+        return
+    patterns = profile_patterns(profile)
+    wanted = [rel for rel in remote.list_files() if matches(rel, patterns)]
+    missing = [rel for rel in wanted if not (root / rel).exists()]
+    click.echo(f"profile {profile}: {len(wanted)} files on remote, {len(missing)} missing locally")
+    for rel in missing[:20]:
+        click.echo(f"  missing {rel}")

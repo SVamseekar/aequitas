@@ -15,6 +15,7 @@ from pathlib import Path
 from loguru import logger
 
 from aequitas.core.config import PipelineConfig
+from aequitas.core.datastore import data_dir
 from aequitas.ingestion.download import download_bods, download_naptan, require_disk
 
 _LOCK_NAME = ".refresh.lock"
@@ -34,7 +35,7 @@ def _stamp() -> str:
 
 
 def _acquire_lock(root: Path) -> Path:
-    lock = root / "data" / _LOCK_NAME
+    lock = data_dir(root) / _LOCK_NAME
     lock.parent.mkdir(parents=True, exist_ok=True)
     if lock.exists():
         age = datetime.now(timezone.utc).timestamp() - lock.stat().st_mtime
@@ -98,8 +99,8 @@ def _restore_warehouse(cfg: PipelineConfig, bak: Path | None) -> None:
 
 def _state_path(project_root: Path, country: str = "england") -> Path:
     if country == "ireland":
-        return project_root / "data" / "refresh_state_ireland.json"
-    return project_root / "data" / "refresh_state.json"
+        return data_dir(project_root) / "refresh_state_ireland.json"
+    return data_dir(project_root) / "refresh_state.json"
 
 
 def last_success_age_days(project_root: Path, country: str = "england") -> float | None:
@@ -117,9 +118,9 @@ def last_success_age_days(project_root: Path, country: str = "england") -> float
 
 
 def _run_ireland_refresh(cfg: PipelineConfig, *, skip_download: bool, stamp: str) -> Path:
+    from aequitas.ireland.download import download_tfi_gtfs
     from aequitas.ireland.pipeline import run_ireland_pack
     from aequitas.ireland.warehouse import ireland_warehouse_path
-    from aequitas.ireland.download import download_tfi_gtfs
 
     dest = ireland_warehouse_path(cfg.project_root)
     bak = dest.with_suffix(".duckdb.bak") if dest.exists() else None
@@ -181,7 +182,7 @@ def run_refresh(
     lock = _acquire_lock(cfg.project_root)
     bak: Path | None = None
     try:
-        require_disk(cfg.project_root / "data", needed_gb=8.0 if country == "ireland" else 40.0)
+        require_disk(data_dir(cfg.project_root), needed_gb=8.0 if country == "ireland" else 40.0)
         from aequitas.warehouse.packs import snapshot_after_refresh
 
         if country == "ireland":
@@ -253,7 +254,7 @@ LAUNCH_AGENT_LABEL = "com.aequitas.refresh"
 
 
 def launch_agent_plist(project_root: Path, uv_bin: str) -> str:
-    log_dir = project_root / "data" / "logs"
+    log_dir = data_dir(project_root) / "logs"
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -298,7 +299,7 @@ def install_schedule(project_root: Path) -> Path:
     uv_bin = shutil.which("uv")
     if not uv_bin:
         raise RuntimeError("uv not found on PATH — cannot install schedule")
-    (project_root / "data" / "logs").mkdir(parents=True, exist_ok=True)
+    (data_dir(project_root) / "logs").mkdir(parents=True, exist_ok=True)
     agents = Path.home() / "Library" / "LaunchAgents"
     agents.mkdir(parents=True, exist_ok=True)
     plist = agents / f"{LAUNCH_AGENT_LABEL}.plist"

@@ -4,6 +4,7 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from aequitas.core.datastore import data_dir
 from aequitas.core.types import RegionCode
 
 _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
@@ -14,10 +15,10 @@ class PipelineConfig:
     """Central configuration for all pipeline stages."""
 
     project_root: Path = _PROJECT_ROOT
-    raw_dir: Path = field(default_factory=lambda: _PROJECT_ROOT / "data" / "raw")
-    audit_dir: Path = field(default_factory=lambda: _PROJECT_ROOT / "data" / "audit")
-    processed_dir: Path = field(default_factory=lambda: _PROJECT_ROOT / "data" / "processed")
-    warehouse_path: Path = field(default_factory=lambda: _PROJECT_ROOT / "data" / "aequitas.duckdb")
+    raw_dir: Path = field(default_factory=lambda: data_dir() / "raw")
+    audit_dir: Path = field(default_factory=lambda: data_dir() / "audit")
+    processed_dir: Path = field(default_factory=lambda: data_dir() / "processed")
+    warehouse_path: Path = field(default_factory=lambda: data_dir() / "aequitas.duckdb")
 
     # Validation thresholds
     min_match_rate: float = 0.95
@@ -35,8 +36,8 @@ class PipelineConfig:
     )
 
     # RAG / API
-    faiss_index_path: Path = field(default_factory=lambda: Path("data/faiss_index.bin"))
-    faiss_metadata_path: Path = field(default_factory=lambda: Path("data/faiss_metadata.json"))
+    faiss_index_path: Path = field(default_factory=lambda: data_dir() / "faiss_index.bin")
+    faiss_metadata_path: Path = field(default_factory=lambda: data_dir() / "faiss_metadata.json")
     gemini_api_key: str = field(default_factory=lambda: os.environ.get("GEMINI_API_KEY", ""))
     api_cors_origins: list[str] = field(default_factory=lambda: ["http://localhost:5173"])
 

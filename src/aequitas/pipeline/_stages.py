@@ -14,6 +14,7 @@ from pathlib import Path
 from loguru import logger
 
 from aequitas.core.config import PipelineConfig
+from aequitas.core.datastore import data_dir
 
 
 @dataclass
@@ -50,8 +51,8 @@ def run_ingestion(cfg: PipelineConfig | None = None) -> StageReport:
     t0 = time.perf_counter()
     logger.info("Stage 1: Ingestion — loading raw data sources")
 
-    from aequitas.ingestion.naptan import load_naptan
     from aequitas.ingestion.bods import load_bods_routes, load_bods_stops
+    from aequitas.ingestion.naptan import load_naptan
     from aequitas.processing.demographics import build_master_lsoa_table
 
     output_files: list[Path] = []
@@ -268,8 +269,9 @@ def run_studio(
         report = StageReport("studio", time.perf_counter() - t0, [], 0, 0)
         report.log()
         return report
-    from pathlib import Path
     import json
+    from pathlib import Path
+
     import pandas as pd
 
     from aequitas.analytics.studio import apply_studio, parse_studio_patch
@@ -288,10 +290,10 @@ def run_studio(
         report.log()
         return report
     from aequitas.analytics.centroids import (
+        bbox_of,
         ensure_centroids,
         filter_centroids_for_studio,
         filter_stops_to_bbox,
-        bbox_of,
         load_centroid_points,
     )
 
@@ -392,11 +394,11 @@ def run_rag_index(cfg: PipelineConfig | None = None, *, country: str = "england"
     t0 = time.perf_counter()
     kwargs: dict = {"country": country}
     if country == "ireland":
-        kwargs["warehouse_path"] = cfg.project_root / "data" / "aequitas_ireland.duckdb"
+        kwargs["warehouse_path"] = data_dir(cfg.project_root) / "aequitas_ireland.duckdb"
     elif country == "france":
-        kwargs["warehouse_path"] = cfg.project_root / "data" / "aequitas_france.duckdb"
+        kwargs["warehouse_path"] = data_dir(cfg.project_root) / "aequitas_france.duckdb"
     elif country == "netherlands":
-        kwargs["warehouse_path"] = cfg.project_root / "data" / "aequitas_netherlands.duckdb"
+        kwargs["warehouse_path"] = data_dir(cfg.project_root) / "aequitas_netherlands.duckdb"
     result = build_faiss_index(cfg, **kwargs)
     return StageReport(
         stage="rag_index",
@@ -415,9 +417,9 @@ def run_validation(cfg: PipelineConfig | None = None) -> StageReport:
     logger.info("Stage 6: Validation — sanity checks (not locked June 2026 Gini)")
     t0 = time.perf_counter()
 
-    from aequitas.validation.sanity import validate_sanity
     from aequitas.validation.ground_truth import validate_against_ground_truth
     from aequitas.validation.report import generate_report
+    from aequitas.validation.sanity import validate_sanity
 
     sanity = validate_sanity(cfg)
     # Historical pack comparison is informational — drift must not fail the pipeline.
